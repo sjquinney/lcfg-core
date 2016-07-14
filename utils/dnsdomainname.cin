@@ -1,0 +1,28 @@
+#!@PERL@
+
+#############################################################################
+#
+# Program that prints current DNS domain by parsing /etc/resolv.conf
+# Alistair Phipps <v1aphipp@inf.ed.ac.uk>
+# @LCFG_DATE@ @MSG@
+#
+#############################################################################
+
+use strict;
+
+die "can't open /etc/resolv.conf\n"
+	unless open(RESOLV,"/etc/resolv.conf");
+
+# print "domain" line if found, else print "search" line
+my $domain;
+while(<RESOLV>) {
+	if(/domain/) {
+		$domain = (split(/ /))[1];
+		last;
+	}
+	if(/search/) {
+		$domain = (split(/ /))[1];
+	}
+}
+close RESOLV;
+print $domain;

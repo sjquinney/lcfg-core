@@ -1,0 +1,504 @@
+=head1 NAME
+
+lcfgpackagespec - Library for handling LCFG package specifications.
+
+=head1 VERSION
+
+This documentation refers to lcfgpackagespec version @LCFG_VERSION@
+
+=head1 SYNOPSIS
+
+  #include <lcfg/packages.h>
+
+  char * input   = "foo-1-2.noarch.rpm";
+  char * defarch = "x86_64";
+
+  LCFGPackageSpec * pkgspec;
+  char *errmsg;
+  
+  lcfgpkgspec_from_rpm_filename( input, &pkgspec, &errmsg );
+
+  char * pkgspec_str = lcfgpkgspec_to_string( pkgspec, defarch, 0 );
+
+  printf("%s\n", pkgspec_str );
+
+  lcfgpkgspec_destroy(pkgspec);
+
+=head1 DESCRIPTION
+
+The LCFG packagelib library provides all the functions and structures
+necessary for parsing and manipulating LCFG package
+specifications.
+
+This documentation describes the I<lcfgpkgspec> suite of functions
+which can be used for parsing and manipulating single package
+specifications.
+
+=head1 LCFG PACKAGE SPECIFICATION
+
+The full LCFG package specification format looks like this:
+
+  <prefix>name-version-release</arch><:flags><[context]>
+
+The I<name>, I<version> and I<release> fields are required.
+
+The I<prefix>, I<arch>, I<flags> and I<context> fields are optional,
+any combination may be specified.
+
+The specification must not contain any whitespace characters but
+leading and trailing whitespace on the same line is permitted.
+
+The I<arch> field is separated from the I<release> field using a C</>
+(forward-slash) character. The I<flags> field is separated from the
+I<release> or I<arch> field using a C<:> (colon) character. The
+I<context> field is surrounded with C<[]> (square brackets).
+
+The details for an LCFG package specification are stored in a struct
+of type C<LCFGPackageSpec> which has the following members:
+
+=over
+
+=item name
+
+The name of the package, this must always be specified.
+
+=item arch
+
+The architecture of the package (e.g. C<x86_64> or C<noarch>). This
+might not be specified in which case it will be an empty string. When
+unspecified it is assumed that the package has the default
+architecture for the system. Only word-characters ([A-Za-z0-9_>]) are
+permitted.
+
+=item version
+
+The version for the package. If this is not specified the default
+value is the wildcard character C<*> (asterisk). Due to the way the
+package strings are parsed this field cannot contain a C<-> (hyphen)
+character.
+
+=item release
+
+The release for the package, this is a string which is used as a
+secondary version string. If this is not specified the default value
+is the wildcard character C<*> (asterisk). This field comes from the
+Redhat RPM packaging system. Note that on some operating systems
+(e.g. MacOSX) this field is irrelevant and it will be ignored. Due to
+the way the package strings are parsed this field cannot contain a
+C<-> (hyphen) character.
+
+=item prefix
+
+The prefix is a single character which is used to control how the LCFG
+tools process lists of package specifications. Currently only C<+>
+(plus), C<-> (minus) and C<?> (question mark) are supported. Below is
+a summary, see updaterpms(8) for further details.
+
+=over
+
+=item C<+> (plus)
+
+This indicates that the current package specification should be added
+to the package list. If any package previously seen in the list has
+the same name and architecture it will be replaced. Consider this to
+be an B<INSERT OR UPDATE> command.
+
+=item C<?> (question mark)
+
+This indicates that the current package specification should replace a
+previously seen package specification with the same name and
+architecture. If it has not been previously seen it will be
+ignored. Consider this to be an B<UPDATE> command.
+
+=item C<-> (minus)
+
+This indicates that any previously seen package specification with the
+same name and architecture should be completely removed. Consider this
+to be a B<DELETE> command.
+
+=back
+
+=item flags
+
+The flags are used to control how the package management tool
+(e.g. updaterpms(8)) installs and updates packages. This is a string
+which can only contain lower-case, upper-case and numeric
+characters. If not specified it will be an empty string. Note that
+different package management tools may interpret the flags in
+different ways (or completely ignore them).
+
+=item context
+
+This is a string which represents the LCFG context in which the
+package specification is applicable (or not). For example, this can be
+used to ensure that some packages are only installed as part of the
+initial install and are subsequently removed. If not specified this
+will be an empty string.
+
+=item derivation
+
+This is a string which contains a space-separated list of file
+locations (e.g. LCFG headers and package lists) where this package
+specification was seen. If not specified this will be an empty string.
+
+=back
+
+=head1 FUNCTIONS
+
+The following functions are available for processing and manipulating
+individual LCFG package specifications. For complete details of the
+API see the C<lcfg/packages.h> header.
+
+=head2 CONSTRUCTORS AND DESTRUCTORS
+
+There are various ways to create new C<LCFGPackageSpec> structs.  Note
+that when no longer required the contents of the struct should be
+released using the C<lcfgpkgspec_destroy> function.
+
+=over
+
+=item lcfgpkgspec_new()
+
+Creates a new empty LCFGPackageSpec struct and returns a pointer.
+
+=item lcfgpkgspec_clone(LCFGPackageSpec * pkgspec)
+
+Creates a new empty LCFGPackageSpec struct, copies in all the contents
+of the existing struct and returns a pointer.
+
+=item lcfgpkgspec_from_string( char * input, LCFGPackageSpec ** pkgspec, char ** errmsg )
+
+This takes an input LCFG package specification string which is to be
+split into the various fields. See the previous section for details of
+the supported format. An integer value is returned which indicates
+success (zero) or failure (non-zero). The pkgspec pointer is updated
+to point to the newly created LCFGPackageSpec struct. If a recoverable
+error occurs the errmsg pointer should point to a string which
+explains what failed. 
+
+=item lcfgpkgspec_from_rpm_filename( char * input, LCFGPackageSpec ** pkgspec, char ** errmsg )
+
+This takes an input RPM filename string which is to be split into the
+various fields. Note that this will never contain information for the
+C<prefix>, C<flags>, C<context> or C<derivation> fields. An integer
+value is returned which indicates success (zero) or failure
+(non-zero). The pkgspec pointer is updated to point to the newly
+created LCFGPackageSpec struct. If a recoverable error occurs the
+errmsg pointer should point to a string which explains what failed.
+
+=item lcfgpkgspec_destroy(LCFGPackageSpec * pkgspec)
+
+This frees all the memory associated with the package
+specification. Note that there is support for a very simple reference
+counting system. If the reference count for the specified
+LCFGPackageSpec struct is not zero then the memory will not be
+freed. See the documentation below for details of the
+C<lcfgpkgspec_dec_ref> and C<lcfgpkgspec_inc_ref> functions.
+
+=back
+
+=head2 ACCESSORS
+
+To read the values of the fields just access them directly via the
+pointer to ther LCFGPackageSpec struct. The following functions
+support querying and modification of the individual fields in various
+other ways.
+
+=over
+
+=item lcfgpkgspec_get_name(LCFGPackageSpec * pkgspec)
+
+Returns the current value of the I<name> field.
+
+=item lcfgpkgspec_set_name(LCFGPackageSpec * pkgspec, char * new_value)
+
+Sets the I<name> pointer in the LCFGPackageSpec struct to be the new
+location. Any memory for a previous value will be freed.
+
+=item lcfgpkgspec_get_arch(LCFGPackageSpec * pkgspec)
+
+Returns the current value of the I<arch> field.
+
+=item lcfgpkgspec_set_arch(LCFGPackageSpec * pkgspec, char * new_value)
+
+Sets the I<arch> pointer in the LCFGPackageSpec struct to be the new
+location. Any memory for a previous value will be freed.
+
+=item lcfgpkgspec_get_version(LCFGPackageSpec * pkgspec)
+
+Returns the current value of the I<version> field.
+
+=item lcfgpkgspec_set_version(LCFGPackageSpec * pkgspec, char * new_value)
+
+Sets the I<version> pointer in the LCFGPackageSpec struct to be the new
+location. Any memory for a previous value will be freed.
+
+=item lcfgpkgspec_get_release(LCFGPackageSpec * pkgspec)
+
+Returns the current value of the I<release> field.
+
+=item lcfgpkgspec_set_release(LCFGPackageSpec * pkgspec, char * new_value)
+
+Sets the I<release> pointer in the LCFGPackageSpec struct to be the new
+location. Any memory for a previous value will be freed.
+
+=item lcfgpkgspec_get_prefix(LCFGPackageSpec * pkgspec)
+
+Returns the current value of the I<prefix> field.
+
+=item lcfgpkgspec_set_prefix(LCFGPackageSpec * pkgspec, char * new_value)
+
+Sets the I<prefix> pointer in the LCFGPackageSpec struct to be the new
+location. Any memory for a previous value will be freed.
+
+=item lcfgpkgspec_get_flags(LCFGPackageSpec * pkgspec)
+
+Returns the current value of the I<flags> field.
+
+=item lcfgpkgspec_set_flags(LCFGPackageSpec * pkgspec, char * new_value)
+
+Sets the I<flags> pointer in the LCFGPackageSpec struct to be the new
+location. Any memory for a previous value will be freed.
+
+=item lcfgpkgspec_add_flags(LCFGPackageSpec * pkgspec, char * extra_value)
+
+Merges each extra flag in the string with any existing flags, if they
+have not already been specified. Any duplicates in the extra flags
+will be ignored. For example, adding C<cdef> to C<abcd> will give
+C<abcdef>.
+
+=item lcfgpkgspec_get_context(LCFGPackageSpec * pkgspec)
+
+Returns the current value of the I<context> field.
+
+=item lcfgpkgspec_set_context(LCFGPackageSpec * pkgspec, char * new_value)
+
+Sets the I<context> pointer in the LCFGPackageSpec struct to be the new
+location. Any memory for a previous value will be freed.
+
+=item lcfgpkgspec_add_context(LCFGPackageSpec * pkgspec, char * extra_value)
+
+Combines the extra context with any which is already specified. If
+nothing was previously specified then the new context will be
+identical to the extra context. If the extra context is identical to
+the current context then nothing will change, e.g. combining C<A> with
+itself always returns C<A>. If there is an existing context specified
+then the combination is done using the C<&> operator. The contexts
+will each be made "safe" by enclosing them in C<()> (round brackets)
+unless they are already enclosed in brackets. This is only really
+essential for complex expressions but it is much simpler this
+way. Prior to combination the two expressions will be sorted so that
+the new compound expression is always the same, for example combining
+C<A> and C<B> in any order will always result in C<(A) & (B)>.
+
+=item lcfgpkgspec_get_derivation(LCFGPackageSpec * pkgspec)
+
+Returns the current value of the I<derivation> field.
+
+=item lcfgpkgspec_set_derivation(LCFGPackageSpec * pkgspec, char * new_value)
+
+Sets the I<derivation> pointer in the LCFGPackageSpec struct to be the
+new location. Any memory for a previous value will be freed.
+
+=item lcfgpkgspec_add_derivation(LCFGPackageSpec * pkgspec, char * extra_value)
+
+Adds the extra derivation string if it is not already present in the
+existing derivation string. It is appended using a single whitespace
+character as a separator.
+
+=item lcfgpkgspec_set_defaults(LCFGPackageSpec * pkgspec, char * new_value)
+
+Sets default values for any pkgspec field which is NULL. The
+I<version> and I<release> fields have wildcard default values - C<*>
+(asterisk). All other fields default to the empty string. It is often
+useful to apply this function after creation of the LCFGPackageSpec
+struct before attempting to reference values to avoid segfaults.
+
+=item lcfgpkgspec_has_arch(LCFGPackageSpec * pkgspec)
+
+Returns a boolean which indicates whether, or not, the pkgspec I<arch>
+field has a non-empty value.
+
+=item lcfgpkgspec_has_prefix(LCFGPackageSpec * pkgspec)
+
+Returns a boolean which indicates whether, or not, the pkgspec
+I<prefix> field has a non-empty value.
+
+=item lcfgpkgspec_has_flags(LCFGPackageSpec * pkgspec)
+
+Returns a boolean which indicates whether, or not, the pkgspec
+I<flags> field has a non-empty value.
+
+=item lcfgpkgspec_has_context(LCFGPackageSpec * pkgspec)
+
+Returns a boolean which indicates whether, or not, the pkgspec
+I<context> field has a non-empty value.
+
+=item lcfgpkgspec_has_derivation(LCFGPackageSpec * pkgspec)
+
+Returns a boolean which indicates whether, or not, the pkgspec
+I<derivation> field has a non-empty value.
+
+=back
+
+=head2 OUTPUT
+
+=over
+
+=item lcfgpkgspec_to_string(LCFGPackageSpec * pkgspec, char * defarch, int options)
+
+Generates a string which is structured according to the LCFG Package
+specification format described above.
+
+If the default architecture for the platform is specified then the
+package architecture will not appear in the string when it is the same
+as the default.
+
+Options can be specified via an integer which is used to control what
+appears in the generated string. Currently there are three options:
+
+=over
+
+=item C<LCFG_PKGSPEC_OPT_NEWLINE>
+
+Adds a newline (C<\n>) character to the end of the string
+
+=item C<LCFG_PKGSPEC_OPT_NOCONTEXT>
+
+Prevents inclusion of any context.
+
+=item C<LCFG_PKGSPEC_OPT_NOPREFIX>
+
+Prevents the inclusion of any package prefix (e.g. [+-?]).
+
+=back
+
+Multiple options can be specified by OR-ing the different
+integers. There are CPP macros defined for each option.
+
+=item lcfgpkgspec_to_cpp(LCFGPackageSpec * pkgspec, char * defarch, int options)
+
+Generates a string which represents an LCFG package specification in
+the C-preprocessor (cpp) style which can be used as a block in the
+updaterpms rpmcfg file.
+
+If the default architecture for the platform is specified then the
+package architecture will not appear in the string when it is the same
+as the default.
+
+Options can be specified via an integer, see the description for
+C<lcfgpkgspec_to_string> above for details. With the cpp generator the
+C<LCFG_PKGSPEC_OPT_NOCONTEXT> and C<LCFG_PKGSPEC_OPT_NOPREFIX> options
+are always enabled when generating the package specification string.
+Any context is specified separately in a C<#pragma> statement instead.
+
+=item lcfgpkgspec_to_rpm_filename(LCFGPackageSpec * pkgspec, char * defarch, int options )
+
+Generates a string which is the RPM filename that matches the LCFG
+package specification. If the package specification does not contain a
+value for the architecture then the default architecture for the
+platform will be used. Supports the C<LCFG_PKGSPEC_OPT_NEWLINE> option
+to add a newline character to the end of the generated string.
+
+=item lcfgpkgspec_print(LCFGPackageSpec * pkgspec, char * defarch, char * style, int options, FILE * stream)
+
+Prints the package specification to the specified stream using the
+required style. Currently supported formatting styles are C<cpp> which
+uses the C<lcfgpkgspec_to_cpp> function and C<rpm> which uses the
+C<lcfgpkgspec_to_rpm_filename> function. If neither of those styles
+are specified then the standard C<lcfgpkgspec_to_string> function is
+used.
+
+Options can be specified via an integer, see the description for
+C<lcfgpkgspec_to_string> above for details.
+
+=back
+
+=head2 REFERENCE COUNTING
+
+It is occasionally useful to be able to keep track of the number of
+references to an LCFGPackagespec struct. The C<lcfgpkgspec_destroy>
+function will not free memory for a struct when the reference count is
+greater than zero. This makes it possible to avoid accidentally
+freeing memory at one point in the code when it is still required
+elsewhere. For example, if it is stored in an LCFGPackageList
+linked-list but also needs to be referred to separately. The reference
+counting system is very simple, it is important to note that there is
+currently no support for locking so this is not thread-safe. The
+functions are:
+
+=over
+
+=item lcfgpkgspec_inc_ref(LCFGPackageSpec * pkgspec)
+
+Increment by one the reference count for this struct.
+
+=item lcfgpkgspec_dec_ref(LCFGPackageSpec * pkgspec)
+
+Decrement by one the reference count for this struct.
+
+=back
+
+=head2 OTHERS
+
+=over
+
+=item lcfgpkgspec_full_version(LCFGPackageSpec * pkgspec)
+
+Returns a string which is a combination of the I<version> and
+I<release> fields joined using a C<-> (hyphen). The returned string
+must be freed when no longer required.
+
+=item lcfgpgkspec_id(LCFGPackageSpec * pkgspec)
+
+Returns a string which is a combination of the I<name> and I<arch>
+field joined using a C<.> (period). If there is no value for the
+I<arch> field then the value returned will just be the I<name>. This
+is mostly useful as a unique string for hashing a set of package
+specifications. The returned string must be freed when no longer
+required.
+
+=item lcfgpkgspec_compare(LCFGPackageSpec * pkgspec1, LCFGPackageSpec * pkgspec2)
+
+Returns an integer which will be -1, 0 or 1 to indicate whether the
+first pkgspec is less than, equal to or greater than the second. The
+comparison is done using the values of the C<name> and C<arch>
+fields. This is mostly useful for sorting lists of package
+specifications.
+
+=item lcfgpkgspec_equals(LCFGPackageSpec * pkgspec1, LCFGPackageSpec * pkgspec2)
+
+Returns a boolean which indicates whether or not two package
+specifications are identical. The values for all fields are compared
+EXCEPT the I<prefix>, I<context> and I<derivation>.
+
+=back
+
+=head1 SEE ALSO
+
+lcfgpackagelib(3), lcfgpackagelist(3), lcfgpackageiterator(3)
+
+=head1 PLATFORMS
+
+This is the list of platforms on which we have tested this
+software. We expect this software to work on any Unix-like platform.
+
+@LCFG_PLATFORMS@
+
+=head1 BUGS AND LIMITATIONS
+
+Please report any bugs or problems (or praise!) to bugs@lcfg.org,
+feedback and patches are also always very welcome.
+
+=head1 AUTHOR
+
+@LCFG_AUTHOR@
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (C) 2015 University of Edinburgh. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GPL, version 2 or later.
+
+=cut

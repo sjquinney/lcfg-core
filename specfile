@@ -1,0 +1,90 @@
+Name:           @LCFG_NAME@
+Version:        @LCFG_VERSION@
+Release:        @LCFG_RELEASE@
+Summary:        @LCFG_ABSTRACT@
+License:        @LCFG_LICENSE@
+Group:          LCFG/Components
+Packager:       @LCFG_AUTHOR@
+Source:         @LCFG_TARNAME@
+Provides:       lcfg-utils
+BuildRequires:  cmake >= 2.6.0, pkgconfig
+BuildRequires:  libxml2-devel, libdb-devel
+BuildRequires:  rpm-devel
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Requires(post,postun):         /sbin/ldconfig
+
+%description
+@LCFG_ABSTRACT@
+
+%package devel
+Group: LCFG/Devel
+Summary: Development files for the LCFG profile library
+Requires: %{name} = %{version}-%{release}
+Provides: lcfg-utils-devel
+
+%description devel
+@LCFG_ABSTRACT@
+
+This package contains the libraries and header files necessary for
+building software and linking against the LCFG profile libraries.
+
+%prep
+%setup
+%cmake
+
+%build
+make
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT
+rm -f $RPM_BUILD_ROOT/usr/sbin/setctx
+
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
+%files
+%defattr(-,root,root)
+%doc ChangeLog
+%doc @LCFGPOD@/*.pod
+%{_mandir}/man1/*
+%{_mandir}/man3/*
+%{_bindir}/parse_pkgspec
+#%{_sbindir}/setctx
+%{_sbindir}/daemon
+%{_sbindir}/lcfgack
+%{_sbindir}/lcfgmsg
+%{_sbindir}/shiftpressed
+%{_bindir}/lcfg_xml_reader
+%{_libdir}/liblcfg_bdb.so.*
+%{_libdir}/liblcfg_utils.so.*
+%{_libdir}/liblcfg_context.so.*
+%{_libdir}/liblcfg_profile.so.*
+%{_libdir}/liblcfg_packages.so.*
+%{_libdir}/liblcfg_resources.so.*
+%{_libdir}/liblcfg_xml.so.*
+
+%files devel
+%{_datadir}/pkgconfig/*.pc
+%{_includedir}/lcfg/*.h
+%{_libdir}/liblcfg_bdb.a
+%{_libdir}/liblcfg_bdb.so
+%{_libdir}/liblcfg_utils.a
+%{_libdir}/liblcfg_utils.so
+%{_libdir}/liblcfg_context.a
+%{_libdir}/liblcfg_context.so
+%{_libdir}/liblcfg_profile.a
+%{_libdir}/liblcfg_profile.so
+%{_libdir}/liblcfg_packages.a
+%{_libdir}/liblcfg_packages.so
+%{_libdir}/liblcfg_resources.a
+%{_libdir}/liblcfg_resources.so
+%{_libdir}/liblcfg_xml.a
+%{_libdir}/liblcfg_xml.so
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%changelog
+@LCFG_CHANGELOG@

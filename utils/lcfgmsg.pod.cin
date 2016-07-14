@@ -1,0 +1,108 @@
+=head1 NAME
+
+lcfgmsg - send messages to LCFG error/logging system
+
+=head1 SYNOPSIS
+
+ 
+@LCFGSBIN@/lcfgmsg [I<options>] I<component> I<message>
+
+=head1 DESCRIPTION
+
+This command is used by LCFG components and daemons to report
+error and log messages.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-a>
+
+Send a SIGUSR2 to the client component requesting an acknowledgement be
+sent to the server.
+
+=item B<-C> I<event>
+
+Clear the named event log (delete the file).
+
+=item B<-d>
+
+Send a Debug message.
+
+=item B<-e>
+
+Send an Error message (non-fatal error).
+
+=item B<-E> I<event>
+
+Send an event message to the named event log.
+
+=item B<-f>
+
+Send a Fail message (fatal error).
+
+=item B<-i>
+
+Send an Info message. This message appears in the logfile and on the
+terminal.
+
+=item B<-l>
+ 
+Send a message to the log file.
+ 
+=item B<-n> I<tag>
+
+Send a notification message to the monitoring system using ther given tag.
+
+=item B<-o>
+ 
+Send an OK message. This message is reported to the terminal only.
+
+=item B<-p>
+
+Advance progress bar.
+
+=item B<-s>
+
+Start a progress bar.
+
+=item B<-w>
+
+Send a warning message.
+
+=item B<-x>
+
+End progress bar.
+
+=back
+
+=head1 ENVIRONMENT VARIABLES
+
+
+=over 4
+
+=item B<LCFG_MONITOR>
+
+If this is set to the name of a pipe, erorrs, warnings and monitoring
+information will be written to the named pipe.
+
+=item B<LCFG_SYSLOG>
+
+If this is set to the name of a syslog facility, errors and warnings
+will be copied to syslog.
+
+=back
+
+=head1 SEE ALSO
+
+LCFG::Utils, lcfgutils, lcfg-ngeneric, LCFG::Component
+
+=head1 PLATFORMS
+
+@LCFG_PLATFORMS@
+
+=head1 AUTHOR
+
+@LCFG_AUTHOR@
+
+=cut

@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@LIB_INSTALL_DIR@
+includedir=@INCLUDE_INSTALL_DIR@
+modules=1
+
+Name: lcfg-utils
+Version: @LCFG_VERSION@
+Description: LCFG general utilities library
+Libs: -L${libdir} -llcfg_utils
+Cflags: -I${includedir}

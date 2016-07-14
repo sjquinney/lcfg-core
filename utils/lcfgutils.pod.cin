@@ -1,0 +1,94 @@
+=head1 NAME
+
+lcfgutils - C library of LCFG utility routines.
+
+=head1 SYNOPSIS
+
+  /* Set file descriptor for output (default stderr) */
+  void LCFG_SetOutput( FILE *fp )
+
+  /* Send Debug Message */
+  void LCFG_Debug( char *component, char *msg )
+
+  /* Send Info message (log file and terminal) */
+  void LCFG_Info( char *component, char *msg )
+
+  /* Send Log Message (logfile only) */
+  void LCFG_Log( char *component, char *msg )
+
+  /* Send Log Message with prefix */
+  void LCFG_Log( char *component, char *pfx, char *msg )
+
+  /* Send OK Message (terminal only) */
+  void LCFG_OK( char *component, char *msg )
+
+  /* Send Warning Message */
+  void LCFG_Warn( char *component, char *msg )
+
+  /* Send Error Message (non fatal) */
+  void LCFG_Error( char *component, char *msg )
+
+  /* Send Fail Message (fatal error) */
+  void LCFG_Fail( char *component, char *msg )
+
+  /* Send Monitoring Message */
+  void LCFG_Notify( char *component, char *tag, char *msg )
+
+  /* Send Message to named event log */
+  void LCFG_Event( char *component, char *event, char *msg )
+
+  /* Clear event log */
+  void LCFG_ClearEvent( char *component, char *msg )
+
+  /* Start a Progress Bar */
+  int LCFG_StartProgress( char *component, char *msg )
+
+  /* Advance Progress Bar */
+  int LCFG_Progress( void )
+
+  /* End Progress Bar */
+  int LCFG_EndProgress( void )
+
+  /* Signal client component to acknowledge server */
+  void LCFG_Ack( void )
+
+  /* Detect if shift key pressed (0=no, 1=yes, -1=don't know) */
+  int LCFG_ShiftPressed( void )
+
+
+=head1 DESCRIPTION
+
+These routines are used by the LCFG generic component for reporting
+log and error information. Daemons can use the same routines for
+reporting so that error message are passed to the status
+and monitoring systems.
+
+=head1 ENVIRONMENT VARIABLES
+
+=over 4
+
+=item B<LCFG_MONITOR>
+
+If this is set to the name of a pipe, erorrs, warnings and monitoring
+information will be written to the named pipe.
+
+=item B<LCFG_SYSLOG>
+
+If this is set to the name of a syslog facility, errors and warnings
+will be copied to syslog.
+
+=back
+
+=head1 SEE ALSO
+
+LCFG::Utils, lcfgmsg, lcfg-ngeneric, LCFG::Component
+
+=head1 PLATFORMS
+
+@LCFG_PLATFORMS@
+
+=head1 AUTHOR
+
+@LCFG_AUTHOR@
+
+=cut

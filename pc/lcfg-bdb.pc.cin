@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@LIB_INSTALL_DIR@
+includedir=@INCLUDE_INSTALL_DIR@
+modules=1
+
+Name: lcfg-bdb
+Version: @LCFG_VERSION@
+Description: LCFG profile Berkeley DB handling library
+Requires: lcfg-profile = @LCFG_VERSION@
+Libs: -L${libdir} -ldb -llcfg_bdb
+Cflags: -I${includedir}

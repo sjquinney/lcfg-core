@@ -1,0 +1,655 @@
+=head1 NAME
+
+lcfgresource - Library for handling LCFG resources.
+
+=head1 VERSION
+
+This documentation refers to lcfg_resources library version @LCFG_VERSION@
+
+=head1 SYNOPSIS
+
+  #include <lcfg/resources.h>
+
+  LCFGResource * res = lcfgresource_new();
+
+  lcfgresource_set_name( res, "active" );
+  lcfgresource_set_type_as_string( res, "boolean" );
+  lcfgresource_set_value( res, "yes" );
+
+  char * as_str = lcfgresource_to_string(res, NULL, 0);
+
+  printf("%s\n", as_str);
+
+=head1 DESCRIPTION
+
+=head1 LCFG RESOURCE ATTRIBUTES
+
+The details for an LCFG resource are stored in a struct of type
+C<LCFGResource> which has the following members:
+
+=over
+
+=item name
+
+The name of the resource, this should always be specified. An LCFG
+resource name MUST be at least one character long. The first character
+MUST be alphabetical (e.g. in the C<[a-zA-Z]> set). Any other
+characters MUST be either alpha-numeric or an underscore character
+(e.g. in the C<[a-zA-Z0-9_]> set).
+
+=item type
+
+This is the type of the resource, the supported types are I<string>
+(the default), I<boolean>, I<integer>, I<list>, I<subscribe> and
+I<publish>. Note that the type is stored as an integer, there are
+C<set_type_as_string> and C<get_type_as_string> functions for setting
+and getting the type as a string. See below for full details on type
+handling.
+
+It is important to note that since 'publish' and 'subscribe' resources
+can hold any value which is to be mapped between profiles they are
+considered to be string-like for most operations. This does mean that
+sometimes extra care must be taken to handle them correctly.
+
+=item comment
+
+This is a string which holds an optional comment that may be
+associated with the type of the resource. User defined string-types
+often have comments which can be used in error messages when
+validation fails.
+
+=item value
+
+This is a string which holds the value for the resource. Note that the
+value is always stored as a string even if the resource is a boolean
+or integer type.
+
+=item template
+
+If an LCFG resource is a I<list> type then it will have an associated
+set of templates which are used for assembling sub-resource names. The
+template data is stored in a linked-list of C<LCFGTemplate>
+structs. There are C<set_template_as_string> and
+C<get_template_as_string> functions available for setting and getting
+the template as a string. See below for full details on template
+handling.
+
+=item context
+
+This is a string which represents the LCFG context expression for
+which the resource specification is applicable (or not). For example,
+this can be used to ensure that resources have different values during
+the initial install process for machine.
+
+=item priority
+
+This is an integer which holds the priority calculated from evaluating
+the context expression for the resource (if any). The default priority
+is zero. If a resource has a negative priority then it is considered
+to not be applicable for the current context state.
+
+=item derivation
+
+This is a string which contains a space-separated list of file
+locations (e.g. LCFG headers and package lists) where this resource
+specification was seen.
+
+=back
+
+=head1 FUNCTIONS
+
+The following functions are available for processing and manipulating
+individual LCFG resources. For complete details of the API see the
+C<lcfg/resources.h> header.
+
+=head2 CONSTRUCTORS AND DESTRUCTORS
+
+=over
+
+=item lcfgresource_new()
+
+Creates a new empty C<LCFGResource> struct and returns a pointer. All
+attributes will be set to their default values where appropriate and
+otherwise strings will be set to C<NULL>, see above for details.
+
+This will exit with a non-zero status if the necessary memory cannot
+be allocated.
+
+=item lcfgresource_clone(LCFGResource * res)
+
+Creates a new empty C<LCFGResource> struct, copies in all the contents
+of the existing struct and returns a pointer. Deep contents, such as
+any templates, will also be cloned.
+
+This will exit with a non-zero status if the necessary memory cannot
+be allocated.
+
+=item lcfgresource_destroy(LCFGResource * res)
+
+This frees all the memory associated with the LCFG resource. Note that
+there is support for a very simple reference counting system. If the
+reference count for the specified C<LCFGResource> struct is not zero
+then the memory will not be freed. See the documentation below for
+details of the C<lcfgresource_dec_ref> and C<lcfgresource_inc_ref>
+functions. It is safe to call this method on a C<NULL> value.
+
+=back
+
+=head2 ATTRIBUTE METHODS
+
+The following functions support querying and modification of the
+individual resource attributes in various other ways.
+
+=over
+
+=item lcfgresource_has_name( LCFGResource * res )
+
+Returns a boolean which indicates whether, or not, the resource has a
+value set for the I<name> field.
+
+=item lcfgresource_get_name( LCFGResource * res )
+
+Returns the current value of the I<name> field.
+
+=item lcfgresource_valid_name( char * string )
+
+Returns a boolean value which indicates whether the specified string
+is considered to be a valid LCFG resource name. See the attributes
+section above for details on what is considered to be valid.
+
+=item lcfgresource_set_name( LCFGResource * res, char * new_value )
+
+Sets the I<name> pointer in the C<LCFGResource> struct to the new
+location if the new string is a valid LCFG resource name. Any memory
+associated with a previous value will be freed.
+
+On success this function returns a true value, if the string is not a
+valid name then the name attribute will not be changed and a false
+value will be returned.
+
+=item lcfgresource_get_type( LCFGResource * res )
+
+Returns the current integer value of the I<type> field.
+
+=item lcfgresource_get_type_as_string( LCFGResource * res, int options )
+
+Returns a string which holds the name of the resource type
+(e.g. I<list>, I<integer> or I<boolean>). If there is a comment
+associated with this resource it will be appended with enclosing
+brackets (e.g. C<()>).
+
+If the resource is a list type then a string representation of any
+templates (using C<lcfgresource_get_template_as_string>) will also be
+appended after a C<:> (colon) separator character. This functionality
+can be disabled by specifying the C<LCFG_RESOURCE_OPT_NOTEMPLATES>
+option.
+
+Note that to avoid memory leaks the returned string will need to be
+freed when it is no longer required.
+
+=item lcfgresource_is_boolean( LCFGResource * res )
+
+Returns a boolean which indicates whether, or not, the resource type
+is I<boolean>.
+
+=item lcfgresource_is_integer( LCFGResource * res )
+
+Returns a boolean which indicates whether, or not, the resource type
+is I<integer>.
+
+=item lcfgresource_is_string( LCFGResource * res )
+
+Returns a boolean which indicates whether, or not, the resource type
+is I<string> or one of the string-like types I<publish> and I<subscribe>.
+
+=item lcfgresource_is_list( LCFGResource * res )
+
+Returns a boolean which indicates whether, or not, the resource type
+is I<list>.
+
+=item lcfgresource_set_type( LCFGResource * res, LCFGResourceType typenum )
+
+Sets the value of the integer C<type> field to the new value. If the
+type is to be changed then there either must not be an existing value
+or that value must be compatible with the new type. For example, if
+the current value is C<fish> it is illegal to request a new type of
+C<integer>, it would be necessary to first unset the current value by
+calling the C<lcfgresource_unset_value> function.
+
+Note that the new type must be found in the C<LCFGResourceType>
+enum. The permitted values are:
+
+=over
+
+=item C<LCFGRESOURCE_TYPE_STRING>
+
+=item C<LCFGRESOURCE_TYPE_INTEGER>
+
+=item C<LCFGRESOURCE_TYPE_BOOLEAN>
+
+=item C<LCFGRESOURCE_TYPE_LIST>
+
+=item C<LCFGRESOURCE_TYPE_SUBSCRIBE>
+
+=item C<LCFGRESOURCE_TYPE_PUBLISH>
+
+=back
+
+It is often easier, and safer, to use the
+C<lcfgresource_set_type_as_string> function, see below for details.
+
+=item lcfgresource_set_type_as_string( LCFGResource * res, char * new_type )
+
+The specified string is used to select the most appropriate type for
+the resource. The supported type strings are:
+
+=over
+
+=item C<string>
+
+=item C<boolean>
+
+=item C<integer>
+
+=item C<list>
+
+=item C<publish>
+
+=item C<subscribe>
+
+=back
+
+On success this function returns a true value, if the string is not a
+valid type string then the type attribute will not be changed and a
+false value will be returned.
+
+Optionally the string may begin with the LCFG resource type symbol
+C<%> (percent).
+
+Additionally, if a comment is found at the end of the specified type
+string and enclosed in brackets (i.e. C<()>) it will be used to set
+the comment for the resource.
+
+=item lcfgresource_valid_value_for_type( LCFGResourceType * type, char * value )
+
+This function returns a boolean which indicates whether a value is
+valid for a particular resource type.
+
+=item lcfgresource_has_value( LCFGResource * res )
+
+Returns a boolean which indicates whether, or not, the resource has a
+value set for the I<value> field.
+
+=item lcfgresource_get_value( LCFGResource * res )
+
+Returns the current value of the I<value> field.
+
+=item lcfgresource_set_value( LCFGResource * res, char * new_value )
+
+Sets the I<value> pointer in the C<LCFGResource> struct to the new
+location. Any memory associated with a previous value will be freed.
+
+On success this function returns a true value, if the string is not a
+valid value string then the value attribute will not be changed and a
+false value will be returned. The validity of the new value is checked
+using the C<lcfgresource_valid_value> function with the decision being
+made using the current resource type, see below for details.
+
+=item lcfgresource_unset_value( LCFGResource * res )
+
+Resets the I<value> pointer in the C<LCFGResource> struct to be
+C<NULL>. Any memory associated with a previous value will be freed.
+
+=item lcfgresource_valid_value( LCFGResource * res, char * value )
+
+This function can be used to check the validity of a value for the
+specified resource. If the value is valid then the function will
+return true otherwise it will return false.
+
+The checking is done by using the relevant function for the resource
+type. Note that for string and string-like types there is no validity
+checking. For the boolean type the C<lcfgresource_valid_boolean>
+function is called, for integers the C<lcfgresource_valid_integer>
+function is called and for lists the C<lcfgresource_valid_list>
+function is used, see below for details.
+
+=item lcfgresource_valid_boolean( char * value )
+
+This function will return true if the specified string is C<yes> for
+true values or empty string for false values. Otherwise this function
+will return false.
+
+When necessary, various strings can be canonicalised into the
+correct boolean form using the C<lcfgresource_canon_boolean> function,
+see below for details.
+
+=item lcfgresource_valid_integer( char * value )
+
+This will return true if the string contains only digits (i.e. in the
+set C<[0-9]>) with an optional C<-> (minus sign) as the first
+character. Otherwise this function will return false.
+
+=item lcfgresource_valid_list( char * value )
+
+This will return true if the string only contains valid LCFG tags
+separated by C< > (space) characters. An LCFG tag string must only
+contain the alpha-numeric characters or underscore (i.e. in the set
+C<[A-Za-z0-9_]>). Otherwise this function will return false.
+
+=item lcfgresource_canon_boolean( char * value )
+
+This function will return a string which represents the canonicalised
+form of the specified string. The following false values are
+supported: C<false>, C<no>, C<off> and C<0> along with the empty
+string. The following true values are supported: C<true>, C<yes>,
+C<on> and C<1>. Note that this function ignores the case of the
+characters in the specified string.
+
+For true values this function will return a C<yes> and for false
+values it will return an empty string. Note that to avoid memory leaks
+the returned string will need to be freed when it is no longer
+required.
+
+If the function fails to canonicalise the specified string it will
+return a C<NULL> value.
+
+=item lcfgresource_has_comment( LCFGResource * res )
+
+Returns a boolean which indicates whether, or not, the resource has a
+a value set for the I<comment> attribute.
+
+=item lcfgresource_get_comment( LCFGResource * res )
+
+Returns the current value of the I<comment> attribute.
+
+=item lcfgresource_set_comment( LCFGResource * res, char * string )
+
+Sets the I<comment> pointer in the C<LCFGResource> struct to the new
+location.  Any memory associated with a previous value will be freed.
+
+=item lcfgresource_has_template( LCFGResource * res )
+
+Returns a boolean which indicates whether, or not, the resource has a
+value set for the I<template> attribute.
+
+=item lcfgresource_get_template( LCFGResource * res )
+
+Returns the current value of the I<template> field.
+
+=item lcfgresource_get_template_as_string( LCFGResource * res )
+
+Returns a string which represents the set of templates for a list
+resource. Note that to avoid memory leaks the string will need to be
+freed when it is no longer required.
+
+=item lcfgresource_set_template
+
+Sets the I<template> pointer in the C<LCFGResource> struct to the new
+location. If there is a previous value for the I<template> field then
+the C<lcfgtemplate_destroy> function will be called.
+
+=item lcfgresource_set_template_as_string
+
+The specified string will be used to build a new linked-list of
+C<LCFGTemplate> structs using the C<lcfgtemplate_from_string>
+function. The newly built list will then be passed to the
+C<lcfgresource_set_template> function described above.
+
+=item lcfgresource_has_context( LCFGResource * res )
+
+Returns a boolean which indicates whether, or not, the resource has a
+value set for the I<context> field.
+
+=item lcfgresource_valid_context( char * expr )
+
+This returns a boolean which indicates whether the specified string is
+a valid LCFG context expression. This is done using the
+C<lcfgcontext_valid_expression> function, see the separate
+documentation for that function for details.
+
+=item lcfgresource_get_context( LCFGResource * res )
+
+Returns the current value of the I<context> field.
+
+=item lcfgresource_set_context( LCFGResource * res, char * value )
+
+Sets the I<context> pointer in the C<LCFGResource> struct to the new
+location if the new string is a valid LCFG context expression. Any
+memory associated with a previous value will be freed.
+
+=item lcfgresource_add_context( LCFGResource * res, char * value )
+
+Combines the extra context with any which is already specified. If
+nothing was previously specified then the new context will be
+identical to the extra context. If the extra context is identical to
+the current context then nothing will change, e.g. combining C<A> with
+itself always returns C<A>. If there is an existing context specified
+then the combination is done using the C<&> operator. The contexts
+will each be made "safe" by enclosing them in C<()> (round brackets)
+unless they are already enclosed in brackets. This is only really
+essential for complex expressions but it is much simpler this
+way. Prior to combination the two expressions will be sorted so that
+the new compound expression is always the same, for example combining
+C<A> and C<B> in any order will always result in C<(A) & (B)>.
+
+The combination of context expressions is done using the
+C<lcfgcontext_combine_expressions> function, for full details see the
+separate documentation for that function.
+
+=item lcfgresource_get_priority( LCFGResource * res )
+
+Returns the current integer value for the priority of the resource.
+
+=item lcfgresource_set_priority( LCFGResource * res, int priority )
+
+Sets the value of the priority to the specified integer value.
+
+=item lcfgresource_eval_priority( LCFGResource * res, LCFGContextList * ctxlist, char ** errmsg )
+
+This evaluates the priority for the resource based on the context
+expression (if any) for the resource and the C<LCFGContextList> which
+represents the current state of the contexts. If the resource has a
+context expression then the priority value is calculated using the
+C<lcfgctxlist_eval_expression> function, see the separate
+documentation for that function for full details. If there is no
+context expression for this resource then the priority will be zero.
+
+If the context expression is successfully evaluated this function will
+return true otherwise it will return false. In case of failure there
+may be an error message returned which can be inspected.
+
+=item lcfgresource_is_active( LCFGResource * res )
+
+This will return true if the current priority for the resource is zero
+or greater. If the priority is negative it will return false. This
+indicates whether or not a resource is applicable (active) for the
+current context state.
+
+=item lcfgresource_has_derivation( LCFGResource * res )
+
+Returns a boolean which indicates whether, or not, the resource has a
+value set for the I<derivation> field.
+
+=item lcfgresource_get_derivation( LCFGResource * res )
+
+Returns the current value of the I<derivation> field.
+
+=item lcfgresource_set_derivation
+
+Sets the I<derivation> pointer in the C<LCFGResource> struct to the new
+location. Any memory associated with a previous value will be freed.
+
+=item lcfgresource_add_derivation
+
+Adds the extra derivation string if it is not already present in the
+existing derivation string. It is appended using a single whitespace
+character as a separator.
+
+=back
+
+=head2 OUTPUT
+
+=over
+
+=item lcfgresource_to_status( const LCFGResource * res, const char * prefix, int options )
+
+This builds a string representation of the resource which can be used
+in an LCFG I<status> file. There will always be at least one line in
+the output string which represents the resource value. If the resource
+has a type other than I<string> it will contain additional type
+information. If the resource has derivation information that will also
+be included. The type information has a C<%> (percent) character
+prefix and the derivation information has a C<#> (octothorpe)
+character prefix. The type information is assembled using the
+C<lcfgresource_type_as_string> function. Thus the returned string will
+contain between 1 and 3 lines of output.
+
+Optionally a prefix may be specified (typically that is the name of
+the component) which will be prepended to the resource name with a
+C<.> (period) character separator.
+
+=item lcfgresource_to_string( const LCFGResource * res, const char * prefix, int options )
+
+This builds a string representation of the resource which shows the
+name, value and context expression (when required). The name and value
+are separated using an C<=> (equals sign) character. Typically this is
+of the form C<resname=value> or C<compname.resname=value>.
+
+Any context expression is prepended to the string after the value and
+is enclosed in C<[]> (square brackets). If the
+C<LCFG_RESOURCE_OPT_NOCONTEXT> option is specified then the assembled
+string will never contain any context information.
+
+Optionally a prefix may be specified (typically that is the name of
+the component) which will be prepended to the resource name with a
+C<.> (period) separator character.
+
+A newline character will be appended to the string if the
+C<LCFG_RESOURCE_OPT_NEWLINE> option is specified.
+
+It is possible to avoid the inclusion of any value (and also the C<=>
+separator character) in the assembled string by specifying the
+C<LCFG_RESOURCE_OPT_NOVALUE> option.
+
+=item lcfgresource_print( const LCFGResource * res, const char * prefix, const char * style, int options, FILE * out )
+
+This will stringify the result according to the desired style and
+print the result to the specified file handle. If the style is
+specified as "status" then the C<lcfgresource_to_status> function will
+be used for stringification, otherwise the C<lcfgresource_to_string>
+function will be used. Optionally, a prefix and options may be
+specified which will be passed through to the required stringification
+function.
+
+=back
+
+=head2 REFERENCE COUNTING
+
+It is occasionally useful to be able to keep track of the number of
+references to an C<LCFGResource> struct. The C<lcfgresource_destroy>
+function will not free memory for a struct when the reference count is
+greater than zero. This makes it possible to avoid accidentally
+freeing memory at one point in the code when it is still required
+elsewhere. For example, if it is stored in an C<LCFGComponent>
+linked-list but also needs to be referred to separately. The reference
+counting system is very simple, it is important to note that there is
+currently no support for locking so this is not thread-safe. The
+functions are:
+
+=over
+
+=item lcfgresource_inc_ref(LCFGResource * res)
+
+Increment by one the reference count for this struct.
+
+=item lcfgresource_dec_ref(LCFGResource * res)
+
+Decrement by one the reference count for this struct.
+
+=back
+
+=head2 OTHERS
+
+=over
+
+=item lcfgresource_compare( LCFGResource * res1, LCFGResource * res2 )
+
+This function returns an integer which indicates whether or not the
+name for the first resource is less than, greater than or the same as
+the name for the second resource. This is intended to be used for
+sorting resources by name.
+
+=item lcfgresource_same_value( LCFGResource * res1, LCFGResource * res2 )
+
+This function returns a boolean which indicates whether the two
+resources have the same value.
+
+=item lcfgresource_same_type( LCFGResource * res1, LCFGResource * res2 )
+
+This function returns a boolean which indicates whether the two
+resources have the same type.
+
+=item lcfgresource_equals( LCFGResource * res1, LCFGResource * res2 )
+
+This function returns a boolean which indicates whether the two
+resources have the same values for the I<name>, I<value> and
+I<context> attributes.
+
+The template, type, comment, priority and derivation attributes are
+NOT compared.
+
+=item lcfgresource_build_name( const LCFGTemplate * templates, const LCFGTagList  * taglist, char * field_name, char ** errmsg )
+
+This function is used to generate a new resource name using the parent
+templates, tags and the current field name.
+
+The templates will be searched for the appropriate template for the
+field name, if none is found an error will occur and this function
+will return C<NULL>.
+
+Working backwards through the template the placeholder C<$> (dollar)
+characters are replaced with tags. 
+
+This is only likely to be useful for regenerating resources from the
+LCFG XML serialisation file format.
+
+=item lcfgresource_build_message( LCFGResource * res, char * component, char * fmt, ... )
+
+This function can be used to generate useful log messages when errors
+occur. It will create a base for the message using all available
+information for the resource (e.g. name, type, derivation). Optionally
+a component name can be specified which will be used as a prefix for
+the resource name. The user must specify a C format string, along with
+zero or more arguments, which is used to generate the second part of
+the output string.
+
+=back
+
+=head1 SEE ALSO
+
+lcfgresourcelib(3), lcfgcomponent(3)
+
+=head1 PLATFORMS
+
+This is the list of platforms on which we have tested this
+software. We expect this software to work on any Unix-like platform.
+
+@LCFG_PLATFORMS@
+
+=head1 BUGS AND LIMITATIONS
+
+Please report any bugs or problems (or praise!) to bugs@lcfg.org,
+feedback and patches are also always very welcome.
+
+=head1 AUTHOR
+
+@LCFG_AUTHOR@
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (C) 2015-2016 University of Edinburgh. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GPL, version 2 or later.
+
+=cut

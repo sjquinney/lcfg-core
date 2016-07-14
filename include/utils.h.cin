@@ -1,0 +1,95 @@
+/*************************************************************************
+
+  LCFG Utility Library
+
+  @LCFG_AUTHOR@
+  Version @LCFG_VERSION@ : @LCFG_DATE@
+
+  @MSG@
+
+*************************************************************************/
+
+#ifndef LCFG_UTILS_H
+#define LCFG_UTILS_H
+
+#include <stdbool.h>
+#include <stdio.h>
+#include <sys/types.h>
+
+#define LOGDIR "@LCFGLOG@"
+#define PIDFILE "@LCFGTMP@/client/client.pid"
+#define PROGRESSFILE "@LCFGTMP@/utils.progress"
+#define LCFGACK "@LCFGSBIN@/lcfgack"
+
+extern int LCFG_FancyStatus( void );
+extern char *LCFG_TimeStamp( void );
+extern int LCFG_ShiftPressed( void );
+
+extern int LCFG_StartProgress( char *comp, char *msg );
+extern int LCFG_Progress();
+extern int LCFG_EndProgress();
+
+extern void LCFG_SetFdOutput( int fd );
+extern void LCFG_SetOutput( FILE *fp );
+extern void LCFG_Fail( char *comp, char *msg );
+extern void LCFG_Error( char *comp, char *msg );
+extern void LCFG_Warn( char *comp, char *msg );
+extern void LCFG_Event( char *comp, char *event, char *msg );
+extern void LCFG_ClearEvent( char *comp, char *event );
+extern void LCFG_Info( char *comp, char *msg );
+extern void LCFG_Debug( char *comp, char *msg );
+extern void LCFG_OK( char *comp, char *msg );
+extern void LCFG_Log( char *comp, char *msg );
+extern void LCFG_LogPrefix( char *comp, char *pfx, char *msg );
+extern void LCFG_Notify( char *comp, char *tag, char *msg );
+extern void LCFG_Ack();
+
+/* New functions only available in version 2 of lcfgutils library */
+
+char * lcfgutils_safe_tmpfile( const char * path );
+
+char * lcfgutils_join_strings( const char * str1,
+                               const char * str2,
+                               const char * sep );
+
+bool lcfgutils_endswith( const char * str, const char * suffix );
+
+char * lcfgutils_basename( const char * path, const char * suffix );
+
+char * lcfgutils_dirname( const char * path);
+
+void lcfgutils_chomp( char * str );
+
+void lcfgutils_trim_whitespace( char * str );
+
+char * lcfgutils_catfile( const char * dir, const char * file );
+
+size_t lcfgutils_decode_html_entities_utf8(char *dest, const char *src);
+
+/* MD5 support - for secure mode */
+
+typedef unsigned char md5_byte_t; /* 8-bit byte */
+typedef unsigned int md5_word_t; /* 32-bit word */
+
+/* Define the state of the MD5 Algorithm. */
+typedef struct md5_state_s {
+    md5_word_t count[2];	/* message length in bits, lsw first */
+    md5_word_t abcd[4];		/* digest buffer */
+    md5_byte_t buf[64];		/* accumulate block */
+} md5_state_t;
+
+/* Initialize the algorithm. */
+void lcfgutils_md5_init(md5_state_t *pms);
+
+/* Append a string to the message. */
+void lcfgutils_md5_append(md5_state_t *pms, const md5_byte_t *data, int nbytes);
+
+/* Finish the message and return the digest. */
+void lcfgutils_md5_finish(md5_state_t *pms, md5_byte_t digest[16]);
+
+bool lcfgutils_md5_hexdigest( md5_byte_t digest[16], char ** result )
+  __attribute_warn_unused_result__;
+
+#endif /* LCFG_UTILS_H */
+
+/* eof */

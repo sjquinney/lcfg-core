@@ -1,0 +1,204 @@
+=head1 NAME
+
+lcfgpackagelist - Library for handling lists of LCFG package specifications.
+
+=head1 VERSION
+
+This documentation refers to lcfgpackagelist version @LCFG_VERSION@
+
+=head1 SYNOPSIS
+
+  #include <lcfg/packages.h>
+
+  LCFGPackageList * pkglist;
+  char * errmsg;
+
+  lcfgpkglist_from_rpmlist( "rpmlist", &pkglist, &errmsg );
+
+  lcfgpkglist_print( pkglist, "x86_64", NULL, 0, stdout );
+
+  lcfgpkglist_destroy(pkgnode);
+
+=head1 DESCRIPTION
+
+The LCFG packagelib library provides all the functions and structures
+necessary for parsing and manipulating LCFG package
+specifications.
+
+This documentation describes the I<lcfgpkglist> and I<lcfgpkgnode>
+suite of functions which can be used for processing lists of LCFG
+package specifications.
+
+An LCFGPackageList struct is used to represent a list of LCFG package
+specifications. It does this using a linked-list of LCFGPackageNode
+structs. An LCFGPackageNode struct holds a reference to an
+LCFGPackageSpec struct and also a pointer to a next item so that it
+can be used to implement a single-linked list.
+
+=head1 FUNCTIONS
+
+The following functions are available for processing and manipulating
+lists of LCFG package specifications. For complete details of the API
+see the C<lcfg/packages.h> header.
+
+=head2 CONSTRUCTORS AND DESTRUCTORS
+
+There are various ways to create new C<LCFGPackageList> structs.  Note
+that when no longer required the contents of the struct should be
+released using the C<lcfgpkglist_destroy> function.
+
+=over
+
+=item lcfgpkglist_new()
+
+Creates a new empty LCFGPackageList struct and returns a pointer.
+
+=item lcfgpkgnode_new(LCFGPackageSpec * pkgspec)
+
+Creates a new LCFGPackageNode struct, stores the pointer to the
+LCFGPackageSpec struct and returns a pointer. It is not normally
+necessary to call this function directly. To add an LCFGPackageSpec
+struct to an LCFGPackageList use a function such as
+C<lcfgpkglist_append>.
+
+=item lcfgpkglist_from_rpmlist( char * filename, LCFGPackageList ** pkglist, char ** errmsg )
+
+The updaterpms package management tool uses I<rpmlist> files to
+discover what packages are available in a repository. An I<rpmlist>
+file is just a simple text file which contains a list of available RPM
+files, one per line.
+
+This function opens the specified rpmlist file and reads it
+line-by-line. Each line is parsed using the
+C<lcfgpkgspec_from_rpm_filename> function. The derivation field is set
+for each LCFGPackageSpec struct to indicate the line of the file on
+which it was specified.
+
+The integer value returned indicates success (zero) or failure
+(non-zero). On success the pkglist pointer is updated to point to the
+the newly created LCFGPackageList struct. If a recoverable error
+occurs the errmsg pointer should point to a string which explains what
+failed.
+
+=item lcfgpkglist_destroy(LCFGPackageList * pkglist)
+
+This frees all memory associated with the LCFGPackageList struct. It
+will remove each LCFGPackageNode from the list and free the memory. It
+also frees the memory for each LCFGPackageSpec struct held in each
+node by calling C<lcfgpkgspec_destroy> (if there are no other
+references to the struct).
+
+=back
+
+=head2 ACCESSORS
+
+=over
+
+=item lcfgpkglist_head( LCFGPackageList * pkglist )
+
+Returns a pointer to the head LCFGPackageNode struct.
+
+=item lcfgpkglist_tail( LCFGPackageList * pkglist )
+
+Returns a pointer to the tail LCFGPackageNode struct.
+
+=item lcfgpkglist_size( LCFGPackageList * pkglist )
+
+Returns an integer which is the number of items in the list.
+
+=item lcfgpkglist_is_empty( LCFGPackageList * pkglist )
+
+Returns a boolean value which indicates whether, or not, the list is
+empty.
+
+=back
+
+=head2 OTHERS
+
+=over
+
+=item lcfgpkglist_next(LCFGPackageNode * pkgnode)
+
+This returns the next node for the specified LCFGPackageNode. Note
+that if the specified node is the tail of the list this will return
+NULL.
+
+=item lcfgpkglist_pkgspec(LCFGPackageNode * pkgnode)
+
+This returns the pointer to the LCFGPackageSpec struct which is stored
+in the specified LCFGPackageNode.
+
+=item lcfgpkglist_insert_next( LCFGPackageList * pkglist, LCFGPackageNode * pkgnode, LCFGPackageSpec * pkgspec )
+
+Creates a new LCFGPackageNode to wrap the pointer to the
+LCFGPackageSpec struct and increments the reference count. The new
+node is then inserted into the package list as the next node after the
+specified LCFGPackageNode. If the specified node is NULL then it is
+inserted at the head of the list. If the specified node does not
+currently have a next node then the new node will be considered to be
+the tail of the list.
+
+Returns an integer value which indicates if the insertion was
+succcesful (zero) or not (non-zero).
+
+=item lcfgpkglist_append( LCFGPackageList * pkglist, LCFGPackageSpec * pkgspec )
+
+Creates a new LCFGPackageNode to wrap the pointer to the
+LCFGPackageSpec struct and increments the reference count. The new
+node is then inserted at the tail of the package list.
+
+Returns an integer value which indicates if the insertion was
+succcesful (zero) or not (non-zero).
+
+=item lcfgpkglist_remove_next( LCFGPackageList * pkglist, LCFGPackageNode * pkgnode, LCFGPackageSpec ** pkgspec )
+
+Removes the next LCFGPackageNode after the specified node in the
+LCFGPackageList. The memory associated with the removed
+LCFGPackageNode struct will be freed and the reference count of the
+LCFGPackageSpec struct will be decremented.
+
+The C<pkgspec> parameter will be updated to be a pointer to the
+associated LCFGPackageSpec struct, it will not be freed. If the
+specified node is NULL then the head node in the list will be removed.
+
+Returns an integer value which indicates if the insertion was
+succcesful (zero) or not (non-zero).
+
+=item lcfgpkglist_print( LCFGPackageList * pkglist, char * defarch, char * style, int options, FILE * stream )
+
+This will call the C<lcfgpkgspec_print> function with the
+LCFGPackageSpec struct held in each node of the LCFGPackageNode
+singly-linked list. The C<defarch>, C<style>, C<options> and C<stream>
+parameters are passed directly to that function, see the
+lcfgpackagespec(3) manual page for details.
+
+=back
+
+=head1 SEE ALSO
+
+lcfgpackagelib(3), lcfgpackagespec(3), lcfgpackageiterator(3)
+
+=head1 PLATFORMS
+
+This is the list of platforms on which we have tested this
+software. We expect this software to work on any Unix-like platform.
+
+@LCFG_PLATFORMS@
+
+=head1 BUGS AND LIMITATIONS
+
+Please report any bugs or problems (or praise!) to bugs@lcfg.org,
+feedback and patches are also always very welcome.
+
+=head1 AUTHOR
+
+@LCFG_AUTHOR@
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (C) 2015 University of Edinburgh. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GPL, version 2 or later.
+
+=cut
