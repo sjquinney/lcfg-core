@@ -1,2462 +1,2187 @@
-2016-07-13  SVN: new release
+2016-07-14  SVN: new release
 
-	* Release: 1.25.2
+	* Release: 1.25.3
+
+2016-07-14 08:16  squinney@INF.ED.AC.UK
+
+	* lcfg.yml: Changed name for project
+
+2016-07-14 08:12  squinney@INF.ED.AC.UK
+
+	* .: Renamed lcfg-profilelib as lcfg-core
+
+2016-07-14 08:07  squinney@INF.ED.AC.UK
+
+	* Added some missing build dependencies. Reinstated the various
+	  utilities which were previously shipped with lcfg-utils. This
+	  package now provides lcfg-utils and lcfg-utils-devel.
+
+2016-07-14 08:06  squinney@INF.ED.AC.UK
+
+	* Set cmake project type to 'C'
+
+2016-07-13 15:17  squinney@INF.ED.AC.UK
+
+	* lcfg-profilelib release: 1.25.2
 
 2016-07-13 14:47  squinney@INF.ED.AC.UK
 
-	* context/context.c: lcfgcontext_from_string now removes all
-	  leading and trailing whitespace from names and values
+	* lcfgcontext_from_string now removes all leading and trailing
+	  whitespace from names and values
 
 2016-07-13 09:16  squinney@INF.ED.AC.UK
 
-	* profile/profile.c: lcfgprofile_has_component now only searches
-	  the component list when it is not NULL.
-	  lcfgprofile_find_component returns NULL immediately if the
-	  component list is NULL
+	* lcfgprofile_has_component now only searches the component list
+	  when it is not NULL. lcfgprofile_find_component returns NULL
+	  immediately if the component list is NULL
 
 2016-07-13 09:15  squinney@INF.ED.AC.UK
 
-	* include/components.h, resources/complist.c:
-	  lcfgcomplist_find_node will now return a NULL when the list is
+	* lcfgcomplist_find_node will now return a NULL when the list is
 	  NULL
 
 2016-07-12 09:57  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c, include/context.h: Altered
-	  lcfgctxlist_find_context and lcfgctxlist_find_node so that they
-	  return NULL when the ctxlist is NULL
+	* Altered lcfgctxlist_find_context and lcfgctxlist_find_node so
+	  that they return NULL when the ctxlist is NULL
 
 2016-07-12 09:40  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.25.1
+	* lcfg-profilelib release: 1.25.1
 
 2016-07-11 15:22  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: Fixed arch handling in lcfgpkgspec_to_xml
+	* Fixed arch handling in lcfgpkgspec_to_xml
 
 2016-07-11 15:12  squinney@INF.ED.AC.UK
 
-	* include/packages.h, packages/packages.c: Added lcfgpkgspec_to_xml
-	  function, this generates the format used in the XML profile for
-	  server/client transfer
+	* Added lcfgpkgspec_to_xml function, this generates the format used
+	  in the XML profile for server/client transfer
 
 2016-07-11 14:11  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: improved default error message for
-	  merge_pkgspec
+	* improved default error message for merge_pkgspec
 
 2016-07-11 14:04  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: Fixed NULL check on msg variable
+	* Fixed NULL check on msg variable
 
 2016-07-11 13:54  squinney@INF.ED.AC.UK
 
-	* packages/packages.c, packages/pkglists.c: Added support for '~'
-	  prefix which means 'append to list only if the package is not
-	  already present in the list'
+	* Added support for '~' prefix which means 'append to list only if
+	  the package is not already present in the list'
 
 2016-07-11 13:39  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: Assign message correctly when merging and
-	  prefix conflict occurs
+	* Assign message correctly when merging and prefix conflict occurs
 
 2016-07-11 13:35  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: Allow '=' as a prefix, this is for pinning a
-	  specific version which cannot be overridden
+	* Allow '=' as a prefix, this is for pinning a specific version
+	  which cannot be overridden
 
 2016-07-11 13:25  squinney@INF.ED.AC.UK
 
-	* include/common.h, packages/pkglists.c: fixed variable name
+	* fixed variable name
 
 2016-07-11 13:24  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: Improved the logic of
-	  lcfgpkglist_merge_pkgspec so that it is simpler to reject when a
-	  conflict occurs
+	* Improved the logic of lcfgpkglist_merge_pkgspec so that it is
+	  simpler to reject when a conflict occurs
 
 2016-07-01 15:10  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.25.0
+	* lcfg-profilelib release: 1.25.0
 
 2016-07-01 14:34  squinney@INF.ED.AC.UK
 
-	* bdb/read.c, include/bdb.h, include/packages.h, lcfg.yml,
-	  packages/pkglists.c, profile/profile.c, xml/packages.c: Reworked
-	  the lcfgpkglist_merge_pkgspec and lcfgpkglist_merge_list
+	* Reworked the lcfgpkglist_merge_pkgspec and lcfgpkglist_merge_list
 	  functions so that they can now take options which control which
 	  merge rules apply. This can now handle merging based on prefix as
 	  well as priority
 
 2016-07-01 05:50  squinney@INF.ED.AC.UK
 
-	* bdb/read.c, bdb/write.c, packages/parse_pkgspec.c,
-	  packages/pkglists.c, packages/rpm.c, xml/components.c,
-	  xml/lcfg_xml_reader.c, xml/packages.c, xml/resource.c: Minor code
-	  tidying
+	* Minor code tidying
 
 2016-07-01 05:37  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, profile/profile.c, resources/complist.c,
-	  resources/components.c, resources/diff.c, resources/mutate.c,
-	  resources/tags.c, resources/templates.c: Minor code tidying
+	* Minor code tidying
 
 2016-06-30 14:20  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.24.4
+	* lcfg-profilelib release: 1.24.4
 
 2016-06-30 14:20  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c, include/components.h, include/context.h,
-	  include/differences.h, include/packages.h, include/profile.h,
-	  include/tags.h, lcfg.yml, packages/pkglists.c, profile/diff.c,
-	  profile/profile.c, resources/complist.c, resources/components.c,
-	  resources/diff.c, resources/tags.c, resources/templates.c: Added
-	  lots more nonnull attributes to function declarations
+	* Added lots more nonnull attributes to function declarations
 
 2016-06-30 13:42  squinney@INF.ED.AC.UK
 
-	* include/bdb.h, include/components.h, include/context.h,
-	  include/differences.h, include/packages.h, include/profile.h,
-	  include/tags.h, include/templates.h, include/xml.h, lcfg.yml:
-	  Added nonnull attributes to more functions
+	* Added nonnull attributes to more functions
 
 2016-06-30 07:53  squinney@INF.ED.AC.UK
 
-	* context/context.c, context/ctxlist.c, include/components.h,
-	  include/context.h, include/differences.h, include/packages.h,
-	  include/profile.h, include/resources.h, include/tags.h,
-	  packages/packages.c, packages/pkglists.c, profile/profile.c,
-	  resources/complist.c, resources/components.c, resources/diff.c,
-	  resources/resources.c, resources/tags.c: Functions which take no
-	  arguments are now declared with void
+	* Functions which take no arguments are now declared with void
 
 2016-06-30 07:36  squinney@INF.ED.AC.UK
 
-	* include/components.h: fixed declaration for
-	  lcfgresourcenode_destroy
+	* fixed declaration for lcfgresourcenode_destroy
 
 2016-06-30 07:32  squinney@INF.ED.AC.UK
 
-	* context/setctx.c, context/tools.c, include/components.h,
-	  include/packages.h, include/resources.h,
-	  packages/parse_pkgspec.c, xml/read.c: Added more missing
-	  declarations to headers. Marked some functions as static
+	* Added more missing declarations to headers. Marked some functions
+	  as static
 
 2016-06-30 07:16  squinney@INF.ED.AC.UK
 
-	* include/context.h, lcfg.yml: needs to include stdio for FILE
-	  type.
+	* needs to include stdio for FILE type.
 
 2016-06-29 10:25  squinney@INF.ED.AC.UK
 
-	* packages/packages.c, packages/pkglists.c, packages/rpm.c: Removed
-	  unnecessary non-null checks
+	* Removed unnecessary non-null checks
 
 2016-06-29 10:20  squinney@INF.ED.AC.UK
 
-	* include/packages.h: removed extra semi-colon
+	* removed extra semi-colon
 
 2016-06-29 10:16  squinney@INF.ED.AC.UK
 
-	* include/bdb.h, include/components.h, include/differences.h,
-	  include/packages.h, include/profile.h, include/resources.h,
-	  include/tags.h, include/templates.h, include/xml.h: Added
-	  attributes to more functions and made the existing ones
+	* Added attributes to more functions and made the existing ones
 	  consistent
 
 2016-06-29 10:02  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: tidied up calls to free()
+	* tidied up calls to free()
 
 2016-06-29 09:56  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Tidied up a couple of checks on parameter
-	  values
+	* Tidied up a couple of checks on parameter values
 
 2016-06-29 09:51  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/resources.c: Added missing 'const'
+	* Added missing 'const'
 
 2016-06-29 09:50  squinney@INF.ED.AC.UK
 
-	* include/resources.h: Set attributes on many functions to help
-	  avoid calling with null value
+	* Set attributes on many functions to help avoid calling with null
+	  value
 
 2016-06-29 09:18  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c: moved list of type
-	  names so it's not defined multiple times
+	* moved list of type names so it's not defined multiple times
 
 2016-06-29 09:14  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: fixed typo in
-	  lcfgresource_get_type_as_string
+	* fixed typo in lcfgresource_get_type_as_string
 
 2016-06-29 09:01  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c: Added list of type
-	  names to make it easier to lookup using the values in the
-	  LCFGResourceType enum
+	* Added list of type names to make it easier to lookup using the
+	  values in the LCFGResourceType enum
 
 2016-06-29 08:37  squinney@INF.ED.AC.UK
 
-	* utils/utils.c: Reworked lcfgutils_trim_whitespace so that it uses
-	  size_t types for string lengths
+	* Reworked lcfgutils_trim_whitespace so that it uses size_t types
+	  for string lengths
 
 2016-06-24 15:02  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c, include/context.h: Tidied the code by adding
-	  nonnull attributes to many function specs
+	* Tidied the code by adding nonnull attributes to many function
+	  specs
 
 2016-06-24 14:46  squinney@INF.ED.AC.UK
 
-	* context/context.c, include/context.h: Tidied the code by adding
-	  nonnull attributes to many function specs
+	* Tidied the code by adding nonnull attributes to many function
+	  specs
 
 2016-06-23 14:18  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.24.3
+	* lcfg-profilelib release: 1.24.3
 
 2016-06-23 14:18  squinney@INF.ED.AC.UK
 
-	* bdb/write.c: fixed lcfgprofile_get_meta function call
+	* fixed lcfgprofile_get_meta function call
 
 2016-06-23 12:06  squinney@INF.ED.AC.UK
 
-	* bdb/write.c, lcfg.yml: The BDB key namespace is actually just
-	  profile.node rather than the full node name with domain
+	* The BDB key namespace is actually just profile.node rather than
+	  the full node name with domain
 
 2016-06-23 11:55  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, utils/utils.c: Tidied lcfgutils_join_strings
+	* Tidied lcfgutils_join_strings
 
 2016-06-23 11:54  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Fixed logic in lcfgresource_value_is_empty
+	* Fixed logic in lcfgresource_value_is_empty
 
 2016-06-23 11:54  squinney@INF.ED.AC.UK
 
-	* profile/profile.c: fixed logic in lcfgprofile_nodename for
-	  checking if profile component was found
+	* fixed logic in lcfgprofile_nodename for checking if profile
+	  component was found
 
 2016-06-23 11:10  squinney@INF.ED.AC.UK
 
-	* bdb/read.c, include/bdb.h, lcfg.yml, xml/lcfg_xml_reader.c: Added
-	  namespace support to lcfgprofile_from_bdb and
+	* Added namespace support to lcfgprofile_from_bdb and
 	  lcfgcomponent_from_bdb, if specified the keys for the DB entries
 	  must have that namespace (i.e. same hostname)
 
 2016-06-23 10:02  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, profile/profile.c: fixed lcfgprofile_get_meta
+	* fixed lcfgprofile_get_meta
 
 2016-06-23 09:56  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, profile/profile.c: need to include utils.h
+	* need to include utils.h
 
 2016-06-23 09:54  squinney@INF.ED.AC.UK
 
-	* bdb/write.c, include/profile.h, include/resources.h,
-	  profile/profile.c, resources/resources.c: Added new
-	  lcfgprofile_get_meta function which can be used to easily lookup
-	  values of resources in the 'profile' component. Also added
-	  lcfgprofile_nodename which returns the nodename for the profile
-	  based on the profile.node and profile.domain resources.
-	  lcfgprofile_to_bdb will now use lcfgprofile_nodename to get the
-	  'namespace' for keys when none is specified
+	* Added new lcfgprofile_get_meta function which can be used to
+	  easily lookup values of resources in the 'profile' component.
+	  Also added lcfgprofile_nodename which returns the nodename for
+	  the profile based on the profile.node and profile.domain
+	  resources. lcfgprofile_to_bdb will now use lcfgprofile_nodename
+	  to get the 'namespace' for keys when none is specified
 
 2016-06-21 08:13  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.24.2
+	* lcfg-profilelib release: 1.24.2
 
 2016-06-21 08:10  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, profile/diff.c: reworked part of lcfgprofile_diff to
-	  improve error checking
+	* reworked part of lcfgprofile_diff to improve error checking
 
 2016-06-21 08:10  squinney@INF.ED.AC.UK
 
-	* context/tools.c: fixed lcfgcontext_update_pending so the changed
-	  variable is always defined before use
+	* fixed lcfgcontext_update_pending so the changed variable is
+	  always defined before use
 
 2016-06-21 08:09  squinney@INF.ED.AC.UK
 
-	* bdb/read.c: silenced warning about calling lcfgtaglist_append
+	* silenced warning about calling lcfgtaglist_append
 
 2016-06-20 15:08  squinney@INF.ED.AC.UK
 
-	* xml/read.c: need _GNU_SOURCE for asprintf
+	* need _GNU_SOURCE for asprintf
 
 2016-06-20 14:46  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Cast from ssize_t to size_t for comparison
-	  in lcfgresource_build_key(), safe enough since already checked
-	  it's not negative
+	* Cast from ssize_t to size_t for comparison in
+	  lcfgresource_build_key(), safe enough since already checked it's
+	  not negative
 
 2016-06-20 14:35  squinney@INF.ED.AC.UK
 
-	* packages/packages.c, packages/rpm.c: Reworked some assert() calls
-	  to avoid compiler warnings about signed/unsigned comparisons
+	* Reworked some assert() calls to avoid compiler warnings about
+	  signed/unsigned comparisons
 
 2016-06-20 13:46  squinney@INF.ED.AC.UK
 
-	* packages/packages.c, packages/rpm.c, resources/diff.c: Use size_t
-	  rather than ssize_t to avoid sign problems with comparisons
+	* Use size_t rather than ssize_t to avoid sign problems with
+	  comparisons
 
 2016-06-20 13:31  squinney@INF.ED.AC.UK
 
-	* bdb/read.c, profile/diff.c, xml/read.c: More tweaks to resolve
-	  compiler warnings
+	* More tweaks to resolve compiler warnings
 
 2016-06-20 09:29  squinney@INF.ED.AC.UK
 
-	* packages/packages.c, packages/pkglists.c, resources/diff.c: more
-	  fixes for compiler warnings
+	* more fixes for compiler warnings
 
 2016-06-20 09:11  squinney@INF.ED.AC.UK
 
-	* include/differences.h, resources/diff.c, resources/templates.c:
-	  Small fixes for compiler warnings
+	* Small fixes for compiler warnings
 
 2016-06-20 09:01  squinney@INF.ED.AC.UK
 
-	* resources/components.c, resources/tags.c: Small fixes for
-	  compiler warnings
+	* Small fixes for compiler warnings
 
 2016-06-17 10:49  squinney@INF.ED.AC.UK
 
-	* resources/diff.c: various minor fixes to resolve warnings
+	* various minor fixes to resolve warnings
 
 2016-06-17 09:21  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: fixed function name in get_type_as_string
+	* fixed function name in get_type_as_string
 
 2016-06-17 09:19  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Various minor improvements to reduce
-	  number of warnings
+	* Various minor improvements to reduce number of warnings
 
 2016-06-17 08:49  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c, context/setctx.c, context/tools.c,
-	  include/context.h: Check status returned by various functions
+	* Check status returned by various functions
 
 2016-06-16 14:22  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.24.1
+	* lcfg-profilelib release: 1.24.1
 
 2016-06-16 14:21  squinney@INF.ED.AC.UK
 
-	* context/context.c, context/ctxlist.c, context/tools.c,
-	  include/context.h, lcfg.yml: pending_to_active no longer returns
-	  the value for the 'secure' context, can be found from the active
-	  list when required. Added has_name function to simplify perl
-	  wrapper code. find_ctx is renamed to find_context for clarity
+	* pending_to_active no longer returns the value for the 'secure'
+	  context, can be found from the active list when required. Added
+	  has_name function to simplify perl wrapper code. find_ctx is
+	  renamed to find_context for clarity
 
 2016-06-16 12:10  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.24.0
+	* lcfg-profilelib release: 1.24.0
 
 2016-06-16 12:09  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt: Reverted change to list of which sub-dirs get
-	  built
+	* Reverted change to list of which sub-dirs get built
 
 2016-06-16 10:53  squinney@INF.ED.AC.UK
 
-	* context/tools.c: update_pending now checks that the context
-	  directory exists and is accessible before doing any work
+	* update_pending now checks that the context directory exists and
+	  is accessible before doing any work
 
 2016-06-16 10:41  squinney@INF.ED.AC.UK
 
-	* context/context.c: Modified the way trailing whitespace is
-	  avoided in lcfgcontext_from_string and avoid dupping an empty
-	  string
+	* Modified the way trailing whitespace is avoided in
+	  lcfgcontext_from_string and avoid dupping an empty string
 
 2016-06-15 14:39  squinney@INF.ED.AC.UK
 
-	* context/tools.c: Check context directory exists before starting
-	  work in pending2active
+	* Check context directory exists before starting work in
+	  pending2active
 
 2016-06-15 14:30  squinney@INF.ED.AC.UK
 
-	* context/tools.c: Reworked pending2active to avoid memory leaks
-	  when errors occur
+	* Reworked pending2active to avoid memory leaks when errors occur
 
 2016-06-15 14:18  squinney@INF.ED.AC.UK
 
-	* context/tools.c, include/context.h: Finishing off pending2active
+	* Finishing off pending2active
 
 2016-06-14 15:25  squinney@INF.ED.AC.UK
 
-	* include/context.h: Added spec for lcfgctxlist_find_ctx
+	* Added spec for lcfgctxlist_find_ctx
 
 2016-06-14 15:03  squinney@INF.ED.AC.UK
 
-	* context/tools.c: lcfgcontext_pending2active now retrieves the
-	  securesig when it is available
+	* lcfgcontext_pending2active now retrieves the securesig when it is
+	  available
 
 2016-06-14 14:13  squinney@INF.ED.AC.UK
 
-	* context/tools.c: Fixed return values for update_pending
+	* Fixed return values for update_pending
 
 2016-06-14 14:06  squinney@INF.ED.AC.UK
 
-	* context/setctx.c: Fixed call to setctx_update
+	* Fixed call to setctx_update
 
 2016-06-14 14:05  squinney@INF.ED.AC.UK
 
-	* context/tools.c, include/context.h: Updated lcfgcontext_tmpfile
-	  to return a FILE pointer as well as the filename
+	* Updated lcfgcontext_tmpfile to return a FILE pointer as well as
+	  the filename
 
 2016-06-14 13:57  squinney@INF.ED.AC.UK
 
-	* context/tools.c: New lcfgcontext_update_pending to replace
-	  store_pending, this has locking and should be more reliable
+	* New lcfgcontext_update_pending to replace store_pending, this has
+	  locking and should be more reliable
 
 2016-06-14 11:05  squinney@INF.ED.AC.UK
 
-	* context/setctx.c: Rewrote setctx_update to use
-	  lcfgcontext_update_pending, this makes the code a lot nicer
+	* Rewrote setctx_update to use lcfgcontext_update_pending, this
+	  makes the code a lot nicer
 
 2016-06-14 11:04  squinney@INF.ED.AC.UK
 
-	* include/context.h: Replaced store_pending with update_pending
-	  which properly handles the necessary locking
+	* Replaced store_pending with update_pending which properly handles
+	  the necessary locking
 
 2016-06-13 16:29  squinney@INF.ED.AC.UK
 
-	* xml/lcfg_xml_reader.c: fixed call to lcfgcontext_load_active
+	* fixed call to lcfgcontext_load_active
 
 2016-06-13 15:14  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt, context/context.c, context/ctxlist.c,
-	  context/setctx.c, context/tools.c, include/context.h,
-	  include/xml.h, lcfg.yml, xml/lcfg_xml_reader.c, xml/read.c:
-	  Reworked the contect library so that the directory is not
+	* Reworked the contect library so that the directory is not
 	  hardwired. Also a few improvements to ensure memory is always
 	  freed when errors occur
 
 2016-06-13 15:06  squinney@INF.ED.AC.UK
 
-	* utils/utils.c: Yet more tweaking of catfile so that it generates
-	  sensible paths for various different directories
+	* Yet more tweaking of catfile so that it generates sensible paths
+	  for various different directories
 
 2016-06-13 14:11  squinney@INF.ED.AC.UK
 
-	* utils/utils.c: Improved catfile so that there is a single '/'
-	  where the two strings are joined
+	* Improved catfile so that there is a single '/' where the two
+	  strings are joined
 
 2016-06-13 12:51  squinney@INF.ED.AC.UK
 
-	* utils/utils.c: Tidied lcfgutils_catfile, switched to using size_t
-	  for string lengths
+	* Tidied lcfgutils_catfile, switched to using size_t for string
+	  lengths
 
 2016-06-12 16:01  squinney@INF.ED.AC.UK
 
-	* packages/packages.c, packages/pkglists.c, packages/rpm.c: use
-	  signed type for handling some string lengths, negative value
+	* use signed type for handling some string lengths, negative value
 	  indicates error
 
 2016-06-12 15:50  squinney@INF.ED.AC.UK
 
-	* context/context.c: use signed type for handling some string
-	  lengths, negative value indicates error
+	* use signed type for handling some string lengths, negative value
+	  indicates error
 
 2016-06-12 15:49  squinney@INF.ED.AC.UK
 
-	* context/tools.c, include/context.h: fixed spec for
-	  lcfgcontext_pending2active
+	* fixed spec for lcfgcontext_pending2active
 
 2016-06-10 15:39  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt: Fixed locations of pod and man files for when
-	  binary and source dirs are different
+	* Fixed locations of pod and man files for when binary and source
+	  dirs are different
 
 2016-06-10 14:31  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt: For header and pkgconfig files need to install
-	  those in both source and binary directories
+	* For header and pkgconfig files need to install those in both
+	  source and binary directories
 
 2016-06-10 14:03  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt: Fixed include path for when the binary and source
-	  directories are not the same location
+	* Fixed include path for when the binary and source directories are
+	  not the same location
 
 2016-06-10 13:52  squinney@INF.ED.AC.UK
 
-	* README: Added more build notes
+	* Added more build notes
 
 2016-06-10 12:04  squinney@INF.ED.AC.UK
 
-	* context/tools.c, include/context.h: Started work on support for
-	  activating the new pending contexts
+	* Started work on support for activating the new pending contexts
 
 2016-06-08 08:37  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.23.0
+	* lcfg-profilelib release: 1.23.0
 
 2016-06-06 17:21  squinney@INF.ED.AC.UK
 
-	* packages/merge.txt: Added a note about how packages should be
-	  merged into lists
+	* Added a note about how packages should be merged into lists
 
 2016-06-06 17:20  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: equals will also compare contexts
+	* equals will also compare contexts
 
 2016-05-23 13:13  squinney@INF.ED.AC.UK
 
-	* include/differences.h, profile/diff.c, resources/diff.c: basic
-	  ref-counting for component and resource diff structs
+	* basic ref-counting for component and resource diff structs
 
 2016-05-23 10:14  squinney@INF.ED.AC.UK
 
-	* include/differences.h, resources/diff.c: Added
-	  lcfgdiffcomponent_find_resource and
+	* Added lcfgdiffcomponent_find_resource and
 	  lcfgdiffcomponent_has_resource
 
 2016-05-23 10:04  squinney@INF.ED.AC.UK
 
-	* include/differences.h, resources/diff.c: Added
-	  lcfgdiffresource_is_changed and lcfgdiffcomponent_is_changed
+	* Added lcfgdiffresource_is_changed and
+	  lcfgdiffcomponent_is_changed
 
 2016-05-23 09:55  squinney@INF.ED.AC.UK
 
-	* include/differences.h, profile/diff.c: Added
-	  lcfgdiffprofile_find_component and lcfgdiffprofile_has_component
+	* Added lcfgdiffprofile_find_component and
+	  lcfgdiffprofile_has_component
 
 2016-05-23 09:55  squinney@INF.ED.AC.UK
 
-	* resources/complist.c: avoid passing a NULL component name into
-	  strcmp in the lcfgcomplist_find_component function
+	* avoid passing a NULL component name into strcmp in the
+	  lcfgcomplist_find_component function
 
 2016-05-20 11:27  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.22.1
+	* lcfg-profilelib release: 1.22.1
 
 2016-05-20 11:17  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt, lcfg.yml, pc, pc/lcfg-bdb.pc.cin,
-	  pc/lcfg-context.pc.cin, pc/lcfg-packages.pc.cin,
-	  pc/lcfg-profile.pc.cin, pc/lcfg-resources.pc.cin,
-	  pc/lcfg-utils.pc.cin, pc/lcfg-xml.pc.cin, specfile: Added
-	  pkg-config files for all the libraries
+	* Added pkg-config files for all the libraries
 
 2016-05-19 14:45  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.22.0
+	* lcfg-profilelib release: 1.22.0
 
 2016-05-19 14:40  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.21.0
+	* lcfg-profilelib release: 1.21.0
 
 2016-05-19 14:29  squinney@INF.ED.AC.UK
 
-	* include/common.h, resources/resources.c: to_string now encodes
-	  the values when the LCFG_OPT_ENCODE option is specified, also
-	  to_status will now call to_string with that option so that the
-	  generated files are safe
+	* to_string now encodes the values when the LCFG_OPT_ENCODE option
+	  is specified, also to_status will now call to_string with that
+	  option so that the generated files are safe
 
 2016-05-19 14:17  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c: Added
-	  lcfgresource_enc_value which will do a numeric html-encoding of
-	  newlines and carriage return characters in the resource values to
-	  make it safe for status files
+	* Added lcfgresource_enc_value which will do a numeric
+	  html-encoding of newlines and carriage return characters in the
+	  resource values to make it safe for status files
 
 2016-05-19 11:50  squinney@INF.ED.AC.UK
 
-	* include/differences.h, profile/diff.c: Pass the new hold file
-	  signature back to the caller so that it can be easily used in a
-	  comparison with an externally specified value
+	* Pass the new hold file signature back to the caller so that it
+	  can be easily used in a comparison with an externally specified
+	  value
 
 2016-05-19 10:51  squinney@INF.ED.AC.UK
 
-	* profile/diff.c: Correctly handle the status returned from
+	* Correctly handle the status returned from
 	  lcfgdiffcomponent_to_holdfile
 
 2016-05-19 10:48  squinney@INF.ED.AC.UK
 
-	* profile/diff.c: Added useful messages for failures in
-	  lcfgdiffprofile_to_holdfile
+	* Added useful messages for failures in lcfgdiffprofile_to_holdfile
 
 2016-05-19 10:39  squinney@INF.ED.AC.UK
 
-	* include/differences.h, profile/diff.c: lcfgprofile_diff will now
-	  pass back a message when it fails to diff a component
+	* lcfgprofile_diff will now pass back a message when it fails to
+	  diff a component
 
 2016-05-19 10:13  squinney@INF.ED.AC.UK
 
-	* utils/CMakeLists.txt: include md5 code
+	* include md5 code
 
 2016-05-19 10:13  squinney@INF.ED.AC.UK
 
-	* profile/CMakeLists.txt: link against lcfg_utils
+	* link against lcfg_utils
 
 2016-05-19 10:05  squinney@INF.ED.AC.UK
 
-	* include/differences.h: Need to include utils.h for definition of
-	  md5_state_t
+	* Need to include utils.h for definition of md5_state_t
 
 2016-05-19 10:04  squinney@INF.ED.AC.UK
 
-	* include/differences.h, profile/diff.c, resources/diff.c: Added
-	  support to lcfgdiffprofile_to_holdfile for generating the md5sum
-	  signature of the changes
+	* Added support to lcfgdiffprofile_to_holdfile for generating the
+	  md5sum signature of the changes
 
 2016-05-19 09:37  squinney@INF.ED.AC.UK
 
-	* resources/diff.c: need to free string buffer after generating
-	  holdfile entries for a component
+	* need to free string buffer after generating holdfile entries for
+	  a component
 
 2016-05-19 09:35  squinney@INF.ED.AC.UK
 
-	* include/differences.h, resources/diff.c: Reworked the way the
-	  component and resource diffs are stored in the holdfile for
-	  secure mode. This paves the way for generating the md5sum of the
-	  stored data.
+	* Reworked the way the component and resource diffs are stored in
+	  the holdfile for secure mode. This paves the way for generating
+	  the md5sum of the stored data.
 
 2016-05-19 08:47  squinney@INF.ED.AC.UK
 
-	* include/utils.h.cin, utils/md5.c: Added utility functions to
-	  generate the md5sum for a string
+	* Added utility functions to generate the md5sum for a string
 
 2016-05-13 14:51  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.20.1
+	* lcfg-profilelib release: 1.20.1
 
 2016-05-13 11:03  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, packages/packages.c: Fixed the way that
-	  lcfgpkgspec_to_cpp assembles the output string when the package
-	  spec has meta-data
+	* Fixed the way that lcfgpkgspec_to_cpp assembles the output string
+	  when the package spec has meta-data
 
 2016-05-13 08:36  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.20.0
+	* lcfg-profilelib release: 1.20.0
 
 2016-05-13 08:36  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/diff.c: Made lcfgcomponent_diff safe against
-	  either component being NULL
+	* Made lcfgcomponent_diff safe against either component being NULL
 
 2016-05-13 08:35  squinney@INF.ED.AC.UK
 
-	* profile/diff.c: Fixed error-handling logic in lcfgprofile_diff
+	* Fixed error-handling logic in lcfgprofile_diff
 
 2016-05-12 15:23  squinney@INF.ED.AC.UK
 
-	* include/differences.h, lcfg.yml, profile/diff.c,
-	  resources/diff.c: Added a change type for the component diffs
-	  which indicates whether the entire component has been added,
-	  removed or modified
+	* Added a change type for the component diffs which indicates
+	  whether the entire component has been added, removed or modified
 
 2016-05-12 13:42  squinney@INF.ED.AC.UK
 
-	* include/differences.h, profile/diff.c: Reworked the
-	  lcfgprofile_diff API to match lcfgcomponent_diff and
+	* Reworked the lcfgprofile_diff API to match lcfgcomponent_diff and
 	  lcfgresource_diff
 
 2016-05-10 10:59  squinney@INF.ED.AC.UK
 
-	* include/differences.h, lcfg.yml, profile/diff.c,
-	  resources/diff.c: Reworked API for lcfgresource_diff and
-	  lcfgcomponent_diff so that they return a status value.
+	* Reworked API for lcfgresource_diff and lcfgcomponent_diff so that
+	  they return a status value.
 
 2016-05-09 15:26  squinney@INF.ED.AC.UK
 
-	* include/differences.h: is_deleted is now named is_removed
+	* is_deleted is now named is_removed
 
 2016-05-09 10:37  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, xml/read.c: Fixed the call to lcfgprofile_from_xml
-	  within the lcfgprofile_overrides_xmldir function
+	* Fixed the call to lcfgprofile_from_xml within the
+	  lcfgprofile_overrides_xmldir function
 
 2016-05-06 08:14  squinney@INF.ED.AC.UK
 
-	* bdb/read.c, include/bdb.h, include/components.h,
-	  include/profile.h, include/xml.h, lcfg.yml, profile/profile.c,
-	  resources/complist.c, xml/lcfg_xml_reader.c, xml/read.c:
-	  Simplified the code by reworking various functions so that they
+	* Simplified the code by reworking various functions so that they
 	  take a taglist of component names rather than a string of
 	  comma-separated names
 
 2016-05-06 08:12  squinney@INF.ED.AC.UK
 
-	* resources/tags.c: lcfgtaglist_from_string now only appends a tag
-	  to the list if the name is valid
+	* lcfgtaglist_from_string now only appends a tag to the list if the
+	  name is valid
 
 2016-05-03 13:49  squinney@INF.ED.AC.UK
 
-	* include/differences.h, lcfg.yml, profile/diff.c,
-	  resources/diff.c, xml/lcfg_xml_reader.c: Reworked the various
-	  diff interfaces to use the standard LCFGChange and LCFGStatus
-	  types
+	* Reworked the various diff interfaces to use the standard
+	  LCFGChange and LCFGStatus types
 
 2016-05-03 13:46  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: fixed variable name
+	* fixed variable name
 
 2016-04-29 16:05  squinney@INF.ED.AC.UK
 
-	* packages/rpm.c: lcfgpkglist_from_rpm_dir will now only parse the
-	  names of files with the .rpm suffix (rather than all directory
-	  entries)
+	* lcfgpkglist_from_rpm_dir will now only parse the names of files
+	  with the .rpm suffix (rather than all directory entries)
 
 2016-04-29 15:47  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: use unsigned int as index in for loops in
-	  lcfgpkglist_search
+	* use unsigned int as index in for loops in lcfgpkglist_search
 
 2016-04-29 15:44  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: use size_t instead of int for string lengths
-	  in lcfgpkgspec_add_flags
+	* use size_t instead of int for string lengths in
+	  lcfgpkgspec_add_flags
 
 2016-04-29 15:24  squinney@INF.ED.AC.UK
 
-	* resources/complist.c: minor tweaks to
-	  lcfgcomplist_find_or_create_component to avoid possibility of
-	  attempt to free NULL string
+	* minor tweaks to lcfgcomplist_find_or_create_component to avoid
+	  possibility of attempt to free NULL string
 
 2016-04-29 15:17  squinney@INF.ED.AC.UK
 
-	* resources/components.c: ensure the result from
-	  lcfgcomponent_get_resources_as_string does not contain duplicate
-	  resource names
+	* ensure the result from lcfgcomponent_get_resources_as_string does
+	  not contain duplicate resource names
 
 2016-04-29 14:20  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Made lcfgresource_parse_key more robust
-	  against badly formatted keys
+	* Made lcfgresource_parse_key more robust against badly formatted
+	  keys
 
 2016-04-28 16:37  squinney@INF.ED.AC.UK
 
-	* packages/parse_pkgspec.c: Added support for parsing rpm file
-	  names as well as package specs
+	* Added support for parsing rpm file names as well as package specs
 
 2016-04-28 16:15  squinney@INF.ED.AC.UK
 
-	* packages/rpm.c: tweaked the way for() is used in
-	  lcfgpkgspec_from_rpm_filename so that the index can be unsigned
-	  (which more closely matches with expectations)
+	* tweaked the way for() is used in lcfgpkgspec_from_rpm_filename so
+	  that the index can be unsigned (which more closely matches with
+	  expectations)
 
 2016-04-28 10:47  squinney@INF.ED.AC.UK
 
-	* packages/rpm.c: Refactored lcfgpkgspec_from_rpm_filename so that
-	  the handling of bad input data is a lot more robust
+	* Refactored lcfgpkgspec_from_rpm_filename so that the handling of
+	  bad input data is a lot more robust
 
 2016-04-28 10:44  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt: Enabled extra warnings to catch problems with
-	  unsigned vars
+	* Enabled extra warnings to catch problems with unsigned vars
 
 2016-04-22 11:09  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Fixed type of string length var in
-	  lcfgresource_build_name which could become negative
+	* Fixed type of string length var in lcfgresource_build_name which
+	  could become negative
 
 2016-04-22 11:07  squinney@INF.ED.AC.UK
 
-	* resources/components.c: decode any html-entities in value strings
-	  loaded from status files
+	* decode any html-entities in value strings loaded from status
+	  files
 
 2016-04-22 11:07  squinney@INF.ED.AC.UK
 
-	* include/utils.h.cin, utils/CMakeLists.txt, utils/entities.c:
-	  Added support for decoding html entities in strings
+	* Added support for decoding html entities in strings
 
 2016-04-21 16:18  squinney@INF.ED.AC.UK
 
-	* xml/lcfg_xml_reader.c, xml/read.c: tweaked debug statements
+	* tweaked debug statements
 
 2016-04-21 16:18  squinney@INF.ED.AC.UK
 
-	* resources/templates.c: Tweaked how new template structs are
-	  created so that the code is clearer
+	* Tweaked how new template structs are created so that the code is
+	  clearer
 
 2016-04-21 15:44  squinney@INF.ED.AC.UK
 
-	* packages/rpm.c: pre-allocate a buffer for the package cpp
-	  generation to avoid many large allocations
+	* pre-allocate a buffer for the package cpp generation to avoid
+	  many large allocations
 
 2016-04-20 13:31  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/complist.c: Fixed status handling for
-	  lcfgcomponent_from_statusfile in lcfgcomplist_from_status_dir
+	* Fixed status handling for lcfgcomponent_from_statusfile in
+	  lcfgcomplist_from_status_dir
 
 2016-04-20 13:31  squinney@INF.ED.AC.UK
 
-	* bdb/write.c: Only call lcfgcomplist_to_bdb when a profile has
-	  components
+	* Only call lcfgcomplist_to_bdb when a profile has components
 
 2016-04-19 09:03  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.19.4
+	* lcfg-profilelib release: 1.19.4
 
 2016-04-19 09:01  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, packages/packages.c: Fixed the architecture handling in
-	  lcfgpkgspec_to_string for the case when a package arch is the
-	  same as the default
+	* Fixed the architecture handling in lcfgpkgspec_to_string for the
+	  case when a package arch is the same as the default
 
 2016-04-18 15:16  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.19.3
+	* lcfg-profilelib release: 1.19.3
 
 2016-04-18 15:16  squinney@INF.ED.AC.UK
 
-	* resources/components.c: shuffled static string to better location
+	* shuffled static string to better location
 
 2016-04-18 09:09  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/components.c: lcfgcomponent_to_env now also
-	  sets the _RESOURCES environment variable which holds the sorted
-	  list of resource names for the component
+	* lcfgcomponent_to_env now also sets the _RESOURCES environment
+	  variable which holds the sorted list of resource names for the
+	  component
 
 2016-04-15 16:18  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/components.c: needed to include assert.h
+	* needed to include assert.h
 
 2016-04-15 16:03  squinney@INF.ED.AC.UK
 
-	* include/components.h, include/resources.h,
-	  resources/components.c, resources/resources.c: Added basic
-	  support for exporting resources into the environment
+	* Added basic support for exporting resources into the environment
 
 2016-04-15 14:00  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.19.2
+	* lcfg-profilelib release: 1.19.2
 
 2016-04-15 13:58  squinney@INF.ED.AC.UK
 
-	* specfile: need libdb-devel as a build dependency
+	* need libdb-devel as a build dependency
 
 2016-04-15 13:28  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.19.1
+	* lcfg-profilelib release: 1.19.1
 
 2016-04-15 13:12  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, xml/packages.c: fixed change variable type
+	* fixed change variable type
 
 2016-04-15 13:06  squinney@INF.ED.AC.UK
 
-	* packages/rpm.c, xml/packages.c: Use the standard LCFG_CHANGE
-	  names instead of LCFGPKGLIST_CHANGE
+	* Use the standard LCFG_CHANGE names instead of LCFGPKGLIST_CHANGE
 
 2016-04-15 12:59  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.19.0
+	* lcfg-profilelib release: 1.19.0
 
 2016-04-15 12:56  squinney@INF.ED.AC.UK
 
-	* include/xml.h, lcfg.yml, xml/lcfg_xml_reader.c, xml/read.c: Minor
-	  improvements to handling context override profiles
+	* Minor improvements to handling context override profiles
 
 2016-04-14 16:39  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: Improved handling of package list merges so
-	  that a reasonable change type is always returned
+	* Improved handling of package list merges so that a reasonable
+	  change type is always returned
 
 2016-04-14 15:49  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: Use LCFG_PACKAGE_WILDCARD macro instead of
-	  hardwired string
+	* Use LCFG_PACKAGE_WILDCARD macro instead of hardwired string
 
 2016-04-14 15:35  squinney@INF.ED.AC.UK
 
-	* include/packages.h: some struct params are really unsigned int
+	* some struct params are really unsigned int
 
 2016-04-14 15:34  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: use size_t instead of int for strlen result
+	* use size_t instead of int for strlen result
 
 2016-04-14 15:32  squinney@INF.ED.AC.UK
 
-	* include/packages.h, packages/pkglists.c: Reworked functions which
-	  returned LCFGPkgListChangeType to use the common LCFGChange type
-	  instead
+	* Reworked functions which returned LCFGPkgListChangeType to use
+	  the common LCFGChange type instead
 
 2016-04-14 14:02  squinney@INF.ED.AC.UK
 
-	* packages/packages.c, packages/parse_pkgspec.c, packages/rpm.c:
-	  Minor tidying, in particular switching to more appropriate
+	* Minor tidying, in particular switching to more appropriate
 	  variable types (e.g. size_t or bool instead of int)
 
 2016-04-12 13:53  squinney@INF.ED.AC.UK
 
-	* xml/lcfg_xml_reader.c: fixed call to fprintf which was missing an
-	  argument
+	* fixed call to fprintf which was missing an argument
 
 2016-04-12 13:50  squinney@INF.ED.AC.UK
 
-	* include/components.h: added spec for lcfgcomponent_has_name
+	* added spec for lcfgcomponent_has_name
 
 2016-04-12 13:46  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c: fixed handling of error message when
-	  lcfgcontext_from_string fails
+	* fixed handling of error message when lcfgcontext_from_string
+	  fails
 
 2016-04-12 13:37  squinney@INF.ED.AC.UK
 
-	* resources/complist.c: fixed variable name
+	* fixed variable name
 
 2016-04-12 13:37  squinney@INF.ED.AC.UK
 
-	* include/components.h: Fixed spec for
-	  lcfgcomplist_transplant_components
+	* Fixed spec for lcfgcomplist_transplant_components
 
 2016-04-12 13:34  squinney@INF.ED.AC.UK
 
-	* include/components.h, include/packages.h, include/profile.h,
-	  include/xml.h, packages/pkglists.c, profile/profile.c,
-	  resources/complist.c, resources/components.c,
-	  xml/lcfg_xml_reader.c, xml/read.c: Added support for applying
-	  context specific overrides to the components/resources and
-	  packages
+	* Added support for applying context specific overrides to the
+	  components/resources and packages
 
 2016-04-12 09:25  squinney@INF.ED.AC.UK
 
-	* include/xml.h, profile/profile.c, resources/complist.c,
-	  xml/lcfg_xml_reader.c, xml/read.c: Improved the handling of the
-	  XML profile override directory
+	* Improved the handling of the XML profile override directory
 
 2016-03-31 15:42  squinney@INF.ED.AC.UK
 
-	* include/packages.h, lcfg.yml, packages/packages.c,
-	  packages/rpm.c: updated the various functions for stringifying
-	  package specs so that they are much more memory-efficient when
-	  writing lists to files
+	* updated the various functions for stringifying package specs so
+	  that they are much more memory-efficient when writing lists to
+	  files
 
 2016-03-31 08:20  squinney@INF.ED.AC.UK
 
-	* include/packages.h, packages/packages.c, packages/pkglists.c,
-	  packages/rpm.c: Converted packages code over to using the
-	  standard LCFG_OPT_ macros for options
+	* Converted packages code over to using the standard LCFG_OPT_
+	  macros for options
 
 2016-03-31 07:06  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, xml/lcfg_xml_reader.c: Added support for diffing with
-	  the previously stashed profile
+	* Added support for diffing with the previously stashed profile
 
 2016-03-31 07:05  squinney@INF.ED.AC.UK
 
-	* bdb/read.c, include/bdb.h, include/common.h: Added support for
-	  allowing the bdb file to not exist when attempting to read
+	* Added support for allowing the bdb file to not exist when
+	  attempting to read
 
 2016-03-30 11:24  squinney@INF.ED.AC.UK
 
-	* specfile: updated for new lcfg_xml library name
+	* updated for new lcfg_xml library name
 
 2016-03-30 11:24  squinney@INF.ED.AC.UK
 
-	* xml/CMakeLists.txt, xml/lcfg_xml_reader.c: Now writes out a
-	  Berkeley BD and an rpmcfg on success
+	* Now writes out a Berkeley BD and an rpmcfg on success
 
 2016-03-30 11:23  squinney@INF.ED.AC.UK
 
-	* include/packages.h: updated spec for lcfgpkglist_to_rpmcfg
+	* updated spec for lcfgpkglist_to_rpmcfg
 
 2016-03-30 11:22  squinney@INF.ED.AC.UK
 
-	* include/profile.h, profile/profile.c: lcfgprofile_write_rpmcfg
-	  now returns whether or not the rpmcfg was modified
+	* lcfgprofile_write_rpmcfg now returns whether or not the rpmcfg
+	  was modified
 
 2016-03-30 11:22  squinney@INF.ED.AC.UK
 
-	* packages/rpm.c: lcfgpkglist_to_rpmcfg now returns whether or not
-	  the rpmcfg was modified
+	* lcfgpkglist_to_rpmcfg now returns whether or not the rpmcfg was
+	  modified
 
 2016-03-30 11:21  squinney@INF.ED.AC.UK
 
-	* resources/complist.c: removed spurious return
+	* removed spurious return
 
 2016-03-29 16:21  squinney@INF.ED.AC.UK
 
-	* include/components.h, include/profile.h, lcfg.yml,
-	  profile/profile.c, resources/complist.c: Added
-	  lcfgcomplist_to_status_dir which will write a status file for
-	  each component into the named directory and also added a
+	* Added lcfgcomplist_to_status_dir which will write a status file
+	  for each component into the named directory and also added a
 	  lcfgprofile_to_status_dir wrapper
 
 2016-03-29 16:16  squinney@INF.ED.AC.UK
 
-	* xml/CMakeLists.txt, xml/read.c, xml/reader.c: Renamed to be
-	  consistent with bdb code
+	* Renamed to be consistent with bdb code
 
 2016-03-29 14:03  squinney@INF.ED.AC.UK
 
-	* include/xml.h, lcfg.yml, xml/reader.c: renamed
-	  lcfgxml_process_profile to lcfgprofile_from_xml everywhere
+	* renamed lcfgxml_process_profile to lcfgprofile_from_xml
+	  everywhere
 
 2016-03-29 13:57  squinney@INF.ED.AC.UK
 
-	* xml/lcfg_xml_reader.c, xml/reader.c: renamed
-	  lcfgxml_process_profile to more standard lcfgprofile_from_xml
+	* renamed lcfgxml_process_profile to more standard
+	  lcfgprofile_from_xml
 
 2016-03-29 13:56  squinney@INF.ED.AC.UK
 
-	* include/xml.h: Tweaked function specs to return LCFGStatus type
+	* Tweaked function specs to return LCFGStatus type
 
 2016-03-29 13:46  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt, README, include/xml.h, include/xmlreader.h,
-	  lcfg.yml, utils/utils.c, xml, xml/CMakeLists.txt, xml/common.c,
-	  xml/components.c, xml/lcfg_xml_reader.c, xml/packages.c,
-	  xml/reader.c, xml/resource.c, xmlreader: Renamed xmlreader to
-	  xml. Standarised all status handling on the LCFGStatus type.
+	* Renamed xmlreader to xml. Standarised all status handling on the
+	  LCFGStatus type.
 
 2016-03-29 12:33  squinney@INF.ED.AC.UK
 
-	* README: Added note of packages required on Debian
+	* Added note of packages required on Debian
 
 2016-03-28 18:00  squinney@INF.ED.AC.UK
 
-	* resources/components.c: minor tidying
+	* minor tidying
 
 2016-03-28 18:00  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: check result of strdup is not NULL
+	* check result of strdup is not NULL
 
 2016-03-28 17:59  squinney@INF.ED.AC.UK
 
-	* resources/tags.c: check result of strdup is not NULL
+	* check result of strdup is not NULL
 
 2016-03-28 17:27  squinney@INF.ED.AC.UK
 
-	* resources/CMakeLists.txt, resources/diff.c, resources/resdiff.c:
-	  renamed file for consistency
+	* renamed file for consistency
 
 2016-03-28 17:17  squinney@INF.ED.AC.UK
 
-	* include/differences.h, lcfg.yml: Added lcfgcomponent_diff
+	* Added lcfgcomponent_diff
 
 2016-03-28 17:17  squinney@INF.ED.AC.UK
 
-	* bdb/write.c: updated calls to lcfgresource_build_key for latest
-	  API
+	* updated calls to lcfgresource_build_key for latest API
 
 2016-03-28 14:34  squinney@INF.ED.AC.UK
 
-	* bdb/read.c, lcfg.yml: Tidying and small improvements in error
-	  handling for reading bdb files
+	* Tidying and small improvements in error handling for reading bdb
+	  files
 
 2016-03-28 14:02  squinney@INF.ED.AC.UK
 
-	* include/profile.h, lcfg.yml, profile/profile.c: Improved the
-	  error checking in the profile print functions
+	* Improved the error checking in the profile print functions
 
 2016-03-28 13:51  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/components.c: reworked lcfgcomponent_print to
-	  use the pre-allocated buffer forms of lcfgresource_to_status and
-	  lcfgresource_to_string so that it is much more efficient
+	* reworked lcfgcomponent_print to use the pre-allocated buffer
+	  forms of lcfgresource_to_status and lcfgresource_to_string so
+	  that it is much more efficient
 
 2016-03-28 13:50  squinney@INF.ED.AC.UK
 
-	* resources/complist.c: Tidied lcfgcomplist_print
+	* Tidied lcfgcomplist_print
 
 2016-03-28 13:48  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: use appropriate types, e.g. size_t rather
-	  than int
+	* use appropriate types, e.g. size_t rather than int
 
 2016-03-28 13:47  squinney@INF.ED.AC.UK
 
-	* include/resources.h: tidying and comments
+	* tidying and comments
 
 2016-03-28 13:09  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c, include/common.h, lcfg.yml, profile/diff.c,
-	  resources/complist.c, resources/components.c,
-	  resources/resdiff.c, resources/tags.c: Renamed
-	  LCFG_CHANGE_DELETED to LCFG_CHANGE_REMOVED so it is clearer what
-	  it means
+	* Renamed LCFG_CHANGE_DELETED to LCFG_CHANGE_REMOVED so it is
+	  clearer what it means
 
 2016-03-28 13:07  squinney@INF.ED.AC.UK
 
-	* xmlreader/components.c, xmlreader/resource.c: For consistency
-	  various functions have changed to now return LCFGChange values
+	* For consistency various functions have changed to now return
+	  LCFGChange values
 
 2016-03-28 13:07  squinney@INF.ED.AC.UK
 
-	* profile/diff.c, profile/profile.c: For consistency various
-	  functions have changed to now return LCFGChange values
+	* For consistency various functions have changed to now return
+	  LCFGChange values
 
 2016-03-28 13:06  squinney@INF.ED.AC.UK
 
-	* resources/complist.c, resources/components.c,
-	  resources/iterator.c, resources/resdiff.c, resources/resources.c:
-	  Shuffled the diff functions into a single file so they are easier
+	* Shuffled the diff functions into a single file so they are easier
 	  to find. For consistency various functions have changed to now
 	  return LCFGChange values.
 
 2016-03-28 13:04  squinney@INF.ED.AC.UK
 
-	* include/xmlreader.h: need to include common.h
+	* need to include common.h
 
 2016-03-28 13:03  squinney@INF.ED.AC.UK
 
-	* include/components.h, include/differences.h, include/profile.h,
-	  include/resources.h: Attempting to make the headers more readable
-	  by splitting out the components and the diffs functions into
-	  separate headers
+	* Attempting to make the headers more readable by splitting out the
+	  components and the diffs functions into separate headers
 
 2016-03-28 13:01  squinney@INF.ED.AC.UK
 
-	* include/packages.h, packages/rpm.c: For consistency
-	  lcfgpkglist_to_rpmcfg now returns an LCFGStatus value instead of
-	  an int
+	* For consistency lcfgpkglist_to_rpmcfg now returns an LCFGStatus
+	  value instead of an int
 
 2016-03-25 16:10  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/components.c: Added code to create an initial
-	  string buffer with a reasonable size for the to_statusfile
-	  function. This should help minimise the number of reallocations
-	  required.
+	* Added code to create an initial string buffer with a reasonable
+	  size for the to_statusfile function. This should help minimise
+	  the number of reallocations required.
 
 2016-03-25 15:48  squinney@INF.ED.AC.UK
 
-	* resources/resources.c, resources/templates.c: tweaked counter
-	  type in lcfgtemplate_new()
+	* tweaked counter type in lcfgtemplate_new()
 
 2016-03-25 15:23  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Updated lcfgcomponent_to_statusfile to
-	  use lcfgresource_to_status directly, this should improve the use
-	  of memory
+	* Updated lcfgcomponent_to_statusfile to use lcfgresource_to_status
+	  directly, this should improve the use of memory
 
 2016-03-25 15:06  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/resources.c: Reworked lcfgresource_to_status
-	  to the new standard API and made it much more maintainable
+	* Reworked lcfgresource_to_status to the new standard API and made
+	  it much more maintainable
 
 2016-03-25 15:06  squinney@INF.ED.AC.UK
 
-	* include/resources.h: Introduced LCFG_RESOURCE_SYMBOL_VALUE which
-	  is just a nul, this is for consistency and makes the code more
-	  readable
+	* Introduced LCFG_RESOURCE_SYMBOL_VALUE which is just a nul, this
+	  is for consistency and makes the code more readable
 
 2016-03-25 13:51  squinney@INF.ED.AC.UK
 
-	* include/resources.h, lcfg.yml, resources/resources.c: Reworked
-	  lcfgresource_to_string to calculate key length and insert the key
-	  string using the new common functions. The aim is to share this
-	  functionality with all code that needs to build resource keys
-	  (e.g. writing into bdb and status files)
+	* Reworked lcfgresource_to_string to calculate key length and
+	  insert the key string using the new common functions. The aim is
+	  to share this functionality with all code that needs to build
+	  resource keys (e.g. writing into bdb and status files)
 
 2016-03-25 13:49  squinney@INF.ED.AC.UK
 
-	* context/context.c: Fixed error codes returned if
-	  lcfgcontext_from_string fails
+	* Fixed error codes returned if lcfgcontext_from_string fails
 
 2016-03-25 13:49  squinney@INF.ED.AC.UK
 
-	* bdb/write.c, include/bdb.h: lcfgresource_build_key has moved into
-	  the main resources.c file
+	* lcfgresource_build_key has moved into the main resources.c file
 
 2016-03-25 13:48  squinney@INF.ED.AC.UK
 
-	* include/templates.h: Fixed spec for lcfgtemplate_from_string
+	* Fixed spec for lcfgtemplate_from_string
 
 2016-03-25 11:22  squinney@INF.ED.AC.UK
 
-	* bdb/write.c, include/resources.h, resources/resources.c,
-	  xmlreader/resource.c: Standardised various macro names and
-	  switched to new common ones where appropriate
+	* Standardised various macro names and switched to new common ones
+	  where appropriate
 
 2016-03-25 09:27  squinney@INF.ED.AC.UK
 
-	* context/context.c, context/ctxlist.c, context/setctx.c,
-	  include/context.h: Standardised interface for
-	  lcfgcontext_from_string
+	* Standardised interface for lcfgcontext_from_string
 
 2016-03-25 08:48  squinney@INF.ED.AC.UK
 
-	* include/templates.h, resources/resources.c,
-	  resources/templates.c: Reworked lcfgtemplate_from_string to have
-	  a standard interface
+	* Reworked lcfgtemplate_from_string to have a standard interface
 
 2016-03-25 08:32  squinney@INF.ED.AC.UK
 
-	* include/tags.h, resources/tags.c: Various small tweaks to make
-	  the tag handling more robust
+	* Various small tweaks to make the tag handling more robust
 
 2016-03-24 19:58  squinney@INF.ED.AC.UK
 
-	* resources/complist.c, resources/tags.c: need to define
-	  _GNU_SOURCE for asprintf
+	* need to define _GNU_SOURCE for asprintf
 
 2016-03-24 19:57  squinney@INF.ED.AC.UK
 
-	* xmlreader/reader.c: use correct function for building error
-	  message
+	* use correct function for building error message
 
 2016-03-24 19:55  squinney@INF.ED.AC.UK
 
-	* bdb/read.c: fixed call to lcfgtaglist_append
+	* fixed call to lcfgtaglist_append
 
 2016-03-24 19:51  squinney@INF.ED.AC.UK
 
-	* resources/complist.c, xmlreader/reader.c: fixed definitions of
-	  status variable
+	* fixed definitions of status variable
 
 2016-03-24 19:48  squinney@INF.ED.AC.UK
 
-	* bdb/read.c, resources/complist.c, xmlreader/reader.c: fixed
-	  variable name
+	* fixed variable name
 
 2016-03-24 19:44  squinney@INF.ED.AC.UK
 
-	* bdb/read.c, include/tags.h, resources/complist.c,
-	  resources/tags.c, xmlreader/reader.c: Updated
-	  lcfgtaglist_from_string API to be consistent and use new common
-	  types
+	* Updated lcfgtaglist_from_string API to be consistent and use new
+	  common types
 
 2016-03-24 19:38  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c, context/setctx.c, context/tools.c,
-	  include/context.h, xmlreader/lcfg_xml_reader.c: Updated various
-	  context function APIs to be consistent and use new common types
+	* Updated various context function APIs to be consistent and use
+	  new common types
 
 2016-03-24 15:27  squinney@INF.ED.AC.UK
 
-	* context/context.c, context/ctxlist.c, context/setctx.c,
-	  include/context.h, lcfg.yml, resources/tags.c,
-	  xmlreader/reader.c: Improved the efficiency and robustness of the
-	  context handling
+	* Improved the efficiency and robustness of the context handling
 
 2016-03-24 15:26  squinney@INF.ED.AC.UK
 
-	* resources/complist.c: needs to include utils.h
+	* needs to include utils.h
 
 2016-03-24 12:08  squinney@INF.ED.AC.UK
 
-	* include/tags.h, include/templates.h, lcfg.yml,
-	  resources/components.c, resources/resources.c, resources/tags.c,
-	  resources/templates.c, xmlreader/resource.c: Updated
-	  lcfgtemplate_to_string and lcfgtaglist_to_string to use stpcpy
-	  for building strings, this makes the code a lot cleaner. Also
-	  updated them both to return the length of the strings created or
-	  -1 for errors. lcfgtaglist_to_string will also now return an
-	  empty string when the list is empty
+	* Updated lcfgtemplate_to_string and lcfgtaglist_to_string to use
+	  stpcpy for building strings, this makes the code a lot cleaner.
+	  Also updated them both to return the length of the strings
+	  created or -1 for errors. lcfgtaglist_to_string will also now
+	  return an empty string when the list is empty
 
 2016-03-23 13:56  squinney@INF.ED.AC.UK
 
-	* resources/templates.c: Fixed changes to lcfgtemplate_new
+	* Fixed changes to lcfgtemplate_new
 
 2016-03-23 13:53  squinney@INF.ED.AC.UK
 
-	* resources/resources.c, resources/templates.c: Various minor
-	  improvements to make the templates API more robust and consistent
+	* Various minor improvements to make the templates API more robust
+	  and consistent
 
 2016-03-23 13:50  squinney@INF.ED.AC.UK
 
-	* include/resources.h, include/templates.h: Moved template
-	  definitions into a separate header for clarity
+	* Moved template definitions into a separate header for clarity
 
 2016-03-23 13:47  squinney@INF.ED.AC.UK
 
-	* include/tags.h: need to include string.h for size_t definition
+	* need to include string.h for size_t definition
 
 2016-03-23 13:07  squinney@INF.ED.AC.UK
 
-	* resources/templates.c: MAX_TAGS is now LCFG_TAGS_MAX_DEPTH
+	* MAX_TAGS is now LCFG_TAGS_MAX_DEPTH
 
 2016-03-23 13:05  squinney@INF.ED.AC.UK
 
-	* resources/components.c: silenced compiler warning in
+	* silenced compiler warning in
 	  lcfgcomponent_get_resources_as_string when calling
 	  lcfgtaglist_append
 
 2016-03-23 13:04  squinney@INF.ED.AC.UK
 
-	* resources/components.c: fixed variable name in
-	  lcfgcomponent_get_resources_as_string
+	* fixed variable name in lcfgcomponent_get_resources_as_string
 
 2016-03-23 13:02  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Fixed bug with use of '==' instead of '='
+	* Fixed bug with use of '==' instead of '='
 
 2016-03-23 13:01  squinney@INF.ED.AC.UK
 
-	* bdb/read.c, bdb/write.c, include/bdb.h, include/profile.h,
-	  include/resources.h, profile/profile.c, resources/complist.c:
-	  updated for the changes in the common LCFGStatus type
+	* updated for the changes in the common LCFGStatus type
 
 2016-03-23 12:55  squinney@INF.ED.AC.UK
 
-	* resources/complist.c: Minor updates to match the recent changes
-	  to the taglist API
+	* Minor updates to match the recent changes to the taglist API
 
 2016-03-23 12:54  squinney@INF.ED.AC.UK
 
-	* resources/complist.c, resources/components.c,
-	  resources/resources.c, xmlreader/reader.c, xmlreader/resource.c:
-	  Minor updates to match the recent changes to the taglist API
+	* Minor updates to match the recent changes to the taglist API
 
 2016-03-23 11:56  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/tags.c: Updated to use common types and
-	  options. Also various other code tidying and efficiency
-	  improvements
+	* Updated to use common types and options. Also various other code
+	  tidying and efficiency improvements
 
 2016-03-23 11:56  squinney@INF.ED.AC.UK
 
-	* include/common.h: Added common stringification options
+	* Added common stringification options
 
 2016-03-23 11:52  squinney@INF.ED.AC.UK
 
-	* include/resources.h, include/tags.h: Moved all the tags stuff
-	  into a separate header for easier reference
+	* Moved all the tags stuff into a separate header for easier
+	  reference
 
 2016-03-21 09:36  squinney@INF.ED.AC.UK
 
-	* include/profile.h, lcfg.yml, profile/profile.c: Added
-	  lcfgprofile_from_status_dir which is a wrapper around
+	* Added lcfgprofile_from_status_dir which is a wrapper around
 	  lcfgcomplist_from_status_dir
 
 2016-03-21 09:35  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/complist.c: Added
-	  lcfgcomplist_from_status_dir to load a profile from a directory
-	  full of status files
+	* Added lcfgcomplist_from_status_dir to load a profile from a
+	  directory full of status files
 
 2016-03-21 09:34  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Needed to chomp newlines from lines in
-	  status files. Tweaked error messages for set_attribute in
-	  from_statusfile
+	* Needed to chomp newlines from lines in status files. Tweaked
+	  error messages for set_attribute in from_statusfile
 
 2016-03-21 09:24  squinney@INF.ED.AC.UK
 
-	* include/utils.h.cin, utils/utils.c: Added lcfgutils_chomp
-	  function which can be used to trim trailing newline characters
-	  from a string
+	* Added lcfgutils_chomp function which can be used to trim trailing
+	  newline characters from a string
 
 2016-03-18 12:08  squinney@INF.ED.AC.UK
 
-	* bdb/write.c, lcfg.yml: Reworked lcfgcomponent_to_bdb to reduce
-	  the number of memory allocations required
+	* Reworked lcfgcomponent_to_bdb to reduce the number of memory
+	  allocations required
 
 2016-03-18 12:05  squinney@INF.ED.AC.UK
 
-	* resources/tags.c: fixed variable name
+	* fixed variable name
 
 2016-03-18 09:45  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/tags.c: Added lcfgtaglist_find_tag
-	  function and altered lcfgtaglist_contains to use that function
+	* Added lcfgtaglist_find_tag function and altered
+	  lcfgtaglist_contains to use that function
 
 2016-03-17 17:09  squinney@INF.ED.AC.UK
 
-	* bdb/write.c, lcfg.yml: mostly completed the support for writing
-	  to a berkeley DB file
+	* mostly completed the support for writing to a berkeley DB file
 
 2016-03-17 17:09  squinney@INF.ED.AC.UK
 
-	* include/bdb.h, include/resources.h, resources/tags.c: Added a
-	  manage flag for taglist which can be used to disable the freeing
-	  of stashed tags when the list is destroyed
+	* Added a manage flag for taglist which can be used to disable the
+	  freeing of stashed tags when the list is destroyed
 
 2016-03-17 17:08  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Added
-	  lcfgcomponent_get_resources_as_string which returns a
+	* Added lcfgcomponent_get_resources_as_string which returns a
 	  space-separated list of resource names
 
 2016-03-17 17:07  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Added lcfgresource_get_priority_as_string
-	  to make it easy to serialise the priority
+	* Added lcfgresource_get_priority_as_string to make it easy to
+	  serialise the priority
 
 2016-03-17 12:07  squinney@INF.ED.AC.UK
 
-	* bdb/write.c, include/bdb.h: Get the required mtime for the file
-	  from the profile struct
+	* Get the required mtime for the file from the profile struct
 
 2016-03-17 12:04  squinney@INF.ED.AC.UK
 
-	* bdb/CMakeLists.txt, bdb/read.c, bdb/write.c, include/bdb.h,
-	  lcfg.yml: Started on support for writing a profile into a
-	  Berkeley DB file
+	* Started on support for writing a profile into a Berkeley DB file
 
 2016-03-17 12:03  squinney@INF.ED.AC.UK
 
-	* include/utils.h.cin, utils/utils.c: Added lcfgutils_dirname which
-	  will return the directory name for a path in the same way as the
-	  dirname command
+	* Added lcfgutils_dirname which will return the directory name for
+	  a path in the same way as the dirname command
 
 2016-03-17 12:02  squinney@INF.ED.AC.UK
 
-	* packages/rpm.c, profile/diff.c, resources/components.c: ensure
-	  unlink is only called on the tmpfile when the variable is not
-	  NULL
+	* ensure unlink is only called on the tmpfile when the variable is
+	  not NULL
 
 2016-03-17 09:56  squinney@INF.ED.AC.UK
 
-	* bdb/read.c, include/bdb.h, lcfg.yml: Added lcfgcomponent_from_bdb
-	  which can load a single named component from the DB file. Also
-	  simplified the APIs as the context stuff is irrelevant in this
-	  situation
+	* Added lcfgcomponent_from_bdb which can load a single named
+	  component from the DB file. Also simplified the APIs as the
+	  context stuff is irrelevant in this situation
 
 2016-03-17 09:55  squinney@INF.ED.AC.UK
 
-	* specfile: Added lcfg_bdb library
+	* Added lcfg_bdb library
 
 2016-03-17 09:54  squinney@INF.ED.AC.UK
 
-	* resources/components.c: By default lcfgcomponent_print now only
-	  prints out resources with values, same as qxprof behaviour
+	* By default lcfgcomponent_print now only prints out resources with
+	  values, same as qxprof behaviour
 
 2016-03-16 20:10  squinney@INF.ED.AC.UK
 
-	* bdb/read.c, include/bdb.h, include/common.h, lcfg.yml: reworked
-	  to use new common status type and general improvements to error
-	  handling
+	* reworked to use new common status type and general improvements
+	  to error handling
 
 2016-03-16 15:53  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt, bdb, bdb/CMakeLists.txt, bdb/read.c,
-	  include/bdb.h, lcfg.yml: Added the start of new support for
-	  reading profiles from Berkeley DB files
+	* Added the start of new support for reading profiles from Berkeley
+	  DB files
 
 2016-03-16 15:52  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Updated lcfgcomponent_from_statusfile to
-	  use the new lcfgresource_parse_key and lcfgresource_set_attribute
-	  functions
+	* Updated lcfgcomponent_from_statusfile to use the new
+	  lcfgresource_parse_key and lcfgresource_set_attribute functions
 
 2016-03-16 15:42  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c: Added
-	  lcfgresource_set_attribute which will set the required resource
-	  attribute based on the specified type-symbol. Also fixed
+	* Added lcfgresource_set_attribute which will set the required
+	  resource attribute based on the specified type-symbol. Also fixed
 	  set_type_as_string which was getting upset with list types that
 	  had no associated template.
 
 2016-03-16 12:03  squinney@INF.ED.AC.UK
 
-	* include/context.h: Needed to include sys/types.h
+	* Needed to include sys/types.h
 
 2016-03-16 12:03  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c: Added an
-	  lcfgresource_parse_key function for parsing the keys used in
-	  status and DB files
+	* Added an lcfgresource_parse_key function for parsing the keys
+	  used in status and DB files
 
 2016-03-16 10:09  squinney@INF.ED.AC.UK
 
-	* include/profile.h, include/resources.h, lcfg.yml,
-	  profile/CMakeLists.txt, profile/diff.c, profile/profile.c: Added
-	  support for finding the differences between two profiles and
-	  generating a 'hold' file
+	* Added support for finding the differences between two profiles
+	  and generating a 'hold' file
 
 2016-03-16 09:12  squinney@INF.ED.AC.UK
 
-	* resources/resdiff.c: fixed function name
+	* fixed function name
 
 2016-03-15 16:03  squinney@INF.ED.AC.UK
 
-	* include/resources.h, lcfg.yml, resources/resdiff.c: Added
-	  lcfgdiffcomponent_sort which will sort the diffs into order by
-	  resource name, this is useful so that the generated holdfile
+	* Added lcfgdiffcomponent_sort which will sort the diffs into order
+	  by resource name, this is useful so that the generated holdfile
 	  output is the same each time
 
 2016-03-15 16:02  squinney@INF.ED.AC.UK
 
-	* resources/components.c: lcfgcomponent_diff can now handle the old
-	  or new components being NULL (signifies add or delete of entire
-	  component)
+	* lcfgcomponent_diff can now handle the old or new components being
+	  NULL (signifies add or delete of entire component)
 
 2016-03-15 11:50  squinney@INF.ED.AC.UK
 
-	* include/resources.h, lcfg.yml, resources/components.c,
-	  resources/resdiff.c: Added support for finding the detailed
-	  differences between two components
+	* Added support for finding the detailed differences between two
+	  components
 
 2016-03-15 09:31  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Added lcfgcomponent_remove_resource
-	  function for removing a named resource
+	* Added lcfgcomponent_remove_resource function for removing a named
+	  resource
 
 2016-03-15 09:30  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resdiff.c: Added a
-	  lcfgdiffresource_to_holdfile function which will print the
-	  details of the resource diff to the holdfile stream
+	* Added a lcfgdiffresource_to_holdfile function which will print
+	  the details of the resource diff to the holdfile stream
 
 2016-03-14 18:33  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/resdiff.c: Various minor bug fixes
+	* Various minor bug fixes
 
 2016-03-14 18:31  squinney@INF.ED.AC.UK
 
-	* include/resources.h: Added lcfgresource_diff
+	* Added lcfgresource_diff
 
 2016-03-14 18:31  squinney@INF.ED.AC.UK
 
-	* resources/CMakeLists.txt: Added resdiff.c
+	* Added resdiff.c
 
 2016-03-14 18:30  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Fixed var names in lcfgresource_diff
+	* Fixed var names in lcfgresource_diff
 
 2016-03-14 18:00  squinney@INF.ED.AC.UK
 
-	* resources/resdiff.c: If both old and new resources are available
-	  the lcfgdiffresource_get_type function will compare values when
+	* If both old and new resources are available the
+	  lcfgdiffresource_get_type function will compare values when
 	  called in case either has changed
 
 2016-03-14 17:26  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/resources.c: Added lcfgresource_diff function
-	  which can be used to find the differences between two resources
+	* Added lcfgresource_diff function which can be used to find the
+	  differences between two resources
 
 2016-03-14 17:25  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resdiff.c: Added new
-	  LCFGDiffResource struct and suite of functions
+	* Added new LCFGDiffResource struct and suite of functions
 
 2016-03-14 17:24  squinney@INF.ED.AC.UK
 
-	* profile/profile.c: Switched from 'removed' to 'deleted' for diff
-	  type
+	* Switched from 'removed' to 'deleted' for diff type
 
 2016-03-14 17:24  squinney@INF.ED.AC.UK
 
-	* resources/complist.c, resources/components.c: Switched from
-	  'removed' to 'deleted' for diff type
+	* Switched from 'removed' to 'deleted' for diff type
 
 2016-03-14 14:51  squinney@INF.ED.AC.UK
 
-	* include/resources.h: new quickdiff functions
+	* new quickdiff functions
 
 2016-03-14 14:51  squinney@INF.ED.AC.UK
 
-	* include/profile.h: Added lcfgprofile_quickdiff which is a thin
-	  wrapper around lcfgcomplist_quickdiff
+	* Added lcfgprofile_quickdiff which is a thin wrapper around
+	  lcfgcomplist_quickdiff
 
 2016-03-14 14:51  squinney@INF.ED.AC.UK
 
-	* profile/profile.c: Added lcfgprofile_quickdiff which is a thin
-	  wrapper around lcfgcomplist_quickdiff
+	* Added lcfgprofile_quickdiff which is a thin wrapper around
+	  lcfgcomplist_quickdiff
 
 2016-03-14 14:50  squinney@INF.ED.AC.UK
 
-	* resources/complist.c: Added lcfgcomplist_quickdiff which will
-	  compare two lists of components and return lists of components
-	  which have been added, removed or have modified values for
-	  resources
+	* Added lcfgcomplist_quickdiff which will compare two lists of
+	  components and return lists of components which have been added,
+	  removed or have modified values for resources
 
 2016-03-14 14:48  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Added lcfgcomponent_quickdiff which will
-	  compare the resources for two components and return a value which
-	  indicates whether there is no change, or anything is added,
-	  removed or modified
+	* Added lcfgcomponent_quickdiff which will compare the resources
+	  for two components and return a value which indicates whether
+	  there is no change, or anything is added, removed or modified
 
 2016-03-14 14:47  squinney@INF.ED.AC.UK
 
-	* resources/tags.c: Added lcfgtaglist_sort function to sort the
-	  taglist by name. Also modified lcfgtaglist_destroy to be safe for
-	  calling on a NULL value
+	* Added lcfgtaglist_sort function to sort the taglist by name. Also
+	  modified lcfgtaglist_destroy to be safe for calling on a NULL
+	  value
 
 2016-03-10 10:49  squinney@INF.ED.AC.UK
 
-	* include/profile.h, lcfg.yml, profile/profile.c: Added some
-	  convenient accessors for the various attributes stored in the
-	  LCFGProfile struct. Also added some functions which just wrap the
-	  equivalent lcfgcomplist functions
+	* Added some convenient accessors for the various attributes stored
+	  in the LCFGProfile struct. Also added some functions which just
+	  wrap the equivalent lcfgcomplist functions
 
 2016-03-10 10:16  squinney@INF.ED.AC.UK
 
-	* resources/complist.c: made lcfgcomplist_find_node safe for
-	  calling on a NULL
+	* made lcfgcomplist_find_node safe for calling on a NULL
 
 2016-03-09 17:26  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.18.0
+	* lcfg-profilelib release: 1.18.0
 
 2016-03-09 17:25  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/components.c: Improved the error messages for
-	  lcfgcomponent_from_statusfile
+	* Improved the error messages for lcfgcomponent_from_statusfile
 
 2016-03-09 14:46  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: has_value will now return false if the
-	  string is empty which matches better with expectations
+	* has_value will now return false if the string is empty which
+	  matches better with expectations
 
 2016-03-09 14:46  squinney@INF.ED.AC.UK
 
-	* xmlreader/components.c: needs to include string.h
+	* needs to include string.h
 
 2016-03-09 10:30  squinney@INF.ED.AC.UK
 
-	* include/resources.h, lcfg.yml, resources/components.c,
-	  xmlreader/components.c: Now need to make copies of the component
-	  name locally
+	* Now need to make copies of the component name locally
 
 2016-03-09 10:20  squinney@INF.ED.AC.UK
 
-	* include/resources.h, lcfg.yml, resources/components.c,
-	  xmlreader/components.c: Added lcfgcomponent_set_name. Reworked
-	  lcfgcomponent_new to not set the name. Do the setting of the
-	  component name separately so that the validity of the name can be
-	  checked more easily
+	* Added lcfgcomponent_set_name. Reworked lcfgcomponent_new to not
+	  set the name. Do the setting of the component name separately so
+	  that the validity of the name can be checked more easily
 
 2016-03-09 09:45  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Altered lcfgcomponent_from_statusfile so
-	  that it is possible to only specify the filename. The component
-	  name is then taken as the basename of the path
+	* Altered lcfgcomponent_from_statusfile so that it is possible to
+	  only specify the filename. The component name is then taken as
+	  the basename of the path
 
 2016-03-07 19:26  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Tweaked lcfgresource_build_message so that
-	  it does not emit the resource type when it is just the default
-	  'string'
+	* Tweaked lcfgresource_build_message so that it does not emit the
+	  resource type when it is just the default 'string'
 
 2016-03-07 15:27  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.17.0
+	* lcfg-profilelib release: 1.17.0
 
 2016-03-07 14:52  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, profile/profile.c: Fixed
-	  lcfgcomplist_find_or_create_component function name
+	* Fixed lcfgcomplist_find_or_create_component function name
 
 2016-03-07 14:52  squinney@INF.ED.AC.UK
 
-	* include/utils.h.cin: needs to include stdbool.h
+	* needs to include stdbool.h
 
 2016-03-07 14:41  squinney@INF.ED.AC.UK
 
-	* xmlreader/reader.c: Improved lcfgxml_process_profile so that it
-	  is more readable and less likely to leak memory if an error
-	  occurs
+	* Improved lcfgxml_process_profile so that it is more readable and
+	  less likely to leak memory if an error occurs
 
 2016-03-07 14:39  squinney@INF.ED.AC.UK
 
-	* include/xmlreader.h: Removed some declarations for private
-	  functions
+	* Removed some declarations for private functions
 
 2016-03-07 14:39  squinney@INF.ED.AC.UK
 
-	* xmlreader/components.c: Couple of comments added
+	* Couple of comments added
 
 2016-03-07 14:39  squinney@INF.ED.AC.UK
 
-	* xmlreader/resource.c: Minor tidying
+	* Minor tidying
 
 2016-03-07 14:07  squinney@INF.ED.AC.UK
 
-	* xmlreader/common.c, xmlreader/resource.c: Removed
-	  lcfgxml_endswith and swapped to using lcfgutils_endswith
+	* Removed lcfgxml_endswith and swapped to using lcfgutils_endswith
 	  everywhere
 
 2016-03-07 13:37  squinney@INF.ED.AC.UK
 
-	* include/profile.h, include/resources.h, profile/profile.c,
-	  resources/complist.c: Added lcfgcomplist_find_or_create_component
-	  and lcfgprofile_find_or_create_component which is a simple
-	  convenient wrapper
+	* Added lcfgcomplist_find_or_create_component and
+	  lcfgprofile_find_or_create_component which is a simple convenient
+	  wrapper
 
 2016-03-07 12:02  squinney@INF.ED.AC.UK
 
-	* profile/profile.c: lcfgprofile_transplant_components will create
-	  a new empty component list if necessary
+	* lcfgprofile_transplant_components will create a new empty
+	  component list if necessary
 
 2016-03-06 06:35  squinney@INF.ED.AC.UK
 
-	* include/profile.h, profile/profile.c: Added
-	  lcfgprofile_write_rpmcfg which is a convenient thin wrapper
+	* Added lcfgprofile_write_rpmcfg which is a convenient thin wrapper
 	  around lcfgpkglist_to_rpmcfg
 
 2016-03-04 15:32  squinney@INF.ED.AC.UK
 
-	* include/xmlreader.h, xmlreader/lcfg_xml_reader.c,
-	  xmlreader/reader.c: Moved lcfgxml_process_override_profiles and
+	* Moved lcfgxml_process_override_profiles and
 	  lcfgxml_process_context_profiles into main library so they can be
 	  reused
 
 2016-03-04 15:29  squinney@INF.ED.AC.UK
 
-	* include/profile.h, profile/profile.c: Added
-	  lcfgprofile_transplant_components which is a simple convenient
-	  wrapper around lcfgcomplist_transplant_components
+	* Added lcfgprofile_transplant_components which is a simple
+	  convenient wrapper around lcfgcomplist_transplant_components
 
 2016-03-04 15:29  squinney@INF.ED.AC.UK
 
-	* include/utils.h.cin, utils/utils.c: Added lcfgutils_endswith and
-	  lcfgutils_basename function
+	* Added lcfgutils_endswith and lcfgutils_basename function
 
 2016-03-04 12:31  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.16.0
+	* lcfg-profilelib release: 1.16.0
 
 2016-03-04 12:30  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/mutate.c: Lots of tidying and
-	  standardisation. Should also no longer leak memory on failure to
-	  set a valid value
+	* Lots of tidying and standardisation. Should also no longer leak
+	  memory on failure to set a valid value
 
 2016-03-04 10:45  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/mutate.c: Added validation for new values
-	  when mutating tag lists
+	* Added validation for new values when mutating tag lists
 
 2016-03-04 10:44  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c: for consistency
-	  lcfgresource_unset_value now returns a boolean value
+	* for consistency lcfgresource_unset_value now returns a boolean
+	  value
 
 2016-03-02 19:50  squinney@INF.ED.AC.UK
 
-	* xmlreader/components.c: need to grab nodename for error message
+	* need to grab nodename for error message
 
 2016-03-02 19:45  squinney@INF.ED.AC.UK
 
-	* xmlreader/components.c: Code tidying
+	* Code tidying
 
 2016-03-02 17:32  squinney@INF.ED.AC.UK
 
-	* xmlreader/resource.c: declare status variable in correct location
+	* declare status variable in correct location
 
 2016-03-02 17:30  squinney@INF.ED.AC.UK
 
-	* xmlreader/resource.c: lots of code tidying
+	* lots of code tidying
 
 2016-03-02 17:27  squinney@INF.ED.AC.UK
 
-	* xmlreader/packages.c: free memory correctly if release value is
-	  invalid
+	* free memory correctly if release value is invalid
 
 2016-03-02 14:48  squinney@INF.ED.AC.UK
 
-	* xmlreader/resource.c: Avoid small memory leak when resource name
-	  is invalid
+	* Avoid small memory leak when resource name is invalid
 
 2016-03-02 14:48  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: corrected resource name validation check
+	* corrected resource name validation check
 
 2016-03-02 14:43  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: added missing semi-colon
+	* added missing semi-colon
 
 2016-03-02 14:42  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: Reworked clone function to be more robust
+	* Reworked clone function to be more robust
 
 2016-03-02 14:34  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: code tidying
+	* code tidying
 
 2016-03-02 14:34  squinney@INF.ED.AC.UK
 
-	* include/packages.h, packages/packages.c: Added validation of
-	  context expression
+	* Added validation of context expression
 
 2016-03-02 14:15  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: Added missing semi-colon
+	* Added missing semi-colon
 
 2016-03-02 14:14  squinney@INF.ED.AC.UK
 
-	* resources/components.c: fixed default part of switch in
-	  from_statusfile to handle weird limitation of C
+	* fixed default part of switch in from_statusfile to handle weird
+	  limitation of C
 
 2016-03-02 14:09  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Tidied switch statement in
-	  from_statusfile function
+	* Tidied switch statement in from_statusfile function
 
 2016-03-02 14:02  squinney@INF.ED.AC.UK
 
-	* utils/utils.c: needs to include stdbool.h
+	* needs to include stdbool.h
 
 2016-03-02 14:01  squinney@INF.ED.AC.UK
 
-	* utils/utils.c: corrected variable name in catfile function
+	* corrected variable name in catfile function
 
 2016-03-02 14:00  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: need to include utils.h
+	* need to include utils.h
 
 2016-03-02 13:59  squinney@INF.ED.AC.UK
 
-	* include/utils.h.cin, utils/utils.c, xmlreader/lcfg_xml_reader.c:
-	  Transferred the lcfgutils_catfile to the common utils library so
+	* Transferred the lcfgutils_catfile to the common utils library so
 	  it is available for reuse elsewhere
 
 2016-03-02 13:52  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/complist.c,
-	  xmlreader/components.c, xmlreader/lcfg_xml_reader.c: Improved the
-	  robustness of the component list handling
+	* Improved the robustness of the component list handling
 
 2016-03-02 13:12  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Ensure lcfgcomponent_from_statusfile does
-	  not leak memory if it fails to parse a line
+	* Ensure lcfgcomponent_from_statusfile does not leak memory if it
+	  fails to parse a line
 
 2016-03-02 10:19  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/components.c,
-	  xmlreader/resource.c: Reworked the various insert, append and
-	  remove methods to return an LCFGComponentChangeType value in a
-	  similar way to how package lists are handled. Also improved the
-	  error handling to avoid memory leaks
+	* Reworked the various insert, append and remove methods to return
+	  an LCFGComponentChangeType value in a similar way to how package
+	  lists are handled. Also improved the error handling to avoid
+	  memory leaks
 
 2016-03-02 10:16  squinney@INF.ED.AC.UK
 
-	* resources/iterator.c: ensure lcfgresiter_destroy is safe for
-	  calling on a NULL value
+	* ensure lcfgresiter_destroy is safe for calling on a NULL value
 
 2016-03-02 09:47  squinney@INF.ED.AC.UK
 
-	* resources/tags.c, resources/templates.c: need to include assert.h
+	* need to include assert.h
 
 2016-03-02 09:45  squinney@INF.ED.AC.UK
 
-	* xmlreader/resource.c: removed spurious semicolon
+	* removed spurious semicolon
 
 2016-03-02 09:43  squinney@INF.ED.AC.UK
 
-	* xmlreader/resource.c: ensure child tag list is not freed twice if
-	  an error occurs
+	* ensure child tag list is not freed twice if an error occurs
 
 2016-03-02 09:42  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c, resources/tags.c,
-	  xmlreader/resource.c: Improved robustness of resource tag list
-	  handling. Should not leak memory when errors occur
+	* Improved robustness of resource tag list handling. Should not
+	  leak memory when errors occur
 
 2016-03-02 09:05  squinney@INF.ED.AC.UK
 
-	* resources/templates.c: Ensure lcfgtemplate_from_string does not
-	  leak memory if an error occurs whilst parsing any part of the
-	  template
+	* Ensure lcfgtemplate_from_string does not leak memory if an error
+	  occurs whilst parsing any part of the template
 
 2016-03-02 08:55  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Ensure various functions do not leak
-	  memory if an error occurs when attempting to set the value for a
-	  resource attribute
+	* Ensure various functions do not leak memory if an error occurs
+	  when attempting to set the value for a resource attribute
 
 2016-03-01 14:08  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, xmlreader/packages.c: Improved the error handling in
-	  lcfgxml_process_packages so that it is more robust and does not
-	  leak memory when failure occurs
+	* Improved the error handling in lcfgxml_process_packages so that
+	  it is more robust and does not leak memory when failure occurs
 
 2016-03-01 12:00  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.15.0
+	* lcfg-profilelib release: 1.15.0
 
 2016-03-01 11:59  squinney@INF.ED.AC.UK
 
-	* include/xmlreader.h, lcfg.yml, xmlreader/components.c,
-	  xmlreader/lcfg_xml_reader.c, xmlreader/packages.c,
-	  xmlreader/reader.c, xmlreader/resource.c: Added a new
-	  LCFGXMLProcessStatus enum which has the various process status
-	  values. Modified many function specifications to have
-	  LCFGXMLProcessStatus as the return type
+	* Added a new LCFGXMLProcessStatus enum which has the various
+	  process status values. Modified many function specifications to
+	  have LCFGXMLProcessStatus as the return type
 
 2016-03-01 11:42  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, xmlreader/packages.c: lcfgxml_process_package now
-	  checks the various calls to lcfgpkgspec_set_ functions and
-	  handles the errors in a robust way that should avoid memory leaks
+	* lcfgxml_process_package now checks the various calls to
+	  lcfgpkgspec_set_ functions and handles the errors in a robust way
+	  that should avoid memory leaks
 
 2016-03-01 11:35  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c: need utils.h
+	* need utils.h
 
 2016-03-01 11:35  squinney@INF.ED.AC.UK
 
-	* packages/rpm.c: need unistd.h for unlink
+	* need unistd.h for unlink
 
 2016-02-26 20:40  squinney@INF.ED.AC.UK
 
-	* packages/rpm.c: Fixed error message
+	* Fixed error message
 
 2016-02-26 20:40  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: Corrected exit status
+	* Corrected exit status
 
 2016-02-26 16:35  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.14.0
+	* lcfg-profilelib release: 1.14.0
 
 2016-02-26 16:34  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, specfile: do not install some tools for now
+	* do not install some tools for now
 
 2016-02-26 14:13  squinney@INF.ED.AC.UK
 
-	* include/packages.h, lcfg.yml, packages/packages.c: Added
-	  lcfgpkgspec_build_message to make it easier to generate error
-	  messages. Also tweaked the to_string function so that it is safe
-	  to call when version and release are not defined, the wildcard
-	  character is used instead
+	* Added lcfgpkgspec_build_message to make it easier to generate
+	  error messages. Also tweaked the to_string function so that it is
+	  safe to call when version and release are not defined, the
+	  wildcard character is used instead
 
 2016-02-26 14:12  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Tweaked lcfgresource_build_message so that
-	  it can handle NULL resources
+	* Tweaked lcfgresource_build_message so that it can handle NULL
+	  resources
 
 2016-02-26 12:00  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: Added note to lcfgpkgnode_destroy about not
-	  destroy the pkgspec
+	* Added note to lcfgpkgnode_destroy about not destroy the pkgspec
 
 2016-02-26 11:59  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: Added error message for when
-	  lcfgpkgspec_from_string is called on a NULL or empty string
+	* Added error message for when lcfgpkgspec_from_string is called on
+	  a NULL or empty string
 
 2016-02-26 11:49  squinney@INF.ED.AC.UK
 
-	* include/packages.h: Marked more functions with the
-	  warn_unused_result attribute
+	* Marked more functions with the warn_unused_result attribute
 
 2016-02-26 11:43  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: Minor tidying and efficiency improvements
+	* Minor tidying and efficiency improvements
 
 2016-02-19 15:52  squinney@INF.ED.AC.UK
 
-	* include/packages.h, lcfg.yml, packages/rpm.c: Added
-	  lcfgpkglist_from_rpm_dir function which will create a package
-	  list based on the .rpm files found in a directory. Added
+	* Added lcfgpkglist_from_rpm_dir function which will create a
+	  package list based on the .rpm files found in a directory. Added
 	  lcfgpkglist_to_rpmlist which will write out an rpmlist file from
 	  the package list
 
 2016-02-19 15:51  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: Added support for using a wildcard in the
-	  arch field when using find_node and find_pkgspec
+	* Added support for using a wildcard in the arch field when using
+	  find_node and find_pkgspec
 
 2016-02-19 10:10  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, packages/pkglists.c, packages/rpm.c: Moved the rpmcfg
-	  handling stuff into the rpm.c file to keep it with the other rpm
-	  functions
+	* Moved the rpmcfg handling stuff into the rpm.c file to keep it
+	  with the other rpm functions
 
 2016-02-19 08:27  squinney@INF.ED.AC.UK
 
-	* packages/iterator.c: Tidying
+	* Tidying
 
 2016-02-19 08:19  squinney@INF.ED.AC.UK
 
-	* packages/packages.c, packages/pkglists.c: compare now sorts on
-	  name/arch/version rather than name/version/arch
+	* compare now sorts on name/arch/version rather than
+	  name/version/arch
 
 2016-02-19 07:56  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, packages/rpm.c: lcfgpkglist_from_rpmlist now ignores
-	  lines which only contain whitespace. The error handling was
-	  further improved to really not leak memory when errors occur
+	* lcfgpkglist_from_rpmlist now ignores lines which only contain
+	  whitespace. The error handling was further improved to really not
+	  leak memory when errors occur
 
 2016-02-19 07:54  squinney@INF.ED.AC.UK
 
-	* utils/utils.c: Fixed lcfgutils_trim_whitespace so that it
-	  correctly handles strings which just contain a single whitespace
-	  character (e.g. a newline)
+	* Fixed lcfgutils_trim_whitespace so that it correctly handles
+	  strings which just contain a single whitespace character (e.g. a
+	  newline)
 
 2016-02-18 19:30  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, packages/rpm.c: Improved error messages for processing
-	  rpmlist files
+	* Improved error messages for processing rpmlist files
 
 2016-02-18 18:45  squinney@INF.ED.AC.UK
 
-	* include/packages.h, lcfg.yml, packages/rpm.c: Reworked
-	  lcfgpkglist_from_rpmlist so that it does not leak memory when an
-	  error occurs
+	* Reworked lcfgpkglist_from_rpmlist so that it does not leak memory
+	  when an error occurs
 
 2016-02-18 17:03  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, packages/packages.c: Tidied some things for the sake of
-	  consistency
+	* Tidied some things for the sake of consistency
 
 2016-02-18 17:03  squinney@INF.ED.AC.UK
 
-	* include/packages.h, packages/rpm.c: Reworked
-	  lcfgpkgspec_from_rpm_filename to not leak memory when parsing of
-	  a filename fails for any reason
+	* Reworked lcfgpkgspec_from_rpm_filename to not leak memory when
+	  parsing of a filename fails for any reason
 
 2016-02-17 15:50  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: Ensure that add_context, add_derivation and
-	  add_flags do not leak memory if there is a failure to set the new
-	  value
+	* Ensure that add_context, add_derivation and add_flags do not leak
+	  memory if there is a failure to set the new value
 
 2016-02-17 12:06  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, packages/packages.c: Reworked lcfgpkgspec_add_flags so
-	  that it is better at producing a unique set of flags given the
-	  current and extra strings
+	* Reworked lcfgpkgspec_add_flags so that it is better at producing
+	  a unique set of flags given the current and extra strings
 
 2016-02-17 12:04  squinney@INF.ED.AC.UK
 
-	* include/packages.h: Needs to include time.h for definition of
-	  time_t
+	* Needs to include time.h for definition of time_t
 
 2016-02-16 19:45  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Tweaked error message
+	* Tweaked error message
 
 2016-02-16 19:44  squinney@INF.ED.AC.UK
 
-	* xmlreader/packages.c: Handle the secondary architecture which is
-	  sometimes encoded in the package name
+	* Handle the secondary architecture which is sometimes encoded in
+	  the package name
 
 2016-02-16 19:30  squinney@INF.ED.AC.UK
 
-	* include/packages.h, lcfg.yml, packages/pkglists.c,
-	  xmlreader/packages.c: Improved the handling of the return values
-	  for insert, append and remove functions for package lists
+	* Improved the handling of the return values for insert, append and
+	  remove functions for package lists
 
 2016-02-16 14:26  squinney@INF.ED.AC.UK
 
-	* include/packages.h, lcfg.yml, packages/packages.c,
-	  packages/parse_pkgspec.c: Reworked lcfgpkgspec_from_string to
-	  avoid multiple attempts to free memory when an error occurs
+	* Reworked lcfgpkgspec_from_string to avoid multiple attempts to
+	  free memory when an error occurs
 
 2016-02-16 13:02  squinney@INF.ED.AC.UK
 
-	* include/packages.h, lcfg.yml, packages/packages.c: Added
-	  lcfgpkgspec_has_flag function for checking if a specific flag is
-	  set
+	* Added lcfgpkgspec_has_flag function for checking if a specific
+	  flag is set
 
 2016-02-16 12:40  squinney@INF.ED.AC.UK
 
-	* include/packages.h: Fixed function specs
+	* Fixed function specs
 
 2016-02-16 12:34  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Fixed uses of asprintf to build error
-	  messages
+	* Fixed uses of asprintf to build error messages
 
 2016-02-16 12:34  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: Needed to include errno.h
+	* Needed to include errno.h
 
 2016-02-16 12:08  squinney@INF.ED.AC.UK
 
-	* include/packages.h, packages/packages.c,
-	  packages/parse_pkgspec.c: Converted prefix from a string to a
-	  single char, never going to need a string
+	* Converted prefix from a string to a single char, never going to
+	  need a string
 
 2016-02-16 11:40  squinney@INF.ED.AC.UK
 
-	* include/packages.h: Annotated set and add functions so that that
-	  compiler will warn when the returned success value is ignored
+	* Annotated set and add functions so that that compiler will warn
+	  when the returned success value is ignored
 
 2016-02-16 11:37  squinney@INF.ED.AC.UK
 
-	* include/packages.h, packages/packages.c: Reworked all the
-	  lcfgpkgspec_set and lcfgpkgspec_add functions so that they
-	  validate the new value and return a boolean which indicates
-	  success
+	* Reworked all the lcfgpkgspec_set and lcfgpkgspec_add functions so
+	  that they validate the new value and return a boolean which
+	  indicates success
 
 2016-02-16 11:05  squinney@INF.ED.AC.UK
 
-	* include/packages.h, packages/packages.c: Added functions for
-	  validating the values for many fields
+	* Added functions for validating the values for many fields
 
 2016-02-16 10:20  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: Dropped the const on the get and set
-	  functions to make them much easier to use, there was no advantage
-	  to using const
+	* Dropped the const on the get and set functions to make them much
+	  easier to use, there was no advantage to using const
 
 2016-02-16 10:19  squinney@INF.ED.AC.UK
 
-	* include/packages.h: Reordered the functions so that they are
-	  grouped according to the relevant LCFGPackageSpec struct field
+	* Reordered the functions so that they are grouped according to the
+	  relevant LCFGPackageSpec struct field
 
 2016-02-16 09:58  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: Reordered the functions so that they are
-	  grouped according to the relevant LCFGPackageSpec struct field
+	* Reordered the functions so that they are grouped according to the
+	  relevant LCFGPackageSpec struct field
 
 2016-02-16 09:45  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: clone should carry through the priority
+	* clone should carry through the priority
 
 2016-01-11 19:46  squinney@INF.ED.AC.UK
 
-	* resources/components.c: ensure that find_or_create_resource does
-	  not fail on creating a new resource with an invalid name
+	* ensure that find_or_create_resource does not fail on creating a
+	  new resource with an invalid name
 
 2016-01-11 16:06  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: fixed typo
+	* fixed typo
 
 2016-01-11 16:03  squinney@INF.ED.AC.UK
 
-	* resources/components.c, resources/resources.c,
-	  xmlreader/resource.c: Reworked set_type_as_string so that for
-	  list types it will hand-off templates to set_template_as_string
-	  if any are found in the type specification
+	* Reworked set_type_as_string so that for list types it will
+	  hand-off templates to set_template_as_string if any are found in
+	  the type specification
 
 2016-01-11 16:02  squinney@INF.ED.AC.UK
 
-	* include/resources.h: lcfgresource_set_type_as_string now handles
-	  an error message parameter
+	* lcfgresource_set_type_as_string now handles an error message
+	  parameter
 
 2016-01-11 14:35  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Need to copy string when setting resource
-	  value in _from_statusfile
+	* Need to copy string when setting resource value in
+	  _from_statusfile
 
 2016-01-11 14:10  squinney@INF.ED.AC.UK
 
-	* specfile: Dropped unnecessary dependencies on lcfg-packagelib
-	  which has now been incorporated into this package
+	* Dropped unnecessary dependencies on lcfg-packagelib which has now
+	  been incorporated into this package
 
 2016-01-11 14:07  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Fixed call to lcfgcomponent_find_resource
+	* Fixed call to lcfgcomponent_find_resource
 
 2016-01-11 14:05  squinney@INF.ED.AC.UK
 
-	* docs/lcfgresource.pod.cin, include/resources.h,
-	  resources/components.c: Added
-	  lcfgcomponent_find_or_create_resource which will find an existing
-	  resource with the specified name or create a new one and add it
-	  to the component. Added lcfgcomponent_from_statusfile which will
-	  load all the resources from a status file into a new
+	* Added lcfgcomponent_find_or_create_resource which will find an
+	  existing resource with the specified name or create a new one and
+	  add it to the component. Added lcfgcomponent_from_statusfile
+	  which will load all the resources from a status file into a new
 	  LCFGComponent
 
 2016-01-11 14:03  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Converted status symbols from strings to
-	  characters for efficiency
+	* Converted status symbols from strings to characters for
+	  efficiency
 
 2016-01-11 12:09  squinney@INF.ED.AC.UK
 
-	* docs/lcfgresource.pod.cin: Added docs about new methods and the
-	  change in behaviour for lcfgresource_set_type
+	* Added docs about new methods and the change in behaviour for
+	  lcfgresource_set_type
 
 2016-01-11 12:06  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Added note about lcfgresource_is_string
-	  and its behaviour for 'publish' and 'subscribe' types
+	* Added note about lcfgresource_is_string and its behaviour for
+	  'publish' and 'subscribe' types
 
 2016-01-11 11:50  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c: Reworked set_type so
-	  that the type cannot be changed if there is already an
-	  incompatible value set for the resource. Also added
+	* Reworked set_type so that the type cannot be changed if there is
+	  already an incompatible value set for the resource. Also added
 	  valid_value_for_type helper function and a new unset_value
 	  function so it is possible to remove an existing value
 
 2016-01-11 10:15  squinney@INF.ED.AC.UK
 
-	* resources/components.c: fixed function definition for
+	* fixed function definition for
 	  lcfgcomponent_insert_or_merge_resource
 
 2016-01-11 10:11  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/components.c,
-	  xmlreader/resource.c: insert_or_replace_resource and
-	  insert_or_merge_resource now return a value which is defined in
-	  the LCFGComponentUpdateType enum, this makes it easier/safer to
-	  check for different scenarios
+	* insert_or_replace_resource and insert_or_merge_resource now
+	  return a value which is defined in the LCFGComponentUpdateType
+	  enum, this makes it easier/safer to check for different scenarios
 
 2016-01-11 10:10  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Improved some comments
+	* Improved some comments
 
 2016-01-08 15:16  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: corrected name comparison in
-	  lcfgresource_equals
+	* corrected name comparison in lcfgresource_equals
 
 2016-01-08 15:11  squinney@INF.ED.AC.UK
 
-	* docs/lcfgresource.pod.cin, lcfg.yml: Added lots more
-	  documentation for the resources lib API
+	* Added lots more documentation for the resources lib API
 
 2016-01-08 15:11  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: fixed logic in a couple of comparison
-	  functions
+	* fixed logic in a couple of comparison functions
 
 2016-01-08 11:50  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Fixed comparison of type strings in
+	* Fixed comparison of type strings in
 	  lcfgresource_set_type_as_string
 
 2015-12-24 15:49  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Fixed lcfgresource_valid_integer so that
-	  it can handle negative integers
+	* Fixed lcfgresource_valid_integer so that it can handle negative
+	  integers
 
 2015-12-21 16:07  squinney@INF.ED.AC.UK
 
-	* xmlreader/packages.c: fixed pointer types for package lists
+	* fixed pointer types for package lists
 
 2015-12-21 16:05  squinney@INF.ED.AC.UK
 
-	* xmlreader/packages.c: Fixed minor errors
+	* Fixed minor errors
 
 2015-12-21 16:02  squinney@INF.ED.AC.UK
 
-	* include/xmlreader.h, xmlreader/packages.c: Eval the priority of
-	  the package spec based on the associated context expression (if
-	  any) and append to the relevant package list
+	* Eval the priority of the package spec based on the associated
+	  context expression (if any) and append to the relevant package
+	  list
 
 2015-12-21 15:51  squinney@INF.ED.AC.UK
 
-	* xmlreader/reader.c: Store the modification time of the XML file
+	* Store the modification time of the XML file
 
 2015-12-21 15:49  squinney@INF.ED.AC.UK
 
-	* include/profile.h, profile/profile.c: Split packages into active
-	  and inactive lists, added mtime field to store the modification
-	  time of the profile XML file
+	* Split packages into active and inactive lists, added mtime field
+	  to store the modification time of the profile XML file
 
 2015-12-21 14:28  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: Added lcfgpkglist_to_rpmcfg function for
-	  generating rpmcfg files
+	* Added lcfgpkglist_to_rpmcfg function for generating rpmcfg files
 
 2015-12-21 14:27  squinney@INF.ED.AC.UK
 
-	* packages/packages.c: lcfgpkgspec_compare_names now does a
-	  case-insensitive comparison of the package names
+	* lcfgpkgspec_compare_names now does a case-insensitive comparison
+	  of the package names
 
 2015-12-21 13:31  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: Reworked lcfgpkglist_sort to have the same
-	  implementation as lcfgcomponent_sort
+	* Reworked lcfgpkglist_sort to have the same implementation as
+	  lcfgcomponent_sort
 
 2015-12-21 11:39  squinney@INF.ED.AC.UK
 
-	* include/xmlreader.h, lcfg.yml, profile/profile.c,
-	  xmlreader/packages.c: use the version of the packages header
-	  which ships with this library
+	* use the version of the packages header which ships with this
+	  library
 
 2015-12-21 11:30  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Drop unnecessary use of const
+	* Drop unnecessary use of const
 
 2015-12-21 11:30  squinney@INF.ED.AC.UK
 
-	* include/profile.h: need to include packages.h
+	* need to include packages.h
 
 2015-12-21 11:30  squinney@INF.ED.AC.UK
 
-	* context/context.c: need to include utils.h
+	* need to include utils.h
 
 2015-12-21 11:24  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.13.0
+	* lcfg-profilelib release: 1.13.0
 
 2015-12-21 11:24  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, packages/CMakeLists.txt: dropped utils.c from sources
+	* dropped utils.c from sources
 
 2015-12-21 11:22  squinney@INF.ED.AC.UK
 
-	* include/packages.h, packages/CMakeLists.txt, packages/packages.c,
-	  packages/utils.c, packages/utils.h: Converted over to using the
-	  standard context library
+	* Converted over to using the standard context library
 
 2015-12-21 11:09  squinney@INF.ED.AC.UK
 
-	* packages/packages.c, packages/rpm.c, packages/utils.c,
-	  packages/utils.h: Converted over to using common functions which
-	  are now part of the lcfg_utils library
+	* Converted over to using common functions which are now part of
+	  the lcfg_utils library
 
 2015-12-21 11:03  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: Fixed variable name
+	* Fixed variable name
 
 2015-12-21 10:50  squinney@INF.ED.AC.UK
 
-	* packages/pkglists.c: restored file which got missed
+	* restored file which got missed
 
 2015-12-21 10:47  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt, docs/lcfgpackageiterator.pod.cin,
-	  docs/lcfgpackagelib.pod.cin, docs/lcfgpackagelist.pod.cin,
-	  docs/lcfgpackagespec.pod.cin, docs/parse_pkgspec.pod.cin,
-	  include/packages.h, lcfg.yml, packages, packages/CMakeLists.txt,
-	  packages/packages.h, packages/pkglists.c,
-	  resources/CMakeLists.txt, specfile: Imported packages library
+	* Imported packages library
 
 2015-12-21 10:29  squinney@INF.ED.AC.UK
 
-	* context/CMakeLists.txt, context/context.c, context/ctxlist.c,
-	  resources/CMakeLists.txt, resources/resources.c: Converted over
-	  to using common functions which are now in lcfg_utils library
+	* Converted over to using common functions which are now in
+	  lcfg_utils library
 
 2015-12-21 10:23  squinney@INF.ED.AC.UK
 
-	* resources/utils.c, resources/utils.h: Moved functions from utils
-	  to lcfg_utils
+	* Moved functions from utils to lcfg_utils
 
 2015-12-21 10:22  squinney@INF.ED.AC.UK
 
-	* include/utils.h.cin, utils/CMakeLists.txt, utils/lcfgack.c,
-	  utils/lcfgmsg.c, utils/lcfgutils.h.cin, utils/libmsg.c,
-	  utils/shiftpressed.c: Renamed to lcfg_utils for consistency with
-	  other libs
+	* Renamed to lcfg_utils for consistency with other libs
 
 2015-12-21 10:09  squinney@INF.ED.AC.UK
 
-	* utils/CMakeLists.txt, utils/lcfgutils.h.cin, utils/utils.c:
-	  Imported various utility functions from the profile libraries
+	* Imported various utility functions from the profile libraries
 
 2015-12-21 10:08  squinney@INF.ED.AC.UK
 
-	* utils/CMakeLists.txt: Bumped so version to 2 to avoid conflicts
-	  with old version of utils library
+	* Bumped so version to 2 to avoid conflicts with old version of
+	  utils library
 
 2015-12-21 09:39  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt, lcfg.yml, specfile, utils/CMakeLists.txt:
-	  Imported lcfg-utils as part of making this the single core
+	* Imported lcfg-utils as part of making this the single core
 	  library package required for LCFG support on a platform
 
 2015-12-21 09:26  squinney@INF.ED.AC.UK
 
-	* utils, utils/Utils.pm.cin, utils/Utils.xs.cin: Merged in lcfg
-	  utils library
+	* Merged in lcfg utils library
 
 2015-12-18 15:39  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.12.1
+	* lcfg-profilelib release: 1.12.1
 
 2015-12-18 15:38  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/resources.c: When cloning a resource also
-	  copy the priority and any comment
+	* When cloning a resource also copy the priority and any comment
 
 2015-12-18 13:55  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.12.0
+	* lcfg-profilelib release: 1.12.0
 
 2015-12-18 12:18  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, xmlreader/resource.c: process_resource now only sets
-	  the tag name which is returned to the caller when it is an active
-	  resource which has been successfully added to the component list
+	* process_resource now only sets the tag name which is returned to
+	  the caller when it is an active resource which has been
+	  successfully added to the component list
 
 2015-12-18 10:27  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/resources.c: Added some assertions to
-	  hopefully avoid string buffer overruns
+	* Added some assertions to hopefully avoid string buffer overruns
 
 2015-12-18 10:26  squinney@INF.ED.AC.UK
 
-	* include/resources.h: lcfgresource_get_type_as_string now takes an
-	  options parameter so that the addition of templates can be
-	  disabled
+	* lcfgresource_get_type_as_string now takes an options parameter so
+	  that the addition of templates can be disabled
 
 2015-12-18 09:31  squinney@INF.ED.AC.UK
 
-	* include/resources.h, lcfg.yml, resources/resources.c: Added
-	  support for 'publish' and 'subscribe' resource types. Also the
-	  lcfgresource_get_type_as_string function now appends the string
-	  of templates for list types
+	* Added support for 'publish' and 'subscribe' resource types. Also
+	  the lcfgresource_get_type_as_string function now appends the
+	  string of templates for list types
 
 2015-12-17 16:19  squinney@INF.ED.AC.UK
 
-	* xmlreader/resource.c: Set list type even if there are no
-	  associated templates
+	* Set list type even if there are no associated templates
 
 2015-12-17 16:08  squinney@INF.ED.AC.UK
 
-	* resources/complist.c: Minor tidying
+	* Minor tidying
 
 2015-12-17 16:08  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c: Added support for
-	  associating comments with resources
+	* Added support for associating comments with resources
 
 2015-12-17 15:59  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: need to close override dir handle
-	  once finished
+	* need to close override dir handle once finished
 
 2015-12-17 12:01  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/components.c: fixed sorting of resources
+	* fixed sorting of resources
 
 2015-12-17 10:46  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/resources.c: ensure integer variable is
-	  always initialised before comparison
+	* ensure integer variable is always initialised before comparison
 
 2015-12-17 10:45  squinney@INF.ED.AC.UK
 
-	* context/context.c: Tidied lcfgcontext_valid_expression
+	* Tidied lcfgcontext_valid_expression
 
 2015-12-17 10:45  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Need unistd.h for unlink
+	* Need unistd.h for unlink
 
 2015-12-17 10:32  squinney@INF.ED.AC.UK
 
-	* include/resources.h, lcfg.yml, resources/resources.c,
-	  xmlreader/resource.c: The lcfgresource_build_name function now
-	  passes back a helpful error message when something goes wrong.
-	  Also lots of small code tidying
+	* The lcfgresource_build_name function now passes back a helpful
+	  error message when something goes wrong. Also lots of small code
+	  tidying
 
 2015-12-16 13:33  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c, xmlreader/resource.c: Various
-	  improvements to the error messages
+	* Various improvements to the error messages
 
 2015-12-16 13:33  squinney@INF.ED.AC.UK
 
-	* include/resources.h, profile/profile.c, resources/complist.c,
-	  resources/components.c, resources/resources.c, resources/utils.c,
-	  resources/utils.h: Added new support for writing component
-	  resources to a status file
+	* Added new support for writing component resources to a status
+	  file
 
 2015-12-16 12:13  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c,
-	  resources/templates.c: Error messages from parsing templates are
-	  now sent back to the original caller via
-	  lcfgresource_set_template_as_string
+	* Error messages from parsing templates are now sent back to the
+	  original caller via lcfgresource_set_template_as_string
 
 2015-12-16 10:28  squinney@INF.ED.AC.UK
 
-	* context/context.c, lcfg.yml: Need to allow '=' and '\!'
-	  characters in context expressions
+	* Need to allow '=' and '\!' characters in context expressions
 
 2015-12-16 10:25  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/resources.c, specfile: Fixed call to
-	  lcfgresource_valid_context
+	* Fixed call to lcfgresource_valid_context
 
 2015-12-16 10:24  squinney@INF.ED.AC.UK
 
-	* xmlreader/resource.c: Now use lcfgresource_eval_priority function
-	  to calculate priority level based on any context expression
-	  associated with the resource
+	* Now use lcfgresource_eval_priority function to calculate priority
+	  level based on any context expression associated with the
+	  resource
 
 2015-12-16 10:21  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/CMakeLists.txt,
-	  resources/resources.c, resources/utils.c, resources/utils.h: Lots
-	  of context related improvements. Now linking against the context
-	  lib. Added lcfgresource_eval_priority which is a convenient
-	  wrapper for setting the priority by calling
+	* Lots of context related improvements. Now linking against the
+	  context lib. Added lcfgresource_eval_priority which is a
+	  convenient wrapper for setting the priority by calling
 	  lcfgctxlist_eval_expression. Added lcfgresource_valid_context
 	  which uses the new lcfgcontext_valid_expression function.
 	  lcfgresource_set_context now checks for the validity of the new
@@ -2465,553 +2190,490 @@
 
 2015-12-16 10:17  squinney@INF.ED.AC.UK
 
-	* context/context.c, include/context.h: Added new
-	  lcfgcontext_valid_expression which can be used to check the
-	  validity of context expressions. Added
+	* Added new lcfgcontext_valid_expression which can be used to check
+	  the validity of context expressions. Added
 	  lcfgcontext_combine_expressions for combining two context
 	  expressions using a logical-AND. These were previously in the
 	  resource lib
 
 2015-12-10 16:18  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: only store the named component for
-	  override profiles
+	* only store the named component for override profiles
 
 2015-12-10 16:14  squinney@INF.ED.AC.UK
 
-	* resources/complist.c: fixed call to insert_or_replace_component
+	* fixed call to insert_or_replace_component
 
 2015-12-10 16:12  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/complist.c,
-	  resources/components.c, xmlreader/resource.c: Added
-	  lcfgcomponent_get_name function which replaces lcfgcomponent_name
-	  macro
+	* Added lcfgcomponent_get_name function which replaces
+	  lcfgcomponent_name macro
 
 2015-12-10 16:06  squinney@INF.ED.AC.UK
 
-	* resources/components.c: added missing brace
+	* added missing brace
 
 2015-12-10 16:05  squinney@INF.ED.AC.UK
 
-	* resources/components.c: added missing semi-colon
+	* added missing semi-colon
 
 2015-12-10 16:03  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/complist.c,
-	  xmlreader/lcfg_xml_reader.c: Added
-	  lcfgcomplist_transplant_components and used it for importing
-	  override profiles
+	* Added lcfgcomplist_transplant_components and used it for
+	  importing override profiles
 
 2015-12-10 15:40  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/complist.c,
-	  resources/components.c: Added reference counting for component
-	  structs
+	* Added reference counting for component structs
 
 2015-12-10 15:39  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: made lcfgresource_destroy safe to call
-	  with a NULL
+	* made lcfgresource_destroy safe to call with a NULL
 
 2015-12-10 15:23  squinney@INF.ED.AC.UK
 
-	* include/resources.h, profile/profile.c, xmlreader/components.c:
-	  renamed lcfgcomponentlist_ functions to lcfgcomplist_ for brevity
+	* renamed lcfgcomponentlist_ functions to lcfgcomplist_ for brevity
 
 2015-12-10 15:22  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: Added first stage of support for
-	  processing override profiles
+	* Added first stage of support for processing override profiles
 
 2015-12-10 15:21  squinney@INF.ED.AC.UK
 
-	* resources/complist.c: First stage of
-	  lcfgcomplist_insert_or_replace_component support
+	* First stage of lcfgcomplist_insert_or_replace_component support
 
 2015-12-10 15:20  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Added lcfgcomponent_has_resource function
+	* Added lcfgcomponent_has_resource function
 
 2015-12-10 14:35  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: fixed catfile
+	* fixed catfile
 
 2015-12-10 14:32  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: needs string.h
+	* needs string.h
 
 2015-12-10 14:29  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: fixed minor issues
+	* fixed minor issues
 
 2015-12-10 14:25  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: First attempt at processing override
-	  profiles
+	* First attempt at processing override profiles
 
 2015-12-10 13:27  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: Need to pass in main profile
+	* Need to pass in main profile
 
 2015-12-10 13:26  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: Pass in the context string when
-	  processing context profiles
+	* Pass in the context string when processing context profiles
 
 2015-12-10 10:42  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c, xmlreader/lcfg_xml_reader.c: Fixed use of
-	  S_ISREG
+	* Fixed use of S_ISREG
 
 2015-12-10 10:38  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c, context/setctx.c, include/context.h: diff no
-	  longer needs to pass context directory
+	* diff no longer needs to pass context directory
 
 2015-12-10 10:34  squinney@INF.ED.AC.UK
 
-	* include/context.h: updated spec for lcfgcontext_profile_path
+	* updated spec for lcfgcontext_profile_path
 
 2015-12-10 10:33  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: First attempt at procesing
-	  context-specific override profiles
+	* First attempt at procesing context-specific override profiles
 
 2015-12-10 10:32  squinney@INF.ED.AC.UK
 
-	* include/resources.h: Added
-	  lcfgcomponent_insert_or_replace_resource
+	* Added lcfgcomponent_insert_or_replace_resource
 
 2015-12-10 10:32  squinney@INF.ED.AC.UK
 
-	* xmlreader/resource.c: lcfgcomponent_update is now
+	* lcfgcomponent_update is now
 	  lcfgcomponent_insert_or_merge_resource
 
 2015-12-10 10:31  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Added insert_or_replace and renamed
-	  update to insert_or_merge for clarity
+	* Added insert_or_replace and renamed update to insert_or_merge for
+	  clarity
 
 2015-12-10 10:30  squinney@INF.ED.AC.UK
 
-	* profile/profile.c: Made lcfgprofile_destroy safe for calling on a
-	  NULL value
+	* Made lcfgprofile_destroy safe for calling on a NULL value
 
 2015-12-10 10:29  squinney@INF.ED.AC.UK
 
-	* context/context.c: Get the base directory for the context profile
-	  path using lcfgcontext_cfgdir
+	* Get the base directory for the context profile path using
+	  lcfgcontext_cfgdir
 
 2015-12-09 11:56  squinney@INF.ED.AC.UK
 
-	* resources/CMakeLists.txt, xmlreader/CMakeLists.txt: need to link
-	  against new context library
+	* need to link against new context library
 
 2015-12-09 11:53  squinney@INF.ED.AC.UK
 
-	* include/xmlreader.h: added context list to set of parameters for
+	* added context list to set of parameters for
 	  lcfgxml_process_profile
 
 2015-12-09 11:51  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Various minor bug fixes
+	* Various minor bug fixes
 
 2015-12-09 11:51  squinney@INF.ED.AC.UK
 
-	* include/resources.h: Added specs for find_node and find_res
+	* Added specs for find_node and find_res
 
 2015-12-09 11:30  squinney@INF.ED.AC.UK
 
-	* context/CMakeLists.txt: Added cmake file
+	* Added cmake file
 
 2015-12-09 11:29  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt, specfile: Added context sub-directory
+	* Added context sub-directory
 
 2015-12-09 11:27  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c, xmlreader/resource.c:
-	  If a resource has a context then only include it when the context
+	* If a resource has a context then only include it when the context
 	  is active
 
 2015-12-09 11:10  squinney@INF.ED.AC.UK
 
-	* include/xmlreader.h, xmlreader/components.c,
-	  xmlreader/lcfg_xml_reader.c, xmlreader/reader.c,
-	  xmlreader/resource.c: Load the active contexts when starting the
-	  profile parser and pass them all the way through to the resource
-	  processing so that priorities can be calculated
+	* Load the active contexts when starting the profile parser and
+	  pass them all the way through to the resource processing so that
+	  priorities can be calculated
 
 2015-12-09 10:33  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/components.c,
-	  resources/resources.c, xmlreader/resource.c: Added support for
-	  lcfgcomponent_update which will append a resource if not
-	  previously seen and otherwise decide whether or not to replace
-	  based on the priority
+	* Added support for lcfgcomponent_update which will append a
+	  resource if not previously seen and otherwise decide whether or
+	  not to replace based on the priority
 
 2015-12-09 10:22  squinney@INF.ED.AC.UK
 
-	* context/context.h, include/context.h: moved to the common include
-	  directory
+	* moved to the common include directory
 
 2015-12-09 10:11  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c: fixed spec for eval_expression
+	* fixed spec for eval_expression
 
 2015-12-08 14:00  squinney@INF.ED.AC.UK
 
-	* context/context.h, context/setctx.c, context/tools.c: Added
-	  support for evaluating context expressions using the --eval
+	* Added support for evaluating context expressions using the --eval
 	  command line argument
 
 2015-12-08 13:57  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c: Altered spec for _update function so that it
-	  is possible to differentiate between the 3 possible result
-	  states: an update, no change and a failure
+	* Altered spec for _update function so that it is possible to
+	  differentiate between the 3 possible result states: an update, no
+	  change and a failure
 
 2015-12-08 13:24  squinney@INF.ED.AC.UK
 
-	* context/context.h, context/ctxlist.c: Added lcfgctxlist_find_ctx
-	  which is similar to lcfgctxlist_find_node except it returns the
-	  LCFGContext. Added lcfgctxlist_eval_expression which can evaluate
-	  simple context expressions ( currently does not support and/or
-	  combinations or brackets).
+	* Added lcfgctxlist_find_ctx which is similar to
+	  lcfgctxlist_find_node except it returns the LCFGContext. Added
+	  lcfgctxlist_eval_expression which can evaluate simple context
+	  expressions ( currently does not support and/or combinations or
+	  brackets).
 
 2015-12-08 12:41  squinney@INF.ED.AC.UK
 
-	* context/context.c: fixed name and value validity checks
+	* fixed name and value validity checks
 
 2015-12-04 16:41  squinney@INF.ED.AC.UK
 
-	* context/context.h, context/setctx.c, context/tools.c: Added
-	  locking and general safety features for updating the pending
-	  contexts.
+	* Added locking and general safety features for updating the
+	  pending contexts.
 
 2015-12-04 13:33  squinney@INF.ED.AC.UK
 
-	* context/ctx.c, context/setctx.c, context/tools.c: First pass at
-	  implementing the setctx utility. Currently handles displaying and
-	  updating the pending contexts
+	* First pass at implementing the setctx utility. Currently handles
+	  displaying and updating the pending contexts
 
 2015-12-04 13:33  squinney@INF.ED.AC.UK
 
-	* context/context.h, context/ctxlist.c: lcfgctxlist_to_file now
-	  takes an errmsg parameter. sort is now named sort_by_priority for
-	  clarity
+	* lcfgctxlist_to_file now takes an errmsg parameter. sort is now
+	  named sort_by_priority for clarity
 
 2015-12-04 13:32  squinney@INF.ED.AC.UK
 
-	* context/context.c: Fixed specification of allowed chars in
-	  context values
+	* Fixed specification of allowed chars in context values
 
 2015-12-04 09:35  squinney@INF.ED.AC.UK
 
-	* context/context.h: Updated spec for lcfgctxlist_to_file
+	* Updated spec for lcfgctxlist_to_file
 
 2015-12-04 09:35  squinney@INF.ED.AC.UK
 
-	* context/ctxlist.c: Can now set utime on files with
-	  lcfgctxlist_to_file. Also some minor code tidying
+	* Can now set utime on files with lcfgctxlist_to_file. Also some
+	  minor code tidying
 
 2015-12-04 09:33  squinney@INF.ED.AC.UK
 
-	* context/context.c: Minor tidying
+	* Minor tidying
 
 2015-11-05 13:53  squinney@INF.ED.AC.UK
 
-	* context/context.h, context/ctx.c, context/ctxlist.c: Added
-	  lcfgctxlist_clone to create a new list from a current list. Does
-	  not make clones of the context structs themselves
+	* Added lcfgctxlist_clone to create a new list from a current list.
+	  Does not make clones of the context structs themselves
 
 2015-11-05 13:40  squinney@INF.ED.AC.UK
 
-	* context/context.c, context/context.h, context/ctxlist.c: Added
-	  support for comparing two context lists
+	* Added support for comparing two context lists
 
 2015-11-05 11:02  squinney@INF.ED.AC.UK
 
-	* context/ctx.c, context/ctxlist.c: Added lcfgctxlist_update which
-	  will append contexts when new and otherwise replace existing ones
+	* Added lcfgctxlist_update which will append contexts when new and
+	  otherwise replace existing ones
 
 2015-11-05 11:01  squinney@INF.ED.AC.UK
 
-	* context/context.c, context/context.h: Added function to unset a
-	  value. Also added is_false and is_true functions for use when
-	  evaluating expressions
+	* Added function to unset a value. Also added is_false and is_true
+	  functions for use when evaluating expressions
 
 2015-11-05 08:19  squinney@INF.ED.AC.UK
 
-	* context/ctx.c: tweaked tests
+	* tweaked tests
 
 2015-11-05 08:18  squinney@INF.ED.AC.UK
 
-	* context/context.c: tweaked has_value to also check if the value
-	  is non-empty when it is non-null
+	* tweaked has_value to also check if the value is non-empty when it
+	  is non-null
 
 2015-11-05 08:17  squinney@INF.ED.AC.UK
 
-	* context/context.h, context/ctxlist.c: Added lcfgctxlist_sort
-	  which bubble sorts the list on the priority. Added
-	  lcfgctxlist_max_priority to find max priority in context list.
-	  Now only print out contexts which have a value
+	* Added lcfgctxlist_sort which bubble sorts the list on the
+	  priority. Added lcfgctxlist_max_priority to find max priority in
+	  context list. Now only print out contexts which have a value
 
 2015-11-05 06:40  squinney@INF.ED.AC.UK
 
-	* context/context.h, context/ctx.c, context/ctxlist.c: Simplified
-	  to a single linked list. Added from_file and to_file functions
-	  for importing and exporting context lists
+	* Simplified to a single linked list. Added from_file and to_file
+	  functions for importing and exporting context lists
 
 2015-11-05 06:39  squinney@INF.ED.AC.UK
 
-	* context/context.c: Improved from_string to ignore leading and
-	  trailing whitespace. Added support in to_string for adding
-	  newlines. Added a trial print function
+	* Improved from_string to ignore leading and trailing whitespace.
+	  Added support in to_string for adding newlines. Added a trial
+	  print function
 
 2015-11-04 10:52  squinney@INF.ED.AC.UK
 
-	* context/context.h, context/ctxlist.c: Added most of the context
-	  list support
+	* Added most of the context list support
 
 2015-11-04 09:25  squinney@INF.ED.AC.UK
 
-	* context/context.h, context/ctxlist.c: added support for destroy
-	  function for context list struct
+	* added support for destroy function for context list struct
 
 2015-11-04 09:23  squinney@INF.ED.AC.UK
 
-	* context/context.c, context/context.h: Added support for reference
-	  counting in the context struct
+	* Added support for reference counting in the context struct
 
 2015-11-03 21:03  squinney@INF.ED.AC.UK
 
-	* context/context.c, context/context.h, context/ctx.c,
-	  context/ctxlist.c: Made a start on support for contexts
+	* Made a start on support for contexts
 
 2015-11-03 20:59  squinney@INF.ED.AC.UK
 
-	* resources/components.c: fixed check for correct allocation of
-	  memory for resource node
+	* fixed check for correct allocation of memory for resource node
 
 2015-11-03 11:30  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.11.0
+	* lcfg-profilelib release: 1.11.0
 
 2015-11-03 10:53  squinney@INF.ED.AC.UK
 
-	* include/xmlreader.h, xmlreader/resource.c: Reworked all the error
-	  handling for the lcfgresource_set_X calls so that good feedback
-	  is provided
+	* Reworked all the error handling for the lcfgresource_set_X calls
+	  so that good feedback is provided
 
 2015-11-03 10:52  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: further improvements to the build_message
-	  function so that it is as helpful as possible
+	* further improvements to the build_message function so that it is
+	  as helpful as possible
 
 2015-11-03 10:51  squinney@INF.ED.AC.UK
 
-	* resources/templates.c: Return NULL rather than exit when a bad
-	  template is found
+	* Return NULL rather than exit when a bad template is found
 
 2015-11-02 15:52  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.10.0
+	* lcfg-profilelib release: 1.10.0
 
 2015-11-02 15:46  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/mutate.c: Added
-	  lcfgresource_value_map_tagstring function which can be used to
-	  apply a function to each token in a whitespace separated list.
+	* Added lcfgresource_value_map_tagstring function which can be used
+	  to apply a function to each token in a whitespace separated list.
 	  This is used by value_add_tags and the new value_remove_tags
 	  functions
 
 2015-11-02 15:44  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Needed to include stdarg.h
+	* Needed to include stdarg.h
 
 2015-11-02 14:03  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c: Added new
-	  lcfgresource_build_message which will format messages with useful
-	  information about the resource (e.g. name, context, derivation).
-	  This is mostly handy for generating error messages
+	* Added new lcfgresource_build_message which will format messages
+	  with useful information about the resource (e.g. name, context,
+	  derivation). This is mostly handy for generating error messages
 
 2015-11-02 10:48  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: The lcfgresource_get_type_as_string
-	  function now just returns the short 'list' name for list types,
-	  it does not append the template. The lcfgresource_to_status
-	  function now adds the template string where necessary. This makes
-	  the _get_as_string function more widely useful
+	* The lcfgresource_get_type_as_string function now just returns the
+	  short 'list' name for list types, it does not append the
+	  template. The lcfgresource_to_status function now adds the
+	  template string where necessary. This makes the _get_as_string
+	  function more widely useful
 
 2015-11-02 10:06  squinney@INF.ED.AC.UK
 
-	* resources/components.c: Tweaked the lcfgcomponent_print function
-	  to match the changes to the prefix handling in the
-	  lcfgresource_to_string and lcfgresource_to_status functions
+	* Tweaked the lcfgcomponent_print function to match the changes to
+	  the prefix handling in the lcfgresource_to_string and
+	  lcfgresource_to_status functions
 
 2015-11-02 09:58  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c: Altered the way the
-	  to_string and to_status functions handle the optional prefix
-	  parameter. To make them more convenient, when specified the
-	  functions will now add the '.' separator. Added support in the
-	  to_string function for a new NOVALUE option which prevents the
-	  inclusion of the '=' and any value string in the generated output
+	* Altered the way the to_string and to_status functions handle the
+	  optional prefix parameter. To make them more convenient, when
+	  specified the functions will now add the '.' separator. Added
+	  support in the to_string function for a new NOVALUE option which
+	  prevents the inclusion of the '=' and any value string in the
+	  generated output
 
 2015-10-30 15:21  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.9.0
+	* lcfg-profilelib release: 1.9.0
 
 2015-10-30 15:19  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, xmlreader/resource.c: Only store values for attributes
-	  when the value has a non-zero length. Also improved the error
-	  messages when attribute failures occur
+	* Only store values for attributes when the value has a non-zero
+	  length. Also improved the error messages when attribute failures
+	  occur
 
 2015-10-30 15:00  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, xmlreader/resource.c: Ensure that the resource
-	  attribute gathering only uses valid values for each parameter
+	* Ensure that the resource attribute gathering only uses valid
+	  values for each parameter
 
 2015-10-30 15:00  squinney@INF.ED.AC.UK
 
-	* xmlreader/components.c: Ensure that the ultimate error handling
-	  for each function does not trample on any error message which has
-	  already been set
+	* Ensure that the ultimate error handling for each function does
+	  not trample on any error message which has already been set
 
 2015-10-30 14:59  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c,
-	  resources/templates.c: Reworked the way that templates are
-	  handled. When a template is parsed the placeholders will now be
-	  found and cached to avoid having to do it multiple times
+	* Reworked the way that templates are handled. When a template is
+	  parsed the placeholders will now be found and cached to avoid
+	  having to do it multiple times
 
 2015-10-30 13:16  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c, xmlreader/resource.c:
-	  Reworked lcfgresource_build_name function so that it does not
+	* Reworked lcfgresource_build_name function so that it does not
 	  alter the resource name. It now returns a string which can then
 	  be passed the lcfgresource_set_name function. This makes the
 	  function reusable for other situations
 
 2015-10-30 12:13  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/resources.c: tidied the output from
-	  type_as_string when there is not a list of templates
+	* tidied the output from type_as_string when there is not a list of
+	  templates
 
 2015-10-30 11:27  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.8.0
+	* lcfg-profilelib release: 1.8.0
 
 2015-10-30 11:22  squinney@INF.ED.AC.UK
 
-	* include/resources.h, lcfg.yml, resources/CMakeLists.txt,
-	  resources/mutate.c: Added a suite of functions to support calling
-	  all the standard mutations on the lcfgresource value
+	* Added a suite of functions to support calling all the standard
+	  mutations on the lcfgresource value
 
 2015-10-29 14:03  squinney@INF.ED.AC.UK
 
-	* include/resources.h: added missing definitions for has_value and
-	  get_value
+	* added missing definitions for has_value and get_value
 
 2015-10-29 13:28  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.7.0
+	* lcfg-profilelib release: 1.7.0
 
 2015-10-29 13:26  squinney@INF.ED.AC.UK
 
-	* xmlreader/components.c: Improved error handling in
-	  process_components
+	* Improved error handling in process_components
 
 2015-10-29 12:38  squinney@INF.ED.AC.UK
 
-	* include/xmlreader.h, lcfg.yml, xmlreader/common.c,
-	  xmlreader/components.c, xmlreader/lcfg_xml_reader.c,
-	  xmlreader/packages.c, xmlreader/reader.c: Made the components
-	  section required. Made it possible for the packages section to be
-	  optional
+	* Made the components section required. Made it possible for the
+	  packages section to be optional
 
 2015-10-27 19:32  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, xmlreader/resource.c: fixed boolean value check
+	* fixed boolean value check
 
 2015-10-27 19:32  squinney@INF.ED.AC.UK
 
-	* include/resources.h: Marked lcfgresource_set_ function as needing
-	  a check of the return value
+	* Marked lcfgresource_set_ function as needing a check of the
+	  return value
 
 2015-10-27 17:09  squinney@INF.ED.AC.UK
 
-	* xmlreader/resource.c: Attempt to canonicalize a boolean value
-	  when it's not valid
+	* Attempt to canonicalize a boolean value when it's not valid
 
 2015-10-27 17:05  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: ensure lcfgresource_add_derivation does
-	  not use undefined pointer
+	* ensure lcfgresource_add_derivation does not use undefined pointer
 
 2015-10-27 16:59  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c: fixed return calls
-	  for lcfgresource_build_name
+	* fixed return calls for lcfgresource_build_name
 
 2015-10-27 16:58  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: need to include errno.h
+	* need to include errno.h
 
 2015-10-27 16:57  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c: Lots of refactoring
-	  work to improve the interface. All lcfgresource_set functions now
-	  return a boolean to indicate success. There are also now enforced
-	  validity checks for name and value strings.
+	* Lots of refactoring work to improve the interface. All
+	  lcfgresource_set functions now return a boolean to indicate
+	  success. There are also now enforced validity checks for name and
+	  value strings.
 
 2015-10-27 13:53  squinney@INF.ED.AC.UK
 
-	* docs, docs/lcfgresource.pod.cin: Started documenting API for
-	  lcfgresource
+	* Started documenting API for lcfgresource
 
 2015-10-27 13:50  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c, xmlreader/resource.c:
-	  split out set_template_as_string and get_template_as_string
+	* split out set_template_as_string and get_template_as_string
 	  functions to provide a more consistent API
 
 2015-10-26 15:50  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.6.0
+	* lcfg-profilelib release: 1.6.0
 
 2015-10-26 14:38  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: ensure lcfgresource_to_string only
-	  attempts to call strlen on resource value when it is not NULL
+	* ensure lcfgresource_to_string only attempts to call strlen on
+	  resource value when it is not NULL
 
 2015-10-26 11:58  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/CMakeLists.txt: Include the new iterator.c in
-	  the build
+	* Include the new iterator.c in the build
 
 2015-10-26 11:51  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/iterator.c: Added iterator
-	  interface for component list of resources
+	* Added iterator interface for component list of resources
 
 2015-10-26 09:27  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.5.0
+	* lcfg-profilelib release: 1.5.0
 
 2015-10-26 09:27  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/resources.c: Fixed function spec for
-	  lcfgresource_get_type_as_string
+	* Fixed function spec for lcfgresource_get_type_as_string
 
 2015-10-24 10:01  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/resources.c, xmlreader/resource.c:
-	  Converted the resource type field over to using a enum and added
+	* Converted the resource type field over to using a enum and added
 	  _set_as_string and get_as_string functions to convert the values
 	  from/to strings. Resources now always have a type (the default
 	  being a string) so the has_type method is gone but there is
@@ -3022,240 +2684,213 @@
 
 2015-10-23 15:23  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.4.0
+	* lcfg-profilelib release: 1.4.0
 
 2015-10-23 15:22  squinney@INF.ED.AC.UK
 
-	* include/resources.h, lcfg.yml, resources/resources.c: Added
-	  functions for validating boolean and integer values
+	* Added functions for validating boolean and integer values
 
 2015-10-22 16:37  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, resources/resources.c: fixed call to
-	  lcfgtemplate_to_string function in lcfgresource_clone
+	* fixed call to lcfgtemplate_to_string function in
+	  lcfgresource_clone
 
 2015-10-22 16:15  squinney@INF.ED.AC.UK
 
-	* resources/resources.c: Added lcfgresource_clone function
+	* Added lcfgresource_clone function
 
 2015-10-22 16:15  squinney@INF.ED.AC.UK
 
-	* include/resources.h, resources/templates.c: tweaked param types
-	  for lcfgtemplate_new
+	* tweaked param types for lcfgtemplate_new
 
 2015-10-22 16:14  squinney@INF.ED.AC.UK
 
-	* xmlreader/components.c: no need to include string.h
+	* no need to include string.h
 
 2015-10-22 15:55  squinney@INF.ED.AC.UK
 
-	* include/resources.h, lcfg.yml, resources/resources.c: Added
-	  lcfgresource_equals and lcfgresource_compare functions
+	* Added lcfgresource_equals and lcfgresource_compare functions
 
 2015-10-22 11:09  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.3.0
+	* lcfg-profilelib release: 1.3.0
 
 2015-10-22 11:08  squinney@INF.ED.AC.UK
 
-	* include/profile.h, include/resources.h, include/xmlreader.h,
-	  lcfg.yml, profile/profile.c, resources/CMakeLists.txt,
-	  resources/resources.h, xmlreader/components.c,
-	  xmlreader/reader.c, xmlreader/resource.c: Moved resources.h
-	  header into common include directory
+	* Moved resources.h header into common include directory
 
 2015-10-22 11:04  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt, lcfg.yml, resources, resources/components.c,
-	  resources/resources.c, resources/resources.h, specfile: Merged
-	  the resources lib into this package to simplify the build process
+	* Merged the resources lib into this package to simplify the build
+	  process
 
 2015-10-22 10:04  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, xmlreader/common.c: tweaked ordering of includes
+	* tweaked ordering of includes
 
 2015-10-22 10:02  squinney@INF.ED.AC.UK
 
-	* xmlreader/common.c: also need to define _GNU_SOURCE
+	* also need to define _GNU_SOURCE
 
 2015-10-22 10:01  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, xmlreader/common.c: Needed to include stdio
+	* Needed to include stdio
 
 2015-10-22 09:57  squinney@INF.ED.AC.UK
 
-	* include/xmlreader.h, lcfg.yml, xmlreader/common.c,
-	  xmlreader/components.c, xmlreader/packages.c, xmlreader/reader.c,
-	  xmlreader/resource.c: Added a new lcfgxml_set_error_message
-	  function which provides a convenient standard way to specify the
-	  error message, it handles a variable number of arguments and just
-	  wraps vasprintf
+	* Added a new lcfgxml_set_error_message function which provides a
+	  convenient standard way to specify the error message, it handles
+	  a variable number of arguments and just wraps vasprintf
 
 2015-10-20 19:20  squinney@INF.ED.AC.UK
 
-	* xmlreader/lcfg_xml_reader.c: Made it easier to set component
-	  printing style
+	* Made it easier to set component printing style
 
 2015-10-20 19:06  squinney@INF.ED.AC.UK
 
-	* xmlreader/common.c: Dropped unnecessary header includes
+	* Dropped unnecessary header includes
 
 2015-10-20 18:49  squinney@INF.ED.AC.UK
 
-	* include/xmlreader.h, xmlreader/common.c: Dropped
-	  lcfgxml_join_strings as it is not used anywhere
+	* Dropped lcfgxml_join_strings as it is not used anywhere
 
 2015-10-20 18:44  squinney@INF.ED.AC.UK
 
-	* profile/profile.c: Converted to using perror for error reporting
+	* Converted to using perror for error reporting
 
 2015-10-20 11:11  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.2.0
+	* lcfg-profilelib release: 1.2.0
 
 2015-10-20 11:11  squinney@INF.ED.AC.UK
 
-	* specfile: updated dependency versions
+	* updated dependency versions
 
 2015-10-20 11:05  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt, lcfg.yml, src, xmlreader,
-	  xmlreader/CMakeLists.txt, xmlreader/profile.c,
-	  xmlreader/profile.h, xmlreader/xmlreader.h: Renamed 'src' to
-	  'xmlreader' to make it clearer what code is in that directory
+	* Renamed 'src' to 'xmlreader' to make it clearer what code is in
+	  that directory
 
 2015-10-20 11:01  squinney@INF.ED.AC.UK
 
-	* CMakeLists.txt, include/profile.h, include/xmlreader.h, lcfg.yml,
-	  profile/CMakeLists.txt, profile/profile.c, specfile,
-	  src/CMakeLists.txt, src/profile.c, src/profile.h,
-	  src/xmlreader.h: Reorganised the files so that it is now possible
-	  to build separate lcfg_profile and lcfg_xmlreader libraries
+	* Reorganised the files so that it is now possible to build
+	  separate lcfg_profile and lcfg_xmlreader libraries
 
 2015-10-20 10:36  squinney@INF.ED.AC.UK
 
-	* context, include, profile: Added new top-level source directories
-	  so the code can be organised better
+	* Added new top-level source directories so the code can be
+	  organised better
 
 2015-10-08 15:04  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.1.1
+	* lcfg-profilelib release: 1.1.1
 
 2015-10-08 15:04  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, src/common.c, src/components.c, src/packages.c,
-	  src/profile.c, src/reader.c, src/resource.c: for safety, set
-	  pointers to NULL when memory is freed
+	* for safety, set pointers to NULL when memory is freed
 
 2015-10-07 12:14  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.1.0
+	* lcfg-profilelib release: 1.1.0
 
 2015-10-07 12:14  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, specfile: Updated resourcelib and packagelib deps
+	* Updated resourcelib and packagelib deps
 
 2015-10-07 12:13  squinney@INF.ED.AC.UK
 
-	* src/resource.c: Updated for resourcelib 0.3.2, also lots of work
-	  to reduce the amount of memory fragmentation.
+	* Updated for resourcelib 0.3.2, also lots of work to reduce the
+	  amount of memory fragmentation.
 
 2015-10-07 12:12  squinney@INF.ED.AC.UK
 
-	* src/packages.c: Do not call lcfgpkgspec_set_defaults, it's not
-	  necessary and it wastes time and memory
+	* Do not call lcfgpkgspec_set_defaults, it's not necessary and it
+	  wastes time and memory
 
 2015-10-07 12:12  squinney@INF.ED.AC.UK
 
-	* src/components.c: Improved the processing of components. Should
-	  now catch all possible error conditions.
+	* Improved the processing of components. Should now catch all
+	  possible error conditions.
 
 2015-10-07 12:11  squinney@INF.ED.AC.UK
 
-	* src/reader.c: modified lcfgxml_collect_metadata to reduce teh
-	  number of string dups and frees
+	* modified lcfgxml_collect_metadata to reduce teh number of string
+	  dups and frees
 
 2015-10-06 15:24  squinney@INF.ED.AC.UK
 
-	* src/packages.c: need to call add_context and add_derivation with
-	  base values so that they are copied rather than just stashed
+	* need to call add_context and add_derivation with base values so
+	  that they are copied rather than just stashed
 
 2015-10-06 11:29  squinney@INF.ED.AC.UK
 
-	* src/packages.c: Updated to the packagelib 1.14.0 API which uses a
-	  lot less memory
+	* Updated to the packagelib 1.14.0 API which uses a lot less memory
 
 2015-10-05 13:20  squinney@INF.ED.AC.UK
 
-	* src/packages.c: Reworked process_package and process_packages to
-	  avoid copying strings unnecessarily
+	* Reworked process_package and process_packages to avoid copying
+	  strings unnecessarily
 
 2015-10-05 12:49  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, src/resource.c: Avoid unnecessary calls to free. Added
-	  a couple of strdup calls where an extra copy of a string is
-	  required
+	* Avoid unnecessary calls to free. Added a couple of strdup calls
+	  where an extra copy of a string is required
 
 2015-10-02 13:12  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.0.2
+	* lcfg-profilelib release: 1.0.2
 
 2015-10-02 13:09  squinney@INF.ED.AC.UK
 
-	* lcfg.yml, src/reader.c: Call lcfgtaglist_destroy to free the
-	  component tag list when no longer required
+	* Call lcfgtaglist_destroy to free the component tag list when no
+	  longer required
 
 2015-10-02 13:09  squinney@INF.ED.AC.UK
 
-	* src/lcfg_xml_reader.c: pass through the list of required
-	  components
+	* pass through the list of required components
 
 2015-10-02 13:05  squinney@INF.ED.AC.UK
 
-	* specfile: Updated dependencies
+	* Updated dependencies
 
 2015-10-02 12:16  squinney@INF.ED.AC.UK
 
-	* src/reader.c, src/xmlreader.h: Altered process_profile so that it
-	  is possible to specify a list of components to be retrieved from
-	  the profile
+	* Altered process_profile so that it is possible to specify a list
+	  of components to be retrieved from the profile
 
 2015-10-02 11:44  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.0.1
+	* lcfg-profilelib release: 1.0.1
 
 2015-10-02 11:39  squinney@INF.ED.AC.UK
 
-	* src/lcfg_xml_reader.c: Made it slightly easier to control
-	  printing of package and resource lists
+	* Made it slightly easier to control printing of package and
+	  resource lists
 
 2015-10-02 11:37  squinney@INF.ED.AC.UK
 
-	* src/resource.c: Only create current_tags and child_tags structs
-	  when necessary to avoid wasting time and memory
+	* Only create current_tags and child_tags structs when necessary to
+	  avoid wasting time and memory
 
 2015-10-02 11:36  squinney@INF.ED.AC.UK
 
-	* src/components.c: Converted done variable to boolean for neatness
+	* Converted done variable to boolean for neatness
 
 2015-10-02 10:38  squinney@INF.ED.AC.UK
 
-	* src/components.c, src/resource.c: removed some debugging
+	* removed some debugging
 
 2015-10-02 09:58  squinney@INF.ED.AC.UK
 
-	* src/resource.c: Fixed type string for list resources with no
-	  templates
+	* Fixed type string for list resources with no templates
 
 2015-10-02 09:15  squinney@INF.ED.AC.UK
 
-	* ChangeLog, lcfg.yml: lcfg-profilelib release: 1.0.0
+	* lcfg-profilelib release: 1.0.0
 
 2015-10-02 09:13  squinney@INF.ED.AC.UK
 
-	* ., CMakeLists.txt, lcfg.yml, specfile, src/CMakeLists.txt,
-	  src/components.c, src/lcfg_xml_reader.c, src/resource.c: Renamed
-	  as lcfg-profilelib
+	* Renamed as lcfg-profilelib
 
 2015-09-30 19:58  squinney@INF.ED.AC.UK
 
