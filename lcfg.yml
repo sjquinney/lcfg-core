@@ -8,11 +8,11 @@ build:
 date: 13/07/16 15:17:41
 group: LCFG
 license: GPLv2
-name: lcfg-profilelib
+name: lcfg-core
 orgident: org.lcfg
 platforms: 
   - ScientificLinux7
-release: 3
+release: 4
 schema: 1
 translate: 
   - "*.cin"
