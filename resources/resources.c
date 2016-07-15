@@ -1186,7 +1186,7 @@ ssize_t lcfgresource_to_string( const LCFGResource * res,
     context_len = strlen(context);
 
     if ( context_len > 0 )
-      new_len += ( 2 + strlen() ); /* +2 for '[' and ']' */
+      new_len += ( 2 + context_len ); /* +2 for '[' and ']' */
 
   }
 
