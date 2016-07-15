@@ -13,6 +13,9 @@
 #include "resources.h"
 #include "utils.h"
 
+/* The list of resource type names MUST match the ordering of the
+   LCFGResourceType enum. */
+
 static const char * lcfgresource_type_names[] = {
   "string",
   "integer",
@@ -244,13 +247,18 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
 
   LCFGResourceType new_type = LCFG_RESOURCE_TYPE_STRING;
 
-  if ( new_value != NULL && *new_value != '\0' ) {
+  char * type_str = (char *) new_value;
+
+  /* Spin past any leading whitespace */
+  if ( type_str != NULL )
+    while ( *type_str != '\0' && isspace(*type_str) ) type_str++;
+
+  if ( type_str != NULL && *type_str != '\0' ) {
 
     /* If the type string begins with the type symbol character '%'
        (percent) then step past it and start the subsequent comparisons
        from the next char */
 
-    char * type_str = (char *) new_value;
     if ( *type_str == LCFG_RESOURCE_SYMBOL_TYPE )
       type_str++;
 
@@ -280,11 +288,11 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
   /* Check if there is a comment string for the resource. This would
      be after the type string and enclosed in brackets - ( ) */
 
-  char * posn = (char *) new_value;
+  char * posn = type_str;
 
-  if ( ok && new_value != NULL ) {
+  if ( ok && type_str != NULL ) {
 
-    char * comment_start = strchr( new_value, '(' );
+    char * comment_start = strchr( type_str, '(' );
     if ( comment_start != NULL ) {
       char * comment_end = strchr( comment_start, ')' );
 
