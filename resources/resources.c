@@ -1034,29 +1034,38 @@ ssize_t lcfgresource_to_status( const LCFGResource * res,
   /* Type - Only output the type when the resource is NOT a string */
 
   char * type_as_str = NULL;
+  size_t type_len = 0;
   if ( lcfgresource_get_type(res) != LCFG_RESOURCE_TYPE_STRING ||
        lcfgresource_has_comment(res) ) {
 
     type_as_str = lcfgresource_get_type_as_string( res, 0 );
 
     if ( type_as_str != NULL ) {
+      type_len = strlen(type_as_str);
+
       ssize_t key_len =
         lcfgresource_compute_key_length( res, prefix, NULL,
                                          LCFG_RESOURCE_SYMBOL_TYPE );
 
-      new_len += ( key_len + strlen(type_as_str) + 2 ); /* +2 for '=' and newline */
+      new_len += ( key_len + type_len + 2 ); /* +2 for '=' and newline */
     }
   }
 
   /* Derivation */
 
+  char * derivation = NULL;
+  size_t deriv_len = 0;
   if ( lcfgresource_has_derivation(res) ) {
+    derivation = lcfgresource_get_derivation(res);
+    deriv_len = strlen(derivation);
 
-    ssize_t key_len =
-      lcfgresource_compute_key_length( res, prefix, NULL,
-                                       LCFG_RESOURCE_SYMBOL_DERIVATION );
+    if ( deriv_len > 0 ) {
+      ssize_t key_len =
+	lcfgresource_compute_key_length( res, prefix, NULL,
+					 LCFG_RESOURCE_SYMBOL_DERIVATION );
 
-    new_len += ( key_len + strlen(lcfgresource_get_derivation(res)) + 2 ); /* +2 for '=' and newline */
+      new_len += ( key_len + deriv_len + 2 ); /* +2 for '=' and newline */
+    }
   }
 
   /* Allocate the required space */
@@ -1085,14 +1094,16 @@ ssize_t lcfgresource_to_status( const LCFGResource * res,
       lcfgresource_insert_key( res, prefix, NULL,
                                LCFG_RESOURCE_SYMBOL_TYPE, to );
 
-    to += write_len;
+    if ( write_len > 0 ) {
+      to += write_len;
 
-    *to = '=';
-    to++;
+      *to = '=';
+      to++;
 
-    to = stpcpy( to, type_as_str );
+      to = stpncpy( to, type_as_str, type_len );
 
-    to = stpcpy( to, "\n" );
+      to = stpcpy( to, "\n" );
+    }
 
     free(type_as_str);
   }
@@ -1105,14 +1116,16 @@ ssize_t lcfgresource_to_status( const LCFGResource * res,
       lcfgresource_insert_key( res, prefix, NULL,
                                LCFG_RESOURCE_SYMBOL_DERIVATION, to );
 
-    to += write_len;
+    if ( write_len > 0 ) {
+      to += write_len;
 
-    *to = '=';
-    to++;
+      *to = '=';
+      to++;
 
-    to = stpcpy( to, lcfgresource_get_derivation(res) );
+      to = stpncpy( to, derivation, deriv_len );
 
-    to = stpcpy( to, "\n" );
+      to = stpcpy( to, "\n" );
+    }
   }
 
   *to = '\0';
@@ -1163,11 +1176,19 @@ ssize_t lcfgresource_to_string( const LCFGResource * res,
 
   /* Context */
 
-  bool has_context = ( !(options&LCFG_OPT_NOCONTEXT) &&
-                       lcfgresource_has_context(res) );
+  char * context = NULL;
+  size_t context_len = 0;
 
-  if ( has_context )
-    new_len += ( 2 + strlen(lcfgresource_get_context(res)) ); /* +2 for '[' and ']' */
+  if ( !(options&LCFG_OPT_NOCONTEXT) &&
+       lcfgresource_has_context(res) ) {
+
+    context = lcfgresource_get_context(res);
+    context_len = strlen(context);
+
+    if ( context_len > 0 )
+      new_len += ( 2 + strlen() ); /* +2 for '[' and ']' */
+
+  }
 
   /* Optional newline at end of string */
 
@@ -1204,11 +1225,11 @@ ssize_t lcfgresource_to_string( const LCFGResource * res,
 
   /* Optional context */
 
-  if ( has_context ) {
+  if ( context_len > 0 ) {
     *to = '[';
     to++;
 
-    to = stpcpy( to, lcfgresource_get_context(res) );
+    to = stpncpy( to, context, context_len );
 
     *to = ']';
     to++;
@@ -1644,6 +1665,8 @@ bool lcfgresource_parse_key( char  * key,
     start++;
   }
 
+  /* Resource name - finds the *last* separator */
+
   char * sep = strrchr( start, '.' );
   if ( sep != NULL ) {
 
@@ -1657,6 +1680,8 @@ bool lcfgresource_parse_key( char  * key,
   } else {
     *resname = start;
   }
+
+  /* Component name - finds the *last* separator */
 
   if ( *resname != start ) {
 
@@ -1673,6 +1698,8 @@ bool lcfgresource_parse_key( char  * key,
     } else {
       *compname = start;
     }
+
+    /* Anything left is the hostname / namespace */
 
     if ( *compname != start )
       *hostname = start;
