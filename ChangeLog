@@ -1,6 +1,24 @@
-2016-07-14  SVN: new release
+2016-07-15  SVN: new release
 
-	* Release: 1.25.3
+	* Release: 1.25.4
+
+2016-07-15 11:10  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/resources.c: fixed wrong variable name
+
+2016-07-15 09:17  squinney@INF.ED.AC.UK
+
+	* resources/resources.c: tweaked the string building in a couple of
+	  places to be more robust
+
+2016-07-15 08:57  squinney@INF.ED.AC.UK
+
+	* resources/resources.c: ignore any leading whitespace in the new
+	  value passed to lcfgresource_set_type_as_string
+
+2016-07-14 08:16  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.25.3
 
 2016-07-14 08:16  squinney@INF.ED.AC.UK
 
