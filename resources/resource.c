@@ -865,7 +865,7 @@ bool lcfgresource_set_template_as_string(  LCFGResource * res,
   }
 
   if (  *new_tmpl_str == '\0' ) {
-    return lcfgresource_set_template( res, NULL )
+    return lcfgresource_set_template( res, NULL );
   }
 
   LCFGTemplate * new_template = NULL;
