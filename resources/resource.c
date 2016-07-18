@@ -26,7 +26,7 @@ static const char * lcfgresource_type_names[] = {
 };
 
 /**
- * @brief Creates and initialises new resource
+ * @brief Create and initialise new resource
  *
  * Creates a new @c LCFGResource struct and initialises the parameters
  * to the default values.
@@ -73,7 +73,7 @@ LCFGResource * lcfgresource_new(void) {
  * If the memory allocation for the new struct is not successful the
  * @c exit() function will be called with a non-zero value.
  *
- * @param Pointer to @c LCFGResource struct to be cloned.
+ * @param res Pointer to @c LCFGResource struct to be cloned.
  *
  * @return Pointer to new @c LCFGResource struct or NULL if copy fails.
  *
@@ -157,7 +157,7 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
 }
 
 /**
- * @brief Destroys a resource
+ * @brief Destroy a resource
  *
  * Destroys the specified @c LCFGResource struct. If the reference
  * count for the resource is greater than zero the function will not
@@ -171,7 +171,7 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
  * resource which has already been destroyed (or potentially was never
  * created).
  *
- * @param Pointer to @c LCFGResource struct to be destroyed.
+ * @param res Pointer to @c LCFGResource struct to be destroyed.
  *
  */
 
@@ -223,7 +223,7 @@ inline static bool isword( const char chr ) {
  * characters MUST be in the class @c [A-Za-z0-9_]. This means they
  * are safe to use as variable names for languages such as bash.
  *
- * @param String to be tested
+ * @param name String to be tested
  *
  * @return boolean which indicates if string is a valid resource name
  *
@@ -256,7 +256,7 @@ bool lcfgresource_valid_name( const char * name ) {
  * an LCFG resource to be valid it is possible for the value of the
  * name to be set to @c NULL when the struct is first created.
  *
- * @param Pointer to an @c LCFGResource struct
+ * @param res Pointer to an @c LCFGResource struct
  *
  * @return boolean which indicates if a resource has a name
  *
@@ -276,7 +276,7 @@ bool lcfgresource_has_name( const LCFGResource * res ) {
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the name of the resource.
  *
- * @param Pointer to an @c LCFGResource struct
+ * @param res Pointer to an @c LCFGResource struct
  *
  * @return The name of the resource (possibly NULL).
  */
@@ -298,20 +298,20 @@ char * lcfgresource_get_name( const LCFGResource * res ) {
  * will be set to @c EINVAL and the function will return a @c false
  * value.
  *
- * @param Pointer to an @c LCFGResource struct
- * @param String which is the new name
+ * @param res Pointer to an @c LCFGResource struct
+ * @param new_name String which is the new name
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgresource_set_name( LCFGResource * res, char * new_value ) {
+bool lcfgresource_set_name( LCFGResource * res, char * new_name ) {
 
   bool ok = false;
-  if ( lcfgresource_valid_name(new_value) ) {
+  if ( lcfgresource_valid_name(new_name) ) {
     free(res->name);
 
-    res->name = new_value;
+    res->name = new_name;
     ok = true;
   } else {
     errno = EINVAL;
