@@ -443,14 +443,14 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
  * foo_$_$ bar_$_$`
  *
  * @param res Pointer to an @c LCFGResource struct
- * @param new_type The new type as a string
+ * @param new_type_str The new type as a string
  * @param msg Pointer to any diagnostic messages
  *
  * @return boolean indicating success
  */
 
 bool lcfgresource_set_type_as_string( LCFGResource * res,
-                                      const char * new_type,
+                                      const char * new_type_str,
                                       char ** msg ) {
 
   *msg = NULL;
@@ -462,7 +462,7 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
 
   LCFGResourceType new_type = LCFG_RESOURCE_TYPE_STRING;
 
-  char * type_str = (char *) new_type;
+  char * type_str = (char *) new_type_str;
 
   /* Spin past any leading whitespace */
   if ( type_str != NULL )
