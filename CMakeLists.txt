@@ -51,3 +51,25 @@ lcfg_add_pod(${CMAKE_BINARY_DIR}/docs/lcfgpackagelib.pod docs/lcfgpackagelib 3)
 lcfg_add_pod(${CMAKE_BINARY_DIR}/docs/lcfgpackageiterator.pod docs/lcfgpackageiterator 3)
 lcfg_add_pod(${CMAKE_BINARY_DIR}/docs/lcfgpackagespec.pod docs/lcfgpackagespec 3)
 lcfg_add_pod(${CMAKE_BINARY_DIR}/docs/lcfgpackagenode.pod docs/lcfgpackagenode 3)
+
+# add a target to generate API documentation with Doxygen
+find_package(Doxygen)
+option(BUILD_DOCS "Create and install the HTML based API documentation (requires Doxygen)" ${DOXYGEN_FOUND})
+
+if(BUILD_DOCS)
+    if(NOT DOXYGEN_FOUND)
+        message(FATAL_ERROR "Doxygen is needed to build the documentation.")
+    endif()
+
+    set(doxyfile_in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+    set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+    configure_file(${doxyfile_in} ${doxyfile} @ONLY)
+
+    add_custom_target(doc
+        COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen"
+        VERBATIM)
+
+endif(BUILD_DOCS)

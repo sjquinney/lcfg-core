@@ -1,5 +1,5 @@
 --- !!perl/hash:LCFG::Build::PkgSpec 
-abstract: Libraries for parsing LCFG XML profiles
+abstract: LCFG Core libraries
 author: 
   - Stephen Quinney <squinney@inf.ed.ac.uk>
 base: ~
@@ -12,7 +12,7 @@ name: lcfg-core
 orgident: org.lcfg
 platforms: 
   - ScientificLinux7
-release: 1
+release: 2
 schema: 1
 translate: 
   - "*.cin"
