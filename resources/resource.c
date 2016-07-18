@@ -25,6 +25,19 @@ static const char * lcfgresource_type_names[] = {
   "subscribe"
 };
 
+/**
+ * @brief Creates and initialises new resource
+ *
+ * Creates a new @c LCFGResource struct and initialises the parameters
+ * to the default values.
+ *
+ * If the memory allocation for the new struct is not successful the
+ * @c exit() function will be called with a non-zero value.
+ *
+ * @return Pointer to new @c LCFGResource struct
+ *
+ */
+
 LCFGResource * lcfgresource_new(void) {
 
   LCFGResource * res = malloc( sizeof(LCFGResource) );
@@ -47,6 +60,24 @@ LCFGResource * lcfgresource_new(void) {
 
   return res;
 }
+
+/**
+ * @brief Clone a resource
+ *
+ * Creates a new @c LCFGResource struct and copies the values of the
+ * parameters from the specified resource. The values for the
+ * parameters are copied (e.g. strings are duplicated using
+ * @c strdup() ) so that a later change to a parameter in the source
+ * resource does not affect the new clone resource.
+ *
+ * If the memory allocation for the new struct is not successful the
+ * @c exit() function will be called with a non-zero value.
+ *
+ * @param Pointer to @c LCFGResource struct to be cloned.
+ *
+ * @return Pointer to new @c LCFGResource struct or NULL if copy fails.
+ *
+ */
 
 LCFGResource * lcfgresource_clone(const LCFGResource * res) {
 
@@ -125,6 +156,25 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
   return clone;
 }
 
+/**
+ * @brief Destroys a resource
+ *
+ * Destroys the specified @c LCFGResource struct. If the reference
+ * count for the resource is greater than zero the function will not
+ * do anything. Otherwise this will free all memory associated with
+ * the resource. This will call @c free() on each parameter (or @c
+ * lcfgtemplate_destroy on the template parameter ) and then set each
+ * value to be @c NULL.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * resource which has already been destroyed (or potentially was never
+ * created).
+ *
+ * @param Pointer to @c LCFGResource struct to be destroyed.
+ *
+ */
+
 void lcfgresource_destroy(LCFGResource * res) {
 
   if ( res == NULL )
@@ -162,6 +212,23 @@ inline static bool isword( const char chr ) {
   return ( isalnum(chr) || chr == '_' );
 }
 
+/**
+ * @brief Check if a string is a valid LCFG resource name
+ *
+ * Checks the contents of a specified string against the specification
+ * for an LCFG resource name.
+ *
+ * An LCFG resource name MUST be at least one character in length. The
+ * first character MUST be in the class @c [A-Za-z] and all other
+ * characters MUST be in the class @c [A-Za-z0-9_]. This means they
+ * are safe to use as variable names for languages such as bash.
+ *
+ * @param String to be tested
+ *
+ * @return boolean which indicates if string is a valid resource name
+ *
+ */
+
 bool lcfgresource_valid_name( const char * name ) {
 
   /* MUST NOT be a NULL.
@@ -181,13 +248,62 @@ bool lcfgresource_valid_name( const char * name ) {
   return valid;
 }
 
+/**
+ * @brief Check if a resource has a name
+ *
+ * Checks if the specified @c LCFGResource struct currently has a
+ * value set for the name attribute. Although a name is required for
+ * an LCFG resource to be valid it is possible for the value of the
+ * name to be set to @c NULL when the struct is first created.
+ *
+ * @param Pointer to an @c LCFGResource struct
+ *
+ * @return boolean which indicates if a resource has a name
+ *
+ */
+
 bool lcfgresource_has_name( const LCFGResource * res ) {
   return ( res->name != NULL );
 }
 
+/**
+ * @brief Get the name of the resource
+ *
+ * This returns the value of the name parameter for the @c
+ * LCFGResource struct. If the resource does not currently have a name
+ * then the value will be @c NULL.
+ *
+ * It is important to note that this is NOT a copy of the string,
+ * changing the returned string will modify the name of the resource.
+ *
+ * @param Pointer to an @c LCFGResource struct
+ *
+ * @return The name of the resource (possibly NULL).
+ */
+
 char * lcfgresource_get_name( const LCFGResource * res ) {
   return res->name;
 }
+
+/**
+ * @brief Set the name of the resource
+ *
+ * Sets the value of the name parameter for the @c LCFGResource struct
+ * to that specified. It is important to note that this does NOT take
+ * a copy of the string.
+ *
+ * Before changing the value of the name to be the new string it will
+ * be validated using the @c lcfgresource_valid_name() function. If
+ * the new string is not valid then no change will occur, the @c errno
+ * will be set to @c EINVAL and the function will return a @c false
+ * value.
+ *
+ * @param Pointer to an @c LCFGResource struct
+ * @param String which is the new name
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgresource_set_name( LCFGResource * res, char * new_value ) {
 
