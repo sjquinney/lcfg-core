@@ -159,11 +159,18 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
 /**
  * @brief Destroy a resource
  *
- * Destroys the specified @c LCFGResource struct. If the reference
- * count for the resource is greater than zero the function will not
- * do anything. Otherwise this will free all memory associated with
- * the resource. This will call @c free() on each parameter (or @c
- * lcfgtemplate_destroy on the template parameter ) and then set each
+ * When the specified @c LCFGResource struct is no longer required
+ * this will free all associated memory.
+ *
+ * *Reference Counting:* There is support for very simple reference
+ * counting which allows an @c LCFGResource struct to appear in
+ * multiple lists. Incrementing and decrementing that reference
+ * counter is the responsibility of the container code. If the
+ * reference count for the specified resource is greater than zero the
+ * function will not do anything.
+ *
+ * This will call @c free() on each parameter of the struct (or @c
+ * lcfgtemplate_destroy for the template parameter ) and then set each
  * value to be @c NULL.
  *
  * If the value of the pointer passed in is @c NULL then the function
