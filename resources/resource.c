@@ -166,8 +166,8 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
  * counting which allows an @c LCFGResource struct to appear in
  * multiple lists. Incrementing and decrementing that reference
  * counter is the responsibility of the container code. If the
- * reference count for the specified resource is greater than zero the
- * function will not do anything.
+ * reference count for the specified resource is greater than zero
+ * this function will have no affect.
  *
  * This will call @c free() on each parameter of the struct (or @c
  * lcfgtemplate_destroy for the template parameter ) and then set each
@@ -329,9 +329,52 @@ bool lcfgresource_set_name( LCFGResource * res, char * new_name ) {
 
 /* Types */
 
+/**
+ * @brief Get the type of the resource as an integer
+ *
+ * This returns the value of the type parameter for the LCFGResource struct.
+ *
+ * An LCFG resource will be one of several types (e.g. string,
+ * integer, boolean, list) which controls what validation is done when
+ * a value is set. Internally the type is stored as an integer, see
+ * the @c LCFGResourceType enum for the full list of supported
+ * values. If you require the type as a string then use @c
+ * lcfgresource_get_type_as_string()
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ *
+ * @return The type of the resource as an integer
+ */
+
 LCFGResourceType lcfgresource_get_type( const LCFGResource * res ) {
   return res->type;
 }
+
+/**
+ * @brief Set the type of the resource
+ *
+ * Changes the type of the resource to that specified. The type of the
+ * resource controls what validation will be done when a new value is
+ * set. By default a resource is considered to be a "string" which
+ * means that any value is permitted. Changing the type to something
+ * like "integer" or "boolean" will thus restrict the valid values.
+
+ * If a resource already has a value then it is only possible to
+ * change the type to something more restrictive if the value is valid
+ * for the new type. For instance, if a resource of type "string" has
+ * a value of "foo" the type could be changed to "list" but not
+ * "integer". If it is not possible to change the type for a resource
+ * then @c errno will be set to @c EINVAL and this function will
+ * return false.
+ *
+ * To set the type for a resource using a string rather than an
+ * integer use @c lcfgresource_set_type_as_string()
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ * @param The new resource type as an integer
+ *
+ * @return boolean indicating success
+ */
 
 bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
 
@@ -357,11 +400,60 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
   return ok;
 }
 
-bool lcfgresource_set_type_as_string( LCFGResource * res,
-                                      const char * new_value,
-                                      char ** errmsg ) {
+/**
+ * @brief Set the type of the resource
+ *
+ * Parses the specified type string and sets the type for the resource
+ * (and optionally sets the comment and template parameters). The type
+ * is actually set using @c lcfgresource_set_type() so see that
+ * function for further details.
+ *
+ * If the specified type string is NULL or empty then the type
+ * defaults to "string". Otherwise the type will be taken from the
+ * initial part of the string (if the first character is the LCFG
+ * marker '%' it will be ignored).
+ *
+ * Currently supported types are:
+ *   + string
+ *   + integer
+ *   + boolean
+ *   + list
+ *   + publish
+ *   + subscribe
+ *
+ * The "publish" and "subscribe" types are effectively string
+ * sub-types and are only relevant for spanning maps. If any other
+ * unsupported type is specified then @c errno will be set to @c
+ * EINVAL and the function will return false.
+ *
+ * Further to the type of the resource a comment may be specified. Any
+ * comment will be enclosed in brackets - '(' .. ')'. Typically these
+ * only appear with string resources which have additional validation
+ * specified by the schema author, the comment then describes the
+ * expected format of the value for the resource. For example a type
+ * specification for a string resource might be `%string (MAC
+ * address)`.
+ *
+ * If a resource is a list then there may also be a set of templates
+ * specified. These follow a ':' (colon) separator and are a
+ * space-separated list of templates of the form @c foo_$_$ where the
+ * '$' dollar symbols are placeholders which are used to be build the
+ * names of sub-resources given the "tags" in the resource value. For
+ * example, a type specification for a list resource might be `%list:
+ * foo_$_$ bar_$_$`
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ * @param new_type The new type as a string
+ * @param msg Pointer to any diagnostic messages
+ *
+ * @return boolean indicating success
+ */
 
-  *errmsg = NULL;
+bool lcfgresource_set_type_as_string( LCFGResource * res,
+                                      const char * new_type,
+                                      char ** msg ) {
+
+  *msg = NULL;
 
   bool ok = true;
 
@@ -370,7 +462,7 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
 
   LCFGResourceType new_type = LCFG_RESOURCE_TYPE_STRING;
 
-  char * type_str = (char *) new_value;
+  char * type_str = (char *) new_type;
 
   /* Spin past any leading whitespace */
   if ( type_str != NULL )
@@ -449,17 +541,29 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
          templates) in which case it is a simple list of tags. */
 
       if ( *tmpl_start != '\0' )
-        ok = lcfgresource_set_template_as_string( res, tmpl_start, errmsg );
+        ok = lcfgresource_set_template_as_string( res, tmpl_start, msg );
     }
   }
 
   return ok;
 }
 
-/* Since 'publish' and 'subscribe' resources hold any value which is
-   to be mapped between profiles they are considered to be string-like
-   for most operations. This does mean that sometimes extra care must
-   be taken to handle them correctly. */
+/**
+ * @brief Check if the resource is a string
+ *
+ * Checks if the type parameter for the @c LCFGResource struct is @c
+ * LCFG_RESOURCE_TYPE_STRING, @c LCFG_RESOURCE_TYPE_SUBSCRIBE or @c
+ * LCFG_RESOURCE_TYPE_PUBLISH.
+ *
+ * Since "publish" and "subscribe" resources can hold any value which
+ * is to be mapped between profiles they are considered to be
+ * string-like for most operations. This does mean that sometimes
+ * extra care must be taken to handle them correctly.
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ *
+ * @return boolean indicating if string-type
+ */
 
 bool lcfgresource_is_string( const LCFGResource * res ) {
   LCFGResourceType res_type = lcfgresource_get_type(res);
@@ -468,17 +572,69 @@ bool lcfgresource_is_string( const LCFGResource * res ) {
            res_type == LCFG_RESOURCE_TYPE_PUBLISH );
 }
 
+/**
+ * @brief Check if the resource is a integer
+ *
+ * Checks if the type parameter for the @c LCFGResource struct is @c
+ * LCFG_RESOURCE_TYPE_INTEGER.
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ *
+ * @return boolean indicating if integer-type
+ */
+
 bool lcfgresource_is_integer( const LCFGResource * res ) {
   return ( lcfgresource_get_type(res) == LCFG_RESOURCE_TYPE_INTEGER );
 }
+
+/**
+ * @brief Check if the resource is a boolean
+ *
+ * Checks if the type parameter for the @c LCFGResource struct is @c
+ * LCFG_RESOURCE_TYPE_BOOLEAN.
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ *
+ * @return boolean indicating if boolean-type
+ */
 
 bool lcfgresource_is_boolean( const LCFGResource * res ) {
   return ( lcfgresource_get_type(res) == LCFG_RESOURCE_TYPE_BOOLEAN );
 }
 
+/**
+ * @brief Check if the resource is a list
+ *
+ * Checks if the type parameter for the @c LCFGResource struct is @c
+ * LCFG_RESOURCE_TYPE_LIST.
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ *
+ * @return boolean indicating if list-type
+ */
+
 bool lcfgresource_is_list( const LCFGResource * res ) {
   return ( lcfgresource_get_type(res) == LCFG_RESOURCE_TYPE_LIST );
 }
+
+/**
+ * @brief Get the resource type as a string
+ *
+ * Generates a new LCFG type string based on the values for the type,
+ * comment and template parameters.
+ *
+ * This converts the integer type for the resource into an LCFG type
+ * string which is formatted as described in @c
+ * lcfgresource_set_type_as_string(). For a list resource type the
+ * templates section can be disabled by specifying the @c
+ * LCFG_OPT_NOTEMPLATES option.
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ * @param options Integer that controls formatting
+ *
+ * @return New string containing resource type information (call @c free() when no longer required)
+ *
+ */
 
 char * lcfgresource_get_type_as_string( const LCFGResource * res,
                                         unsigned int options ) {
