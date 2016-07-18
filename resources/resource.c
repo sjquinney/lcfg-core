@@ -720,13 +720,59 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
 
 /* Templates */
 
+/**
+ * @brief Check if a resource has a set of templates
+ *
+ * Checks if the specified @c LCFGResource struct currently has a
+ * value set for the template attribute. This is only relevant for
+ * list resources. The templates are used to convert the list of LCFG
+ * tags into the names of associated sub-resources.
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ *
+ * @return boolean which indicates if a resource has a template
+ *
+ */
+
 bool lcfgresource_has_template( const LCFGResource * res ) {
   return ( res->template != NULL );
 }
 
+/**
+ * @brief Get the template for a resource
+ *
+ * This returns the value of the template parameter for the @c
+ * LCFGResource struct. If the resource does not currently have a
+ * template then the value will be @c NULL.
+ *
+ * Templates for a list resource are stored as a linked-list using the
+ * @c LCFGTemplate struct. To get them as a formatted string use the
+ * @c lcfgresource_get_template_as_string() function.
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ *
+ * @return A pointer to an @c LCFGTemplate struct (or a @c NULL value).
+ */
+
 LCFGTemplate * lcfgresource_get_template( const LCFGResource * res ) {
   return res->template;
 }
+
+/**
+ * @brief Get the template for a resource as a string
+ *
+ * If the @c LCFGResource struct has a value for the template
+ * attribute it will be transformed into a new string using the @c
+ * lcfgtemplate_to_string() function. When this string is no longer
+ * required it must be freed.
+ *
+ * If the resource does not have a template then a @c NULL value will
+ * be returned.
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ *
+ * @return New string containing resource type information (call @c free() when no longer required) or a @c NULL value
+ */
 
 char * lcfgresource_get_template_as_string( const LCFGResource * res ) {
 
@@ -749,30 +795,82 @@ char * lcfgresource_get_template_as_string( const LCFGResource * res ) {
   return as_str;
 }
 
+/**
+ * @brief Set the template for a resource.
+ *
+ * Sets the specified @c LCFGTemplate struct as the value for the
+ * template attribute in the @c LCFGResource struct.
+ *
+ * The use of templates is only relevant for list resources. They are
+ * used to transform a list of tags into the names of associated
+ * sub-resources.
+ *
+ * Usually the template will be specified as a string which needs to
+ * be converted into an @c LCFGTemplate struct, in that situation use
+ * the @c lcfgresource_set_template_as_string() function.
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ * @param new_tmpl Pointer to an @c LCFGTemplate struct
+ *
+ * @return boolean indicating success
+ *
+ */
+
 bool lcfgresource_set_template( LCFGResource * res,
-                                LCFGTemplate * new_value ) {
+                                LCFGTemplate * new_tmpl ) {
 
   free(res->template);
 
-  res->template = new_value;
+  res->template = new_tmpl;
 
   return true;
 }
 
+/**
+ * @brief Set the template for a resource as a string.
+ *
+ * Converts the specified string into a linked-list of @c LCFGTemplate
+ * structs. The pointer to the head of the new template list is set as
+ * the value for the template attribute in the @c LCFGResource struct.
+ *
+ * The templates string is expected to be a space-separated list of
+ * parts of the form @c foo_$_$ where the '$' (dollar) placeholders
+ * are replaced with tag names when the resource names are
+ * generated. The string is parsed using the @c
+ * lcfgtemplate_from_string() function, see that for full details. If
+ * the string cannot be parsed then @c errno will be set to @c EINVAL
+ * and a false value will be returned.
+ *
+ * The use of templates is only relevant for list resources. They are
+ * used to transform a list of tags into the names of associated
+ * sub-resources.
+ *
+ * @param res Pointer to an @c LCFGResource struct
+ * @param new_tmpl_str String of LCFG resource templates
+ * @param msg Pointer to any diagnostic messages
+ *
+ * @return boolean indicating success
+ *
+ */
+
 bool lcfgresource_set_template_as_string(  LCFGResource * res,
-                                           const char * new_value,
+                                           const char * new_tmpl_str,
                                            char ** msg ) {
 
   *msg = NULL;
 
-  if ( new_value == NULL || *new_value == '\0' ) {
+  if ( new_tmpl_str == NULL ) {
     errno = EINVAL;
     return false;
   }
 
+  if (  *new_tmpl_str == '\0' ) {
+    return lcfgresource_set_template( res, NULL )
+  }
+
   LCFGTemplate * new_template = NULL;
   char * parse_msg = NULL;
-  LCFGStatus rc = lcfgtemplate_from_string( new_value, &new_template,
+  LCFGStatus rc = lcfgtemplate_from_string( new_tmpl_str, &new_template,
                                             &parse_msg );
 
   bool ok = ( rc == LCFG_STATUS_OK && new_template != NULL );
@@ -782,7 +880,7 @@ bool lcfgresource_set_template_as_string(  LCFGResource * res,
 
 
   if (!ok) {
-    asprintf( msg, "Invalid template '%s': %s", new_value,
+    asprintf( msg, "Invalid template '%s': %s", new_tmpl_str,
               ( parse_msg != NULL ? parse_msg : "unknown error" ) );
 
     lcfgtemplate_destroy(new_template);
