@@ -411,7 +411,7 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
  * If the specified type string is NULL or empty then the type
  * defaults to "string". Otherwise the type will be taken from the
  * initial part of the string (if the first character is the LCFG
- * marker '%' it will be ignored).
+ * marker '%%' (percent) it will be ignored).
  *
  * Currently supported types are:
  *   + string
@@ -431,15 +431,15 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
  * only appear with string resources which have additional validation
  * specified by the schema author, the comment then describes the
  * expected format of the value for the resource. For example a type
- * specification for a string resource might be `%string (MAC
+ * specification for a string resource might be `%%string (MAC
  * address)`.
  *
  * If a resource is a list then there may also be a set of templates
  * specified. These follow a ':' (colon) separator and are a
  * space-separated list of templates of the form @c foo_$_$ where the
- * '$' dollar symbols are placeholders which are used to be build the
+ * '$' (dollar) symbols are placeholders which are used to be build the
  * names of sub-resources given the "tags" in the resource value. For
- * example, a type specification for a list resource might be `%list:
+ * example, a type specification for a list resource might be `%%list:
  * foo_$_$ bar_$_$`
  *
  * @param res Pointer to an @c LCFGResource struct
