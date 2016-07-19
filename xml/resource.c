@@ -482,7 +482,8 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
           char * canon_value =
             lcfgresource_canon_boolean( (char *) nodevalue );
 
-          if ( !lcfgresource_set_value( resource, canon_value ) ) {
+          if ( canon_value == NULL ||
+               !lcfgresource_set_value( resource, canon_value ) ) {
             status = LCFG_STATUS_ERROR;
 
             *errmsg = lcfgresource_build_message( resource, compname,
