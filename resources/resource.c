@@ -73,7 +73,7 @@ LCFGResource * lcfgresource_new(void) {
  * If the memory allocation for the new struct is not successful the
  * @c exit() function will be called with a non-zero value.
  *
- * @param res Pointer to @c LCFGResource struct to be cloned.
+ * @param[in] res Pointer to @c LCFGResource struct to be cloned.
  *
  * @return Pointer to new @c LCFGResource struct or NULL if copy fails.
  *
@@ -178,7 +178,7 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
  * resource which has already been destroyed (or potentially was never
  * created).
  *
- * @param res Pointer to @c LCFGResource struct to be destroyed.
+ * @param[in] res Pointer to @c LCFGResource struct to be destroyed.
  *
  */
 
@@ -230,7 +230,7 @@ inline static bool isword( const char chr ) {
  * characters MUST be in the class @c [A-Za-z0-9_]. This means they
  * are safe to use as variable names for languages such as bash.
  *
- * @param name String to be tested
+ * @param[in] name String to be tested
  *
  * @return boolean which indicates if string is a valid resource name
  *
@@ -263,7 +263,7 @@ bool lcfgresource_valid_name( const char * name ) {
  * an LCFG resource to be valid it is possible for the value of the
  * name to be set to @c NULL when the struct is first created.
  *
- * @param res Pointer to an @c LCFGResource struct
+ * @param[in] res Pointer to an @c LCFGResource struct
  *
  * @return boolean which indicates if a resource has a name
  *
@@ -274,18 +274,19 @@ bool lcfgresource_has_name( const LCFGResource * res ) {
 }
 
 /**
- * @brief Get the name of the resource
+ * @brief Get the name for the resource
  *
- * This returns the value of the name parameter for the @c
- * LCFGResource struct. If the resource does not currently have a name
- * then the value will be @c NULL.
+ * This returns the value of the @E name parameter for the @c
+ * LCFGResource struct. If the resource does not currently have a @e
+ * name then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
- * changing the returned string will modify the name of the resource.
+ * changing the returned string will modify the @e name of the
+ * resource.
  *
- * @param res Pointer to an @c LCFGResource struct
+ * @param[in] res Pointer to an @c LCFGResource struct
  *
- * @return The name of the resource (possibly NULL).
+ * @return The @e name for the resource (possibly NULL).
  */
 
 char * lcfgresource_get_name( const LCFGResource * res ) {
@@ -293,20 +294,22 @@ char * lcfgresource_get_name( const LCFGResource * res ) {
 }
 
 /**
- * @brief Set the name of the resource
+ * @brief Set the name for the resource
  *
- * Sets the value of the name parameter for the @c LCFGResource struct
- * to that specified. It is important to note that this does NOT take
- * a copy of the string.
+ * Sets the value of the @e name parameter for the @c LCFGResource
+ * struct to that specified. It is important to note that this does
+ * NOT take a copy of the string. Furthermore, once the value is set
+ * the resource assumes "ownership", the memory will be freed if the
+ * name is further modified or the resource is destroyed.
  *
- * Before changing the value of the name to be the new string it will
- * be validated using the @c lcfgresource_valid_name() function. If
- * the new string is not valid then no change will occur, the @c errno
- * will be set to @c EINVAL and the function will return a @c false
- * value.
+ * Before changing the value of the @e name to be the new string it
+ * will be validated using the @c lcfgresource_valid_name()
+ * function. If the new string is not valid then no change will occur,
+ * the @c errno will be set to @c EINVAL and the function will return
+ * a @c false value.
  *
- * @param res Pointer to an @c LCFGResource struct
- * @param new_name String which is the new name
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] new_name String which is the new name
  *
  * @return boolean indicating success
  *
@@ -330,9 +333,10 @@ bool lcfgresource_set_name( LCFGResource * res, char * new_name ) {
 /* Types */
 
 /**
- * @brief Get the type of the resource as an integer
+ * @brief Get the type for the resource as an integer
  *
- * This returns the value of the type parameter for the LCFGResource struct.
+ * This returns the value of the type parameter for the @c
+ * LCFGResource struct.
  *
  * An LCFG resource will be one of several types (e.g. string,
  * integer, boolean, list) which controls what validation is done when
@@ -341,7 +345,7 @@ bool lcfgresource_set_name( LCFGResource * res, char * new_name ) {
  * values. If you require the type as a string then use @c
  * lcfgresource_get_type_as_string()
  *
- * @param res Pointer to an @c LCFGResource struct
+ * @param[in] res Pointer to an @c LCFGResource struct
  *
  * @return The type of the resource as an integer
  */
@@ -370,8 +374,8 @@ LCFGResourceType lcfgresource_get_type( const LCFGResource * res ) {
  * To set the type for a resource using a string rather than an
  * integer use @c lcfgresource_set_type_as_string()
  *
- * @param res Pointer to an @c LCFGResource struct
- * @param The new resource type as an integer
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] new_type The new resource type as an integer
  *
  * @return boolean indicating success
  */
@@ -401,7 +405,7 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
 }
 
 /**
- * @brief Set the type of the resource
+ * @brief Set the type of the resource as a string
  *
  * Parses the specified type string and sets the type for the resource
  * (and optionally sets the comment and template parameters). The type
@@ -442,9 +446,9 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
  * example, a type specification for a list resource might be `%%list:
  * foo_$_$ bar_$_$`
  *
- * @param res Pointer to an @c LCFGResource struct
- * @param new_type_str The new type as a string
- * @param msg Pointer to any diagnostic messages
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] new_type_str The new type as a string
+ * @param[out] msg Pointer to any diagnostic messages
  *
  * @return boolean indicating success
  */
@@ -560,7 +564,7 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
  * string-like for most operations. This does mean that sometimes
  * extra care must be taken to handle them correctly.
  *
- * @param res Pointer to an @c LCFGResource struct
+ * @param[in] res Pointer to an @c LCFGResource struct
  *
  * @return boolean indicating if string-type
  */
@@ -578,7 +582,7 @@ bool lcfgresource_is_string( const LCFGResource * res ) {
  * Checks if the type parameter for the @c LCFGResource struct is @c
  * LCFG_RESOURCE_TYPE_INTEGER.
  *
- * @param res Pointer to an @c LCFGResource struct
+ * @param[in] res Pointer to an @c LCFGResource struct
  *
  * @return boolean indicating if integer-type
  */
@@ -593,7 +597,7 @@ bool lcfgresource_is_integer( const LCFGResource * res ) {
  * Checks if the type parameter for the @c LCFGResource struct is @c
  * LCFG_RESOURCE_TYPE_BOOLEAN.
  *
- * @param res Pointer to an @c LCFGResource struct
+ * @param[in] res Pointer to an @c LCFGResource struct
  *
  * @return boolean indicating if boolean-type
  */
@@ -608,7 +612,7 @@ bool lcfgresource_is_boolean( const LCFGResource * res ) {
  * Checks if the type parameter for the @c LCFGResource struct is @c
  * LCFG_RESOURCE_TYPE_LIST.
  *
- * @param res Pointer to an @c LCFGResource struct
+ * @param[in] res Pointer to an @c LCFGResource struct
  *
  * @return boolean indicating if list-type
  */
@@ -620,17 +624,17 @@ bool lcfgresource_is_list( const LCFGResource * res ) {
 /**
  * @brief Get the resource type as a string
  *
- * Generates a new LCFG type string based on the values for the type,
- * comment and template parameters.
+ * Generates a new LCFG type string based on the values for the @e
+ * type, @e comment and @e template parameters.
  *
- * This converts the integer type for the resource into an LCFG type
- * string which is formatted as described in @c
+ * This converts the integer @e type parameter for the resource into
+ * an LCFG type string which is formatted as described in @c
  * lcfgresource_set_type_as_string(). For a list resource type the
  * templates section can be disabled by specifying the @c
  * LCFG_OPT_NOTEMPLATES option.
  *
- * @param res Pointer to an @c LCFGResource struct
- * @param options Integer that controls formatting
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] options Integer that controls formatting
  *
  * @return New string containing resource type information (call @c free() when no longer required)
  *
@@ -728,7 +732,7 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
  * list resources. The templates are used to convert the list of LCFG
  * tags into the names of associated sub-resources.
  *
- * @param res Pointer to an @c LCFGResource struct
+ * @param[in] res Pointer to an @c LCFGResource struct
  *
  * @return boolean which indicates if a resource has a template
  *
@@ -739,17 +743,17 @@ bool lcfgresource_has_template( const LCFGResource * res ) {
 }
 
 /**
- * @brief Get the template for a resource
+ * @brief Get the template for the resource
  *
- * This returns the value of the template parameter for the @c
- * LCFGResource struct. If the resource does not currently have a
- * template then the value will be @c NULL.
+ * This returns the value of the @e template parameter for the @c
+ * LCFGResource struct. If the resource does not currently have a @e
+ * template then the pointer returned will be @c NULL.
  *
  * Templates for a list resource are stored as a linked-list using the
  * @c LCFGTemplate struct. To get them as a formatted string use the
  * @c lcfgresource_get_template_as_string() function.
  *
- * @param res Pointer to an @c LCFGResource struct
+ * @param[in] res Pointer to an @c LCFGResource struct
  *
  * @return A pointer to an @c LCFGTemplate struct (or a @c NULL value).
  */
@@ -759,9 +763,9 @@ LCFGTemplate * lcfgresource_get_template( const LCFGResource * res ) {
 }
 
 /**
- * @brief Get the template for a resource as a string
+ * @brief Get the template for the resource as a string
  *
- * If the @c LCFGResource struct has a value for the template
+ * If the @c LCFGResource struct has a value for the @e template
  * attribute it will be transformed into a new string using the @c
  * lcfgtemplate_to_string() function. When this string is no longer
  * required it must be freed.
@@ -769,7 +773,7 @@ LCFGTemplate * lcfgresource_get_template( const LCFGResource * res ) {
  * If the resource does not have a template then a @c NULL value will
  * be returned.
  *
- * @param res Pointer to an @c LCFGResource struct
+ * @param[in] res Pointer to an @c LCFGResource struct
  *
  * @return New string containing resource type information (call @c free() when no longer required) or a @c NULL value
  */
@@ -796,9 +800,9 @@ char * lcfgresource_get_template_as_string( const LCFGResource * res ) {
 }
 
 /**
- * @brief Set the template for a resource.
+ * @brief Set the template for the resource.
  *
- * Sets the specified @c LCFGTemplate struct as the value for the
+ * Sets the specified @c LCFGTemplate struct as the value for the @e
  * template attribute in the @c LCFGResource struct.
  *
  * The use of templates is only relevant for list resources. They are
@@ -809,8 +813,8 @@ char * lcfgresource_get_template_as_string( const LCFGResource * res ) {
  * be converted into an @c LCFGTemplate struct, in that situation use
  * the @c lcfgresource_set_template_as_string() function.
  *
- * @param res Pointer to an @c LCFGResource struct
- * @param new_tmpl Pointer to an @c LCFGTemplate struct
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] new_tmpl Pointer to an @c LCFGTemplate struct
  *
  * @return boolean indicating success
  *
@@ -831,7 +835,8 @@ bool lcfgresource_set_template( LCFGResource * res,
  *
  * Converts the specified string into a linked-list of @c LCFGTemplate
  * structs. The pointer to the head of the new template list is set as
- * the value for the template attribute in the @c LCFGResource struct.
+ * the value for the @e template attribute in the @c LCFGResource
+ * struct.
  *
  * The templates string is expected to be a space-separated list of
  * parts of the form @c foo_$_$ where the '$' (dollar) placeholders
@@ -845,9 +850,9 @@ bool lcfgresource_set_template( LCFGResource * res,
  * used to transform a list of tags into the names of associated
  * sub-resources.
  *
- * @param res Pointer to an @c LCFGResource struct
- * @param new_tmpl_str String of LCFG resource templates
- * @param msg Pointer to any diagnostic messages
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] new_tmpl_str String of LCFG resource templates
+ * @param[out] msg Pointer to any diagnostic messages
  *
  * @return boolean indicating success
  *
@@ -893,17 +898,80 @@ bool lcfgresource_set_template_as_string(  LCFGResource * res,
 
 /* Values */
 
+/**
+ * @brief Check if a value is considered to be empty
+ *
+ * Checks if a value string is "empty", this is similar to the concept
+ * of a value being "defined" in Perl. A value is "empty" if the
+ * pointer passed in has a @c NULL value or the string has zero
+ * length.
+ *
+ * @param[in] value A string to be checked
+ *
+ * @return A boolean which indicates if the string is an empty value
+ */
+
 bool lcfgresource_value_is_empty( const char * value ) {
   return ( value == NULL || *value == '\0' );
 }
+
+/**
+ * @brief Check if the resource has a value
+ *
+ * Checks to see if the @e value parameter for the @c LCFGResource
+ * struct is considered to be a non-empty value. See the @c
+ * lcfgresource_value_is_empty() function for further details.
+ *
+ * @param[in] res Pointer to an LCFGResource struct
+ *
+ * @return A boolean which indicates if the resource has a non-empty value
+ */
 
 bool lcfgresource_has_value( const LCFGResource * res ) {
   return !lcfgresource_value_is_empty(res->value);
 }
 
+/**
+ * @brief Get the value for the resource
+ *
+ * This returns the value of the @e value parameter for the @c
+ * LCFGResource struct. If the resource does not currently have a
+ * @e value then the returned pointer will be @c NULL.
+ *
+ * It is important to note that this is NOT a copy of the string,
+ * changing the returned string will modify the @e value for the
+ * resource.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ *
+ * @return The @e value string for the resource (possibly NULL).
+ */
+
 char * lcfgresource_get_value( const LCFGResource * res ) {
   return res->value;
 }
+
+/**
+ * @brief Get an encoded version of the value for the resource
+ *
+ * Generates a new string which is an encoded version of the @e value
+ * parameter for the @c LCFGResource struct. The encoded value is made
+ * safe for use in LCFG status files by escaping newline and
+ * carriage-return characters (and also ampersands). Note that this is
+ * NOT a general encoding function and it does not make the value safe
+ * for direct inclusion in XML or HTML.
+ *
+ * If the current value for the @e value parameter is @c NULL then
+ * this function will return a @c NULL value.
+ *
+ * When the returned string is no longer required the memory must be
+ * freed.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ *
+ * @return The encoded @e value string for the resource (call @c free() when no longer required) or a @c NULL value
+ */
+
 
 char * lcfgresource_enc_value( const LCFGResource * res ) {
 
@@ -975,9 +1043,25 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
   return enc_value;
 }
 
+/**
+ * @brief Check if a value is a valid boolean
+ *
+ * Checks whether the string contains a valid LCFG boolean
+ * value. There are various acceptable forms for a value for a boolean
+ * LCFG resource (see @c lcfgresource_canon_boolean() for details) but
+ * only the empty string (see @c lcfgresource_value_is_empty() for
+ * details) and "yes" are considered to be @e valid boolean
+ * values. Anything else must be canonicalised from an accepted form
+ * into the equivalent valid value.
+ *
+ * @param[in] value A string to be checked
+ *
+ * @return A boolean which indicates if the string contains a boolean
+ */
+
 bool lcfgresource_valid_boolean( const char * value ) {
   /* MUST NOT be NULL. MUST be empty string or "yes" */
-  return ( value != NULL && 
+  return ( value != NULL &&
            ( *value == '\0' || strcmp( value, "yes" ) == 0 ) );
 }
 
@@ -990,6 +1074,29 @@ static char * valid_true_values[] = {
   "true",  "yes", "on", "1",
   NULL
 };
+
+/**
+ * @brief Canonicalise a boolean value
+ *
+ * Converts various acceptable forms of the boolean value into the
+ * equivalent valid forms. Input can be any of:
+ *
+ *   + false, no, off, 0, ""
+ *   + true, yes, on, 1
+ *
+ * the characters of the input string can be in any case (upper, lower
+ * or mixed). The strings are canonicalised into "yes" for true values
+ * and "" (empty string) for false values.
+ *
+ * A new string will be returned, the input will not be modified. When
+ * no longer required the newly created string should be freed. If the
+ * input cannot be canonicalised the function will return a @c NULL
+ * value.
+ *
+ * @param[in] value The boolean value string to be canonicalised
+ *
+ * @return A new string (call @c free() when no longer required) or a @c NULL value if the input could not be canonicalised.
+ */
 
 char * lcfgresource_canon_boolean( const char * value ) {
 
@@ -1054,6 +1161,18 @@ char * lcfgresource_canon_boolean( const char * value ) {
   return result;
 }
 
+/**
+ * @brief Check if a value is a valid integer
+ *
+ * Checks whether the string contains a valid LCFG integer value. The
+ * string may begin with a negative sign '-', otherwise all characters
+ * MUST be digits - @c [0-9].
+ *
+ * @param[in] value A string to be checked
+ *
+ * @return A boolean which indicates if the string contains an integer
+ */
+
 bool lcfgresource_valid_integer( const char * value ) {
 
   /* MUST NOT be a NULL. */
@@ -1081,6 +1200,21 @@ bool lcfgresource_valid_integer( const char * value ) {
   return valid;
 }
 
+/**
+ * @brief Check if a value is a valid list
+ *
+ * Checks whether the string contains a valid list of LCFG tags. An
+ * LCFG tag is used to generate resource names along with a template,
+ * consequently tags MUST only contain characters which are valid in
+ * LCFG resource names (@c [A-Za-z0-9_]). Tags in a list are separated
+ * using space characters. If any other characters are found the
+ * string is not a valid tag list.
+ *
+ * @param[in] value A string to be checked
+ *
+ * @return A boolean which indicates if the string contains a list of tags
+ */
+
 bool lcfgresource_valid_list( const char * value ) {
 
   /* MUST NOT be a NULL */
@@ -1099,6 +1233,23 @@ bool lcfgresource_valid_list( const char * value ) {
 
   return valid;
 }
+
+/**
+ * @brief Check if the value is valid for the type
+ *
+ * Checks whether a string contains a value which is valid for the
+ * specified LCFG resource type. This will call the relevant
+ * validation function for the specified type (e.g. @c
+ * lcfgresource_valid_boolean), if there is one, and return the
+ * result. If no validation function is available for the type this
+ * will just return true.
+ *
+ * @param[in] type Integer LCFG resource type
+ * @param[in] value A string to be checked
+ *
+ * @return A boolean which indicates if the string is valid for the type
+ *
+ */
 
 bool lcfgresource_valid_value_for_type( LCFGResourceType type,
                                         const char * value ) {
@@ -1126,12 +1277,50 @@ bool lcfgresource_valid_value_for_type( LCFGResourceType type,
   return valid;
 }
 
+/**
+ * @brief Check if the value is valid for the resource
+ *
+ * It can often be useful to test the validity of a potential new
+ * value for a resource before proceeding with further work. This
+ * checks to see if the specified value is valid for the type of the
+ * @c LCFGResource, this is done using the @c
+ * lcfgresource_valid_value_for_type() function.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] value A string to be checked
+ *
+ * @return A boolean which indicates if the string is valid for the resource
+ *
+ */
+
 bool lcfgresource_valid_value( const LCFGResource * res,
                                const char * value ) {
 
   return lcfgresource_valid_value_for_type( lcfgresource_get_type(res),
                                             value );
 }
+
+/**
+ * @brief Set the value for the resource
+ *
+ * Sets the value of the @e value parameter for the @c LCFGResource
+ * struct to that specified. It is important to note that this does
+ * NOT take a copy of the string. Furthermore, once the value is set
+ * the resource assumes "ownership", the memory will be freed if the
+ * value is further modified or the resource is destroyed.
+ *
+ * Before changing the value of the @e value parameter to be the new
+ * string it will be validated using the @c lcfgresource_valid_value()
+ * function. If the new string is not valid then no change will occur,
+ * the @c errno will be set to @c EINVAL and the function will return
+ * a @c false value.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] new_value String which is the new value
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgresource_set_value( LCFGResource * res, char * new_value ) {
 
@@ -1148,9 +1337,22 @@ bool lcfgresource_set_value( LCFGResource * res, char * new_value ) {
   return ok;
 }
 
-/* It is not possible to set the value back to NULL by calling
-   set_value since it is an illegal value so an explicit unset
-   function is provided. */
+/**
+ * @brief Unset the value for the resource
+ *
+ * Sets the value for the @e value parameter of the @c LCFGResource
+ * struct back to @c NULL and frees any memory associated with a
+ * previous value.
+ *
+ * This is useful since it is not permitted to set the value for an
+ * LCFG resource to be @c NULL via the @c lcfgresource_set_value
+ * function.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgresource_unset_value( LCFGResource * res ) {
 
@@ -1162,24 +1364,93 @@ bool lcfgresource_unset_value( LCFGResource * res ) {
 
 /* Derivations */
 
+/**
+ * @brief Check if the resource has a derivation
+ *
+ * Checks if there is any derivation information stored in the @c
+ * LCFGResource struct.
+ *
+ * Derivation information is typically a space-separated list of files
+ * and line numbers where the resource value has been modified.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ *
+ * @return Boolean which indicates if the resource has derivation information
+ *
+ */
+
 bool lcfgresource_has_derivation( const LCFGResource * res ) {
   return ( res->derivation != NULL && *( res->derivation ) != '\0' );
 }
+
+/**
+ * @brief Get the derivation for the resource
+ *
+ * This returns the value of the @E derivation parameter for the @c
+ * LCFGResource struct. If the resource does not currently have a
+ * value for the @e derivation then the pointer returned will be @c
+ * NULL.
+ *
+ * It is important to note that this is NOT a copy of the string,
+ * changing the returned string will modify the @e derivation for the
+ * resource.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ *
+ * @return The @e derivation for the resource (possibly NULL).
+ */
 
 char * lcfgresource_get_derivation( const LCFGResource * res ) {
   return res->derivation;
 }
 
-bool lcfgresource_set_derivation( LCFGResource * res, char * new_value ) {
+/**
+ * @brief Set the derivation for the resource
+ *
+ * Sets the value of the @e derivation parameter for the @c
+ * LCFGResource struct to that specified. It is important to note that
+ * this does NOT take a copy of the string. Furthermore, once the
+ * value is set the resource assumes "ownership", the memory will be
+ * freed if the derivation is further modified or the resource is
+ * destroyed.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] new_deriv String which is the new derivation
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgresource_set_derivation( LCFGResource * res, char * new_deriv ) {
 
   /* Currently no validation of the derivation */
 
   free(res->derivation);
 
-  res->derivation = new_value;
+  res->derivation = new_deriv;
 
   return true;
 }
+
+/**
+ * @brief Add extra derivation information for the resource
+ *
+ * Adds the extra derivation information to the value for the @e
+ * derivation parameter in the @c LCFGResource struct if it is not
+ * already found in the string.
+ *
+ * If not already present in the existing information a new derivation
+ * string is built which is the combination of any existing string
+ * with the new string appended. The new string is passed to @c
+ * lcfgresource_set_derivation(), unlike that function this does NOT
+ * assume "ownership" of the string specified.
+
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] extra_deriv String which is the additional derivation
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgresource_add_derivation( LCFGResource * resource,
                                   const char * extra_deriv ) {
@@ -1221,21 +1492,73 @@ bool lcfgresource_valid_context( const char * expr ) {
   return lcfgcontext_valid_expression(expr);
 }
 
+/**
+ * @brief Check if the resource has a context
+ *
+ * Checks if there is any context information stored in the @c
+ * LCFGResource struct.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ *
+ * @return Boolean which indicates if the resource has a context
+ *
+ */
+
 bool lcfgresource_has_context( const LCFGResource * res ) {
   return ( res->context != NULL && *( res->context ) != '\0' );
 }
+
+/**
+ * @brief Get the context for the resource
+ *
+ * This returns the value of the @E context parameter for the @c
+ * LCFGResource struct. If the resource does not currently have a
+ * value for the @e context then the pointer returned will be @c
+ * NULL.
+ *
+ * It is important to note that this is NOT a copy of the string,
+ * changing the returned string will modify the @e context for the
+ * resource.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ *
+ * @return The @e context for the resource (possibly NULL).
+ */
 
 char * lcfgresource_get_context( const LCFGResource * res ) {
   return res->context;
 }
 
-bool lcfgresource_set_context( LCFGResource * res, char * new_value ) {
+/**
+ * @brief Set the context for the resource
+ *
+ * Sets the value of the @e context parameter for the @c
+ * LCFGResource struct to that specified. It is important to note that
+ * this does NOT take a copy of the string. Furthermore, once the
+ * value is set the resource assumes "ownership", the memory will be
+ * freed if the context is further modified or the resource is
+ * destroyed.
+ *
+ * Before changing the value of the @e context to be the new string it
+ * will be validated using the @c lcfgresource_valid_context()
+ * function. If the new string is not valid then no change will occur,
+ * the @c errno will be set to @c EINVAL and the function will return
+ * a @c false value.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] new_ctx String which is the new context
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgresource_set_context( LCFGResource * res, char * new_ctx ) {
 
   bool ok = false;
-  if ( lcfgresource_valid_context(new_value) ) {
+  if ( lcfgresource_valid_context(new_ctx) ) {
     free(res->context);
 
-    res->context = new_value;
+    res->context = new_ctx;
     ok = true;
   } else {
     errno = EINVAL;
@@ -1243,6 +1566,27 @@ bool lcfgresource_set_context( LCFGResource * res, char * new_value ) {
 
   return ok;
 }
+
+/**
+ * @brief Add extra context information for the resource
+ *
+ * Adds the extra context information to the value for the @e
+ * context parameter in the @c LCFGResource struct if it is not
+ * already found in the string.
+ *
+ * If not already present in the existing information a new context
+ * string is built which is the combination of any existing string
+ * with the new string appended, the strings are combined using @c
+ * lcfgcontext_combine_expressions(). The new string is passed to @c
+ * lcfgresource_set_context(), unlike that function this does NOT
+ * assume "ownership" of the string specified.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] extra_context String which is the additional context
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgresource_add_context( LCFGResource * res,
                                const char * extra_context ) {
@@ -1267,19 +1611,70 @@ bool lcfgresource_add_context( LCFGResource * res,
 
 /* Comments */
 
+/**
+ * @brief Check if the resource has a comment
+ *
+ * Checks if there is any comment stored in the @c LCFGResource
+ * struct.
+ *
+ * Typically only string resources with additional validation added by
+ * the schema author will have a comment. The comment often describes
+ * the expected format for the value (e.g. MAC address) so that a
+ * helpful error can be printed when an invalid value is specified.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ *
+ * @return Boolean which indicates if the resource has a comment
+ *
+ */
+
 bool lcfgresource_has_comment( const LCFGResource * res ) {
   return ( res->comment != NULL && *( res->comment ) != '\0' );
 }
+
+/**
+ * @brief Get the comment for the resource
+ *
+ * This returns the value of the @E comment parameter for the @c
+ * LCFGResource struct. If the resource does not currently have a
+ * value for the @e comment then the pointer returned will be @c
+ * NULL.
+ *
+ * It is important to note that this is NOT a copy of the string,
+ * changing the returned string will modify the @e comment for the
+ * resource.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ *
+ * @return The @e comment for the resource (possibly NULL).
+ */
 
 char * lcfgresource_get_comment( const LCFGResource * res ) {
   return res->comment;
 }
 
-bool lcfgresource_set_comment( LCFGResource * res, char * new_value ) {
+/**
+ * @brief Set the comment for the resource
+ *
+ * Sets the value of the @e comment parameter for the @c
+ * LCFGResource struct to that specified. It is important to note that
+ * this does NOT take a copy of the string. Furthermore, once the
+ * value is set the resource assumes "ownership", the memory will be
+ * freed if the comment is further modified or the resource is
+ * destroyed.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ * @param[in] new_comment String which is the new comment
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgresource_set_comment( LCFGResource * res, char * new_comment ) {
 
   free(res->comment);
 
-  res->comment = new_value;
+  res->comment = new_comment;
 
   return true;
 }

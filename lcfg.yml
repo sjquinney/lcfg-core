@@ -12,7 +12,7 @@ name: lcfg-core
 orgident: org.lcfg
 platforms: 
   - ScientificLinux7
-release: 2
+release: 15
 schema: 1
 translate: 
   - "*.cin"
