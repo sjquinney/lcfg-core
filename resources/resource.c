@@ -26,7 +26,7 @@ static const char * lcfgresource_type_names[] = {
 };
 
 /**
- * @brief Create and initialise new resource
+ * @brief Create and initialise a new resource
  *
  * Creates a new @c LCFGResource struct and initialises the parameters
  * to the default values.
@@ -62,7 +62,7 @@ LCFGResource * lcfgresource_new(void) {
 }
 
 /**
- * @brief Clone a resource
+ * @brief Clone the resource
  *
  * Creates a new @c LCFGResource struct and copies the values of the
  * parameters from the specified resource. The values for the
@@ -157,7 +157,7 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
 }
 
 /**
- * @brief Destroy a resource
+ * @brief Destroy the resource
  *
  * When the specified @c LCFGResource struct is no longer required
  * this will free all associated memory.
@@ -256,7 +256,7 @@ bool lcfgresource_valid_name( const char * name ) {
 }
 
 /**
- * @brief Check if a resource has a name
+ * @brief Check if the resource has a name
  *
  * Checks if the specified @c LCFGResource struct currently has a
  * value set for the name attribute. Although a name is required for
@@ -725,7 +725,7 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
 /* Templates */
 
 /**
- * @brief Check if a resource has a set of templates
+ * @brief Check if the resource has a set of templates
  *
  * Checks if the specified @c LCFGResource struct currently has a
  * value set for the template attribute. This is only relevant for
@@ -1235,7 +1235,7 @@ bool lcfgresource_valid_list( const char * value ) {
 }
 
 /**
- * @brief Check if the value is valid for the type
+ * @brief Check if a value is valid for the type
  *
  * Checks whether a string contains a value which is valid for the
  * specified LCFG resource type. This will call the relevant
@@ -1278,7 +1278,7 @@ bool lcfgresource_valid_value_for_type( LCFGResourceType type,
 }
 
 /**
- * @brief Check if the value is valid for the resource
+ * @brief Check if a value is valid for the resource
  *
  * It can often be useful to test the validity of a potential new
  * value for a resource before proceeding with further work. This
@@ -1579,7 +1579,7 @@ bool lcfgresource_set_context( LCFGResource * res, char * new_ctx ) {
  * with the new string appended, the strings are combined using @c
  * lcfgcontext_combine_expressions(). The new string is passed to @c
  * lcfgresource_set_context(), unlike that function this does NOT
- * assume "ownership" of the string specified.
+ * assume "ownership" of the input string.
  *
  * @param[in] res Pointer to an @c LCFGResource struct
  * @param[in] extra_context String which is the additional context
