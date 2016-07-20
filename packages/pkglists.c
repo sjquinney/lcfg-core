@@ -216,12 +216,6 @@ LCFGChange lcfgpkglist_merge_pkgspec( LCFGPackageList * pkglist,
   bool append_new = false;
   bool accept     = false;
 
-  if ( options&LCFG_PKGS_OPT_KEEP_ALL ) {
-    append_new = true;
-    accept     = true;
-    goto apply;
-  }
-
   /* Doing a search here rather than calling find_node so that the
      previous node can also be selected. That is needed for removals. */
 
@@ -255,8 +249,26 @@ LCFGChange lcfgpkglist_merge_pkgspec( LCFGPackageList * pkglist,
     node = lcfgpkglist_next(node);
   }
 
-  if ( cur_node != NULL )
+  if ( cur_node != NULL ) {
     cur_spec = lcfgpkglist_pkgspec(cur_node);
+
+    /* Merging a struct which is already in the list is a no-op. Note
+       that this does not prevent the same spec appearing multiple
+       times in the list if they are in different structs. */
+
+    if ( cur_spec == new_spec ) {
+      accept = true;
+      goto apply;
+    }
+  }
+
+  /* Might want to just keep everything */
+
+  if ( options&LCFG_PKGS_OPT_KEEP_ALL ) {
+    append_new = true;
+    accept     = true;
+    goto apply;
+  }
 
   /* Apply any prefix rules */
 
