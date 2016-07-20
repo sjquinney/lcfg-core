@@ -1,6 +1,83 @@
-2016-07-15  SVN: new release
+2016-07-20  SVN: new release
 
-	* Release: 1.25.4
+	* Release: 1.25.5
+
+2016-07-20 14:25  squinney@INF.ED.AC.UK
+
+	* packages/pkglists.c: Prevent merge_pkgspec from including the
+	  same struct multiple times in a list
+
+2016-07-20 10:38  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Added docs for many functions
+
+2016-07-20 10:38  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Minor docs tweaks
+
+2016-07-20 08:54  squinney@INF.ED.AC.UK
+
+	* packages/CMakeLists.txt, packages/package.c, packages/packages.c:
+	  Renamed to singular
+
+2016-07-19 09:44  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/resource.c: Added more docs
+
+2016-07-19 09:44  squinney@INF.ED.AC.UK
+
+	* xml/resource.c: Ensure that lcfgresource_canon_boolean has not
+	  returned NULL which indicates an error
+
+2016-07-18 15:09  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: passing an empty string to
+	  lcfgresource_set_template_as_string will now set the template to
+	  NULL since lists can legally have no templates
+
+2016-07-18 15:08  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Added docs for template functions
+
+2016-07-18 14:22  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: escaped % signs
+
+2016-07-18 14:15  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Fixed lcfgresource_set_type_as_string
+	  variable name
+
+2016-07-18 14:14  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Added docs for type functions
+
+2016-07-18 13:14  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Testing a few doc tweaks
+
+2016-07-18 13:04  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Testing a few doc tweaks
+
+2016-07-18 12:59  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Made a start on adding documentation for
+	  functions
+
+2016-07-18 12:18  squinney@INF.ED.AC.UK
+
+	* resources/CMakeLists.txt, resources/resource.c,
+	  resources/resources.c: renamed to singular
+
+2016-07-18 12:15  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, Doxyfile.in, lcfg.yml: Added support for running
+	  doxygen on the code base to generate documentation
+
+2016-07-15 11:11  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.25.4
 
 2016-07-15 11:10  squinney@INF.ED.AC.UK
 
