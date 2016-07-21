@@ -64,8 +64,8 @@ static bool file_needs_update( const char * cur_file,
   return needs_update;
 }
 
-bool lcfgpkgspec_from_rpm_filename( const char * input,
-                                    LCFGPackageSpec ** result,
+bool lcfgpackage_from_rpm_filename( const char * input,
+                                    LCFGPackage ** result,
                                     char ** errmsg ) {
 
   *result = NULL;
@@ -95,7 +95,7 @@ bool lcfgpkgspec_from_rpm_filename( const char * input,
   /* Results - note that the file name has to be split apart backwards */
 
   bool ok = true;
-  *result = lcfgpkgspec_new();
+  *result = lcfgpackage_new();
 
   size_t offset = input_len - suffix_len - 1;
 
@@ -116,7 +116,7 @@ bool lcfgpkgspec_from_rpm_filename( const char * input,
     ok = false;
     goto failure;
   } else {
-    ok = lcfgpkgspec_set_arch( *result, pkg_arch );
+    ok = lcfgpackage_set_arch( *result, pkg_arch );
     if ( !ok ) {
       asprintf( errmsg, "Invalid RPM filename '%s', bad package architecture '%s'", input, pkg_arch );
       free(pkg_arch);
@@ -145,7 +145,7 @@ bool lcfgpkgspec_from_rpm_filename( const char * input,
     ok = false;
     goto failure;
   } else {
-    ok = lcfgpkgspec_set_release( *result, pkg_release );
+    ok = lcfgpackage_set_release( *result, pkg_release );
     if ( !ok ) {
       asprintf( errmsg, "Invalid RPM filename '%s', bad package release '%s'", input, pkg_release );
       free(pkg_release);
@@ -174,7 +174,7 @@ bool lcfgpkgspec_from_rpm_filename( const char * input,
     ok = false;
     goto failure;
   } else {
-    ok = lcfgpkgspec_set_version( *result, pkg_version );
+    ok = lcfgpackage_set_version( *result, pkg_version );
     if ( !ok ) {
       asprintf( errmsg, "Invalid RPM filename '%s', bad package version '%s'", input, pkg_version );
       free(pkg_version);
@@ -196,7 +196,7 @@ bool lcfgpkgspec_from_rpm_filename( const char * input,
     ok = false;
     goto failure;
   } else {
-    ok = lcfgpkgspec_set_name( *result, pkg_name );
+    ok = lcfgpackage_set_name( *result, pkg_name );
     if ( !ok ) {
       asprintf( errmsg, "Invalid RPM filename '%s', bad package name '%s'", input, pkg_name );
       free(pkg_name);
@@ -215,7 +215,7 @@ bool lcfgpkgspec_from_rpm_filename( const char * input,
       asprintf( errmsg, "Invalid RPM filename '%s'", input );
 
     if ( *result != NULL ) {
-      lcfgpkgspec_destroy(*result);
+      lcfgpackage_destroy(*result);
       *result = NULL;
     }
 
@@ -224,18 +224,18 @@ bool lcfgpkgspec_from_rpm_filename( const char * input,
   return ok;
 }
 
-ssize_t lcfgpkgspec_to_rpm_filename( const LCFGPackageSpec * pkgspec,
+ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkgspec,
                                      const char * defarch,
                                      unsigned int options,
                                      char ** result, size_t * size ) {
 
-  const char * pkgnam  = lcfgpkgspec_get_name(pkgspec);
-  const char * pkgver  = lcfgpkgspec_get_version(pkgspec);
-  const char * pkgrel  = lcfgpkgspec_get_release(pkgspec);
+  const char * pkgnam  = lcfgpackage_get_name(pkgspec);
+  const char * pkgver  = lcfgpackage_get_version(pkgspec);
+  const char * pkgrel  = lcfgpackage_get_release(pkgspec);
 
   const char * pkgarch;
-  if ( lcfgpkgspec_has_arch(pkgspec) ) {
-    pkgarch = lcfgpkgspec_get_arch(pkgspec);
+  if ( lcfgpackage_has_arch(pkgspec) ) {
+    pkgarch = lcfgpackage_get_arch(pkgspec);
   } else {
     pkgarch = defarch;
   }
@@ -342,9 +342,9 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
   LCFGPackageNode * cur_node = lcfgpkglist_head(pkglist);
   while ( cur_node != NULL ) {
 
-    const LCFGPackageSpec * pkgspec = lcfgpkglist_pkgspec(cur_node);
+    const LCFGPackage * pkgspec = lcfgpkglist_pkgspec(cur_node);
 
-    ssize_t rc = lcfgpkgspec_to_rpm_filename( pkgspec,
+    ssize_t rc = lcfgpackage_to_rpm_filename( pkgspec,
                                               defarch,
                                               LCFG_OPT_NEWLINE,
                                               &buffer, &buf_size );
@@ -447,9 +447,9 @@ bool lcfgpkglist_from_rpm_dir( const char * rpmdir,
     char * fullpath  = lcfgutils_catfile( rpmdir, filename );
     if ( stat( fullpath, &sb ) == 0 && S_ISREG(sb.st_mode) ) {
 
-      LCFGPackageSpec * pkgspec = NULL;
+      LCFGPackage * pkgspec = NULL;
       char * parse_msg = NULL;
-      ok = lcfgpkgspec_from_rpm_filename( filename, &pkgspec,
+      ok = lcfgpackage_from_rpm_filename( filename, &pkgspec,
                                           &parse_msg );
 
       if ( !ok ) {
@@ -469,7 +469,7 @@ bool lcfgpkglist_from_rpm_dir( const char * rpmdir,
       free(parse_msg);
 
       if ( !ok )
-        lcfgpkgspec_destroy(pkgspec);
+        lcfgpackage_destroy(pkgspec);
 
     }
 
@@ -546,14 +546,14 @@ bool lcfgpkglist_from_rpmlist( const char * filename,
       continue;
     }
 
-    LCFGPackageSpec * pkgspec = NULL;
+    LCFGPackage * pkgspec = NULL;
     char * parse_errmsg = NULL;
-    ok = lcfgpkgspec_from_rpm_filename( trimmed, &pkgspec, &parse_errmsg );
+    ok = lcfgpackage_from_rpm_filename( trimmed, &pkgspec, &parse_errmsg );
 
     if ( !ok ) {
 
       if ( pkgspec != NULL ) {
-        lcfgpkgspec_destroy(pkgspec);
+        lcfgpackage_destroy(pkgspec);
         pkgspec = NULL;
       }
 
@@ -572,12 +572,12 @@ bool lcfgpkglist_from_rpmlist( const char * filename,
         exit(EXIT_FAILURE);
       }
 
-      lcfgpkgspec_set_derivation( pkgspec, derivation );
+      lcfgpackage_set_derivation( pkgspec, derivation );
 
       if ( lcfgpkglist_append( *result, pkgspec )
            != LCFG_CHANGE_ADDED ) {
         ok = false;
-        lcfgpkgspec_destroy(pkgspec);
+        lcfgpackage_destroy(pkgspec);
         pkgspec = NULL;
       }
 
@@ -647,9 +647,9 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
     LCFGPackageNode * cur_node = lcfgpkglist_head(active);
     while ( cur_node != NULL ) {
 
-      const LCFGPackageSpec * pkgspec = lcfgpkglist_pkgspec(cur_node);
+      const LCFGPackage * pkgspec = lcfgpkglist_pkgspec(cur_node);
 
-      ssize_t rc = lcfgpkgspec_to_cpp( pkgspec,
+      ssize_t rc = lcfgpackage_to_cpp( pkgspec,
                                        defarch,
                                        0,
                                        &buffer, &buf_size );
@@ -686,9 +686,9 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
     LCFGPackageNode * cur_node = lcfgpkglist_head(inactive);
     while ( cur_node != NULL ) {
 
-      const LCFGPackageSpec * pkgspec = lcfgpkglist_pkgspec(cur_node);
+      const LCFGPackage * pkgspec = lcfgpkglist_pkgspec(cur_node);
 
-      ssize_t rc = lcfgpkgspec_to_cpp( pkgspec,
+      ssize_t rc = lcfgpackage_to_cpp( pkgspec,
                                        defarch,
                                        0,
                                        &buffer, &buf_size );

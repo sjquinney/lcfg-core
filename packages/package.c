@@ -45,19 +45,19 @@ static const char * permitted_prefixes = "?+-=~";
 /**
  * @brief Create and initialise a new package
  *
- * Creates a new @c LCFGPackageSpec struct and initialises the
+ * Creates a new @c LCFGPackage struct and initialises the
  * parameters to the default values.
  *
  * If the memory allocation for the new struct is not successful the
  * @c exit() function will be called with a non-zero value.
  *
- * @return Pointer to new @c LCFGPackageSpec struct
+ * @return Pointer to new @c LCFGPackage struct
  *
  */
 
-LCFGPackageSpec * lcfgpkgspec_new(void) {
+LCFGPackage * lcfgpackage_new(void) {
 
-  LCFGPackageSpec * pkgspec = malloc( sizeof(LCFGPackageSpec) );
+  LCFGPackage * pkgspec = malloc( sizeof(LCFGPackage) );
   if ( pkgspec == NULL ) {
     perror( "Failed to allocate memory for LCFG package spec" );
     exit(EXIT_FAILURE);
@@ -80,11 +80,11 @@ LCFGPackageSpec * lcfgpkgspec_new(void) {
 /**
  * @brief Destroy the package
  *
- * When the specified @c LCFGPackageSpec struct is no longer required
+ * When the specified @c LCFGPackage struct is no longer required
  * this will free all associated memory.
  *
  * *Reference Counting:* There is support for very simple reference
- * counting which allows an @c LCFGPackageSpec struct to appear in
+ * counting which allows an @c LCFGPackage struct to appear in
  * multiple lists. Incrementing and decrementing that reference
  * counter is the responsibility of the container code. If the
  * reference count for the specified package is greater than zero
@@ -99,11 +99,11 @@ LCFGPackageSpec * lcfgpkgspec_new(void) {
  * package which has already been destroyed (or potentially was never
  * created).
  *
- * @param[in] res Pointer to @c LCFGPackageSpec struct to be destroyed.
+ * @param[in] res Pointer to @c LCFGPackage struct to be destroyed.
  *
  */
 
-void lcfgpkgspec_destroy(LCFGPackageSpec * pkgspec) {
+void lcfgpackage_destroy(LCFGPackage * pkgspec) {
 
   if ( pkgspec == NULL )
     return;
@@ -140,7 +140,7 @@ void lcfgpkgspec_destroy(LCFGPackageSpec * pkgspec) {
 /**
  * @brief Clone the package
  *
- * Creates a new @c LCFGPackageSpec struct and copies the values of
+ * Creates a new @c LCFGPackage struct and copies the values of
  * the parameters from the specified package. The values for the
  * parameters are copied (e.g. strings are duplicated using @c
  * strdup() ) so that a later change to a parameter in the source
@@ -149,64 +149,64 @@ void lcfgpkgspec_destroy(LCFGPackageSpec * pkgspec) {
  * If the memory allocation for the new struct is not successful the
  * @c exit() function will be called with a non-zero value.
  *
- * @param[in] res Pointer to @c LCFGPackageSpec struct to be cloned.
+ * @param[in] res Pointer to @c LCFGPackage struct to be cloned.
  *
- * @return Pointer to new @c LCFGPackageSpec struct or NULL if copy fails.
+ * @return Pointer to new @c LCFGPackage struct or NULL if copy fails.
  *
  */
 
-LCFGPackageSpec * lcfgpkgspec_clone( const LCFGPackageSpec * pkgspec ) {
+LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkgspec ) {
 
-  LCFGPackageSpec * clone = lcfgpkgspec_new();
+  LCFGPackage * clone = lcfgpackage_new();
   if ( clone == NULL )
     return NULL;
 
   bool ok = true;
   if ( pkgspec->name != NULL ) {
     char * new_name = strdup(pkgspec->name);
-    ok = lcfgpkgspec_set_name( clone, new_name );
+    ok = lcfgpackage_set_name( clone, new_name );
     if (!ok)
       free(new_name);
   }
 
   if ( ok && pkgspec->arch != NULL ) {
     char * new_arch = strdup(pkgspec->arch);
-    ok = lcfgpkgspec_set_arch( clone, new_arch );
+    ok = lcfgpackage_set_arch( clone, new_arch );
     if (!ok)
       free(new_arch);
   }
 
   if ( ok && pkgspec->version != NULL ) {
     char * new_version = strdup(pkgspec->version);
-    ok = lcfgpkgspec_set_version( clone, new_version );
+    ok = lcfgpackage_set_version( clone, new_version );
     if (!ok)
       free(new_version);
   }
 
   if ( ok && pkgspec->release != NULL ) {
     char * new_release = strdup(pkgspec->release);
-    ok = lcfgpkgspec_set_release( clone, new_release );
+    ok = lcfgpackage_set_release( clone, new_release );
     if (!ok)
       free(new_release);
   }
 
   if ( ok && pkgspec->flags != NULL ) {
     char * new_flags = strdup(pkgspec->flags);
-    ok = lcfgpkgspec_set_flags( clone, new_flags );
+    ok = lcfgpackage_set_flags( clone, new_flags );
     if (!ok)
       free(new_flags);
   }
 
   if ( ok && pkgspec->context != NULL ) {
     char * new_context = strdup(pkgspec->context);
-    ok = lcfgpkgspec_set_context( clone, new_context );
+    ok = lcfgpackage_set_context( clone, new_context );
     if (!ok)
       free(new_context);
   }
 
   if ( ok && pkgspec->derivation != NULL ) {
     char * new_deriv = strdup(pkgspec->derivation);
-    ok = lcfgpkgspec_set_derivation( clone, new_deriv );
+    ok = lcfgpackage_set_derivation( clone, new_deriv );
     if (!ok)
       free(new_deriv);
   }
@@ -216,7 +216,7 @@ LCFGPackageSpec * lcfgpkgspec_clone( const LCFGPackageSpec * pkgspec ) {
 
   /* Cloning should never fail */
   if ( !ok ) {
-    lcfgpkgspec_destroy(clone);
+    lcfgpackage_destroy(clone);
     clone = NULL;
   }
 
@@ -241,7 +241,7 @@ LCFGPackageSpec * lcfgpkgspec_clone( const LCFGPackageSpec * pkgspec ) {
  *
  */
 
-bool lcfgpkgspec_valid_name( const char * name ) {
+bool lcfgpackage_valid_name( const char * name ) {
 
   /* MUST be at least one character long and first character MUST be
      an alpha-numeric. */
@@ -262,18 +262,18 @@ bool lcfgpkgspec_valid_name( const char * name ) {
 /**
  * @brief Check if the package has a name
  *
- * Checks if the specified @c LCFGPackageSpec struct currently has a
+ * Checks if the specified @c LCFGPackage struct currently has a
  * value set for the @e name attribute. Although a name is required
  * for an LCFG package to be valid it is possible for the value of the
  * name to be set to @c NULL when the struct is first created.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return boolean which indicates if a package has a name
  *
  */
 
-bool lcfgpkgspec_has_name( const LCFGPackageSpec * pkgspec ) {
+bool lcfgpackage_has_name( const LCFGPackage * pkgspec ) {
   return ( pkgspec->name != NULL && *( pkgspec->name ) != '\0' );
 }
 
@@ -281,48 +281,48 @@ bool lcfgpkgspec_has_name( const LCFGPackageSpec * pkgspec ) {
  * @brief Get the name for the package
  *
  * This returns the value of the @e name parameter for the @c
- * LCFGPackageSpec struct. If the package does not currently have a @e
+ * LCFGPackage struct. If the package does not currently have a @e
  * name then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e name for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return The name for the package (possibly NULL).
  */
 
-char * lcfgpkgspec_get_name( const LCFGPackageSpec * pkgspec ) {
+char * lcfgpackage_get_name( const LCFGPackage * pkgspec ) {
   return pkgspec->name;
 }
 
 /**
  * @brief Set the name for the package
  *
- * Sets the value of the @e name parameter for the @c LCFGPackageSpec
+ * Sets the value of the @e name parameter for the @c LCFGPackage
  * struct to that specified. It is important to note that this does
  * NOT take a copy of the string. Furthermore, once the value is set
  * the package assumes "ownership", the memory will be freed if the
  * name is further modified or the package is destroyed.
  *
  * Before changing the value of the @e name to be the new string it
- * will be validated using the @c lcfgpkgspec_valid_name()
+ * will be validated using the @c lcfgpackage_valid_name()
  * function. If the new string is not valid then no change will occur,
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  * @param[in] new_name String which is the new name
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgpkgspec_set_name( LCFGPackageSpec * pkgspec, char * new_name ) {
+bool lcfgpackage_set_name( LCFGPackage * pkgspec, char * new_name ) {
 
   bool ok = false;
-  if ( lcfgpkgspec_valid_name(new_name) ) {
+  if ( lcfgpackage_valid_name(new_name) ) {
     free(pkgspec->name);
 
     pkgspec->name = new_name;
@@ -351,7 +351,7 @@ bool lcfgpkgspec_set_name( LCFGPackageSpec * pkgspec, char * new_name ) {
  *
  */
 
-bool lcfgpkgspec_valid_arch( const char * arch ) {
+bool lcfgpackage_valid_arch( const char * arch ) {
 
   /* MUST be at least one character long */
 
@@ -372,16 +372,16 @@ bool lcfgpkgspec_valid_arch( const char * arch ) {
 /**
  * @brief Check if the package has an architecture 
  *
- * Checks if the specified @c LCFGPackageSpec struct currently has a
+ * Checks if the specified @c LCFGPackage struct currently has a
  * value set for the @e arch attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return boolean which indicates if a package has an architecture
  *
  */
 
-bool lcfgpkgspec_has_arch( const LCFGPackageSpec * pkgspec ) {
+bool lcfgpackage_has_arch( const LCFGPackage * pkgspec ) {
   return ( pkgspec->arch != NULL && *( pkgspec->arch ) != '\0' );
 }
 
@@ -389,48 +389,48 @@ bool lcfgpkgspec_has_arch( const LCFGPackageSpec * pkgspec ) {
  * @brief Get the architecture for the package
  *
  * This returns the value of the @e arch parameter for the @c
- * LCFGPackageSpec struct. If the package does not currently have an @e
+ * LCFGPackage struct. If the package does not currently have an @e
  * arch then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e arch for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return The architecture for the package (possibly NULL).
  */
 
-char * lcfgpkgspec_get_arch( const LCFGPackageSpec * pkgspec ) {
+char * lcfgpackage_get_arch( const LCFGPackage * pkgspec ) {
   return pkgspec->arch;
 }
 
 /**
  * @brief Set the architecture for the package
  *
- * Sets the value of the @e arch parameter for the @c LCFGPackageSpec
+ * Sets the value of the @e arch parameter for the @c LCFGPackage
  * struct to that specified. It is important to note that this does
  * NOT take a copy of the string. Furthermore, once the value is set
  * the package assumes "ownership", the memory will be freed if the
  * architecture is further modified or the package is destroyed.
  *
  * Before changing the value of the @e arch to be the new string it
- * will be validated using the @c lcfgpkgspec_valid_arch()
+ * will be validated using the @c lcfgpackage_valid_arch()
  * function. If the new string is not valid then no change will occur,
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  * @param[in] new_arch String which is the new architecture
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgpkgspec_set_arch( LCFGPackageSpec * pkgspec, char * new_arch ) {
+bool lcfgpackage_set_arch( LCFGPackage * pkgspec, char * new_arch ) {
 
   bool ok = false;
-  if ( lcfgpkgspec_valid_arch(new_arch) ) {
+  if ( lcfgpackage_valid_arch(new_arch) ) {
     free(pkgspec->arch);
 
     pkgspec->arch = new_arch;
@@ -459,7 +459,7 @@ bool lcfgpkgspec_set_arch( LCFGPackageSpec * pkgspec, char * new_arch ) {
  *
  */
 
-bool lcfgpkgspec_valid_version( const char * version ) {
+bool lcfgpackage_valid_version( const char * version ) {
 
   /* Must be at least one character long. */
 
@@ -481,16 +481,16 @@ bool lcfgpkgspec_valid_version( const char * version ) {
 /**
  * @brief Check if the package has a version
  *
- * Checks if the specified @c LCFGPackageSpec struct currently has a
+ * Checks if the specified @c LCFGPackage struct currently has a
  * value set for the @e version attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return boolean which indicates if a package has a version
  *
  */
 
-bool lcfgpkgspec_has_version( const LCFGPackageSpec * pkgspec ) {
+bool lcfgpackage_has_version( const LCFGPackage * pkgspec ) {
   return ( pkgspec->version != NULL && *( pkgspec->version ) != '\0' );
 }
 
@@ -498,48 +498,48 @@ bool lcfgpkgspec_has_version( const LCFGPackageSpec * pkgspec ) {
  * @brief Get the version for the package
  *
  * This returns the value of the @e version parameter for the @c
- * LCFGPackageSpec struct. If the package does not currently have a @e
+ * LCFGPackage struct. If the package does not currently have a @e
  * version then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e version for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return The version for the package (possibly NULL).
  */
 
-char * lcfgpkgspec_get_version( const LCFGPackageSpec * pkgspec ) {
+char * lcfgpackage_get_version( const LCFGPackage * pkgspec ) {
   return pkgspec->version;
 }
 
 /**
  * @brief Set the version for the package
  *
- * Sets the value of the @e version parameter for the @c LCFGPackageSpec
+ * Sets the value of the @e version parameter for the @c LCFGPackage
  * struct to that specified. It is important to note that this does
  * NOT take a copy of the string. Furthermore, once the value is set
  * the package assumes "ownership", the memory will be freed if the
  * version is further modified or the package is destroyed.
  *
  * Before changing the value of the @e version to be the new string it
- * will be validated using the @c lcfgpkgspec_valid_version()
+ * will be validated using the @c lcfgpackage_valid_version()
  * function. If the new string is not valid then no change will occur,
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  * @param[in] new_version String which is the new version
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgpkgspec_set_version( LCFGPackageSpec * pkgspec, char * new_version ) {
+bool lcfgpackage_set_version( LCFGPackage * pkgspec, char * new_version ) {
 
   bool ok = false;
-  if ( lcfgpkgspec_valid_version(new_version) ) {
+  if ( lcfgpackage_valid_version(new_version) ) {
     free(pkgspec->version);
 
     pkgspec->version = new_version;
@@ -569,24 +569,24 @@ bool lcfgpkgspec_set_version( LCFGPackageSpec * pkgspec, char * new_version ) {
  *
  */
 
-bool lcfgpkgspec_valid_release( const char * release ) {
+bool lcfgpackage_valid_release( const char * release ) {
   /* Currently the same rules as for version strings */
-  return lcfgpkgspec_valid_version(release);
+  return lcfgpackage_valid_version(release);
 }
 
 /**
  * @brief Check if the package has a release
  *
- * Checks if the specified @c LCFGPackageSpec struct currently has a
+ * Checks if the specified @c LCFGPackage struct currently has a
  * value set for the @e release attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return boolean which indicates if a package has a release
  *
  */
 
-bool lcfgpkgspec_has_release( const LCFGPackageSpec * pkgspec ) {
+bool lcfgpackage_has_release( const LCFGPackage * pkgspec ) {
   return ( pkgspec->release != NULL && *( pkgspec->release ) != '\0' );
 }
 
@@ -594,48 +594,48 @@ bool lcfgpkgspec_has_release( const LCFGPackageSpec * pkgspec ) {
  * @brief Get the release for the package
  *
  * This returns the value of the @e release parameter for the @c
- * LCFGPackageSpec struct. If the package does not currently have a @e
+ * LCFGPackage struct. If the package does not currently have a @e
  * release then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e release for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return The release for the package (possibly NULL).
  */
 
-char * lcfgpkgspec_get_release( const LCFGPackageSpec * pkgspec ) {
+char * lcfgpackage_get_release( const LCFGPackage * pkgspec ) {
   return pkgspec->release;
 }
 
 /**
  * @brief Set the release for the package
  *
- * Sets the value of the @e release parameter for the @c LCFGPackageSpec
+ * Sets the value of the @e release parameter for the @c LCFGPackage
  * struct to that specified. It is important to note that this does
  * NOT take a copy of the string. Furthermore, once the value is set
  * the package assumes "ownership", the memory will be freed if the
  * release is further modified or the package is destroyed.
  *
  * Before changing the value of the @e release to be the new string it
- * will be validated using the @c lcfgpkgspec_valid_release()
+ * will be validated using the @c lcfgpackage_valid_release()
  * function. If the new string is not valid then no change will occur,
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  * @param[in] new_release String which is the new release
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgpkgspec_set_release( LCFGPackageSpec * pkgspec, char * new_release ) {
+bool lcfgpackage_set_release( LCFGPackage * pkgspec, char * new_release ) {
 
   bool ok = false;
-  if ( lcfgpkgspec_valid_release(new_release) ) {
+  if ( lcfgpackage_valid_release(new_release) ) {
     free(pkgspec->release);
 
     pkgspec->release = new_release;
@@ -670,23 +670,23 @@ bool lcfgpkgspec_set_release( LCFGPackageSpec * pkgspec, char * new_release ) {
  *
  */
 
-bool lcfgpkgspec_valid_prefix( char prefix ) {
+bool lcfgpackage_valid_prefix( char prefix ) {
   return ( strchr( permitted_prefixes, prefix ) != NULL );
 }
 
 /**
  * @brief Check if the package has a prefix
  *
- * Checks if the specified @c LCFGPackageSpec struct currently has a
+ * Checks if the specified @c LCFGPackage struct currently has a
  * value set for the @e prefix attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return boolean which indicates if a package has a prefix
  *
  */
 
-bool lcfgpkgspec_has_prefix( const LCFGPackageSpec * pkgspec ) {
+bool lcfgpackage_has_prefix( const LCFGPackage * pkgspec ) {
   return ( pkgspec->prefix != '\0' );
 }
 
@@ -694,19 +694,19 @@ bool lcfgpkgspec_has_prefix( const LCFGPackageSpec * pkgspec ) {
  * @brief Get the prefix for the package
  *
  * This returns the value of the @e prefix parameter for the @c
- * LCFGPackageSpec struct. If the package does not currently have a @e
+ * LCFGPackage struct. If the package does not currently have a @e
  * release then the null character @c '\0' will be returned.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return The prefix character for the package.
  */
 
-char lcfgpkgspec_get_prefix( const LCFGPackageSpec * pkgspec ) {
+char lcfgpackage_get_prefix( const LCFGPackage * pkgspec ) {
   return pkgspec->prefix;
 }
 
-bool lcfgpkgspec_remove_prefix( LCFGPackageSpec * pkgspec ) {
+bool lcfgpackage_remove_prefix( LCFGPackage * pkgspec ) {
     pkgspec->prefix = '\0';
     return true;
 }
@@ -714,26 +714,26 @@ bool lcfgpkgspec_remove_prefix( LCFGPackageSpec * pkgspec ) {
 /**
  * @brief Set the prefix for the package
  *
- * Sets the value of the @e prefix parameter for the @c LCFGPackageSpec
+ * Sets the value of the @e prefix parameter for the @c LCFGPackage
  * struct to that specified. 
  *
  * Before changing the value of the @e prefix to be the new character
- * it will be validated using the @c lcfgpkgspec_valid_prefix()
+ * it will be validated using the @c lcfgpackage_valid_prefix()
  * function. If the new character is not valid then no change will
  * occur, the @c errno will be set to @c EINVAL and the function will
  * return a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  * @param[in] new_prefix Character which is the new prefix
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgpkgspec_set_prefix( LCFGPackageSpec * pkgspec, char new_prefix ) {
+bool lcfgpackage_set_prefix( LCFGPackage * pkgspec, char new_prefix ) {
 
   bool ok = false;
-  if ( lcfgpkgspec_valid_prefix(new_prefix) ) {
+  if ( lcfgpackage_valid_prefix(new_prefix) ) {
     pkgspec->prefix = new_prefix;
     ok = true;
   } else {
@@ -760,7 +760,7 @@ bool lcfgpkgspec_set_prefix( LCFGPackageSpec * pkgspec, char new_prefix ) {
  *
  */
 
-bool lcfgpkgspec_valid_flag_chr( const char flag ) {
+bool lcfgpackage_valid_flag_chr( const char flag ) {
   return ( isalnum(flag) );
 }
 
@@ -768,7 +768,7 @@ bool lcfgpkgspec_valid_flag_chr( const char flag ) {
  * @brief Check if a string is a valid set of LCFG package flags
  *
  * Checks the contents of a specified string are all valid LCFG
- * package flags. See @c lcfgpkgspec_valid_flag() for details.
+ * package flags. See @c lcfgpackage_valid_flag() for details.
  *
  * @param[in] flags String to be tested
  *
@@ -776,7 +776,7 @@ bool lcfgpkgspec_valid_flag_chr( const char flag ) {
  *
  */
 
-bool lcfgpkgspec_valid_flags( const char * flags ) {
+bool lcfgpackage_valid_flags( const char * flags ) {
 
   /* MUST be at least one character long. */
 
@@ -787,7 +787,7 @@ bool lcfgpkgspec_valid_flags( const char * flags ) {
 
   char * ptr;
   for ( ptr = (char *) flags; valid && *ptr != '\0'; ptr++ ) {
-    if ( !lcfgpkgspec_valid_flag_chr(*ptr) )
+    if ( !lcfgpackage_valid_flag_chr(*ptr) )
       valid = false;
   }
 
@@ -797,22 +797,22 @@ bool lcfgpkgspec_valid_flags( const char * flags ) {
 /**
  * @brief Check if the package has flags
  *
- * Checks if the specified @c LCFGPackageSpec struct currently has a
+ * Checks if the specified @c LCFGPackage struct currently has a
  * value set for the @e flags attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return boolean which indicates if a package has flags
  *
  */
 
-bool lcfgpkgspec_has_flags( const LCFGPackageSpec * pkgspec ) {
+bool lcfgpackage_has_flags( const LCFGPackage * pkgspec ) {
   return ( pkgspec->flags != NULL && *( pkgspec->flags ) != '\0' );
 }
 
-bool lcfgpkgspec_has_flag( const LCFGPackageSpec * pkgspec, char flag ) {
+bool lcfgpackage_has_flag( const LCFGPackage * pkgspec, char flag ) {
 
-  return ( lcfgpkgspec_has_flags(pkgspec) &&
+  return ( lcfgpackage_has_flags(pkgspec) &&
            strchr( pkgspec->flags, flag ) != NULL );
 }
 
@@ -820,48 +820,48 @@ bool lcfgpkgspec_has_flag( const LCFGPackageSpec * pkgspec, char flag ) {
  * @brief Get the flags for the package
  *
  * This returns the value of the @e flags parameter for the @c
- * LCFGPackageSpec struct. If the package does not currently have @e
+ * LCFGPackage struct. If the package does not currently have @e
  * flags then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e flags for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return The flags for the package (possibly NULL).
  */
 
-char * lcfgpkgspec_get_flags( const LCFGPackageSpec * pkgspec ) {
+char * lcfgpackage_get_flags( const LCFGPackage * pkgspec ) {
   return pkgspec->flags;
 }
 
 /**
  * @brief Set the flags for the package
  *
- * Sets the value of the @e flags parameter for the @c LCFGPackageSpec
+ * Sets the value of the @e flags parameter for the @c LCFGPackage
  * struct to that specified. It is important to note that this does
  * NOT take a copy of the string. Furthermore, once the value is set
  * the package assumes "ownership", the memory will be freed if the
  * flags are further modified or the package is destroyed.
  *
  * Before changing the value of the @e flags to be the new string it
- * will be validated using the @c lcfgpkgspec_valid_flags()
+ * will be validated using the @c lcfgpackage_valid_flags()
  * function. If the new string is not valid then no change will occur,
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  * @param[in] new_flags String which is the new flags
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgpkgspec_set_flags( LCFGPackageSpec * pkgspec, char * new_flags ) {
+bool lcfgpackage_set_flags( LCFGPackage * pkgspec, char * new_flags ) {
 
   bool ok = false;
-  if ( lcfgpkgspec_valid_flags(new_flags) ) {
+  if ( lcfgpackage_valid_flags(new_flags) ) {
     free(pkgspec->flags);
 
     pkgspec->flags = new_flags;
@@ -879,19 +879,19 @@ bool lcfgpkgspec_set_flags( LCFGPackageSpec * pkgspec, char * new_flags ) {
  * Combines the extra flags with any already present so that each flag
  * character only appears once. Due to the way the selection process
  * works this has the side-effect of sorting the list of flags. The
- * extra flags must be valid according to @c lcfgpkgspec_valid_flags.
+ * extra flags must be valid according to @c lcfgpackage_valid_flags.
  *
- * The new string is passed to @c lcfgpkgspec_set_flags(), unlike that
+ * The new string is passed to @c lcfgpackage_set_flags(), unlike that
  * function this does NOT assume "ownership" of the input string.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  * @param[in] extra_flags String of extra flags to be added
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgpkgspec_add_flags( LCFGPackageSpec * pkgspec,
+bool lcfgpackage_add_flags( LCFGPackage * pkgspec,
                             const char * extra_flags ) {
 
   if ( extra_flags == NULL || *extra_flags == '\0' )
@@ -899,7 +899,7 @@ bool lcfgpkgspec_add_flags( LCFGPackageSpec * pkgspec,
 
   /* No point doing any work if there are invalid flags */
 
-  if ( !lcfgpkgspec_valid_flags(extra_flags) ) {
+  if ( !lcfgpackage_valid_flags(extra_flags) ) {
     errno = EINVAL;
     return false;
   }
@@ -981,7 +981,7 @@ bool lcfgpkgspec_add_flags( LCFGPackageSpec * pkgspec,
 
   assert( ( result + new_len ) == to );
 
-  bool ok = lcfgpkgspec_set_flags( pkgspec, result );
+  bool ok = lcfgpackage_set_flags( pkgspec, result );
   if ( !ok )
     free(result);
 
@@ -1002,23 +1002,23 @@ bool lcfgpkgspec_add_flags( LCFGPackageSpec * pkgspec,
  *
  */
 
-bool lcfgpkgspec_valid_context( const char * ctx ) {
+bool lcfgpackage_valid_context( const char * ctx ) {
   return lcfgcontext_valid_expression(ctx);
 }
 
 /**
  * @brief Check if the package has a context
  *
- * Checks if the specified @c LCFGPackageSpec struct currently has a
+ * Checks if the specified @c LCFGPackage struct currently has a
  * value set for the @e context attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return boolean which indicates if a package has a context
  *
  */
 
-bool lcfgpkgspec_has_context( const LCFGPackageSpec * pkgspec ) {
+bool lcfgpackage_has_context( const LCFGPackage * pkgspec ) {
   return ( pkgspec->context != NULL && *( pkgspec->context ) != '\0' );
 }
 
@@ -1026,19 +1026,19 @@ bool lcfgpkgspec_has_context( const LCFGPackageSpec * pkgspec ) {
  * @brief Get the context for the package
  *
  * This returns the value of the @e context parameter for the @c
- * LCFGPackageSpec struct. If the package does not currently have a @e
+ * LCFGPackage struct. If the package does not currently have a @e
  * context then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e context for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return The context for the package (possibly NULL).
  */
 
-char * lcfgpkgspec_get_context( const LCFGPackageSpec * pkgspec ) {
+char * lcfgpackage_get_context( const LCFGPackage * pkgspec ) {
   return pkgspec->context;
 }
 
@@ -1046,28 +1046,28 @@ char * lcfgpkgspec_get_context( const LCFGPackageSpec * pkgspec ) {
  * @brief Set the context for the package
  *
  * Sets the value of the @e context parameter for the @c
- * LCFGPackageSpec struct to that specified. It is important to note
+ * LCFGPackage struct to that specified. It is important to note
  * that this does NOT take a copy of the string. Furthermore, once the
  * value is set the package assumes "ownership", the memory will be
  * freed if the context is further modified or the package is destroyed.
  *
  * Before changing the value of the @e context to be the new string it
- * will be validated using the @c lcfgpkgspec_valid_context()
+ * will be validated using the @c lcfgpackage_valid_context()
  * function. If the new string is not valid then no change will occur,
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  * @param[in] new_ctx String which is the new context
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgpkgspec_set_context( LCFGPackageSpec * pkgspec, char * new_ctx ) {
+bool lcfgpackage_set_context( LCFGPackage * pkgspec, char * new_ctx ) {
 
   bool ok = false;
-  if ( lcfgpkgspec_valid_context(new_ctx) ) {
+  if ( lcfgpackage_valid_context(new_ctx) ) {
     free(pkgspec->context);
 
     pkgspec->context = new_ctx;
@@ -1083,38 +1083,38 @@ bool lcfgpkgspec_set_context( LCFGPackageSpec * pkgspec, char * new_ctx ) {
  * @brief Add extra context information for the package
  *
  * Adds the extra context information to the value for the @e context
- * parameter in the @c LCFGPackageSpec struct if it is not already
+ * parameter in the @c LCFGPackage struct if it is not already
  * found in the string.
  *
  * If not already present in the existing information a new context
  * string is built which is the combination of any existing string
  * with the new string appended, the strings are combined using @c
  * lcfgcontext_combine_expressions(). The new string is passed to @c
- * lcfgpkgspec_set_context(), unlike that function this does NOT
+ * lcfgpackage_set_context(), unlike that function this does NOT
  * assume "ownership" of the input string.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  * @param[in] extra_context String which is the additional context
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgpkgspec_add_context( LCFGPackageSpec * pkgspec,
+bool lcfgpackage_add_context( LCFGPackage * pkgspec,
                               const char * extra_context ) {
 
   if ( extra_context == NULL || *extra_context == '\0' )
     return true;
 
   char * new_context = NULL;
-  if ( !lcfgpkgspec_has_context(pkgspec) ) {
+  if ( !lcfgpackage_has_context(pkgspec) ) {
     new_context = strdup(extra_context);
   } else {
     new_context =
       lcfgcontext_combine_expressions( pkgspec->context, extra_context );
   }
 
-  bool ok = lcfgpkgspec_set_context( pkgspec, new_context );
+  bool ok = lcfgpackage_set_context( pkgspec, new_context );
   if ( !ok )
     free(new_context);
 
@@ -1126,16 +1126,16 @@ bool lcfgpkgspec_add_context( LCFGPackageSpec * pkgspec,
 /**
  * @brief Check if the package has derivation information
  *
- * Checks if the specified @c LCFGPackageSpec struct currently has a
+ * Checks if the specified @c LCFGPackage struct currently has a
  * value set for the @e derivation attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return boolean which indicates if a package has a derivation
  *
  */
 
-bool lcfgpkgspec_has_derivation( const LCFGPackageSpec * pkgspec ) {
+bool lcfgpackage_has_derivation( const LCFGPackage * pkgspec ) {
   return ( pkgspec->derivation != NULL && *( pkgspec->derivation ) != '\0' );
 }
 
@@ -1143,19 +1143,19 @@ bool lcfgpkgspec_has_derivation( const LCFGPackageSpec * pkgspec ) {
  * @brief Get the derivation for the package
  *
  * This returns the value of the @e derivation parameter for the @c
- * LCFGPackageSpec struct. If the package does not currently have a @e
+ * LCFGPackage struct. If the package does not currently have a @e
  * derivation then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e derivation for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return The derivation for the package (possibly NULL).
  */
 
-char * lcfgpkgspec_get_derivation( const LCFGPackageSpec * pkgspec ) {
+char * lcfgpackage_get_derivation( const LCFGPackage * pkgspec ) {
   return pkgspec->derivation;
 }
 
@@ -1163,19 +1163,19 @@ char * lcfgpkgspec_get_derivation( const LCFGPackageSpec * pkgspec ) {
  * @brief Set the derivation for the package
  *
  * Sets the value of the @e derivation parameter for the @c
- * LCFGPackageSpec struct to that specified. It is important to note
+ * LCFGPackage struct to that specified. It is important to note
  * that this does NOT take a copy of the string. Furthermore, once the
  * value is set the package assumes "ownership", the memory will be
  * freed if the derivation is further modified or the package is destroyed.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  * @param[in] new_deriv String which is the new derivation
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgpkgspec_set_derivation( LCFGPackageSpec * pkgspec, char * new_deriv ) {
+bool lcfgpackage_set_derivation( LCFGPackage * pkgspec, char * new_deriv ) {
 
   /* Currently no validation of the derivation */
 
@@ -1189,30 +1189,30 @@ bool lcfgpkgspec_set_derivation( LCFGPackageSpec * pkgspec, char * new_deriv ) {
  * @brief Add extra derivation information for the package
  *
  * Adds the extra derivation information to the value for the @e
- * derivation parameter in the @c LCFGPackageSpec struct if it is not
+ * derivation parameter in the @c LCFGPackage struct if it is not
  * already found in the string.
  *
  * If not already present in the existing information a new derivation
  * string is built which is the combination of any existing string
  * with the new string appended. The new string is passed to @c
- * lcfgpkgspec_set_derivation(), unlike that function this does NOT
+ * lcfgpackage_set_derivation(), unlike that function this does NOT
  * assume "ownership" of the input string.
 
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  * @param[in] extra_deriv String which is the additional derivation
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgpkgspec_add_derivation( LCFGPackageSpec * pkgspec,
+bool lcfgpackage_add_derivation( LCFGPackage * pkgspec,
                                  const char * extra_deriv ) {
 
   if ( extra_deriv == NULL || *extra_deriv == '\0' )
     return true;
 
   char * new_deriv = NULL;
-  if ( !lcfgpkgspec_has_derivation(pkgspec) ) {
+  if ( !lcfgpackage_has_derivation(pkgspec) ) {
     new_deriv = strdup(extra_deriv);
   } else if ( strstr( pkgspec->derivation, extra_deriv ) == NULL ) {
 
@@ -1234,7 +1234,7 @@ bool lcfgpkgspec_add_derivation( LCFGPackageSpec * pkgspec,
 
   bool ok = true;
   if ( new_deriv != NULL ) {
-    ok = lcfgpkgspec_set_derivation( pkgspec, new_deriv );
+    ok = lcfgpackage_set_derivation( pkgspec, new_deriv );
 
     if ( !ok )
       free(new_deriv);
@@ -1249,38 +1249,38 @@ bool lcfgpkgspec_add_derivation( LCFGPackageSpec * pkgspec,
  * @brief Get the priority for the package
  *
  * This returns the value of the integer @e priority parameter for the
- * @c LCFGPackageSpec struct. The priority is calculated using the
+ * @c LCFGPackage struct. The priority is calculated using the
  * context for the package (if any) along with the current active set
  * of contexts for the system.
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  *
  * @return The priority for the package.
  */
 
-int lcfgpkgspec_get_priority( const LCFGPackageSpec * pkgspec ) {
+int lcfgpackage_get_priority( const LCFGPackage * pkgspec ) {
   return pkgspec->priority;
 }
 
 /**
  * @brief Set the priority for the package
  *
- * Sets the value of the @e priority parameter for the @c LCFGPackageSpec
+ * Sets the value of the @e priority parameter for the @c LCFGPackage
  * struct to that specified. 
  *
- * @param[in] res Pointer to an @c LCFGPackageSpec struct
+ * @param[in] res Pointer to an @c LCFGPackage struct
  * @param[in] new_prio Integer which is the new priority
  *
  * @return boolean indicating success
  *
  */
 
-bool lcfgpkgspec_set_priority( LCFGPackageSpec * pkgspec, int new_prio ) {
+bool lcfgpackage_set_priority( LCFGPackage * pkgspec, int new_prio ) {
   pkgspec->priority = new_prio;
   return true;
 }
 
-bool lcfgpkgspec_eval_priority( LCFGPackageSpec * pkgspec,
+bool lcfgpackage_eval_priority( LCFGPackage * pkgspec,
                                 const LCFGContextList * ctxlist,
                                 char ** msg ) {
 
@@ -1288,7 +1288,7 @@ bool lcfgpkgspec_eval_priority( LCFGPackageSpec * pkgspec,
   bool ok = true;
 
   int priority = 0;
-  if ( lcfgpkgspec_has_context(pkgspec) ) {
+  if ( lcfgpackage_has_context(pkgspec) ) {
 
     /* Calculate the priority using the context expression for this
        package spec. */
@@ -1300,16 +1300,16 @@ bool lcfgpkgspec_eval_priority( LCFGPackageSpec * pkgspec,
   }
 
   if (ok)
-    ok = lcfgpkgspec_set_priority( pkgspec, priority );
+    ok = lcfgpackage_set_priority( pkgspec, priority );
 
   return ok;
 }
 
-bool lcfgpkgspec_is_active( const LCFGPackageSpec * pkgspec ) {
+bool lcfgpackage_is_active( const LCFGPackage * pkgspec ) {
   return ( pkgspec->priority >= 0 );
 }
 
-void lcfgpkgspec_set_defaults(LCFGPackageSpec * pkgspec) {
+void lcfgpackage_set_defaults(LCFGPackage * pkgspec) {
 
   /* This is used to set defaults for anything which is not yet defined */
 
@@ -1343,7 +1343,7 @@ void lcfgpkgspec_set_defaults(LCFGPackageSpec * pkgspec) {
 
 /* Higher-level functions */
 
-char * lcfgpkgspec_full_version( const LCFGPackageSpec * pkgspec ) {
+char * lcfgpackage_full_version( const LCFGPackage * pkgspec ) {
 
   char * result =
     lcfgutils_join_strings( pkgspec->version, pkgspec->release, "-" );
@@ -1356,10 +1356,10 @@ char * lcfgpkgspec_full_version( const LCFGPackageSpec * pkgspec ) {
   return result;
 }
 
-char * lcfgpkgspec_id( const LCFGPackageSpec * pkgspec ) {
+char * lcfgpackage_id( const LCFGPackage * pkgspec ) {
 
   char * result;
-  if ( lcfgpkgspec_has_arch(pkgspec) ) {
+  if ( lcfgpackage_has_arch(pkgspec) ) {
     result = lcfgutils_join_strings( pkgspec->name, pkgspec->arch, "." );
 
     if ( result == NULL ) {
@@ -1373,8 +1373,8 @@ char * lcfgpkgspec_id( const LCFGPackageSpec * pkgspec ) {
   return result;
 }
 
-bool lcfgpkgspec_from_string( const char * spec,
-                              LCFGPackageSpec ** result,
+bool lcfgpackage_from_string( const char * spec,
+                              LCFGPackage ** result,
                               char ** errmsg ) {
   *result = NULL;
   *errmsg = NULL;
@@ -1400,7 +1400,7 @@ bool lcfgpkgspec_from_string( const char * spec,
   char * pkg_flags   = NULL;
   char * pkg_context = NULL;
 
-  *result = lcfgpkgspec_new();
+  *result = lcfgpackage_new();
 
   /* Prefix - optional
 
@@ -1411,7 +1411,7 @@ bool lcfgpkgspec_from_string( const char * spec,
    */
 
   if ( !isword(input[0]) ) {
-    if ( !lcfgpkgspec_set_prefix( *result, input[0] ) ) {
+    if ( !lcfgpackage_set_prefix( *result, input[0] ) ) {
       asprintf( errmsg, "Invalid LCFG package prefix '%c'.", input[0] );
       goto failure;
     }
@@ -1482,7 +1482,7 @@ bool lcfgpkgspec_from_string( const char * spec,
   }
 
   if ( pkg_context != NULL ) {
-    if ( !lcfgpkgspec_set_context( *result, pkg_context ) ) {
+    if ( !lcfgpackage_set_context( *result, pkg_context ) ) {
       asprintf( errmsg, "Invalid LCFG package context '%s'.", pkg_context );
       free(pkg_context);
       pkg_context = NULL;
@@ -1519,7 +1519,7 @@ bool lcfgpkgspec_from_string( const char * spec,
   }
 
   if ( pkg_flags != NULL ) {
-    if ( !lcfgpkgspec_set_flags( *result, pkg_flags ) ) {
+    if ( !lcfgpackage_set_flags( *result, pkg_flags ) ) {
       asprintf( errmsg, "Invalid LCFG package flags '%s'.", pkg_flags );
       free(pkg_flags);
       pkg_flags = NULL;
@@ -1552,7 +1552,7 @@ bool lcfgpkgspec_from_string( const char * spec,
   }
 
   if ( pkg_arch != NULL ) {
-    if ( !lcfgpkgspec_set_arch( *result, pkg_arch ) ) {
+    if ( !lcfgpackage_set_arch( *result, pkg_arch ) ) {
       asprintf( errmsg, "Invalid LCFG package architecture '%s'.", pkg_arch );
       free(pkg_arch);
       pkg_arch = NULL;
@@ -1586,7 +1586,7 @@ bool lcfgpkgspec_from_string( const char * spec,
     asprintf( errmsg, "Failed to extract package release." );
     goto failure;
   } else {
-    if ( !lcfgpkgspec_set_release( *result, pkg_release ) ) {
+    if ( !lcfgpackage_set_release( *result, pkg_release ) ) {
       asprintf( errmsg, "Invalid LCFG package release '%s'.", pkg_release );
       free(pkg_release);
       pkg_release = NULL;
@@ -1620,7 +1620,7 @@ bool lcfgpkgspec_from_string( const char * spec,
     asprintf( errmsg, "Failed to extract package version." );
     goto failure;
   } else {
-    if ( !lcfgpkgspec_set_version( *result, pkg_version ) ) {
+    if ( !lcfgpackage_set_version( *result, pkg_version ) ) {
       asprintf( errmsg, "Invalid LCFG package version '%s'.", pkg_version );
       free(pkg_version);
       pkg_version = NULL;
@@ -1643,7 +1643,7 @@ bool lcfgpkgspec_from_string( const char * spec,
     asprintf( errmsg, "Failed to extract package name." );
     goto failure;
   } else {
-    if ( !lcfgpkgspec_set_name( *result, pkg_name ) ) {
+    if ( !lcfgpackage_set_name( *result, pkg_name ) ) {
       asprintf( errmsg, "Invalid LCFG package name '%s'.", pkg_name );
       free(pkg_name);
       pkg_name = NULL;
@@ -1659,7 +1659,7 @@ bool lcfgpkgspec_from_string( const char * spec,
     ok = false; /* in case we've jumped in from elsewhere */
 
     if ( *result != NULL ) {
-      lcfgpkgspec_destroy(*result);
+      lcfgpackage_destroy(*result);
       *result = NULL;
     }
 
@@ -1668,12 +1668,12 @@ bool lcfgpkgspec_from_string( const char * spec,
   return ok;
 }
 
-ssize_t lcfgpkgspec_to_string( const LCFGPackageSpec * pkgspec,
+ssize_t lcfgpackage_to_string( const LCFGPackage * pkgspec,
                                const char * defarch,
                                unsigned int options,
                                char ** result, size_t * size ) {
 
-  if ( !lcfgpkgspec_has_name(pkgspec) )
+  if ( !lcfgpackage_has_name(pkgspec) )
     return -1;
 
   /* This is rather long-winded but it is done this way to avoid
@@ -1687,11 +1687,11 @@ ssize_t lcfgpkgspec_to_string( const LCFGPackageSpec * pkgspec,
   const char * pkgnam = pkgspec->name;
   size_t pkgnamlen    = strlen(pkgnam);
 
-  const char * pkgver = lcfgpkgspec_has_version(pkgspec) ?
+  const char * pkgver = lcfgpackage_has_version(pkgspec) ?
                          pkgspec->version : LCFG_PACKAGE_WILDCARD;
   size_t pkgverlen    = strlen(pkgver);
 
-  const char * pkgrel = lcfgpkgspec_has_release(pkgspec) ?
+  const char * pkgrel = lcfgpackage_has_release(pkgspec) ?
                           pkgspec->release : LCFG_PACKAGE_WILDCARD;
   size_t pkgrellen    = strlen(pkgrel);
 
@@ -1702,14 +1702,14 @@ ssize_t lcfgpkgspec_to_string( const LCFGPackageSpec * pkgspec,
 
   char pkgpfx = '\0';
   if ( !(options&LCFG_OPT_NOPREFIX) &&
-       lcfgpkgspec_has_prefix(pkgspec) ) {
+       lcfgpackage_has_prefix(pkgspec) ) {
 
     pkgpfx = pkgspec->prefix;
     new_len++;
   }
 
   char * pkgarch = NULL;
-  if ( lcfgpkgspec_has_arch(pkgspec) ) {
+  if ( lcfgpackage_has_arch(pkgspec) ) {
 
     /* Not added to the spec when same as default architecture */
     if ( defarch == NULL ||
@@ -1722,7 +1722,7 @@ ssize_t lcfgpkgspec_to_string( const LCFGPackageSpec * pkgspec,
   }
 
   char * pkgflgs = NULL;
-  if ( lcfgpkgspec_has_flags(pkgspec) ) {
+  if ( lcfgpackage_has_flags(pkgspec) ) {
     pkgflgs = pkgspec->flags;
 
     new_len += ( strlen(pkgflgs) + 1 ); /* +1 for ':' separator */
@@ -1730,7 +1730,7 @@ ssize_t lcfgpkgspec_to_string( const LCFGPackageSpec * pkgspec,
 
   char * pkgctx = NULL;
   if ( !(options&LCFG_OPT_NOCONTEXT) &&
-       lcfgpkgspec_has_context(pkgspec) ) {
+       lcfgpackage_has_context(pkgspec) ) {
 
     pkgctx = pkgspec->context;
 
@@ -1824,7 +1824,7 @@ static char const * const pragma_derive  = "#pragma LCFG derive \"";
 static char const * const pragma_context = "#pragma LCFG context \"";
 static char const * const pragma_end     = "\"\n";
 
-ssize_t lcfgpkgspec_to_cpp( const LCFGPackageSpec * pkgspec,
+ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkgspec,
                             const char * defarch,
                             unsigned int options,
                             char ** result, size_t * size ) {
@@ -1834,7 +1834,7 @@ ssize_t lcfgpkgspec_to_cpp( const LCFGPackageSpec * pkgspec,
                                 LCFG_OPT_NOPREFIX  |
                                 LCFG_OPT_NEWLINE );
 
-  ssize_t spec_len = lcfgpkgspec_to_string( pkgspec, defarch,
+  ssize_t spec_len = lcfgpackage_to_string( pkgspec, defarch,
                                             spec_options,
                                             result, size );
 
@@ -1852,14 +1852,14 @@ ssize_t lcfgpkgspec_to_cpp( const LCFGPackageSpec * pkgspec,
   size_t meta_len = 0;
 
   char * derivation = NULL;
-  if ( lcfgpkgspec_has_derivation(pkgspec) ) {
+  if ( lcfgpackage_has_derivation(pkgspec) ) {
     derivation = pkgspec->derivation;
 
     meta_len += ( pragma_derive_len + strlen(derivation) + pragma_end_len );
   }
 
   char * context = NULL;
-  if ( lcfgpkgspec_has_context(pkgspec) ) {
+  if ( lcfgpackage_has_context(pkgspec) ) {
     context     = pkgspec->context;
 
     meta_len += ( pragma_context_len + strlen(context) + pragma_end_len );
@@ -1926,12 +1926,12 @@ ssize_t lcfgpkgspec_to_cpp( const LCFGPackageSpec * pkgspec,
   return new_len;
 }
 
-ssize_t lcfgpkgspec_to_xml( const LCFGPackageSpec * pkgspec,
+ssize_t lcfgpackage_to_xml( const LCFGPackage * pkgspec,
                             const char * defarch,
                             unsigned int options,
                             char ** result, size_t * size ) {
 
-  if ( !lcfgpkgspec_has_name(pkgspec) )
+  if ( !lcfgpackage_has_name(pkgspec) )
     return -1;
 
   static const char * indent = "   ";
@@ -1941,29 +1941,29 @@ ssize_t lcfgpkgspec_to_xml( const LCFGPackageSpec * pkgspec,
 
   /* Name - required */
 
-  const char * name = lcfgpkgspec_get_name(pkgspec);
+  const char * name = lcfgpackage_get_name(pkgspec);
   size_t name_len = strlen(name);
 
   new_len += ( name_len + 13 ); /* <name></name> */
 
   /* Version - required */
 
-  const char * version = lcfgpkgspec_has_version(pkgspec) ?
-                      lcfgpkgspec_get_version(pkgspec) : LCFG_PACKAGE_WILDCARD;
+  const char * version = lcfgpackage_has_version(pkgspec) ?
+                      lcfgpackage_get_version(pkgspec) : LCFG_PACKAGE_WILDCARD;
   size_t ver_len = strlen(version);
 
   new_len += ( ver_len + 7 ); /* <v></v> */
 
   /* Release - required (and possibly architecture) */
 
-  const char * release = lcfgpkgspec_has_release(pkgspec) ?
-                      lcfgpkgspec_get_release(pkgspec) : LCFG_PACKAGE_WILDCARD;
+  const char * release = lcfgpackage_has_release(pkgspec) ?
+                      lcfgpackage_get_release(pkgspec) : LCFG_PACKAGE_WILDCARD;
   size_t rel_len = strlen(release);
 
   new_len += ( rel_len + 7 ); /* <r></r> */
 
-  const char * arch = lcfgpkgspec_has_arch(pkgspec) ?
-                      lcfgpkgspec_get_arch(pkgspec) : defarch;
+  const char * arch = lcfgpackage_has_arch(pkgspec) ?
+                      lcfgpackage_get_arch(pkgspec) : defarch;
 
   size_t arch_len = 0;
   if ( arch != NULL ) {
@@ -1976,7 +1976,7 @@ ssize_t lcfgpkgspec_to_xml( const LCFGPackageSpec * pkgspec,
 
   /* Flags - optional */
 
-  const char * flags = lcfgpkgspec_get_flags(pkgspec);
+  const char * flags = lcfgpackage_get_flags(pkgspec);
   size_t flags_len = 0;
   if ( flags != NULL ) {
     flags_len = strlen(flags);
@@ -1988,7 +1988,7 @@ ssize_t lcfgpkgspec_to_xml( const LCFGPackageSpec * pkgspec,
 
   /* Context - optional */
 
-  const char * context = lcfgpkgspec_get_context(pkgspec);
+  const char * context = lcfgpackage_get_context(pkgspec);
   size_t ctx_len = 0;
   if ( context != NULL ) {
     ctx_len = strlen(context);
@@ -1999,7 +1999,7 @@ ssize_t lcfgpkgspec_to_xml( const LCFGPackageSpec * pkgspec,
 
   /* Derivation - optional */
 
-  const char * derivation = lcfgpkgspec_get_derivation(pkgspec);
+  const char * derivation = lcfgpackage_get_derivation(pkgspec);
   size_t deriv_len = 0;
   if ( derivation != NULL ) {
     deriv_len = strlen(derivation);
@@ -2111,13 +2111,13 @@ ssize_t lcfgpkgspec_to_xml( const LCFGPackageSpec * pkgspec,
 
 }
 
-int lcfgpkgspec_compare_versions( const LCFGPackageSpec * pkgspec1,
-                                  const LCFGPackageSpec * pkgspec2 ) {
+int lcfgpackage_compare_versions( const LCFGPackage * pkgspec1,
+                                  const LCFGPackage * pkgspec2 ) {
 
   int result = 0;
 
-  if ( lcfgpkgspec_has_version(pkgspec1) &&
-       lcfgpkgspec_has_version(pkgspec2) ) {
+  if ( lcfgpackage_has_version(pkgspec1) &&
+       lcfgpackage_has_version(pkgspec2) ) {
 
     const char * ver1 = pkgspec1->version;
     const char * ver2 = pkgspec2->version;
@@ -2131,8 +2131,8 @@ int lcfgpkgspec_compare_versions( const LCFGPackageSpec * pkgspec1,
   }
 
   if ( result == 0 ) {
-    if ( lcfgpkgspec_has_release(pkgspec1) &&
-         lcfgpkgspec_has_release(pkgspec2) ) {
+    if ( lcfgpackage_has_release(pkgspec1) &&
+         lcfgpackage_has_release(pkgspec2) ) {
 
       const char * rel1 = pkgspec1->release;
       const char * rel2 = pkgspec2->release;
@@ -2149,55 +2149,55 @@ int lcfgpkgspec_compare_versions( const LCFGPackageSpec * pkgspec1,
   return result;
 }
 
-int lcfgpkgspec_compare_names( const LCFGPackageSpec * pkgspec1,
-                               const LCFGPackageSpec * pkgspec2 ) {
+int lcfgpackage_compare_names( const LCFGPackage * pkgspec1,
+                               const LCFGPackage * pkgspec2 ) {
 
   return strcasecmp( pkgspec1->name,
                      pkgspec2->name );
 }
 
-int lcfgpkgspec_compare_archs( const LCFGPackageSpec * pkgspec1,
-                               const LCFGPackageSpec * pkgspec2 ) {
+int lcfgpackage_compare_archs( const LCFGPackage * pkgspec1,
+                               const LCFGPackage * pkgspec2 ) {
 
-  const char * arch1 = lcfgpkgspec_has_arch(pkgspec1) ? pkgspec1->arch : LCFG_PACKAGE_NOVALUE;
-  const char * arch2 = lcfgpkgspec_has_arch(pkgspec2) ? pkgspec2->arch : LCFG_PACKAGE_NOVALUE;
+  const char * arch1 = lcfgpackage_has_arch(pkgspec1) ? pkgspec1->arch : LCFG_PACKAGE_NOVALUE;
+  const char * arch2 = lcfgpackage_has_arch(pkgspec2) ? pkgspec2->arch : LCFG_PACKAGE_NOVALUE;
 
   return strcmp( arch1, arch2 );
 }
 
-int lcfgpkgspec_compare( const LCFGPackageSpec * pkgspec1,
-                         const LCFGPackageSpec * pkgspec2 ) {
+int lcfgpackage_compare( const LCFGPackage * pkgspec1,
+                         const LCFGPackage * pkgspec2 ) {
 
   /* Name */
 
-  int result = lcfgpkgspec_compare_names( pkgspec1, pkgspec2 );
+  int result = lcfgpackage_compare_names( pkgspec1, pkgspec2 );
 
   /* Architecture */
 
   if ( result == 0 )
-    result = lcfgpkgspec_compare_archs( pkgspec1, pkgspec2 );
+    result = lcfgpackage_compare_archs( pkgspec1, pkgspec2 );
 
   /* Version and Release */
 
   if ( result == 0 )
-    result = lcfgpkgspec_compare_versions( pkgspec1, pkgspec2 );
+    result = lcfgpackage_compare_versions( pkgspec1, pkgspec2 );
 
   return result;
 }
 
-bool lcfgpkgspec_equals( const LCFGPackageSpec * pkgspec1,
-                         const LCFGPackageSpec * pkgspec2 ) {
+bool lcfgpackage_equals( const LCFGPackage * pkgspec1,
+                         const LCFGPackage * pkgspec2 ) {
 
   /* Name */
 
-  bool equals = ( lcfgpkgspec_compare_names( pkgspec1, pkgspec2 ) == 0 );
+  bool equals = ( lcfgpackage_compare_names( pkgspec1, pkgspec2 ) == 0 );
 
   /* Architecture */
 
   if ( !equals ) {
     return false;
   } else {
-    equals = ( lcfgpkgspec_compare_archs( pkgspec1, pkgspec2 ) == 0 );
+    equals = ( lcfgpackage_compare_archs( pkgspec1, pkgspec2 ) == 0 );
   }
 
   /* Version and Release */
@@ -2205,7 +2205,7 @@ bool lcfgpkgspec_equals( const LCFGPackageSpec * pkgspec1,
   if ( !equals ) {
     return false;
   } else {
-    equals = ( lcfgpkgspec_compare_versions( pkgspec1, pkgspec2 ) == 0 );
+    equals = ( lcfgpackage_compare_versions( pkgspec1, pkgspec2 ) == 0 );
   }
 
   /* Flags */
@@ -2213,8 +2213,8 @@ bool lcfgpkgspec_equals( const LCFGPackageSpec * pkgspec1,
   if ( !equals ) {
     return false;
   } else {
-    const char * flags1 = lcfgpkgspec_has_flags(pkgspec1) ? pkgspec1->flags : LCFG_PACKAGE_NOVALUE;
-    const char * flags2 = lcfgpkgspec_has_flags(pkgspec2) ? pkgspec2->flags : LCFG_PACKAGE_NOVALUE;
+    const char * flags1 = lcfgpackage_has_flags(pkgspec1) ? pkgspec1->flags : LCFG_PACKAGE_NOVALUE;
+    const char * flags2 = lcfgpackage_has_flags(pkgspec2) ? pkgspec2->flags : LCFG_PACKAGE_NOVALUE;
 
     equals = ( strcmp( flags1, flags2 ) == 0 );
   }
@@ -2224,8 +2224,8 @@ bool lcfgpkgspec_equals( const LCFGPackageSpec * pkgspec1,
   if ( !equals ) {
     return false;
   } else {
-    const char * ctx1 = lcfgpkgspec_has_context(pkgspec1) ? pkgspec1->context : LCFG_PACKAGE_NOVALUE;
-    const char * ctx2 = lcfgpkgspec_has_context(pkgspec2) ? pkgspec2->context : LCFG_PACKAGE_NOVALUE;
+    const char * ctx1 = lcfgpackage_has_context(pkgspec1) ? pkgspec1->context : LCFG_PACKAGE_NOVALUE;
+    const char * ctx2 = lcfgpackage_has_context(pkgspec2) ? pkgspec2->context : LCFG_PACKAGE_NOVALUE;
 
     equals = ( strcmp( ctx1, ctx2 ) == 0 );
   }
@@ -2235,7 +2235,7 @@ bool lcfgpkgspec_equals( const LCFGPackageSpec * pkgspec1,
   return equals;
 }
 
-bool lcfgpkgspec_print( const LCFGPackageSpec * pkgspec,
+bool lcfgpackage_print( const LCFGPackage * pkgspec,
                         const char * defarch,
                         const char * style,
                         unsigned int options,
@@ -2246,16 +2246,16 @@ bool lcfgpkgspec_print( const LCFGPackageSpec * pkgspec,
 
   ssize_t rc = 0;
   if ( style != NULL && strcmp( style, "cpp" ) == 0 ) {
-    rc = lcfgpkgspec_to_cpp( pkgspec, defarch, options,
+    rc = lcfgpackage_to_cpp( pkgspec, defarch, options,
                              &lcfgspec, &buf_size );
   } else {
     unsigned int my_options = options | LCFG_OPT_NEWLINE;
 
     if ( style != NULL && strcmp( style, "rpm" ) == 0 ) {
-      rc = lcfgpkgspec_to_rpm_filename( pkgspec, defarch, my_options,
+      rc = lcfgpackage_to_rpm_filename( pkgspec, defarch, my_options,
                                         &lcfgspec, &buf_size );
     } else {
-      rc = lcfgpkgspec_to_string( pkgspec, defarch, my_options,
+      rc = lcfgpackage_to_string( pkgspec, defarch, my_options,
                                   &lcfgspec, &buf_size );
     }
 
@@ -2275,7 +2275,7 @@ bool lcfgpkgspec_print( const LCFGPackageSpec * pkgspec,
   return ok;
 }
 
-char * lcfgpkgspec_build_message( const LCFGPackageSpec * pkgspec,
+char * lcfgpackage_build_message( const LCFGPackage * pkgspec,
                                   const char *fmt, ... ) {
 
   /* This is rather messy and probably somewhat inefficient. It is
@@ -2299,9 +2299,9 @@ char * lcfgpkgspec_build_message( const LCFGPackageSpec * pkgspec,
   int rc = 0;
 
   char * pkg_as_str  = NULL;
-  if ( pkgspec != NULL && lcfgpkgspec_has_name(pkgspec) ) {
+  if ( pkgspec != NULL && lcfgpackage_has_name(pkgspec) ) {
     size_t buf_size = 0;
-    if ( lcfgpkgspec_to_string( pkgspec, NULL, 0,
+    if ( lcfgpackage_to_string( pkgspec, NULL, 0,
 				&pkg_as_str, &buf_size ) < 0 ) {
       free(pkg_as_str);
       perror("Failed to build LCFG package message");
@@ -2327,10 +2327,10 @@ char * lcfgpkgspec_build_message( const LCFGPackageSpec * pkgspec,
 
   /* Final string, possibly with derivation information */
 
-  if ( pkgspec != NULL && lcfgpkgspec_has_derivation(pkgspec) ) {
+  if ( pkgspec != NULL && lcfgpackage_has_derivation(pkgspec) ) {
     rc = asprintf( &result, "%s %s at %s",
                    msg_base, msg_mid,
-                   lcfgpkgspec_get_derivation(pkgspec) );
+                   lcfgpackage_get_derivation(pkgspec) );
   } else {
     rc = asprintf( &result, "%s %s",
                    msg_base, msg_mid );

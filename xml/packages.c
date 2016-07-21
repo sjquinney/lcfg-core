@@ -8,7 +8,7 @@
 #include "xml.h"
 
 LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
-                                              LCFGPackageSpec ** result,
+                                              LCFGPackage ** result,
                                               const char * base_context,
                                               const char * base_derivation,
                                               char ** errmsg ) {
@@ -27,7 +27,7 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
   int topdepth = xmlTextReaderDepth(reader);
   LCFGStatus status = LCFG_STATUS_OK;
 
-  LCFGPackageSpec * pkgspec = lcfgpkgspec_new();
+  LCFGPackage * pkgspec = lcfgpackage_new();
 
   /* The linenum and cur_element variables are declared here as the
      jump to 'cleanup' could otherwise leave them undefined. */
@@ -38,18 +38,18 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
   /* add base context and derivation rather than set so that we take a copy */
 
   if ( base_context != NULL ) {
-    if ( !lcfgpkgspec_add_context( pkgspec, base_context ) ) {
+    if ( !lcfgpackage_add_context( pkgspec, base_context ) ) {
       status = LCFG_STATUS_ERROR;
-      *errmsg = lcfgpkgspec_build_message( pkgspec,
+      *errmsg = lcfgpackage_build_message( pkgspec,
                 "Failed to set base context '%s'", base_context );
       goto cleanup;
     }
   }
 
   if ( base_derivation != NULL ) {
-    if ( !lcfgpkgspec_add_derivation( pkgspec, base_derivation ) ) {
+    if ( !lcfgpackage_add_derivation( pkgspec, base_derivation ) ) {
       status = LCFG_STATUS_ERROR;
-      *errmsg = lcfgpkgspec_build_message( pkgspec,
+      *errmsg = lcfgpackage_build_message( pkgspec,
                 "Failed to set base derivation '%s'", base_derivation );
       goto cleanup;
     }
@@ -65,11 +65,11 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
                  xmlTextReaderGetAttribute( reader, BAD_CAST "cfg:derivation");
 
     if ( derivation != NULL ) {
-      if ( lcfgpkgspec_has_derivation(pkgspec) ) {
+      if ( lcfgpackage_has_derivation(pkgspec) ) {
 
-        if ( !lcfgpkgspec_add_derivation( pkgspec, (char *) derivation ) ) {
+        if ( !lcfgpackage_add_derivation( pkgspec, (char *) derivation ) ) {
           status = LCFG_STATUS_ERROR;
-          *errmsg = lcfgpkgspec_build_message( pkgspec,
+          *errmsg = lcfgpackage_build_message( pkgspec,
                     "Invalid derivation '%s'", (char *) derivation );
         }
 
@@ -78,9 +78,9 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
       } else {
 
-        if ( !lcfgpkgspec_set_derivation( pkgspec, (char *) derivation ) ) {
+        if ( !lcfgpackage_set_derivation( pkgspec, (char *) derivation ) ) {
           status = LCFG_STATUS_ERROR;
-          *errmsg = lcfgpkgspec_build_message( pkgspec,
+          *errmsg = lcfgpackage_build_message( pkgspec,
                     "Invalid derivation '%s'", (char *) derivation );
           xmlFree(derivation);
         }
@@ -97,11 +97,11 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
                  xmlTextReaderGetAttribute( reader, BAD_CAST "cfg:context" );
 
     if ( context != NULL ) {
-      if ( lcfgpkgspec_has_context(pkgspec) ) {
+      if ( lcfgpackage_has_context(pkgspec) ) {
 
-        if ( !lcfgpkgspec_add_context( pkgspec, (char *) context ) ) {
+        if ( !lcfgpackage_add_context( pkgspec, (char *) context ) ) {
           status = LCFG_STATUS_ERROR;
-          *errmsg = lcfgpkgspec_build_message( pkgspec,
+          *errmsg = lcfgpackage_build_message( pkgspec,
                     "Invalid context '%s'", (char *) context );
         }
 
@@ -110,9 +110,9 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
       } else {
 
-        if ( !lcfgpkgspec_set_context( pkgspec, (char *) context ) ) {
+        if ( !lcfgpackage_set_context( pkgspec, (char *) context ) ) {
           status = LCFG_STATUS_ERROR;
-          *errmsg = lcfgpkgspec_build_message( pkgspec,
+          *errmsg = lcfgpackage_build_message( pkgspec,
                     "Invalid context '%s'", (char *) context );
           xmlFree(context);
         }
@@ -166,9 +166,9 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
           char * slash = strrchr(archname,'/');
           if ( slash == NULL ) {
 
-            if ( !lcfgpkgspec_set_name( pkgspec, archname ) ) {
+            if ( !lcfgpackage_set_name( pkgspec, archname ) ) {
               status = LCFG_STATUS_ERROR;
-              *errmsg = lcfgpkgspec_build_message( pkgspec,
+              *errmsg = lcfgpackage_build_message( pkgspec,
                         "Invalid name '%s'", archname );
 
               xmlFree(nodevalue);
@@ -184,25 +184,25 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
             if ( name_len > 0 ) {
               char * name = strndup(slash,name_len);
 
-              if ( !lcfgpkgspec_set_name( pkgspec, name ) ) {
+              if ( !lcfgpackage_set_name( pkgspec, name ) ) {
                 status = LCFG_STATUS_ERROR;
-                *errmsg = lcfgpkgspec_build_message( pkgspec,
+                *errmsg = lcfgpackage_build_message( pkgspec,
                           "Invalid name '%s'", name );
                 free(name);
               }
 
             } else {
               status = LCFG_STATUS_ERROR;
-              *errmsg = lcfgpkgspec_build_message( pkgspec,
+              *errmsg = lcfgpackage_build_message( pkgspec,
                         "Missing name" );
             }
 
             if ( status == LCFG_STATUS_OK ) {
 
               char * arch = strdup(archname); /* everything before slash */
-              if ( !lcfgpkgspec_set_arch( pkgspec, arch ) ) {
+              if ( !lcfgpackage_set_arch( pkgspec, arch ) ) {
                 status = LCFG_STATUS_ERROR;
-                *errmsg = lcfgpkgspec_build_message( pkgspec,
+                *errmsg = lcfgpackage_build_message( pkgspec,
                           "Invalid architecture '%s'", arch );
                 free(arch);
               }
@@ -217,9 +217,9 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
         } else if ( xmlStrcmp(nodename, BAD_CAST "v" ) == 0 ) {
 
-          if ( !lcfgpkgspec_set_version( pkgspec, (char *) nodevalue ) ) {
+          if ( !lcfgpackage_set_version( pkgspec, (char *) nodevalue ) ) {
             status = LCFG_STATUS_ERROR;
-            *errmsg = lcfgpkgspec_build_message( pkgspec,
+            *errmsg = lcfgpackage_build_message( pkgspec,
                      "Invalid version '%s'", (char *) nodevalue );
             xmlFree(nodevalue);
             nodevalue = NULL;
@@ -245,9 +245,9 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
             if ( arch_len > 0 ) {
               char * arch = strndup(slash,arch_len);
 
-              if ( !lcfgpkgspec_set_arch( pkgspec, arch ) ) {
+              if ( !lcfgpackage_set_arch( pkgspec, arch ) ) {
                 status = LCFG_STATUS_ERROR;
-                *errmsg = lcfgpkgspec_build_message( pkgspec,
+                *errmsg = lcfgpackage_build_message( pkgspec,
                         "Invalid architecture '%s'", arch );
                 free(arch);
               }
@@ -257,9 +257,9 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
           if ( status == LCFG_STATUS_OK ) {
 
-            if ( !lcfgpkgspec_set_release( pkgspec, relarch ) ) {
+            if ( !lcfgpackage_set_release( pkgspec, relarch ) ) {
               status = LCFG_STATUS_ERROR;
-              *errmsg = lcfgpkgspec_build_message( pkgspec,
+              *errmsg = lcfgpackage_build_message( pkgspec,
                         "Invalid release '%s'", relarch );
             }
 
@@ -274,9 +274,9 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
         } else if ( xmlStrcmp(nodename, BAD_CAST "options" ) == 0 ) {
 
-          if ( !lcfgpkgspec_set_flags( pkgspec, (char *) nodevalue ) ) {
+          if ( !lcfgpackage_set_flags( pkgspec, (char *) nodevalue ) ) {
             status = LCFG_STATUS_ERROR;
-            *errmsg = lcfgpkgspec_build_message( pkgspec,
+            *errmsg = lcfgpackage_build_message( pkgspec,
                       "Invalid flags '%s'", (char *) nodevalue );
             xmlFree(nodevalue);
             nodevalue = NULL;
@@ -342,7 +342,7 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
     if ( *errmsg != NULL )
       lcfgxml_set_error_message( errmsg, "Something bad happened whilst processing package at line %d.", linenum );
 
-    lcfgpkgspec_destroy(pkgspec);
+    lcfgpackage_destroy(pkgspec);
     *result = NULL;
   }
 
@@ -395,7 +395,7 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
     if ( nodetype == XML_READER_TYPE_ELEMENT &&
          xmlStrcmp(nodename, BAD_CAST LCFGXML_PACKAGES_CHILD_NODE ) == 0 ) {
 
-      LCFGPackageSpec * pkgspec = NULL;
+      LCFGPackage * pkgspec = NULL;
 
       status = lcfgxml_process_package( reader, &pkgspec, 
                                         base_context, base_derivation,
@@ -407,12 +407,12 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
         if ( pkgspec == NULL ) continue;
 
         char * eval_errmsg = NULL;
-        if ( !lcfgpkgspec_has_context(pkgspec) ||
-             lcfgpkgspec_eval_priority( pkgspec, ctxlist, &eval_errmsg ) ) {
+        if ( !lcfgpackage_has_context(pkgspec) ||
+             lcfgpackage_eval_priority( pkgspec, ctxlist, &eval_errmsg ) ) {
 
           LCFGChange rc;
           char * merge_errmsg = NULL;
-          if ( lcfgpkgspec_is_active(pkgspec) ) {
+          if ( lcfgpackage_is_active(pkgspec) ) {
             rc = lcfgpkglist_merge_pkgspec( *active, pkgspec,
                    LCFG_PKGS_OPT_SQUASH_IDENTICAL | LCFG_PKGS_OPT_USE_PRIORITY,
                                             &merge_errmsg );
@@ -422,7 +422,7 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
 
           /* Either did not need to store or failed in some way */
           if ( rc != LCFG_CHANGE_ADDED ) {
-            lcfgpkgspec_destroy(pkgspec);
+            lcfgpackage_destroy(pkgspec);
             pkgspec = NULL;
           }
 
@@ -431,7 +431,7 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
 
             lcfgxml_set_error_message( errmsg,
                                        "Failed to store package '%s': %s",
-                                       lcfgpkgspec_get_name(pkgspec),
+                                       lcfgpackage_get_name(pkgspec),
                                        merge_errmsg );
           }
 
@@ -440,7 +440,7 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
         } else { /* context eval failure */
           status = LCFG_STATUS_ERROR;
 
-          lcfgpkgspec_build_message( pkgspec,
+          lcfgpackage_build_message( pkgspec,
              "Failed to evaluate context expression: %s", eval_errmsg );
         }
 
@@ -449,7 +449,7 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
       }
 
       if ( status != LCFG_STATUS_OK ) {
-        lcfgpkgspec_destroy(pkgspec);
+        lcfgpackage_destroy(pkgspec);
         pkgspec = NULL;
       }
 

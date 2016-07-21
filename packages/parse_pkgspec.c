@@ -126,14 +126,14 @@ int main(int argc, char* argv[])
     return(1);
   }
 
-  LCFGPackageSpec * pkgspec = NULL;
+  LCFGPackage * pkgspec = NULL;
   char *msg = NULL;
 
   bool parse_ok;
   if ( rpm_name ) {
-    parse_ok = lcfgpkgspec_from_rpm_filename( input, &pkgspec, &msg );
+    parse_ok = lcfgpackage_from_rpm_filename( input, &pkgspec, &msg );
   } else {
-    parse_ok = lcfgpkgspec_from_string( input, &pkgspec, &msg );
+    parse_ok = lcfgpackage_from_string( input, &pkgspec, &msg );
   }
 
   if ( !parse_ok ) {
@@ -147,31 +147,31 @@ int main(int argc, char* argv[])
 
   /* output the results */
   if (print_name || print_all ) {
-    myoutput("Name", lcfgpkgspec_get_name(pkgspec), style);
+    myoutput("Name", lcfgpackage_get_name(pkgspec), style);
   }
   if (print_version || print_all ) {
-    myoutput("Version", lcfgpkgspec_get_version(pkgspec), style);
+    myoutput("Version", lcfgpackage_get_version(pkgspec), style);
   }
   if (print_release || print_all ) {
-    myoutput("Release", lcfgpkgspec_get_release(pkgspec), style);
+    myoutput("Release", lcfgpackage_get_release(pkgspec), style);
   }
   if (print_arch || print_all ) {
-    myoutput("Arch", lcfgpkgspec_get_arch(pkgspec), style);
+    myoutput("Arch", lcfgpackage_get_arch(pkgspec), style);
   }
   if (print_flags || print_all ) {
-    myoutput("Flags", lcfgpkgspec_get_flags(pkgspec), style);
+    myoutput("Flags", lcfgpackage_get_flags(pkgspec), style);
   }
   if (print_prefix || print_all ) {
     char prefix[2] = "";
-    if ( lcfgpkgspec_has_prefix(pkgspec) )
-      sprintf( prefix, "%c", lcfgpkgspec_get_prefix(pkgspec) );
+    if ( lcfgpackage_has_prefix(pkgspec) )
+      sprintf( prefix, "%c", lcfgpackage_get_prefix(pkgspec) );
     myoutput("Prefix", prefix, style);
   }
   if (print_context || print_all ) {
-    myoutput("Context", lcfgpkgspec_get_context(pkgspec), style);
+    myoutput("Context", lcfgpackage_get_context(pkgspec), style);
   }
 
-  lcfgpkgspec_destroy(pkgspec);
+  lcfgpackage_destroy(pkgspec);
 
   return 0;
 }

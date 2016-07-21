@@ -68,7 +68,7 @@ bool lcfgpkgiter_has_next( LCFGPackageIterator * iterator ) {
   return has_next;
 }
 
-LCFGPackageSpec * lcfgpkgiter_next(LCFGPackageIterator * iterator) {
+LCFGPackage * lcfgpkgiter_next(LCFGPackageIterator * iterator) {
 
   if ( iterator->done )
     return NULL;
@@ -84,7 +84,7 @@ LCFGPackageSpec * lcfgpkgiter_next(LCFGPackageIterator * iterator) {
     iterator->current = lcfgpkglist_next(iterator->current);
   }
 
-  LCFGPackageSpec * pkgspec = NULL;
+  LCFGPackage * pkgspec = NULL;
   if ( iterator->current != NULL )
     pkgspec = lcfgpkglist_pkgspec(iterator->current);
 

@@ -110,7 +110,7 @@ LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
-				    LCFGPackageSpec **result,
+				    LCFGPackage **result,
 				    const char * base_context,
 				    const char * base_derivation,
 				    char ** msg )

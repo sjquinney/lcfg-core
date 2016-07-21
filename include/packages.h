@@ -12,7 +12,7 @@
 #define LCFG_PACKAGE_NOVALUE ""
 #define LCFG_PACKAGE_WILDCARD "*"
 
-struct LCFGPackageSpec {
+struct LCFGPackage {
   char * name;
   char * arch;
   char * version;
@@ -25,222 +25,222 @@ struct LCFGPackageSpec {
   unsigned int _refcount;
 };
 
-typedef struct LCFGPackageSpec LCFGPackageSpec;
+typedef struct LCFGPackage LCFGPackage;
 
-LCFGPackageSpec * lcfgpkgspec_new(void);
-void lcfgpkgspec_destroy(LCFGPackageSpec * pkgspec);
+LCFGPackage * lcfgpackage_new(void);
+void lcfgpackage_destroy(LCFGPackage * pkgspec);
 
-LCFGPackageSpec * lcfgpkgspec_clone( const LCFGPackageSpec * pkgspec );
+LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkgspec );
 
-#define lcfgpkgspec_inc_ref(pkgspec) (((pkgspec)->_refcount)++)
-#define lcfgpkgspec_dec_ref(pkgspec) (((pkgspec)->_refcount)--)
+#define lcfgpackage_inc_ref(pkgspec) (((pkgspec)->_refcount)++)
+#define lcfgpackage_dec_ref(pkgspec) (((pkgspec)->_refcount)--)
 
 /* Name */
 
-bool lcfgpkgspec_valid_name( const char * name );
-bool lcfgpkgspec_has_name( const LCFGPackageSpec * pkgspec )
+bool lcfgpackage_valid_name( const char * name );
+bool lcfgpackage_has_name( const LCFGPackage * pkgspec )
 __attribute__((nonnull (1)));
 
-char * lcfgpkgspec_get_name( const LCFGPackageSpec * pkgspec )
+char * lcfgpackage_get_name( const LCFGPackage * pkgspec )
 __attribute__((nonnull (1)));
 
-bool lcfgpkgspec_set_name( LCFGPackageSpec * pkgspec, char * new_value )
+bool lcfgpackage_set_name( LCFGPackage * pkgspec, char * new_value )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 /* Architecture */
 
-bool lcfgpkgspec_valid_arch( const char * arch );
-bool lcfgpkgspec_has_arch( const LCFGPackageSpec * pkgspec )
+bool lcfgpackage_valid_arch( const char * arch );
+bool lcfgpackage_has_arch( const LCFGPackage * pkgspec )
 __attribute__((nonnull (1)));
 
-char * lcfgpkgspec_get_arch( const LCFGPackageSpec * pkgspec )
+char * lcfgpackage_get_arch( const LCFGPackage * pkgspec )
   __attribute__((nonnull (1)));
 
-bool lcfgpkgspec_set_arch( LCFGPackageSpec * pkgspec, char * new_value )
+bool lcfgpackage_set_arch( LCFGPackage * pkgspec, char * new_value )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 /* Version */
 
-bool lcfgpkgspec_valid_version( const char * version );
-bool lcfgpkgspec_has_version( const LCFGPackageSpec * pkgspec )
+bool lcfgpackage_valid_version( const char * version );
+bool lcfgpackage_has_version( const LCFGPackage * pkgspec )
   __attribute__((nonnull (1)));
 
-char * lcfgpkgspec_get_version( const LCFGPackageSpec * pkgspec )
+char * lcfgpackage_get_version( const LCFGPackage * pkgspec )
 __attribute__((nonnull (1)));
 
-bool lcfgpkgspec_set_version( LCFGPackageSpec * pkgspec, char * new_value )
+bool lcfgpackage_set_version( LCFGPackage * pkgspec, char * new_value )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 /* Release */
 
-bool lcfgpkgspec_valid_release( const char * release );
-bool lcfgpkgspec_has_release( const LCFGPackageSpec * pkgspec )
+bool lcfgpackage_valid_release( const char * release );
+bool lcfgpackage_has_release( const LCFGPackage * pkgspec )
 __attribute__((nonnull (1)));
 
-char * lcfgpkgspec_get_release( const LCFGPackageSpec * pkgspec )
+char * lcfgpackage_get_release( const LCFGPackage * pkgspec )
 __attribute__((nonnull (1)));
 
-bool lcfgpkgspec_set_release( LCFGPackageSpec * pkgspec, char * new_value )
+bool lcfgpackage_set_release( LCFGPackage * pkgspec, char * new_value )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 /* Prefix */
 
-bool lcfgpkgspec_valid_prefix( char prefix );
+bool lcfgpackage_valid_prefix( char prefix );
 
-bool lcfgpkgspec_has_prefix( const LCFGPackageSpec * pkgspec )
+bool lcfgpackage_has_prefix( const LCFGPackage * pkgspec )
 __attribute__((nonnull (1)));
 
-char lcfgpkgspec_get_prefix( const LCFGPackageSpec * pkgspec )
+char lcfgpackage_get_prefix( const LCFGPackage * pkgspec )
 __attribute__((nonnull (1)));
 
-bool lcfgpkgspec_set_prefix( LCFGPackageSpec * pkgspec, char new_prefix )
+bool lcfgpackage_set_prefix( LCFGPackage * pkgspec, char new_prefix )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-bool lcfgpkgspec_remove_prefix( LCFGPackageSpec * pkgspec )
+bool lcfgpackage_remove_prefix( LCFGPackage * pkgspec )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 /* Flags */
 
-bool lcfgpkgspec_valid_flag_chr( const char flag );
+bool lcfgpackage_valid_flag_chr( const char flag );
 
-bool lcfgpkgspec_valid_flags( const char * flag );
+bool lcfgpackage_valid_flags( const char * flag );
 
-bool lcfgpkgspec_has_flag( const LCFGPackageSpec * pkgspec, char flag )
+bool lcfgpackage_has_flag( const LCFGPackage * pkgspec, char flag )
   __attribute__((nonnull (1)));
 
-bool lcfgpkgspec_has_flags( const LCFGPackageSpec * pkgspec )
+bool lcfgpackage_has_flags( const LCFGPackage * pkgspec )
 __attribute__((nonnull (1)));
 
-char * lcfgpkgspec_get_flags( const LCFGPackageSpec * pkgspec )
+char * lcfgpackage_get_flags( const LCFGPackage * pkgspec )
 __attribute__((nonnull (1)));
 
-bool lcfgpkgspec_set_flags( LCFGPackageSpec * pkgspec, char * new_value )
+bool lcfgpackage_set_flags( LCFGPackage * pkgspec, char * new_value )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-bool lcfgpkgspec_add_flags( LCFGPackageSpec * pkgspec,
+bool lcfgpackage_add_flags( LCFGPackage * pkgspec,
                             const char * new_value )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 /* Context Expression */
 
-bool lcfgpkgspec_valid_context( const char * expr );
+bool lcfgpackage_valid_context( const char * expr );
 
-bool lcfgpkgspec_has_context( const LCFGPackageSpec * pkgspec )
+bool lcfgpackage_has_context( const LCFGPackage * pkgspec )
   __attribute__((nonnull (1)));
 
-char * lcfgpkgspec_get_context( const LCFGPackageSpec * pkgspec )
+char * lcfgpackage_get_context( const LCFGPackage * pkgspec )
   __attribute__((nonnull (1)));
 
-bool lcfgpkgspec_set_context( LCFGPackageSpec * pkgspec, char * new_value )
+bool lcfgpackage_set_context( LCFGPackage * pkgspec, char * new_value )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-bool lcfgpkgspec_add_context( LCFGPackageSpec * pkgspec,
+bool lcfgpackage_add_context( LCFGPackage * pkgspec,
                               const char * extra_context )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 /* Derivation */
 
-bool lcfgpkgspec_has_derivation( const LCFGPackageSpec * pkgspec )
+bool lcfgpackage_has_derivation( const LCFGPackage * pkgspec )
   __attribute__((nonnull (1)));
 
-char * lcfgpkgspec_get_derivation( const LCFGPackageSpec * pkgspec )
+char * lcfgpackage_get_derivation( const LCFGPackage * pkgspec )
   __attribute__((nonnull (1)));
 
-bool lcfgpkgspec_set_derivation( LCFGPackageSpec * pkgspec, char * new_value )
+bool lcfgpackage_set_derivation( LCFGPackage * pkgspec, char * new_value )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-bool lcfgpkgspec_add_derivation( LCFGPackageSpec * pkgspec,
+bool lcfgpackage_add_derivation( LCFGPackage * pkgspec,
                                  const char * extra_deriv )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 /* Priority */
 
-int lcfgpkgspec_get_priority( const LCFGPackageSpec * pkgspec )
+int lcfgpackage_get_priority( const LCFGPackage * pkgspec )
   __attribute__((nonnull (1)));
 
-bool lcfgpkgspec_set_priority( LCFGPackageSpec * pkgspec, int priority )
+bool lcfgpackage_set_priority( LCFGPackage * pkgspec, int priority )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-bool lcfgpkgspec_is_active( const LCFGPackageSpec * pkgspec )
+bool lcfgpackage_is_active( const LCFGPackage * pkgspec )
   __attribute__((nonnull (1)));
 
-bool lcfgpkgspec_eval_priority( LCFGPackageSpec * pkgspec,
+bool lcfgpackage_eval_priority( LCFGPackage * pkgspec,
                                 const LCFGContextList * ctxlist,
                                 char ** msg )
     __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-void lcfgpkgspec_set_defaults(LCFGPackageSpec *pkgspec)
+void lcfgpackage_set_defaults(LCFGPackage *pkgspec)
   __attribute__((nonnull (1)));
 
-char * lcfgpkgspec_full_version( const LCFGPackageSpec * pkgspec )
+char * lcfgpackage_full_version( const LCFGPackage * pkgspec )
   __attribute__((nonnull (1)));
 
-char * lcfgpkgspec_id( const LCFGPackageSpec * pkgspec )
+char * lcfgpackage_id( const LCFGPackage * pkgspec )
   __attribute__((nonnull (1)));
 
-int lcfgpkgspec_compare_versions( const LCFGPackageSpec * pkgspec1,
-                                  const LCFGPackageSpec * pkgspec2 )
+int lcfgpackage_compare_versions( const LCFGPackage * pkgspec1,
+                                  const LCFGPackage * pkgspec2 )
   __attribute__((nonnull (1,2)));
 
-int lcfgpkgspec_compare_names( const LCFGPackageSpec * pkgspec1,
-                               const LCFGPackageSpec * pkgspec2 )
+int lcfgpackage_compare_names( const LCFGPackage * pkgspec1,
+                               const LCFGPackage * pkgspec2 )
   __attribute__((nonnull (1,2)));
 
-int lcfgpkgspec_compare_archs( const LCFGPackageSpec * pkgspec1,
-                               const LCFGPackageSpec * pkgspec2 )
+int lcfgpackage_compare_archs( const LCFGPackage * pkgspec1,
+                               const LCFGPackage * pkgspec2 )
   __attribute__((nonnull (1,2)));
 
-int lcfgpkgspec_compare( const LCFGPackageSpec * pkgspec1,
-                         const LCFGPackageSpec * pkgspec2 )
+int lcfgpackage_compare( const LCFGPackage * pkgspec1,
+                         const LCFGPackage * pkgspec2 )
   __attribute__((nonnull (1,2)));
 
-bool lcfgpkgspec_equals( const LCFGPackageSpec * pkgspec1,
-                         const LCFGPackageSpec * pkgspec2 )
+bool lcfgpackage_equals( const LCFGPackage * pkgspec1,
+                         const LCFGPackage * pkgspec2 )
   __attribute__((nonnull (1,2)));
 
-bool lcfgpkgspec_from_string( const char * input,
-                              LCFGPackageSpec ** result,
+bool lcfgpackage_from_string( const char * input,
+                              LCFGPackage ** result,
                               char ** msg)
   __attribute__((warn_unused_result));
 
-ssize_t lcfgpkgspec_to_string( const LCFGPackageSpec * pkgspec,
+ssize_t lcfgpackage_to_string( const LCFGPackage * pkgspec,
                                const char * defarch,
                                unsigned int options,
                                char ** result, size_t * size )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-ssize_t lcfgpkgspec_to_cpp( const LCFGPackageSpec * pkgspec,
+ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkgspec,
                             const char * defarch,
                             unsigned int options,
                             char ** result, size_t * size )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-ssize_t lcfgpkgspec_to_xml( const LCFGPackageSpec * pkgspec,
+ssize_t lcfgpackage_to_xml( const LCFGPackage * pkgspec,
                             const char * defarch,
                             unsigned int options,
                             char ** result, size_t * size )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-bool lcfgpkgspec_print( const LCFGPackageSpec * pkgspec,
+bool lcfgpackage_print( const LCFGPackage * pkgspec,
                         const char * defarch,
                         const char * style,
                         unsigned int options,
                         FILE * out )
   __attribute__((nonnull (1,5))) __attribute__((warn_unused_result));
 
-char * lcfgpkgspec_build_message( const LCFGPackageSpec * pkgspec,
+char * lcfgpackage_build_message( const LCFGPackage * pkgspec,
                                   const char *fmt, ... );
 
 /* Package Lists */
 
 struct LCFGPackageNode {
-  LCFGPackageSpec * pkgspec;
+  LCFGPackage * pkgspec;
   struct LCFGPackageNode * next;
 };
 
 typedef struct LCFGPackageNode LCFGPackageNode;
 
-LCFGPackageNode * lcfgpkgnode_new(LCFGPackageSpec * pkgspec);
+LCFGPackageNode * lcfgpkgnode_new(LCFGPackage * pkgspec);
 
 void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode);
 
@@ -257,12 +257,12 @@ void lcfgpkglist_destroy(LCFGPackageList * pkglist);
 
 LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
                                     LCFGPackageNode * pkgnode,
-                                    LCFGPackageSpec * pkgspec )
+                                    LCFGPackage     * pkgspec )
   __attribute__((nonnull (1,3))) __attribute__((warn_unused_result));
 
 LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
                                     LCFGPackageNode * pkgnode,
-                                    LCFGPackageSpec ** pkgspec )
+                                    LCFGPackage    ** pkgspec )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 #define lcfgpkglist_head(pkglist) ((pkglist)->head)
@@ -281,9 +281,9 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
                                          const char * arch )
   __attribute__((nonnull (1,2)));
 
-LCFGPackageSpec * lcfgpkglist_find_pkgspec( const LCFGPackageList * pkglist,
-                                            const char * name,
-                                            const char * arch )
+LCFGPackage * lcfgpkglist_find_pkgspec( const LCFGPackageList * pkglist,
+                                        const char * name,
+                                        const char * arch )
   __attribute__((nonnull (1,2)));
 
 /* Rules for merging a package into a list */
@@ -294,7 +294,7 @@ LCFGPackageSpec * lcfgpkglist_find_pkgspec( const LCFGPackageList * pkglist,
 #define LCFG_PKGS_OPT_USE_PREFIX       8
 
 LCFGChange lcfgpkglist_merge_pkgspec( LCFGPackageList * pkglist,
-                                      LCFGPackageSpec * pkgspec,
+                                      LCFGPackage * pkgspec,
                                       unsigned int options,
                                       char ** msg )
   __attribute__((nonnull (1,2))) __attribute__((warn_unused_result));
@@ -324,12 +324,12 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
                                   char ** msg )
   __attribute__((warn_unused_result));
 
-bool lcfgpkgspec_from_rpm_filename( const char * input,
-                                    LCFGPackageSpec ** result,
+bool lcfgpackage_from_rpm_filename( const char * input,
+                                    LCFGPackage ** result,
                                     char ** msg)
   __attribute__((warn_unused_result));
 
-ssize_t lcfgpkgspec_to_rpm_filename( const LCFGPackageSpec * pkgspec,
+ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkgspec,
                                      const char * defarch,
                                      unsigned int options,
                                      char ** result, size_t * size )
@@ -379,7 +379,7 @@ void lcfgpkgiter_reset( LCFGPackageIterator * iterator );
 
 bool lcfgpkgiter_has_next( LCFGPackageIterator * iterator );
 
-LCFGPackageSpec * lcfgpkgiter_next(LCFGPackageIterator * iterator);
+LCFGPackage * lcfgpkgiter_next(LCFGPackageIterator * iterator);
 
 #endif /* LCFG_PACKAGES_H */
 
