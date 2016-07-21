@@ -57,24 +57,24 @@ static const char * permitted_prefixes = "?+-=~";
 
 LCFGPackage * lcfgpackage_new(void) {
 
-  LCFGPackage * pkgspec = malloc( sizeof(LCFGPackage) );
-  if ( pkgspec == NULL ) {
+  LCFGPackage * pkg = malloc( sizeof(LCFGPackage) );
+  if ( pkg == NULL ) {
     perror( "Failed to allocate memory for LCFG package spec" );
     exit(EXIT_FAILURE);
   }
 
-  pkgspec->name       = NULL;
-  pkgspec->arch       = NULL;
-  pkgspec->version    = NULL;
-  pkgspec->release    = NULL;
-  pkgspec->flags      = NULL;
-  pkgspec->context    = NULL;
-  pkgspec->derivation = NULL;
-  pkgspec->prefix     = '\0';
-  pkgspec->priority   = 0;
-  pkgspec->_refcount  = 0;
+  pkg->name       = NULL;
+  pkg->arch       = NULL;
+  pkg->version    = NULL;
+  pkg->release    = NULL;
+  pkg->flags      = NULL;
+  pkg->context    = NULL;
+  pkg->derivation = NULL;
+  pkg->prefix     = '\0';
+  pkg->priority   = 0;
+  pkg->_refcount  = 0;
 
-  return pkgspec;
+  return pkg;
 }
 
 /**
@@ -103,37 +103,37 @@ LCFGPackage * lcfgpackage_new(void) {
  *
  */
 
-void lcfgpackage_destroy(LCFGPackage * pkgspec) {
+void lcfgpackage_destroy(LCFGPackage * pkg) {
 
-  if ( pkgspec == NULL )
+  if ( pkg == NULL )
     return;
 
-  if ( pkgspec->_refcount > 0 )
+  if ( pkg->_refcount > 0 )
     return;
 
-  free(pkgspec->name);
-  pkgspec->name = NULL;
+  free(pkg->name);
+  pkg->name = NULL;
 
-  free(pkgspec->arch);
-  pkgspec->arch = NULL;
+  free(pkg->arch);
+  pkg->arch = NULL;
 
-  free(pkgspec->version);
-  pkgspec->version = NULL;
+  free(pkg->version);
+  pkg->version = NULL;
 
-  free(pkgspec->release);
-  pkgspec->release = NULL;
+  free(pkg->release);
+  pkg->release = NULL;
 
-  free(pkgspec->flags);
-  pkgspec->flags = NULL;
+  free(pkg->flags);
+  pkg->flags = NULL;
 
-  free(pkgspec->context);
-  pkgspec->context = NULL;
+  free(pkg->context);
+  pkg->context = NULL;
 
-  free(pkgspec->derivation);
-  pkgspec->derivation = NULL;
+  free(pkg->derivation);
+  pkg->derivation = NULL;
 
-  free(pkgspec);
-  pkgspec = NULL;
+  free(pkg);
+  pkg = NULL;
 
 }
 
@@ -155,64 +155,64 @@ void lcfgpackage_destroy(LCFGPackage * pkgspec) {
  *
  */
 
-LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkgspec ) {
+LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkg ) {
 
   LCFGPackage * clone = lcfgpackage_new();
   if ( clone == NULL )
     return NULL;
 
   bool ok = true;
-  if ( pkgspec->name != NULL ) {
-    char * new_name = strdup(pkgspec->name);
+  if ( pkg->name != NULL ) {
+    char * new_name = strdup(pkg->name);
     ok = lcfgpackage_set_name( clone, new_name );
     if (!ok)
       free(new_name);
   }
 
-  if ( ok && pkgspec->arch != NULL ) {
-    char * new_arch = strdup(pkgspec->arch);
+  if ( ok && pkg->arch != NULL ) {
+    char * new_arch = strdup(pkg->arch);
     ok = lcfgpackage_set_arch( clone, new_arch );
     if (!ok)
       free(new_arch);
   }
 
-  if ( ok && pkgspec->version != NULL ) {
-    char * new_version = strdup(pkgspec->version);
+  if ( ok && pkg->version != NULL ) {
+    char * new_version = strdup(pkg->version);
     ok = lcfgpackage_set_version( clone, new_version );
     if (!ok)
       free(new_version);
   }
 
-  if ( ok && pkgspec->release != NULL ) {
-    char * new_release = strdup(pkgspec->release);
+  if ( ok && pkg->release != NULL ) {
+    char * new_release = strdup(pkg->release);
     ok = lcfgpackage_set_release( clone, new_release );
     if (!ok)
       free(new_release);
   }
 
-  if ( ok && pkgspec->flags != NULL ) {
-    char * new_flags = strdup(pkgspec->flags);
+  if ( ok && pkg->flags != NULL ) {
+    char * new_flags = strdup(pkg->flags);
     ok = lcfgpackage_set_flags( clone, new_flags );
     if (!ok)
       free(new_flags);
   }
 
-  if ( ok && pkgspec->context != NULL ) {
-    char * new_context = strdup(pkgspec->context);
+  if ( ok && pkg->context != NULL ) {
+    char * new_context = strdup(pkg->context);
     ok = lcfgpackage_set_context( clone, new_context );
     if (!ok)
       free(new_context);
   }
 
-  if ( ok && pkgspec->derivation != NULL ) {
-    char * new_deriv = strdup(pkgspec->derivation);
+  if ( ok && pkg->derivation != NULL ) {
+    char * new_deriv = strdup(pkg->derivation);
     ok = lcfgpackage_set_derivation( clone, new_deriv );
     if (!ok)
       free(new_deriv);
   }
 
-  clone->prefix   = pkgspec->prefix;
-  clone->priority = pkgspec->priority;
+  clone->prefix   = pkg->prefix;
+  clone->priority = pkg->priority;
 
   /* Cloning should never fail */
   if ( !ok ) {
@@ -273,8 +273,8 @@ bool lcfgpackage_valid_name( const char * name ) {
  *
  */
 
-bool lcfgpackage_has_name( const LCFGPackage * pkgspec ) {
-  return ( pkgspec->name != NULL && *( pkgspec->name ) != '\0' );
+bool lcfgpackage_has_name( const LCFGPackage * pkg ) {
+  return ( pkg->name != NULL && *( pkg->name ) != '\0' );
 }
 
 /**
@@ -293,8 +293,8 @@ bool lcfgpackage_has_name( const LCFGPackage * pkgspec ) {
  * @return The name for the package (possibly NULL).
  */
 
-char * lcfgpackage_get_name( const LCFGPackage * pkgspec ) {
-  return pkgspec->name;
+char * lcfgpackage_get_name( const LCFGPackage * pkg ) {
+  return pkg->name;
 }
 
 /**
@@ -319,13 +319,13 @@ char * lcfgpackage_get_name( const LCFGPackage * pkgspec ) {
  *
  */
 
-bool lcfgpackage_set_name( LCFGPackage * pkgspec, char * new_name ) {
+bool lcfgpackage_set_name( LCFGPackage * pkg, char * new_name ) {
 
   bool ok = false;
   if ( lcfgpackage_valid_name(new_name) ) {
-    free(pkgspec->name);
+    free(pkg->name);
 
-    pkgspec->name = new_name;
+    pkg->name = new_name;
     ok = true;
   } else {
     errno = EINVAL;
@@ -381,8 +381,8 @@ bool lcfgpackage_valid_arch( const char * arch ) {
  *
  */
 
-bool lcfgpackage_has_arch( const LCFGPackage * pkgspec ) {
-  return ( pkgspec->arch != NULL && *( pkgspec->arch ) != '\0' );
+bool lcfgpackage_has_arch( const LCFGPackage * pkg ) {
+  return ( pkg->arch != NULL && *( pkg->arch ) != '\0' );
 }
 
 /**
@@ -401,8 +401,8 @@ bool lcfgpackage_has_arch( const LCFGPackage * pkgspec ) {
  * @return The architecture for the package (possibly NULL).
  */
 
-char * lcfgpackage_get_arch( const LCFGPackage * pkgspec ) {
-  return pkgspec->arch;
+char * lcfgpackage_get_arch( const LCFGPackage * pkg ) {
+  return pkg->arch;
 }
 
 /**
@@ -427,13 +427,13 @@ char * lcfgpackage_get_arch( const LCFGPackage * pkgspec ) {
  *
  */
 
-bool lcfgpackage_set_arch( LCFGPackage * pkgspec, char * new_arch ) {
+bool lcfgpackage_set_arch( LCFGPackage * pkg, char * new_arch ) {
 
   bool ok = false;
   if ( lcfgpackage_valid_arch(new_arch) ) {
-    free(pkgspec->arch);
+    free(pkg->arch);
 
-    pkgspec->arch = new_arch;
+    pkg->arch = new_arch;
     ok = true;
   } else {
     errno = EINVAL;
@@ -490,8 +490,8 @@ bool lcfgpackage_valid_version( const char * version ) {
  *
  */
 
-bool lcfgpackage_has_version( const LCFGPackage * pkgspec ) {
-  return ( pkgspec->version != NULL && *( pkgspec->version ) != '\0' );
+bool lcfgpackage_has_version( const LCFGPackage * pkg ) {
+  return ( pkg->version != NULL && *( pkg->version ) != '\0' );
 }
 
 /**
@@ -510,8 +510,8 @@ bool lcfgpackage_has_version( const LCFGPackage * pkgspec ) {
  * @return The version for the package (possibly NULL).
  */
 
-char * lcfgpackage_get_version( const LCFGPackage * pkgspec ) {
-  return pkgspec->version;
+char * lcfgpackage_get_version( const LCFGPackage * pkg ) {
+  return pkg->version;
 }
 
 /**
@@ -536,13 +536,13 @@ char * lcfgpackage_get_version( const LCFGPackage * pkgspec ) {
  *
  */
 
-bool lcfgpackage_set_version( LCFGPackage * pkgspec, char * new_version ) {
+bool lcfgpackage_set_version( LCFGPackage * pkg, char * new_version ) {
 
   bool ok = false;
   if ( lcfgpackage_valid_version(new_version) ) {
-    free(pkgspec->version);
+    free(pkg->version);
 
-    pkgspec->version = new_version;
+    pkg->version = new_version;
     ok = true;
   } else {
     errno = EINVAL;
@@ -586,8 +586,8 @@ bool lcfgpackage_valid_release( const char * release ) {
  *
  */
 
-bool lcfgpackage_has_release( const LCFGPackage * pkgspec ) {
-  return ( pkgspec->release != NULL && *( pkgspec->release ) != '\0' );
+bool lcfgpackage_has_release( const LCFGPackage * pkg ) {
+  return ( pkg->release != NULL && *( pkg->release ) != '\0' );
 }
 
 /**
@@ -606,8 +606,8 @@ bool lcfgpackage_has_release( const LCFGPackage * pkgspec ) {
  * @return The release for the package (possibly NULL).
  */
 
-char * lcfgpackage_get_release( const LCFGPackage * pkgspec ) {
-  return pkgspec->release;
+char * lcfgpackage_get_release( const LCFGPackage * pkg ) {
+  return pkg->release;
 }
 
 /**
@@ -632,13 +632,13 @@ char * lcfgpackage_get_release( const LCFGPackage * pkgspec ) {
  *
  */
 
-bool lcfgpackage_set_release( LCFGPackage * pkgspec, char * new_release ) {
+bool lcfgpackage_set_release( LCFGPackage * pkg, char * new_release ) {
 
   bool ok = false;
   if ( lcfgpackage_valid_release(new_release) ) {
-    free(pkgspec->release);
+    free(pkg->release);
 
-    pkgspec->release = new_release;
+    pkg->release = new_release;
     ok = true;
   } else {
     errno = EINVAL;
@@ -686,8 +686,8 @@ bool lcfgpackage_valid_prefix( char prefix ) {
  *
  */
 
-bool lcfgpackage_has_prefix( const LCFGPackage * pkgspec ) {
-  return ( pkgspec->prefix != '\0' );
+bool lcfgpackage_has_prefix( const LCFGPackage * pkg ) {
+  return ( pkg->prefix != '\0' );
 }
 
 /**
@@ -702,12 +702,12 @@ bool lcfgpackage_has_prefix( const LCFGPackage * pkgspec ) {
  * @return The prefix character for the package.
  */
 
-char lcfgpackage_get_prefix( const LCFGPackage * pkgspec ) {
-  return pkgspec->prefix;
+char lcfgpackage_get_prefix( const LCFGPackage * pkg ) {
+  return pkg->prefix;
 }
 
-bool lcfgpackage_remove_prefix( LCFGPackage * pkgspec ) {
-    pkgspec->prefix = '\0';
+bool lcfgpackage_remove_prefix( LCFGPackage * pkg ) {
+    pkg->prefix = '\0';
     return true;
 }
 
@@ -730,11 +730,11 @@ bool lcfgpackage_remove_prefix( LCFGPackage * pkgspec ) {
  *
  */
 
-bool lcfgpackage_set_prefix( LCFGPackage * pkgspec, char new_prefix ) {
+bool lcfgpackage_set_prefix( LCFGPackage * pkg, char new_prefix ) {
 
   bool ok = false;
   if ( lcfgpackage_valid_prefix(new_prefix) ) {
-    pkgspec->prefix = new_prefix;
+    pkg->prefix = new_prefix;
     ok = true;
   } else {
     errno = EINVAL;
@@ -806,14 +806,14 @@ bool lcfgpackage_valid_flags( const char * flags ) {
  *
  */
 
-bool lcfgpackage_has_flags( const LCFGPackage * pkgspec ) {
-  return ( pkgspec->flags != NULL && *( pkgspec->flags ) != '\0' );
+bool lcfgpackage_has_flags( const LCFGPackage * pkg ) {
+  return ( pkg->flags != NULL && *( pkg->flags ) != '\0' );
 }
 
-bool lcfgpackage_has_flag( const LCFGPackage * pkgspec, char flag ) {
+bool lcfgpackage_has_flag( const LCFGPackage * pkg, char flag ) {
 
-  return ( lcfgpackage_has_flags(pkgspec) &&
-           strchr( pkgspec->flags, flag ) != NULL );
+  return ( lcfgpackage_has_flags(pkg) &&
+           strchr( pkg->flags, flag ) != NULL );
 }
 
 /**
@@ -832,8 +832,8 @@ bool lcfgpackage_has_flag( const LCFGPackage * pkgspec, char flag ) {
  * @return The flags for the package (possibly NULL).
  */
 
-char * lcfgpackage_get_flags( const LCFGPackage * pkgspec ) {
-  return pkgspec->flags;
+char * lcfgpackage_get_flags( const LCFGPackage * pkg ) {
+  return pkg->flags;
 }
 
 /**
@@ -858,13 +858,13 @@ char * lcfgpackage_get_flags( const LCFGPackage * pkgspec ) {
  *
  */
 
-bool lcfgpackage_set_flags( LCFGPackage * pkgspec, char * new_flags ) {
+bool lcfgpackage_set_flags( LCFGPackage * pkg, char * new_flags ) {
 
   bool ok = false;
   if ( lcfgpackage_valid_flags(new_flags) ) {
-    free(pkgspec->flags);
+    free(pkg->flags);
 
-    pkgspec->flags = new_flags;
+    pkg->flags = new_flags;
     ok = true;
   } else {
     errno = EINVAL;
@@ -891,7 +891,7 @@ bool lcfgpackage_set_flags( LCFGPackage * pkgspec, char * new_flags ) {
  *
  */
 
-bool lcfgpackage_add_flags( LCFGPackage * pkgspec,
+bool lcfgpackage_add_flags( LCFGPackage * pkg,
                             const char * extra_flags ) {
 
   if ( extra_flags == NULL || *extra_flags == '\0' )
@@ -929,11 +929,11 @@ bool lcfgpackage_add_flags( LCFGPackage * pkgspec,
   bool char_set[MAXCHAR] = { false };
 
   size_t cur_len = 0;
-  if ( pkgspec->flags != NULL ) {
-    cur_len = strlen(pkgspec->flags);
+  if ( pkg->flags != NULL ) {
+    cur_len = strlen(pkg->flags);
 
     for ( i=0; i<cur_len; i++ ) {
-      int val = (pkgspec->flags)[i] - '0';
+      int val = (pkg->flags)[i] - '0';
       if ( val < MAXCHAR ) {
         if ( !char_set[val] ) {
           new_len++;
@@ -981,7 +981,7 @@ bool lcfgpackage_add_flags( LCFGPackage * pkgspec,
 
   assert( ( result + new_len ) == to );
 
-  bool ok = lcfgpackage_set_flags( pkgspec, result );
+  bool ok = lcfgpackage_set_flags( pkg, result );
   if ( !ok )
     free(result);
 
@@ -1018,8 +1018,8 @@ bool lcfgpackage_valid_context( const char * ctx ) {
  *
  */
 
-bool lcfgpackage_has_context( const LCFGPackage * pkgspec ) {
-  return ( pkgspec->context != NULL && *( pkgspec->context ) != '\0' );
+bool lcfgpackage_has_context( const LCFGPackage * pkg ) {
+  return ( pkg->context != NULL && *( pkg->context ) != '\0' );
 }
 
 /**
@@ -1038,8 +1038,8 @@ bool lcfgpackage_has_context( const LCFGPackage * pkgspec ) {
  * @return The context for the package (possibly NULL).
  */
 
-char * lcfgpackage_get_context( const LCFGPackage * pkgspec ) {
-  return pkgspec->context;
+char * lcfgpackage_get_context( const LCFGPackage * pkg ) {
+  return pkg->context;
 }
 
 /**
@@ -1064,13 +1064,13 @@ char * lcfgpackage_get_context( const LCFGPackage * pkgspec ) {
  *
  */
 
-bool lcfgpackage_set_context( LCFGPackage * pkgspec, char * new_ctx ) {
+bool lcfgpackage_set_context( LCFGPackage * pkg, char * new_ctx ) {
 
   bool ok = false;
   if ( lcfgpackage_valid_context(new_ctx) ) {
-    free(pkgspec->context);
+    free(pkg->context);
 
-    pkgspec->context = new_ctx;
+    pkg->context = new_ctx;
     ok = true;
   } else {
     errno = EINVAL;
@@ -1100,21 +1100,21 @@ bool lcfgpackage_set_context( LCFGPackage * pkgspec, char * new_ctx ) {
  *
  */
 
-bool lcfgpackage_add_context( LCFGPackage * pkgspec,
+bool lcfgpackage_add_context( LCFGPackage * pkg,
                               const char * extra_context ) {
 
   if ( extra_context == NULL || *extra_context == '\0' )
     return true;
 
   char * new_context = NULL;
-  if ( !lcfgpackage_has_context(pkgspec) ) {
+  if ( !lcfgpackage_has_context(pkg) ) {
     new_context = strdup(extra_context);
   } else {
     new_context =
-      lcfgcontext_combine_expressions( pkgspec->context, extra_context );
+      lcfgcontext_combine_expressions( pkg->context, extra_context );
   }
 
-  bool ok = lcfgpackage_set_context( pkgspec, new_context );
+  bool ok = lcfgpackage_set_context( pkg, new_context );
   if ( !ok )
     free(new_context);
 
@@ -1135,8 +1135,8 @@ bool lcfgpackage_add_context( LCFGPackage * pkgspec,
  *
  */
 
-bool lcfgpackage_has_derivation( const LCFGPackage * pkgspec ) {
-  return ( pkgspec->derivation != NULL && *( pkgspec->derivation ) != '\0' );
+bool lcfgpackage_has_derivation( const LCFGPackage * pkg ) {
+  return ( pkg->derivation != NULL && *( pkg->derivation ) != '\0' );
 }
 
 /**
@@ -1155,8 +1155,8 @@ bool lcfgpackage_has_derivation( const LCFGPackage * pkgspec ) {
  * @return The derivation for the package (possibly NULL).
  */
 
-char * lcfgpackage_get_derivation( const LCFGPackage * pkgspec ) {
-  return pkgspec->derivation;
+char * lcfgpackage_get_derivation( const LCFGPackage * pkg ) {
+  return pkg->derivation;
 }
 
 /**
@@ -1175,13 +1175,13 @@ char * lcfgpackage_get_derivation( const LCFGPackage * pkgspec ) {
  *
  */
 
-bool lcfgpackage_set_derivation( LCFGPackage * pkgspec, char * new_deriv ) {
+bool lcfgpackage_set_derivation( LCFGPackage * pkg, char * new_deriv ) {
 
   /* Currently no validation of the derivation */
 
-  free(pkgspec->derivation);
+  free(pkg->derivation);
 
-  pkgspec->derivation = new_deriv;
+  pkg->derivation = new_deriv;
   return true;
 }
 
@@ -1205,22 +1205,22 @@ bool lcfgpackage_set_derivation( LCFGPackage * pkgspec, char * new_deriv ) {
  *
  */
 
-bool lcfgpackage_add_derivation( LCFGPackage * pkgspec,
+bool lcfgpackage_add_derivation( LCFGPackage * pkg,
                                  const char * extra_deriv ) {
 
   if ( extra_deriv == NULL || *extra_deriv == '\0' )
     return true;
 
   char * new_deriv = NULL;
-  if ( !lcfgpackage_has_derivation(pkgspec) ) {
+  if ( !lcfgpackage_has_derivation(pkg) ) {
     new_deriv = strdup(extra_deriv);
-  } else if ( strstr( pkgspec->derivation, extra_deriv ) == NULL ) {
+  } else if ( strstr( pkg->derivation, extra_deriv ) == NULL ) {
 
     /* Only adding the derivation when it is not present in the
        current value. This avoids unnecessary duplication. */
 
     new_deriv =
-      lcfgutils_join_strings( pkgspec->derivation, extra_deriv, " " );
+      lcfgutils_join_strings( pkg->derivation, extra_deriv, " " );
     if ( new_deriv == NULL ) {
       perror( "Failed to build LCFG derivation" );
       exit(EXIT_FAILURE);
@@ -1234,7 +1234,7 @@ bool lcfgpackage_add_derivation( LCFGPackage * pkgspec,
 
   bool ok = true;
   if ( new_deriv != NULL ) {
-    ok = lcfgpackage_set_derivation( pkgspec, new_deriv );
+    ok = lcfgpackage_set_derivation( pkg, new_deriv );
 
     if ( !ok )
       free(new_deriv);
@@ -1258,8 +1258,8 @@ bool lcfgpackage_add_derivation( LCFGPackage * pkgspec,
  * @return The priority for the package.
  */
 
-int lcfgpackage_get_priority( const LCFGPackage * pkgspec ) {
-  return pkgspec->priority;
+int lcfgpackage_get_priority( const LCFGPackage * pkg ) {
+  return pkg->priority;
 }
 
 /**
@@ -1275,12 +1275,12 @@ int lcfgpackage_get_priority( const LCFGPackage * pkgspec ) {
  *
  */
 
-bool lcfgpackage_set_priority( LCFGPackage * pkgspec, int new_prio ) {
-  pkgspec->priority = new_prio;
+bool lcfgpackage_set_priority( LCFGPackage * pkg, int new_prio ) {
+  pkg->priority = new_prio;
   return true;
 }
 
-bool lcfgpackage_eval_priority( LCFGPackage * pkgspec,
+bool lcfgpackage_eval_priority( LCFGPackage * pkg,
                                 const LCFGContextList * ctxlist,
                                 char ** msg ) {
 
@@ -1288,28 +1288,28 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkgspec,
   bool ok = true;
 
   int priority = 0;
-  if ( lcfgpackage_has_context(pkgspec) ) {
+  if ( lcfgpackage_has_context(pkg) ) {
 
     /* Calculate the priority using the context expression for this
        package spec. */
 
     ok = lcfgctxlist_eval_expression( ctxlist,
-                                      pkgspec->context,
+                                      pkg->context,
                                       &priority, msg );
 
   }
 
   if (ok)
-    ok = lcfgpackage_set_priority( pkgspec, priority );
+    ok = lcfgpackage_set_priority( pkg, priority );
 
   return ok;
 }
 
-bool lcfgpackage_is_active( const LCFGPackage * pkgspec ) {
-  return ( pkgspec->priority >= 0 );
+bool lcfgpackage_is_active( const LCFGPackage * pkg ) {
+  return ( pkg->priority >= 0 );
 }
 
-void lcfgpackage_set_defaults(LCFGPackage * pkgspec) {
+void lcfgpackage_set_defaults(LCFGPackage * pkg) {
 
   /* This is used to set defaults for anything which is not yet defined */
 
@@ -1321,32 +1321,32 @@ void lcfgpackage_set_defaults(LCFGPackage * pkgspec) {
 
   /* There is no default value for the name field, it is required */
 
-  if ( pkgspec->arch == NULL )
-    pkgspec->arch       = strndup(empty,empty_len);
+  if ( pkg->arch == NULL )
+    pkg->arch       = strndup(empty,empty_len);
 
-  if ( pkgspec->version == NULL )
-    pkgspec->version    = strndup(wild,wild_len);
+  if ( pkg->version == NULL )
+    pkg->version    = strndup(wild,wild_len);
 
-  if ( pkgspec->release == NULL )
-    pkgspec->release    = strndup(wild,wild_len);
+  if ( pkg->release == NULL )
+    pkg->release    = strndup(wild,wild_len);
 
-  if ( pkgspec->flags == NULL )
-    pkgspec->flags      = strndup(empty,empty_len);
+  if ( pkg->flags == NULL )
+    pkg->flags      = strndup(empty,empty_len);
 
-  if ( pkgspec->context == NULL )
-    pkgspec->context    = strndup(empty,empty_len);
+  if ( pkg->context == NULL )
+    pkg->context    = strndup(empty,empty_len);
 
-  if ( pkgspec->derivation == NULL )
-    pkgspec->derivation = strndup(empty,empty_len);
+  if ( pkg->derivation == NULL )
+    pkg->derivation = strndup(empty,empty_len);
 
 }
 
 /* Higher-level functions */
 
-char * lcfgpackage_full_version( const LCFGPackage * pkgspec ) {
+char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
 
   char * result =
-    lcfgutils_join_strings( pkgspec->version, pkgspec->release, "-" );
+    lcfgutils_join_strings( pkg->version, pkg->release, "-" );
 
   if ( result == NULL ) {
     perror( "Failed to build LCFG package full-version string" );
@@ -1356,18 +1356,18 @@ char * lcfgpackage_full_version( const LCFGPackage * pkgspec ) {
   return result;
 }
 
-char * lcfgpackage_id( const LCFGPackage * pkgspec ) {
+char * lcfgpackage_id( const LCFGPackage * pkg ) {
 
   char * result;
-  if ( lcfgpackage_has_arch(pkgspec) ) {
-    result = lcfgutils_join_strings( pkgspec->name, pkgspec->arch, "." );
+  if ( lcfgpackage_has_arch(pkg) ) {
+    result = lcfgutils_join_strings( pkg->name, pkg->arch, "." );
 
     if ( result == NULL ) {
       perror( "Failed to build LCFG package ID string" );
       exit(EXIT_FAILURE);
     }
   } else {
-    result = strdup( pkgspec->name );
+    result = strdup( pkg->name );
   }
 
   return result;
@@ -1668,12 +1668,12 @@ bool lcfgpackage_from_string( const char * spec,
   return ok;
 }
 
-ssize_t lcfgpackage_to_string( const LCFGPackage * pkgspec,
+ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
                                const char * defarch,
                                unsigned int options,
                                char ** result, size_t * size ) {
 
-  if ( !lcfgpackage_has_name(pkgspec) )
+  if ( !lcfgpackage_has_name(pkg) )
     return -1;
 
   /* This is rather long-winded but it is done this way to avoid
@@ -1684,15 +1684,15 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkgspec,
 
   /* name, version and release always have values */
 
-  const char * pkgnam = pkgspec->name;
+  const char * pkgnam = pkg->name;
   size_t pkgnamlen    = strlen(pkgnam);
 
-  const char * pkgver = lcfgpackage_has_version(pkgspec) ?
-                         pkgspec->version : LCFG_PACKAGE_WILDCARD;
+  const char * pkgver = lcfgpackage_has_version(pkg) ?
+                         pkg->version : LCFG_PACKAGE_WILDCARD;
   size_t pkgverlen    = strlen(pkgver);
 
-  const char * pkgrel = lcfgpackage_has_release(pkgspec) ?
-                          pkgspec->release : LCFG_PACKAGE_WILDCARD;
+  const char * pkgrel = lcfgpackage_has_release(pkg) ?
+                          pkg->release : LCFG_PACKAGE_WILDCARD;
   size_t pkgrellen    = strlen(pkgrel);
 
   /* +2 for the two '-' separators */
@@ -1702,37 +1702,37 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkgspec,
 
   char pkgpfx = '\0';
   if ( !(options&LCFG_OPT_NOPREFIX) &&
-       lcfgpackage_has_prefix(pkgspec) ) {
+       lcfgpackage_has_prefix(pkg) ) {
 
-    pkgpfx = pkgspec->prefix;
+    pkgpfx = pkg->prefix;
     new_len++;
   }
 
   char * pkgarch = NULL;
-  if ( lcfgpackage_has_arch(pkgspec) ) {
+  if ( lcfgpackage_has_arch(pkg) ) {
 
     /* Not added to the spec when same as default architecture */
     if ( defarch == NULL ||
-         strcmp( pkgspec->arch, defarch ) != 0 ) {
+         strcmp( pkg->arch, defarch ) != 0 ) {
 
-      pkgarch = pkgspec->arch;
+      pkgarch = pkg->arch;
       new_len += ( strlen(pkgarch) + 1 ); /* +1 for '/' separator */
     }
 
   }
 
   char * pkgflgs = NULL;
-  if ( lcfgpackage_has_flags(pkgspec) ) {
-    pkgflgs = pkgspec->flags;
+  if ( lcfgpackage_has_flags(pkg) ) {
+    pkgflgs = pkg->flags;
 
     new_len += ( strlen(pkgflgs) + 1 ); /* +1 for ':' separator */
   }
 
   char * pkgctx = NULL;
   if ( !(options&LCFG_OPT_NOCONTEXT) &&
-       lcfgpackage_has_context(pkgspec) ) {
+       lcfgpackage_has_context(pkg) ) {
 
-    pkgctx = pkgspec->context;
+    pkgctx = pkg->context;
 
     new_len += ( strlen(pkgctx) + 2 ); /* +2 for '[' and ']' brackets */
   }
@@ -1824,7 +1824,7 @@ static char const * const pragma_derive  = "#pragma LCFG derive \"";
 static char const * const pragma_context = "#pragma LCFG context \"";
 static char const * const pragma_end     = "\"\n";
 
-ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkgspec,
+ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
                             const char * defarch,
                             unsigned int options,
                             char ** result, size_t * size ) {
@@ -1834,7 +1834,7 @@ ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkgspec,
                                 LCFG_OPT_NOPREFIX  |
                                 LCFG_OPT_NEWLINE );
 
-  ssize_t spec_len = lcfgpackage_to_string( pkgspec, defarch,
+  ssize_t spec_len = lcfgpackage_to_string( pkg, defarch,
                                             spec_options,
                                             result, size );
 
@@ -1852,15 +1852,15 @@ ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkgspec,
   size_t meta_len = 0;
 
   char * derivation = NULL;
-  if ( lcfgpackage_has_derivation(pkgspec) ) {
-    derivation = pkgspec->derivation;
+  if ( lcfgpackage_has_derivation(pkg) ) {
+    derivation = pkg->derivation;
 
     meta_len += ( pragma_derive_len + strlen(derivation) + pragma_end_len );
   }
 
   char * context = NULL;
-  if ( lcfgpackage_has_context(pkgspec) ) {
-    context     = pkgspec->context;
+  if ( lcfgpackage_has_context(pkg) ) {
+    context     = pkg->context;
 
     meta_len += ( pragma_context_len + strlen(context) + pragma_end_len );
   }
@@ -1926,12 +1926,12 @@ ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkgspec,
   return new_len;
 }
 
-ssize_t lcfgpackage_to_xml( const LCFGPackage * pkgspec,
+ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
                             const char * defarch,
                             unsigned int options,
                             char ** result, size_t * size ) {
 
-  if ( !lcfgpackage_has_name(pkgspec) )
+  if ( !lcfgpackage_has_name(pkg) )
     return -1;
 
   static const char * indent = "   ";
@@ -1941,29 +1941,29 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkgspec,
 
   /* Name - required */
 
-  const char * name = lcfgpackage_get_name(pkgspec);
+  const char * name = lcfgpackage_get_name(pkg);
   size_t name_len = strlen(name);
 
   new_len += ( name_len + 13 ); /* <name></name> */
 
   /* Version - required */
 
-  const char * version = lcfgpackage_has_version(pkgspec) ?
-                      lcfgpackage_get_version(pkgspec) : LCFG_PACKAGE_WILDCARD;
+  const char * version = lcfgpackage_has_version(pkg) ?
+                      lcfgpackage_get_version(pkg) : LCFG_PACKAGE_WILDCARD;
   size_t ver_len = strlen(version);
 
   new_len += ( ver_len + 7 ); /* <v></v> */
 
   /* Release - required (and possibly architecture) */
 
-  const char * release = lcfgpackage_has_release(pkgspec) ?
-                      lcfgpackage_get_release(pkgspec) : LCFG_PACKAGE_WILDCARD;
+  const char * release = lcfgpackage_has_release(pkg) ?
+                      lcfgpackage_get_release(pkg) : LCFG_PACKAGE_WILDCARD;
   size_t rel_len = strlen(release);
 
   new_len += ( rel_len + 7 ); /* <r></r> */
 
-  const char * arch = lcfgpackage_has_arch(pkgspec) ?
-                      lcfgpackage_get_arch(pkgspec) : defarch;
+  const char * arch = lcfgpackage_has_arch(pkg) ?
+                      lcfgpackage_get_arch(pkg) : defarch;
 
   size_t arch_len = 0;
   if ( arch != NULL ) {
@@ -1976,7 +1976,7 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkgspec,
 
   /* Flags - optional */
 
-  const char * flags = lcfgpackage_get_flags(pkgspec);
+  const char * flags = lcfgpackage_get_flags(pkg);
   size_t flags_len = 0;
   if ( flags != NULL ) {
     flags_len = strlen(flags);
@@ -1988,7 +1988,7 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkgspec,
 
   /* Context - optional */
 
-  const char * context = lcfgpackage_get_context(pkgspec);
+  const char * context = lcfgpackage_get_context(pkg);
   size_t ctx_len = 0;
   if ( context != NULL ) {
     ctx_len = strlen(context);
@@ -1999,7 +1999,7 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkgspec,
 
   /* Derivation - optional */
 
-  const char * derivation = lcfgpackage_get_derivation(pkgspec);
+  const char * derivation = lcfgpackage_get_derivation(pkg);
   size_t deriv_len = 0;
   if ( derivation != NULL ) {
     deriv_len = strlen(derivation);
@@ -2111,16 +2111,16 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkgspec,
 
 }
 
-int lcfgpackage_compare_versions( const LCFGPackage * pkgspec1,
-                                  const LCFGPackage * pkgspec2 ) {
+int lcfgpackage_compare_versions( const LCFGPackage * pkg1,
+                                  const LCFGPackage * pkg2 ) {
 
   int result = 0;
 
-  if ( lcfgpackage_has_version(pkgspec1) &&
-       lcfgpackage_has_version(pkgspec2) ) {
+  if ( lcfgpackage_has_version(pkg1) &&
+       lcfgpackage_has_version(pkg2) ) {
 
-    const char * ver1 = pkgspec1->version;
-    const char * ver2 = pkgspec2->version;
+    const char * ver1 = pkg1->version;
+    const char * ver2 = pkg2->version;
 
 #ifdef HAVE_RPMLIB
     result = rpmvercmp( ver1, ver2 );
@@ -2131,11 +2131,11 @@ int lcfgpackage_compare_versions( const LCFGPackage * pkgspec1,
   }
 
   if ( result == 0 ) {
-    if ( lcfgpackage_has_release(pkgspec1) &&
-         lcfgpackage_has_release(pkgspec2) ) {
+    if ( lcfgpackage_has_release(pkg1) &&
+         lcfgpackage_has_release(pkg2) ) {
 
-      const char * rel1 = pkgspec1->release;
-      const char * rel2 = pkgspec2->release;
+      const char * rel1 = pkg1->release;
+      const char * rel2 = pkg2->release;
 
 #ifdef HAVE_RPMLIB
       result = rpmvercmp( rel1, rel2 );
@@ -2149,55 +2149,55 @@ int lcfgpackage_compare_versions( const LCFGPackage * pkgspec1,
   return result;
 }
 
-int lcfgpackage_compare_names( const LCFGPackage * pkgspec1,
-                               const LCFGPackage * pkgspec2 ) {
+int lcfgpackage_compare_names( const LCFGPackage * pkg1,
+                               const LCFGPackage * pkg2 ) {
 
-  return strcasecmp( pkgspec1->name,
-                     pkgspec2->name );
+  return strcasecmp( pkg1->name,
+                     pkg2->name );
 }
 
-int lcfgpackage_compare_archs( const LCFGPackage * pkgspec1,
-                               const LCFGPackage * pkgspec2 ) {
+int lcfgpackage_compare_archs( const LCFGPackage * pkg1,
+                               const LCFGPackage * pkg2 ) {
 
-  const char * arch1 = lcfgpackage_has_arch(pkgspec1) ? pkgspec1->arch : LCFG_PACKAGE_NOVALUE;
-  const char * arch2 = lcfgpackage_has_arch(pkgspec2) ? pkgspec2->arch : LCFG_PACKAGE_NOVALUE;
+  const char * arch1 = lcfgpackage_has_arch(pkg1) ? pkg1->arch : LCFG_PACKAGE_NOVALUE;
+  const char * arch2 = lcfgpackage_has_arch(pkg2) ? pkg2->arch : LCFG_PACKAGE_NOVALUE;
 
   return strcmp( arch1, arch2 );
 }
 
-int lcfgpackage_compare( const LCFGPackage * pkgspec1,
-                         const LCFGPackage * pkgspec2 ) {
+int lcfgpackage_compare( const LCFGPackage * pkg1,
+                         const LCFGPackage * pkg2 ) {
 
   /* Name */
 
-  int result = lcfgpackage_compare_names( pkgspec1, pkgspec2 );
+  int result = lcfgpackage_compare_names( pkg1, pkg2 );
 
   /* Architecture */
 
   if ( result == 0 )
-    result = lcfgpackage_compare_archs( pkgspec1, pkgspec2 );
+    result = lcfgpackage_compare_archs( pkg1, pkg2 );
 
   /* Version and Release */
 
   if ( result == 0 )
-    result = lcfgpackage_compare_versions( pkgspec1, pkgspec2 );
+    result = lcfgpackage_compare_versions( pkg1, pkg2 );
 
   return result;
 }
 
-bool lcfgpackage_equals( const LCFGPackage * pkgspec1,
-                         const LCFGPackage * pkgspec2 ) {
+bool lcfgpackage_equals( const LCFGPackage * pkg1,
+                         const LCFGPackage * pkg2 ) {
 
   /* Name */
 
-  bool equals = ( lcfgpackage_compare_names( pkgspec1, pkgspec2 ) == 0 );
+  bool equals = ( lcfgpackage_compare_names( pkg1, pkg2 ) == 0 );
 
   /* Architecture */
 
   if ( !equals ) {
     return false;
   } else {
-    equals = ( lcfgpackage_compare_archs( pkgspec1, pkgspec2 ) == 0 );
+    equals = ( lcfgpackage_compare_archs( pkg1, pkg2 ) == 0 );
   }
 
   /* Version and Release */
@@ -2205,7 +2205,7 @@ bool lcfgpackage_equals( const LCFGPackage * pkgspec1,
   if ( !equals ) {
     return false;
   } else {
-    equals = ( lcfgpackage_compare_versions( pkgspec1, pkgspec2 ) == 0 );
+    equals = ( lcfgpackage_compare_versions( pkg1, pkg2 ) == 0 );
   }
 
   /* Flags */
@@ -2213,8 +2213,8 @@ bool lcfgpackage_equals( const LCFGPackage * pkgspec1,
   if ( !equals ) {
     return false;
   } else {
-    const char * flags1 = lcfgpackage_has_flags(pkgspec1) ? pkgspec1->flags : LCFG_PACKAGE_NOVALUE;
-    const char * flags2 = lcfgpackage_has_flags(pkgspec2) ? pkgspec2->flags : LCFG_PACKAGE_NOVALUE;
+    const char * flags1 = lcfgpackage_has_flags(pkg1) ? pkg1->flags : LCFG_PACKAGE_NOVALUE;
+    const char * flags2 = lcfgpackage_has_flags(pkg2) ? pkg2->flags : LCFG_PACKAGE_NOVALUE;
 
     equals = ( strcmp( flags1, flags2 ) == 0 );
   }
@@ -2224,8 +2224,8 @@ bool lcfgpackage_equals( const LCFGPackage * pkgspec1,
   if ( !equals ) {
     return false;
   } else {
-    const char * ctx1 = lcfgpackage_has_context(pkgspec1) ? pkgspec1->context : LCFG_PACKAGE_NOVALUE;
-    const char * ctx2 = lcfgpackage_has_context(pkgspec2) ? pkgspec2->context : LCFG_PACKAGE_NOVALUE;
+    const char * ctx1 = lcfgpackage_has_context(pkg1) ? pkg1->context : LCFG_PACKAGE_NOVALUE;
+    const char * ctx2 = lcfgpackage_has_context(pkg2) ? pkg2->context : LCFG_PACKAGE_NOVALUE;
 
     equals = ( strcmp( ctx1, ctx2 ) == 0 );
   }
@@ -2235,7 +2235,7 @@ bool lcfgpackage_equals( const LCFGPackage * pkgspec1,
   return equals;
 }
 
-bool lcfgpackage_print( const LCFGPackage * pkgspec,
+bool lcfgpackage_print( const LCFGPackage * pkg,
                         const char * defarch,
                         const char * style,
                         unsigned int options,
@@ -2246,16 +2246,16 @@ bool lcfgpackage_print( const LCFGPackage * pkgspec,
 
   ssize_t rc = 0;
   if ( style != NULL && strcmp( style, "cpp" ) == 0 ) {
-    rc = lcfgpackage_to_cpp( pkgspec, defarch, options,
+    rc = lcfgpackage_to_cpp( pkg, defarch, options,
                              &lcfgspec, &buf_size );
   } else {
     unsigned int my_options = options | LCFG_OPT_NEWLINE;
 
     if ( style != NULL && strcmp( style, "rpm" ) == 0 ) {
-      rc = lcfgpackage_to_rpm_filename( pkgspec, defarch, my_options,
+      rc = lcfgpackage_to_rpm_filename( pkg, defarch, my_options,
                                         &lcfgspec, &buf_size );
     } else {
-      rc = lcfgpackage_to_string( pkgspec, defarch, my_options,
+      rc = lcfgpackage_to_string( pkg, defarch, my_options,
                                   &lcfgspec, &buf_size );
     }
 
@@ -2275,7 +2275,7 @@ bool lcfgpackage_print( const LCFGPackage * pkgspec,
   return ok;
 }
 
-char * lcfgpackage_build_message( const LCFGPackage * pkgspec,
+char * lcfgpackage_build_message( const LCFGPackage * pkg,
                                   const char *fmt, ... ) {
 
   /* This is rather messy and probably somewhat inefficient. It is
@@ -2299,9 +2299,9 @@ char * lcfgpackage_build_message( const LCFGPackage * pkgspec,
   int rc = 0;
 
   char * pkg_as_str  = NULL;
-  if ( pkgspec != NULL && lcfgpackage_has_name(pkgspec) ) {
+  if ( pkg != NULL && lcfgpackage_has_name(pkg) ) {
     size_t buf_size = 0;
-    if ( lcfgpackage_to_string( pkgspec, NULL, 0,
+    if ( lcfgpackage_to_string( pkg, NULL, 0,
 				&pkg_as_str, &buf_size ) < 0 ) {
       free(pkg_as_str);
       perror("Failed to build LCFG package message");
@@ -2327,10 +2327,10 @@ char * lcfgpackage_build_message( const LCFGPackage * pkgspec,
 
   /* Final string, possibly with derivation information */
 
-  if ( pkgspec != NULL && lcfgpackage_has_derivation(pkgspec) ) {
+  if ( pkg != NULL && lcfgpackage_has_derivation(pkg) ) {
     rc = asprintf( &result, "%s %s at %s",
                    msg_base, msg_mid,
-                   lcfgpackage_get_derivation(pkgspec) );
+                   lcfgpackage_get_derivation(pkg) );
   } else {
     rc = asprintf( &result, "%s %s",
                    msg_base, msg_mid );

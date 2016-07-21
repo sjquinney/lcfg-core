@@ -84,11 +84,11 @@ LCFGPackage * lcfgpkgiter_next(LCFGPackageIterator * iterator) {
     iterator->current = lcfgpkglist_next(iterator->current);
   }
 
-  LCFGPackage * pkgspec = NULL;
+  LCFGPackage * pkg = NULL;
   if ( iterator->current != NULL )
-    pkgspec = lcfgpkglist_pkgspec(iterator->current);
+    pkg = lcfgpkglist_package(iterator->current);
 
-  return pkgspec;
+  return pkg;
 }
 
 /* eof */
