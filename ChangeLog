@@ -1,6 +1,17 @@
 2016-07-21  SVN: new release
 
-	* Release: 1.26.0
+	* Release: 1.26.1
+
+2016-07-21 13:11  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/iterator.c,
+	  packages/package.c, packages/parse_pkgspec.c,
+	  packages/pkglists.c, packages/rpm.c, xml/packages.c: Further
+	  renaming to switch from 'pkgspec' to 'pkg'
+
+2016-07-21 12:34  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.26.0
 
 2016-07-21 12:33  squinney@INF.ED.AC.UK
 
