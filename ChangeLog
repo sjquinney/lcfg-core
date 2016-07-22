@@ -1,6 +1,18 @@
-2016-07-21  SVN: new release
+2016-07-22  SVN: new release
 
-	* Release: 1.26.1
+	* Release: 1.26.2
+
+2016-07-22 15:14  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/package.c,
+	  packages/parse_pkgspec.c: Reworked lcfgpackage_from_string to be
+	  more robust and extracted some common repeated functionality into
+	  separate functions to avoid the potential for copy/paste errors.
+	  Also now tolerates white space in many places in the input spec
+
+2016-07-21 13:11  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.26.1
 
 2016-07-21 13:11  squinney@INF.ED.AC.UK
 

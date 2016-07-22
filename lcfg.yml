@@ -5,14 +5,14 @@ author:
 base: ~
 build: 
   gencmake: 1
-date: 21/07/16 13:11:39
+date: 22/07/16 15:15:13
 group: LCFG
 license: GPLv2
 name: lcfg-core
 orgident: org.lcfg
 platforms: 
   - ScientificLinux7
-release: 3
+release: 1
 schema: 1
 translate: 
   - "*.cin"
@@ -21,4 +21,4 @@ vcs:
   genchangelog: 1
   logname: ChangeLog
 vendor: University of Edinburgh
-version: 1.26.1
+version: 1.26.2
