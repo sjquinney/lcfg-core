@@ -32,12 +32,14 @@ inline static bool isnamechr( const char chr ) {
   return ( isword(chr) || strchr( "-.+", chr ) != NULL );
 }
 
-/* Currently there are only three supported prefixes for LCFG package
+/* Currently there are five supported prefixes for LCFG package
    specifications:
 
    +  insert package into list, replaces any existing package of same name/arch
+   =  Similar to + but "pins" the version so it cannot be overridden
    -  remove any package from list which matches this name/arch
    ?  replace any existing package in list which matches this name/arch
+   ~  Add package to list if name/arch is not already present
 */
 
 static const char * permitted_prefixes = "?+-=~";
@@ -706,6 +708,19 @@ char lcfgpackage_get_prefix( const LCFGPackage * pkg ) {
   return pkg->prefix;
 }
 
+/**
+ * @brief Remove any prefix for the package
+ *
+ * Removes any prefix which has been previously specified for the
+ * package specification. This is done by resetting the @c prefix
+ * attribute for the @c LCFGPackage struct to be the null character @c
+ * '\0'.
+ *
+ * @param[in] res Pointer to an @c LCFGPackage struct
+ *
+ * @return boolean indicating success
+ */
+
 bool lcfgpackage_remove_prefix( LCFGPackage * pkg ) {
     pkg->prefix = '\0';
     return true;
@@ -795,7 +810,7 @@ bool lcfgpackage_valid_flags( const char * flags ) {
 }
 
 /**
- * @brief Check if the package has flags
+ * @brief Check if the package has any flags
  *
  * Checks if the specified @c LCFGPackage struct currently has a
  * value set for the @e flags attribute. 
@@ -809,6 +824,19 @@ bool lcfgpackage_valid_flags( const char * flags ) {
 bool lcfgpackage_has_flags( const LCFGPackage * pkg ) {
   return ( pkg->flags != NULL && *( pkg->flags ) != '\0' );
 }
+
+/**
+ * @brief Check if the package has a particular flag
+ *
+ * Checks if the specified @c LCFGPackage struct currently has a
+ * particular flag enabled.
+ *
+ * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] flag Character to check
+ *
+ * @return boolean which indicates if a package has a flag set
+ *
+ */
 
 bool lcfgpackage_has_flag( const LCFGPackage * pkg, char flag ) {
 
@@ -917,16 +945,16 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
      value for that element is switched to true.
 
      This silently ignores any character with an ASCII code greater
-     than MAXCHAR but that's unlikely to be a huge problem. Other
-     invalid characters not in the [a-zA-Z0-9] set will be flagged up
-     as a problem when set_flags is called at the end of this
-     function.
+     than LCFG_PKGS_FLAGS_MAXCHAR but that's unlikely to be a huge
+     problem. Other invalid characters not in the [a-zA-Z0-9] set will
+     be flagged up as a problem when set_flags is called at the end of
+     this function.
 
   */
 
-#define MAXCHAR 128
+#define LCFG_PKGS_FLAGS_MAXCHAR 128
 
-  bool char_set[MAXCHAR] = { false };
+  bool char_set[LCFG_PKGS_FLAGS_MAXCHAR] = { false };
 
   size_t cur_len = 0;
   if ( pkg->flags != NULL ) {
@@ -934,7 +962,7 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
 
     for ( i=0; i<cur_len; i++ ) {
       int val = (pkg->flags)[i] - '0';
-      if ( val < MAXCHAR ) {
+      if ( val < LCFG_PKGS_FLAGS_MAXCHAR ) {
         if ( !char_set[val] ) {
           new_len++;
           char_set[val] = true;
@@ -948,7 +976,7 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
   size_t extra_len = strlen(extra_flags);
   for ( i=0; i<extra_len; i++ ) {
     int val = (extra_flags)[i] - '0';
-    if ( val < MAXCHAR ) {
+    if ( val < LCFG_PKGS_FLAGS_MAXCHAR ) {
       if ( !char_set[val] ) {
         new_len++;
         char_set[val] = true;
@@ -970,7 +998,7 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
 
   char * to = result;
 
-  for ( i=0; i<MAXCHAR; i++ ) {
+  for ( i=0; i<LCFG_PKGS_FLAGS_MAXCHAR; i++ ) {
     if ( char_set[i] ) {
       *to = i + '0';
       to++;
@@ -1280,6 +1308,28 @@ bool lcfgpackage_set_priority( LCFGPackage * pkg, int new_prio ) {
   return true;
 }
 
+
+/**
+ * @brief Evaluate the priority for the package for a list of contexts
+ *
+ * This will evaluate and update the value of the @c priority
+ * attribute for the LCFG package using the value set for the @c
+ * context attribute (if any) and the list of LCFG contexts passed in
+ * as an argument. The priority is evaluated using @c
+ * lcfgctxlist_eval_expression().
+ *
+ * The default value for the priority is zero, if the package is
+ * applicable for the specified list of contexts the priority will be
+ * positive otherwise it will be negative.
+ *
+ * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] ctxlist List of LCFG contexts
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return boolean indicating success
+ *
+ */
+
 bool lcfgpackage_eval_priority( LCFGPackage * pkg,
                                 const LCFGContextList * ctxlist,
                                 char ** msg ) {
@@ -1304,6 +1354,22 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkg,
 
   return ok;
 }
+
+/**
+ * @brief Check if the package is considered to be active
+ *
+ * Checks if the current value for the @c priority attribute in the @c
+ * LCFGPackage struct is greater than or equal to zero.
+ *
+ * The priority is calculated using the value for the @c context
+ * attribute and the list of currently active contexts, see @c
+ * lcfgpackage_eval_priority() for details.
+ *
+ * @param[in] res Pointer to an @c LCFGPackage struct
+ *
+ * @return boolean indicating if the package is active
+ *
+ */
 
 bool lcfgpackage_is_active( const LCFGPackage * pkg ) {
   return ( pkg->priority >= 0 );
@@ -1343,329 +1409,359 @@ void lcfgpackage_set_defaults(LCFGPackage * pkg) {
 
 /* Higher-level functions */
 
+/**
+ * @brief Get the full version for the resource
+ *
+ * Combines the version and release strings for the package using a
+ * '-' (hyphen) separator to create a new "full version" string. If
+ * either of the version or release attributes is empty then the
+ * wildcard '*' (asterisk) character will be used. When this string is
+ * no longer required it must be freed.
+ *
+ * @param[in] res Pointer to an @c LCFGPackage struct
+ *
+ * @return Pointer to new string (call @c free() when no longer required)
+ *
+ */
+
 char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
 
-  char * result =
-    lcfgutils_join_strings( pkg->version, pkg->release, "-" );
+  const char * v = lcfgpackage_has_version(pkg) ?
+                   lcfgpackage_get_version(pkg) : LCFG_PACKAGE_WILDCARD;
+  const char * r = lcfgpackage_has_release(pkg) ?
+                   lcfgpackage_get_release(pkg) : LCFG_PACKAGE_WILDCARD;
 
-  if ( result == NULL ) {
+  char * full_version = lcfgutils_join_strings( v, r, "-" );
+
+  if ( full_version == NULL ) {
     perror( "Failed to build LCFG package full-version string" );
     exit(EXIT_FAILURE);
   }
 
-  return result;
+  return full_version;
 }
+
+/**
+ * @brief Get an identifier for the resource
+ *
+ * Combines the @c name and @c arch (if any) strings for the package
+ * using a '.' (period) separator to create a new "identifier"
+ * string. If the architecture attribute is empty then this will just
+ * return a copy of the name. If the package does not have a value for
+ * the name then this will return a @c NULL value. When this string is
+ * no longer required it must be freed.
+ *
+ * @param[in] res Pointer to an @c LCFGPackage struct
+ *
+ * @return Pointer to new string (call @c free() when no longer required)
+ *
+ */
 
 char * lcfgpackage_id( const LCFGPackage * pkg ) {
 
-  char * result;
+  char * id = NULL;
   if ( lcfgpackage_has_arch(pkg) ) {
-    result = lcfgutils_join_strings( pkg->name, pkg->arch, "." );
+    id = lcfgutils_join_strings( pkg->name, pkg->arch, "." );
 
-    if ( result == NULL ) {
+    if ( id == NULL ) {
       perror( "Failed to build LCFG package ID string" );
       exit(EXIT_FAILURE);
     }
-  } else {
-    result = strdup( pkg->name );
+  } else if ( lcfgpackage_has_name(pkg) ) {
+    id = strdup( lcfgpackage_get_name(pkg) );
   }
 
-  return result;
+  return id;
 }
 
-bool lcfgpackage_from_string( const char * spec,
-                              LCFGPackage ** result,
-                              char ** errmsg ) {
-  *result = NULL;
-  *errmsg = NULL;
+static bool walk_forwards_until( char ** start,
+                                 char separator, const char * stop,
+                                 char ** field_value ) {
 
-  if ( spec == NULL || *spec == '\0' ) {
-    asprintf( errmsg, "Invalid LCFG package specification" );
-    return false;
+  *field_value = NULL;
+
+  char * begin = *start;
+  char * end = NULL;
+
+  /* Ignore leading whitespace */
+
+  while ( *begin != '\0' && isspace(*begin) ) begin++;
+
+ /* Walk forwards looking for the separator */
+
+  char * ptr;
+  for ( ptr = (char *) begin; *ptr != '\0'; ptr++ ) {
+    if ( *ptr == separator ) {
+      end = ptr;
+      break;
+    } else if ( stop != NULL && strchr( stop, *ptr ) ) { 
+      break;
+    }
+  }
+
+  bool found = false;
+  if ( end != NULL ) {
+    found = true;
+
+    *start = end + 1;
+
+    if ( begin != end ) {
+
+      end--; /* step backward from separator */
+
+      size_t field_len = end - begin + 1;
+
+      while ( field_len > 0 && isspace( *( begin + field_len - 1 ) ) ) field_len--;
+
+      if ( field_len > 0 )
+        *field_value = strndup( begin, field_len );
+
+    }
+
+  }
+
+  return found;
+}
+
+
+static bool walk_backwards_until( const char * input, size_t * len,
+                                  char separator, const char * stop,
+                                  char ** field_value ) {
+
+  *field_value = NULL;
+
+  size_t my_len = *len;
+
+  /* Ignore trailing whitespace */
+
+  while ( my_len > 0 && isspace( *( input + my_len - 1 ) ) ) my_len--;
+
+  const char * end = my_len > 0 ? input + my_len - 1 : input;
+  char * begin = NULL;
+
+  /* Walk backwards looking for the separator */
+
+  char * ptr;
+  for ( ptr = (char *) end; ptr - input >= 0; ptr-- ) {
+    if ( *ptr == separator ) {
+      begin = ptr;
+      break;
+    } else if ( stop != NULL && strchr( stop, *ptr ) ) {
+      break;
+    }
+  }
+
+  bool found = false;
+
+  if ( begin != NULL ) {
+    found = true;
+    *len = begin - input;
+
+    if ( begin != end ) {
+
+      begin++; /* step forward from separator */
+
+      /* Ignore any leading whitespace */
+
+      while ( *begin != '\0' && isspace(*begin) ) begin++;
+
+      size_t field_len = end - begin + 1;
+      if ( field_len > 0 )
+        *field_value = strndup( begin, field_len );
+
+    }
+
+  }
+
+  return found;
+}
+
+LCFGStatus lcfgpackage_from_string( const char * input,
+                                    LCFGPackage ** result,
+                                    char ** msg ) {
+
+  *result = NULL;
+  *msg = NULL;
+
+  if ( input == NULL ) {
+    asprintf( msg, "Invalid LCFG package specification" );
+    return LCFG_STATUS_ERROR;
+  }
+
+  char * start = (char *) input;
+  while ( *start != '\0' && isspace(*start) ) start++;
+
+  if ( *start == '\0' ) {
+    asprintf( msg, "Invalid LCFG package specification" );
+    return LCFG_STATUS_ERROR;
   }
 
   bool ok = true;
+  LCFGPackage * pkg = lcfgpackage_new();
 
-  int i;
+  /* Prefix - optional */
 
-  char * input = (char *) spec;
-  int end = strlen(input) - 1;
+  /* If first char is not a word character assume it is intended to be
+     a prefix */
 
-  /* Results */
+  char first_char = *start;
+  if ( !isword(first_char) ) {
 
-  char * pkg_name    = NULL;
-  char * pkg_arch    = NULL;
-  char * pkg_version = NULL;
-  char * pkg_release = NULL;
-  char * pkg_flags   = NULL;
-  char * pkg_context = NULL;
-
-  *result = lcfgpackage_new();
-
-  /* Prefix - optional
-
-     Check the first character of the string to see if it is one of
-     the supported prefix characters. If found then store it and
-     advance the pointer.
-
-   */
-
-  if ( !isword(input[0]) ) {
-    if ( !lcfgpackage_set_prefix( *result, input[0] ) ) {
-      asprintf( errmsg, "Invalid LCFG package prefix '%c'.", input[0] );
+    if ( !lcfgpackage_set_prefix( pkg, first_char ) ) {
+      ok = false;
+      asprintf( msg, "Invalid LCFG package prefix '%c'.", first_char );
       goto failure;
     }
 
-    input += 1;
-    end   -= 1;
+    start++;
   }
 
-  /* Secondary Architecture - optional
+  /* Secondary Architecture - optional */
 
-     Scan forwards from the start of the string until a '/'
-     (forward-slash) separator is found. The characters of the
-     architecture are always alpha-numeric or underscore so if any
-     other character is found or the end of the string is reached then
-     just stop and do not store anything. If found then store it and
-     advance the pointer.
+  char * pkg_arch = NULL;
+  walk_forwards_until( &start, '/', "-", &pkg_arch );
 
-  */
+  while ( *start != '\0' && isspace(*start) ) start++;
 
-  i = 0;
-  while ( i <= end ) {
+  size_t len = strlen(start);
+  while ( len > 0 && isspace( *( start + len - 1 ) ) ) len--;
 
-    if ( input[i] == '/' ) {
-      if ( i > 0 ) {
-        pkg_arch = strndup( input, i );
-      }
-      input += ( i + 1 );
-      end   -= ( i + 1 );
-      break;
-    } else if ( !isword(input[i]) ) {
-      break;
-    }
+  /* Context - optional */
 
-    i++;
-  }
+  char * ctx_end = len > 0 ? start + len - 1 : start;
+  if ( *ctx_end == ']' ) {
+    size_t ctx_len = len - 1;
 
-  /* Context - optional
+    char * pkg_context = NULL;
 
-     If the final character of the string is a ']' (right
-     square-bracket) then scan backwards from the end until a '['
-     (left square-bracket) is found for the start of the context
-     string. If the start of the string is found then fail.
+    if ( walk_backwards_until( start, &ctx_len, '[', NULL, &pkg_context ) ) {
+      len = ctx_len;
 
-  */
+      if ( pkg_context != NULL ) {
 
-  if ( input[end] == ']' ) {
-
-    i = end - 1;
-    while ( i >= 0 ) {
-
-      if ( input[i] == '[' ) {
-        /* -1 to avoid the closing ']' character */
-        int len = end - 1 - i;
-        if ( len > 0 ) {
-          pkg_context = strndup( input + i + 1, len );
+        ok = lcfgpackage_set_context( pkg, pkg_context );
+        if (!ok) {
+          asprintf( msg, "Invalid LCFG package context '%s'.", pkg_context );
+          free(pkg_context);
+          goto failure;
         }
-        end = i - 1;
-        break;
       }
 
-      i--;
     }
 
-    if ( i < 0 ) {
-      asprintf( errmsg, "Failed to extract package context." );
-      goto failure;
-    }
   }
 
-  if ( pkg_context != NULL ) {
-    if ( !lcfgpackage_set_context( *result, pkg_context ) ) {
-      asprintf( errmsg, "Invalid LCFG package context '%s'.", pkg_context );
-      free(pkg_context);
-      pkg_context = NULL;
-      goto failure;
-    }
-  }
+  /* Flags - optional */
 
-  /* Flags - optional
-
-     Scan backwards from the end of the string until a ':' (colon)
-     separator is found. If a '/' architecture separator or a '-'
-     (hyphen) version-release separator is found first or the start of
-     the string is reached then just stop and do not store
-     anything. Note that this could break if a package has a colon in
-     the 'release' field but that has not been seen in the wild.
-
-  */
-
-  i = end;
-  while ( i >= 0 ) {
-
-    if ( input[i] == ':' ) {
-      int len = end - i;
-      if ( len > 0 ) {
-        pkg_flags = strndup( input + i + 1, len );
-      }
-      end = i - 1;
-      break;
-    } else if ( input[i] == '/' || input[i] == '-' ) {
-      break;
-    }
-
-    i--;
-  }
+  char * pkg_flags = NULL;
+  walk_backwards_until( start, &len, ':', "/-", &pkg_flags );
 
   if ( pkg_flags != NULL ) {
-    if ( !lcfgpackage_set_flags( *result, pkg_flags ) ) {
-      asprintf( errmsg, "Invalid LCFG package flags '%s'.", pkg_flags );
+
+    ok = lcfgpackage_set_flags( pkg, pkg_flags );
+    if (!ok) {
+      asprintf( msg, "Invalid LCFG package flags '%s'.", pkg_flags );
       free(pkg_flags);
-      pkg_flags = NULL;
       goto failure;
     }
+
   }
+  
+  /* Primary Architecture - optional */
 
-  /* Primary Architecture - optional
+  char * arch2 = NULL;
+  walk_backwards_until( start, &len, '/', NULL, &arch2 );
 
-     Scan backwards from the end of the string until a '/'
-     (forward-slash) separator is found. . Note that if a secondary
-     architecture has already been found then that takes precedence
-     and the primary architecture will NOT be stored.
-
-   */
-
-  i = end;
-  while ( i > 0 ) {
-
-    if ( input[i] == '/' ) {
-      int len = end - i;
-      if ( len > 0 && pkg_arch == NULL ) {
-        pkg_arch = strndup( input + i + 1, len );
-      }
-      end = i - 1;
-      break;
-    }
-
-    i--;
+  if ( pkg_arch == NULL ) {
+    pkg_arch = arch2;
+  } else {
+    free(arch2);
   }
 
   if ( pkg_arch != NULL ) {
-    if ( !lcfgpackage_set_arch( *result, pkg_arch ) ) {
-      asprintf( errmsg, "Invalid LCFG package architecture '%s'.", pkg_arch );
+
+    ok = lcfgpackage_set_arch( pkg, pkg_arch );
+    if (!ok) {
+      asprintf( msg, "Invalid LCFG package architecture '%s'.", pkg_arch );
       free(pkg_arch);
-      pkg_arch = NULL;
       goto failure;
     }
+
   }
 
-  /* Release - required
+  /* Release - required */
 
-   Scan backwards until the first '-' (hyphen) character is
-   found. Fails if the start of the string is reached or the field is
-   empty. 
+  char * pkg_release = NULL;
+  walk_backwards_until( start, &len, '-', NULL, &pkg_release );
 
-  */
-
-  i = end;
-  while ( i > 0 ) {
-
-    if ( input[i] == '-' ) {
-      int len = end - i;
-      if ( len > 0 ) {
-        pkg_release = strndup( input + i + 1, len );
-      }
-      end = i - 1;
-      break;
-    }
-
-    i--;
-  }
-  if ( i < 0 || pkg_release == NULL ) {
-    asprintf( errmsg, "Failed to extract package release." );
+  if ( pkg_release == NULL ) {
+    ok = false;
+    asprintf( msg, "Failed to extract package release." );
     goto failure;
   } else {
-    if ( !lcfgpackage_set_release( *result, pkg_release ) ) {
-      asprintf( errmsg, "Invalid LCFG package release '%s'.", pkg_release );
+
+    ok = lcfgpackage_set_release( pkg, pkg_release );
+
+    if (!ok) {
+      asprintf( msg, "Invalid LCFG package release '%s'.", pkg_release );
       free(pkg_release);
-      pkg_release = NULL;
       goto failure;
     }
+
   }
 
-  /* Version - required
+  /* Release - required */
 
-   Scan backwards until the first '-' (hyphen) character is
-   found. Fails if the start of the string is reached or the field is
-   empty. 
+  char * pkg_version = NULL;
+  walk_backwards_until( start, &len, '-', NULL, &pkg_version );
 
-  */
-
-  i = end;
-  while ( i > 0 ) {
-
-    if ( input[i] == '-' ) {
-      int len = end - i;
-      if ( len > 0 ) {
-        pkg_version = strndup( input + i + 1, len );
-      }
-      end = i - 1;
-      break;
-    }
-
-    i--;
-  }
-  if ( i < 0 || pkg_version == NULL ) {
-    asprintf( errmsg, "Failed to extract package version." );
+  if ( pkg_version == NULL ) {
+    ok = false;
+    asprintf( msg, "Failed to extract package version." );
     goto failure;
   } else {
-    if ( !lcfgpackage_set_version( *result, pkg_version ) ) {
-      asprintf( errmsg, "Invalid LCFG package version '%s'.", pkg_version );
+
+    ok = lcfgpackage_set_version( pkg, pkg_version );
+
+    if (!ok) {
+      asprintf( msg, "Invalid LCFG package version '%s'.", pkg_version );
       free(pkg_version);
-      pkg_version = NULL;
       goto failure;
     }
+
   }
 
+  /* Name - required */
 
-  /* Name - required
+  while ( len > 0 && isspace( *( start + len - 1 ) ) ) len--;
 
-   This is everything left after finding all the other fields. 
-
-  */
-
-  int len = end + 1;
-  if ( len > 0 ) {
-    pkg_name = strndup( input, end + 1 );
-  }
-  if ( pkg_name == NULL ) {
-    asprintf( errmsg, "Failed to extract package name." );
+  if ( len == 0 ) {
+    ok = false;
+    asprintf( msg, "Failed to extract package name." );
     goto failure;
   } else {
-    if ( !lcfgpackage_set_name( *result, pkg_name ) ) {
-      asprintf( errmsg, "Invalid LCFG package name '%s'.", pkg_name );
+    char * pkg_name = strndup( start, len );
+
+    ok = lcfgpackage_set_name( pkg, pkg_name );
+
+    if ( !ok ) {
+      asprintf( msg, "Invalid LCFG package name '%s'.", pkg_name );
       free(pkg_name);
-      pkg_name = NULL;
       goto failure;
     }
-  }
-
-  /* Finishing off */
-
-  if (!ok) {
-
-  failure:
-    ok = false; /* in case we've jumped in from elsewhere */
-
-    if ( *result != NULL ) {
-      lcfgpackage_destroy(*result);
-      *result = NULL;
-    }
 
   }
 
-  return ok;
+ failure:
+
+  if ( !ok ) {
+    lcfgpackage_destroy(pkg);
+    pkg = NULL;
+  }
+
+  *result = pkg;
+
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
 ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,

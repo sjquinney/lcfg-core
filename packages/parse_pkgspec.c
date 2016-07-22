@@ -129,11 +129,12 @@ int main(int argc, char* argv[])
   LCFGPackage * pkg = NULL;
   char *msg = NULL;
 
-  bool parse_ok;
+  bool parse_ok = false;
   if ( rpm_name ) {
     parse_ok = lcfgpackage_from_rpm_filename( input, &pkg, &msg );
   } else {
-    parse_ok = lcfgpackage_from_string( input, &pkg, &msg );
+    if ( lcfgpackage_from_string( input, &pkg, &msg ) == LCFG_STATUS_OK ) 
+      parse_ok = true;
   }
 
   if ( !parse_ok ) {

@@ -198,9 +198,9 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
                          const LCFGPackage * pkg2 )
   __attribute__((nonnull (1,2)));
 
-bool lcfgpackage_from_string( const char * input,
-                              LCFGPackage ** result,
-                              char ** msg)
+LCFGStatus lcfgpackage_from_string( const char * input,
+                                    LCFGPackage ** result,
+                                    char ** msg)
   __attribute__((warn_unused_result));
 
 ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
