@@ -2203,14 +2203,20 @@ int lcfgresource_compare( const LCFGResource * res1,
 
   int result = strcmp( name1, name2 );
 
-  /* Value */
+  /* Value - explicitly doing a string comparison rather than type-based */
 
-  if ( result == 0 )
-    result = lcfgresource_compare_values( res1, res2 );
+  if ( result == 0 ) {
+
+    const char * value1 = lcfgresource_has_value(res1) ? lcfgresource_get_value(res1) : LCFG_RESOURCE_NOVALUE;
+    const char * value2 = lcfgresource_has_value(res2) ? lcfgresource_get_value(res2) : LCFG_RESOURCE_NOVALUE;
+
+    result = strcmp( value1, value2 );
+  }
 
   /* Context */
 
   if ( result == 0 ) {
+
     const char * context1 = lcfgresource_has_context(res1) ? lcfgresource_get_context(res1) : LCFG_RESOURCE_NOVALUE;
     const char * context2 = lcfgresource_has_context(res2) ? lcfgresource_get_context(res2) : LCFG_RESOURCE_NOVALUE;
 
