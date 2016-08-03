@@ -308,6 +308,10 @@ ssize_t lcfgresource_to_status( const LCFGResource * res,
 
 /* Resources: Others */
 
+int lcfgresource_compare_values( const LCFGResource * res1,
+                                 const LCFGResource * res2 )
+  __attribute__((nonnull (1,2)));
+
 int lcfgresource_compare( const LCFGResource * res1,
                           const LCFGResource * res2 )
   __attribute__((nonnull (1,2)));

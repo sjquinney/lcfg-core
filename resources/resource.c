@@ -2152,22 +2152,80 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
   return result;
 }
 
+int lcfgresource_compare_values( const LCFGResource * res1,
+                                 const LCFGResource * res2 ) {
+
+  const char * value1_str = lcfgresource_has_value(res1) ? lcfgresource_get_value(res1) : LCFG_RESOURCE_NOVALUE;
+  const char * value2_str = lcfgresource_has_value(res2) ? lcfgresource_get_value(res2) : LCFG_RESOURCE_NOVALUE;
+
+  int result = 0;
+
+  if ( lcfgresource_is_boolean(res1) &&
+       lcfgresource_same_type( res1, res2 ) ) {
+
+    bool value1 = strcmp( value1_str, "yes" ) ? true : false;
+    bool value2 = strcmp( value2_str, "yes" ) ? true : false;
+
+    /* true is greater than false */
+
+    if ( value1 ) {
+      if ( !value2 )
+        result = 1;
+    } else {
+      if ( value2 )
+        result = -1;
+    }
+
+  } else if ( lcfgresource_is_integer(res1) &&
+              lcfgresource_same_type( res1, res2 ) ) {
+
+    /* If value cannot be converted to integer will return zero */
+
+    long int value1 = strtol( value1_str, NULL, 10 );
+    long int value2 = strtol( value2_str, NULL, 10 );
+
+    result = ( value1 == value2 ? 0 : ( value1 > value2 ? 1 : -1 ) );
+
+  } else {
+    result = strcmp( value1_str, value2_str );
+  }
+
+  return result;
+}
+
 int lcfgresource_compare( const LCFGResource * res1,
                           const LCFGResource * res2 ) {
+
+  /* Name */
 
   const char * name1 = lcfgresource_has_name(res1) ? lcfgresource_get_name(res1) : LCFG_RESOURCE_NOVALUE;
   const char * name2 = lcfgresource_has_name(res2) ? lcfgresource_get_name(res2) : LCFG_RESOURCE_NOVALUE;
 
-  return strcmp( name1, name2 );
+  int result = strcmp( name1, name2 );
+
+  /* Value */
+
+  if ( result == 0 )
+    result = lcfgresource_compare_values( res1, res2 );
+
+  /* Context */
+
+  if ( result == 0 ) {
+    const char * context1 = lcfgresource_has_context(res1) ? lcfgresource_get_context(res1) : LCFG_RESOURCE_NOVALUE;
+    const char * context2 = lcfgresource_has_context(res2) ? lcfgresource_get_context(res2) : LCFG_RESOURCE_NOVALUE;
+
+    result = strcmp( context1, context2 );
+  }
+
+  /* The template, type and derivation are NOT compared */
+
+  return result;
 }
 
 bool lcfgresource_same_value( const LCFGResource * res1,
                               const LCFGResource * res2 ) {
 
-  const char * value1 = lcfgresource_has_value(res1) ? lcfgresource_get_value(res1) : LCFG_RESOURCE_NOVALUE;
-  const char * value2 = lcfgresource_has_value(res2) ? lcfgresource_get_value(res2) : LCFG_RESOURCE_NOVALUE;
-
-  return ( strcmp( value1, value2 ) == 0 );
+  return ( lcfgresource_compare_values( res1, res2 ) == 0 );
 }
 
 bool lcfgresource_same_type( const LCFGResource * res1,
@@ -2179,30 +2237,7 @@ bool lcfgresource_same_type( const LCFGResource * res1,
 bool lcfgresource_equals( const LCFGResource * res1,
                           const LCFGResource * res2 ) {
 
-  /* Name */
-
-  const char * name1 = lcfgresource_has_name(res1) ? lcfgresource_get_name(res1) : LCFG_RESOURCE_NOVALUE;
-  const char * name2 = lcfgresource_has_name(res2) ? lcfgresource_get_name(res2) : LCFG_RESOURCE_NOVALUE;
-
-  bool equals = ( strcmp( name1, name2 ) == 0 );
-
-  /* Value */
-
-  if ( equals )
-    equals = lcfgresource_same_value( res1, res2 );
-
-  /* Context */
-
-  if ( equals ) {
-    const char * context1 = lcfgresource_has_context(res1) ? lcfgresource_get_context(res1) : LCFG_RESOURCE_NOVALUE;
-    const char * context2 = lcfgresource_has_context(res2) ? lcfgresource_get_context(res2) : LCFG_RESOURCE_NOVALUE;
-
-    equals = ( strcmp( context1, context2 ) == 0 );
-  }
-
-  /* The template, type and derivation are NOT compared */
-
-  return equals;
+  return ( lcfgresource_compare( res1, res2 ) == 0 );
 }
 
 char * lcfgresource_build_message( const LCFGResource * res,
