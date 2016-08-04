@@ -1,6 +1,39 @@
-2016-07-22  SVN: new release
+2016-08-04  SVN: new release
 
-	* Release: 1.26.2
+	* Release: 1.27.0
+
+2016-08-04 11:39  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/package.c: Added
+	  lcfgpackage_clear_flags function to make it straightforward to
+	  clear any flags on a package
+
+2016-08-04 10:39  squinney@INF.ED.AC.UK
+
+	* include/resources.h, lcfg.yml, resources/resource.c: Added
+	  lcfgresource_is_true function which checks if the value for the
+	  resource is true. For booleans the only true value is yes, for
+	  anything else NULL, empty string and zero are false and all other
+	  values are true
+
+2016-08-03 13:47  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: For predictability lcfgresource_compare
+	  will always compare values as strings rather than doing anything
+	  type-based, this means a sorted list always comes out in the same
+	  order
+
+2016-08-03 13:40  squinney@INF.ED.AC.UK
+
+	* include/resources.h, lcfg.yml, resources/resource.c: Added
+	  lcfgresource_compare_values which will do the right thing when
+	  both resources are integers or booleans and otherwise do a string
+	  comparison. Reworked lcfgresource_same_value to use
+	  lcfgresource_compare_values
+
+2016-07-22 15:15  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.26.2
 
 2016-07-22 15:14  squinney@INF.ED.AC.UK
 
