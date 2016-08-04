@@ -622,6 +622,38 @@ bool lcfgresource_is_list( const LCFGResource * res ) {
 }
 
 /**
+ * @brief Check if the resource value is true
+ *
+ * Checks if the value parameter for the @c LCFGResource struct can be
+ * considered to be "true". This uses similar rules to Perl. For
+ * resources of the boolean type the canonical value of "yes" is
+ * considered to be true and anything else is false. For all other
+ * types of resource if the value is NULL, "" (empty string), or "0"
+ * (zero) it will considered to be false and otherwise true.
+ *
+ * @param[in] res Pointer to an @c LCFGResource struct
+ *
+ * @return boolean indicating if the value is true
+ */
+
+bool lcfgresource_is_true( const LCFGResource * res ) {
+
+  bool is_true = false;
+
+  if ( lcfgresource_has_value(res) ) {
+    const char * value = lcfgresource_get_value(res);
+
+    if ( lcfgresource_is_boolean(res) ) {
+      is_true = ( strcmp( value, "yes" ) == 0 );
+    } else {
+      is_true = ( strcmp( value, "0" ) != 0 );
+    }
+  }
+
+  return is_true;
+}
+
+/**
  * @brief Get the resource type as a string
  *
  * Generates a new LCFG type string based on the values for the @e
@@ -911,7 +943,7 @@ bool lcfgresource_set_template_as_string(  LCFGResource * res,
  * @return A boolean which indicates if the string is an empty value
  */
 
-bool lcfgresource_value_is_empty( const char * value ) {
+static bool lcfgresource_string_is_empty( const char * value ) {
   return ( value == NULL || *value == '\0' );
 }
 
@@ -920,7 +952,7 @@ bool lcfgresource_value_is_empty( const char * value ) {
  *
  * Checks to see if the @e value parameter for the @c LCFGResource
  * struct is considered to be a non-empty value. See the @c
- * lcfgresource_value_is_empty() function for further details.
+ * lcfgresource_string_is_empty() function for further details.
  *
  * @param[in] res Pointer to an LCFGResource struct
  *
@@ -928,7 +960,7 @@ bool lcfgresource_value_is_empty( const char * value ) {
  */
 
 bool lcfgresource_has_value( const LCFGResource * res ) {
-  return !lcfgresource_value_is_empty(res->value);
+  return !lcfgresource_string_is_empty(res->value);
 }
 
 /**
@@ -1049,7 +1081,7 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
  * Checks whether the string contains a valid LCFG boolean
  * value. There are various acceptable forms for a value for a boolean
  * LCFG resource (see @c lcfgresource_canon_boolean() for details) but
- * only the empty string (see @c lcfgresource_value_is_empty() for
+ * only the empty string (see @c lcfgresource_string_is_empty() for
  * details) and "yes" are considered to be @e valid boolean
  * values. Anything else must be canonicalised from an accepted form
  * into the equivalent valid value.

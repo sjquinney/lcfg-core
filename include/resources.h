@@ -103,6 +103,9 @@ bool lcfgresource_is_boolean( const LCFGResource * res )
 bool lcfgresource_is_list(    const LCFGResource * res )
   __attribute__((nonnull (1)));
 
+bool lcfgresource_is_true( const LCFGResource * res )
+  __attribute__((nonnull (1)));
+
 /* Resources: Templates */
 
 bool lcfgresource_has_template( const LCFGResource * res )
@@ -138,7 +141,6 @@ bool lcfgresource_valid_value( const LCFGResource * res,
 
 char * lcfgresource_canon_boolean( const char * value );
 
-bool lcfgresource_value_is_empty( const char * value );
 bool lcfgresource_has_value( const LCFGResource * res )
   __attribute__((nonnull (1)));
 
