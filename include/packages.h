@@ -88,15 +88,15 @@ bool lcfgpackage_set_release( LCFGPackage * pkg, char * new_value )
 bool lcfgpackage_valid_prefix( char prefix );
 
 bool lcfgpackage_has_prefix( const LCFGPackage * pkg )
-__attribute__((nonnull (1)));
+  __attribute__((nonnull (1)));
 
 char lcfgpackage_get_prefix( const LCFGPackage * pkg )
-__attribute__((nonnull (1)));
+  __attribute__((nonnull (1)));
 
 bool lcfgpackage_set_prefix( LCFGPackage * pkg, char new_prefix )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-bool lcfgpackage_remove_prefix( LCFGPackage * pkg )
+bool lcfgpackage_clear_prefix( LCFGPackage * pkg )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 /* Flags */
@@ -109,10 +109,13 @@ bool lcfgpackage_has_flag( const LCFGPackage * pkg, char flag )
   __attribute__((nonnull (1)));
 
 bool lcfgpackage_has_flags( const LCFGPackage * pkg )
-__attribute__((nonnull (1)));
+  __attribute__((nonnull (1)));
 
 char * lcfgpackage_get_flags( const LCFGPackage * pkg )
-__attribute__((nonnull (1)));
+  __attribute__((nonnull (1)));
+
+bool lcfgpackage_clear_flags( LCFGPackage * pkg )
+  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 bool lcfgpackage_set_flags( LCFGPackage * pkg, char * new_value )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));

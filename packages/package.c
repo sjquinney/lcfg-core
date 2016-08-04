@@ -709,7 +709,7 @@ char lcfgpackage_get_prefix( const LCFGPackage * pkg ) {
 }
 
 /**
- * @brief Remove any prefix for the package
+ * @brief Clear any prefix for the package
  *
  * Removes any prefix which has been previously specified for the
  * package specification. This is done by resetting the @c prefix
@@ -721,7 +721,7 @@ char lcfgpackage_get_prefix( const LCFGPackage * pkg ) {
  * @return boolean indicating success
  */
 
-bool lcfgpackage_remove_prefix( LCFGPackage * pkg ) {
+bool lcfgpackage_clear_prefix( LCFGPackage * pkg ) {
     pkg->prefix = '\0';
     return true;
 }
@@ -899,6 +899,25 @@ bool lcfgpackage_set_flags( LCFGPackage * pkg, char * new_flags ) {
   }
 
   return ok;
+}
+
+/**
+ * @brief Clear the flags for the package
+ *
+ * Sets the value of the @e flags parameter for the @c LCFGPackage
+ * struct to be NULL
+ *
+ * @param[in] res Pointer to an @c LCFGPackage struct
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgpackage_clear_flags( LCFGPackage * pkg ) {
+  free(pkg->flags);
+  pkg->flags = NULL;
+
+  return true;
 }
 
 /**
