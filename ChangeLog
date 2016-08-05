@@ -1,6 +1,14 @@
 2016-08-05  SVN: new release
 
-	* Release: 1.27.1
+	* Release: 1.27.2
+
+2016-08-05 15:52  squinney@INF.ED.AC.UK
+
+	* specfile: Fixed build dependency for Berkeley DB on SL6
+
+2016-08-05 15:15  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.27.1
 
 2016-08-05 14:31  squinney@INF.ED.AC.UK
 
