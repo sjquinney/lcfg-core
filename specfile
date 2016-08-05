@@ -8,7 +8,12 @@ Packager:       @LCFG_AUTHOR@
 Source:         @LCFG_TARNAME@
 Provides:       lcfg-utils
 BuildRequires:  cmake >= 2.6.0, pkgconfig
-BuildRequires:  libxml2-devel, libdb-devel
+BuildRequires:  libxml2-devel
+%if 0%{?rhel} && %{rhel} < 7
+BuildRequires:  db4-devel
+%else
+BuildRequires:  libdb-devel
+%endif
 BuildRequires:  rpm-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires(post,postun):         /sbin/ldconfig
