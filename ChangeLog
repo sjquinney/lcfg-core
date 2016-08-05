@@ -1,6 +1,17 @@
-2016-08-04  SVN: new release
+2016-08-05  SVN: new release
 
-	* Release: 1.27.0
+	* Release: 1.27.1
+
+2016-08-05 14:31  squinney@INF.ED.AC.UK
+
+	* include/resources.h, lcfg.yml, resources/components.c,
+	  resources/resource.c: Added new lcfgresource_to_export which will
+	  format the resource as a shell export statement which can be
+	  passed through eval
+
+2016-08-04 11:41  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.27.0
 
 2016-08-04 11:39  squinney@INF.ED.AC.UK
 
