@@ -1814,6 +1814,114 @@ bool lcfgresource_to_env( const LCFGResource * res,
   return ( rc == 0 );
 }
 
+ssize_t lcfgresource_to_export( const LCFGResource * res,
+                                const char * prefix,
+                                unsigned int options,
+                                char ** result, size_t * size ) {
+
+  /* Name is required */
+
+  if ( !lcfgresource_has_name(res) )
+    return false;
+
+  const char * name = lcfgresource_get_name(res);
+  size_t name_len = strlen(name);
+
+  char * fn_name = "export";
+  size_t fn_len = strlen(fn_name);
+
+  size_t new_len = fn_len + 4 + name_len; /* +1 space, +1 =, +2 '' */
+
+  /* Optional prefix (usually LCFG_compname_) */
+
+  size_t prefix_len = 0;
+  if ( prefix != NULL ) {
+    prefix_len = strlen(prefix);
+    new_len += prefix_len;
+  }
+
+  char * escaped = "'\"'\"'";
+  size_t escaped_len = strlen(escaped);
+
+  char * value = NULL;
+  size_t value_len = 0;
+  if ( lcfgresource_has_value(res) ) {
+    value = lcfgresource_get_value(res);
+    value_len = strlen(value);
+
+    char * ptr;
+    for ( ptr = value; *ptr != '\0'; ptr++ ) {
+      if ( *ptr == '\'' )
+        value_len += ( escaped_len - 1 );
+    }
+
+    new_len += value_len;
+  }
+
+  /* Optional newline at end of string */
+
+  if ( options&LCFG_OPT_NEWLINE )
+    new_len += 1;
+
+  /* Allocate the required space */
+
+  if ( *result == NULL || *size < ( new_len + 1 ) ) {
+    *size = new_len + 1;
+
+    *result = realloc( *result, ( *size * sizeof(char) ) );
+    if ( *result == NULL ) {
+      perror("Failed to allocate memory for LCFG resource string");
+      exit(EXIT_FAILURE);
+    }
+
+  }
+
+  /* Always initialise the characters of the full space to nul */
+  memset( *result, '\0', *size );
+
+  /* Build the new string */
+
+  char * to = *result;
+
+  to = stpncpy( to, fn_name, fn_len );
+
+  *to = ' ';
+  to++;
+
+  if ( prefix != NULL )
+    to = stpncpy( to, prefix, prefix_len );
+
+  to = stpncpy( to, name, name_len );
+
+  to = stpncpy( to, "='", 2 );
+
+  if ( value != NULL ) {
+    char * ptr;
+    for ( ptr = value; *ptr != '\0'; ptr++ ) {
+      if ( *ptr == '\'' ) {
+        to = stpncpy( to, escaped, escaped_len );
+      } else {
+        *to = *ptr;
+        to++;
+      }
+    }
+  }
+
+  *to = '\'';
+  to++;
+
+  /* Optional newline at the end of the string */
+
+  if ( options&LCFG_OPT_NEWLINE )
+    to = stpncpy( to, "\n", 1 );
+
+  *to = '\0';
+
+  assert( ( *result + new_len ) == to );
+
+  return new_len;
+}
+
 ssize_t lcfgresource_to_status( const LCFGResource * res,
                                 const char * prefix,
                                 unsigned int options,

@@ -206,7 +206,15 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
   if ( lcfgcomponent_is_empty(comp) )
     return true;
 
-  bool print_status = ( style != NULL && strcmp( style, "status" ) == 0 );
+  bool print_status = false;
+  bool print_export = false;
+  if ( style != NULL ) {
+    if ( strcmp( style, "status" ) == 0 ) {
+      print_status = true;
+    } else if ( strcmp( style, "export" ) == 0 ) {
+      print_export = true;
+    }
+  }
 
   bool ok = true;
 
@@ -230,6 +238,9 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
       ssize_t rc;
       if ( print_status ) {
         rc = lcfgresource_to_status( res, comp->name, 0,
+                                     &buffer, &buf_size );
+      } else if ( print_export ) {
+        rc = lcfgresource_to_export( res, comp->name, LCFG_OPT_NEWLINE,
                                      &buffer, &buf_size );
       } else {
         rc = lcfgresource_to_string( res, comp->name, LCFG_OPT_NEWLINE,

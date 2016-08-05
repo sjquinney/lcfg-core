@@ -296,6 +296,12 @@ bool lcfgresource_to_env( const LCFGResource * res,
                           unsigned int options )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
+ssize_t lcfgresource_to_export( const LCFGResource * res,
+                                const char * prefix,
+                                unsigned int options,
+                                char ** result, size_t * size )
+  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+
 ssize_t lcfgresource_to_string( const LCFGResource * res,
                                 const char * prefix,
                                 unsigned int options,
