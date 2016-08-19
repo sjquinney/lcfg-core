@@ -383,7 +383,7 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
   unsigned int inactive_merge_rules =
     LCFG_PKGS_OPT_SQUASH_IDENTICAL | LCFG_PKGS_OPT_KEEP_ALL;
 
-  lcfgpkglist_set_merge_rules( *inactive, inactive_merge_rules )
+  lcfgpkglist_set_merge_rules( *inactive, inactive_merge_rules );
 
   /* Need to store the depth of the packages element. */
 
