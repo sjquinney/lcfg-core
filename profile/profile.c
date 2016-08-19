@@ -214,19 +214,24 @@ LCFGStatus lcfgprofile_apply_overrides( LCFGProfile * profile1,
 					   msg );
   }
 
-  /* Merge active packages lists */
-
-  unsigned int merge_opts =
+  /* default rules, only used when creating new empty lists */
+  unsigned int active_merge_rules =
     LCFG_PKGS_OPT_SQUASH_IDENTICAL | LCFG_PKGS_OPT_USE_PRIORITY;
+  unsigned int inactive_merge_rules =
+    LCFG_PKGS_OPT_SQUASH_IDENTICAL | LCFG_PKGS_OPT_KEEP_ALL;
+
+  /* Merge active packages lists */
 
   if ( profile2->active_packages != NULL ) {
 
-    if ( profile1->active_packages == NULL )
+    if ( profile1->active_packages == NULL ) {
       profile1->active_packages = lcfgpkglist_new();
+      lcfgpkglist_set_merge_rules( profile1->active_packages,
+				   active_merge_rules );
+    }
 
     LCFGChange change = lcfgpkglist_merge_list( profile1->active_packages,
                                                 profile2->active_packages,
-                                                merge_opts,
                                                 msg );
 
     if ( change == LCFG_CHANGE_ERROR )
@@ -237,12 +242,14 @@ LCFGStatus lcfgprofile_apply_overrides( LCFGProfile * profile1,
 
   if ( profile2->inactive_packages != NULL ) {
 
-    if ( profile1->inactive_packages == NULL )
+    if ( profile1->inactive_packages == NULL ) {
       profile1->inactive_packages = lcfgpkglist_new();
+      lcfgpkglist_set_merge_rules( profile1->inactive_packages,
+				   inactive_merge_rules );
+    }
 
     LCFGChange change = lcfgpkglist_merge_list( profile1->inactive_packages,
                                                 profile2->inactive_packages,
-                                                merge_opts,
                                                 msg );
 
     if ( change == LCFG_CHANGE_ERROR )

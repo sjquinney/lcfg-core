@@ -250,6 +250,7 @@ void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode);
 struct LCFGPackageList {
   LCFGPackageNode * head;
   LCFGPackageNode * tail;
+  unsigned int merge_rules;
   unsigned int size;
 };
 
@@ -257,6 +258,12 @@ typedef struct LCFGPackageList LCFGPackageList;
 
 LCFGPackageList * lcfgpkglist_new(void);
 void lcfgpkglist_destroy(LCFGPackageList * pkglist);
+
+unsigned int lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist );
+
+bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
+				  unsigned int new_rules )
+  __attribute__((warn_unused_result));
 
 LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
                                     LCFGPackageNode * pkgnode,
@@ -298,13 +305,11 @@ LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * pkglist,
 
 LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
                                       LCFGPackage * pkg,
-                                      unsigned int options,
                                       char ** msg )
   __attribute__((nonnull (1,2))) __attribute__((warn_unused_result));
 
 LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
                                    const LCFGPackageList * pkglist2,
-                                   unsigned int options,
                                    char ** msg )
   __attribute__((nonnull (1,2))) __attribute__((warn_unused_result));
 

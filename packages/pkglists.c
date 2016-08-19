@@ -52,6 +52,7 @@ LCFGPackageList * lcfgpkglist_new(void) {
     exit(EXIT_FAILURE);
   }
 
+  pkglist->merge_rules = 0;
   pkglist->size = 0;
   pkglist->head = NULL;
   pkglist->tail = NULL;
@@ -76,6 +77,18 @@ void lcfgpkglist_destroy(LCFGPackageList * pkglist) {
   free(pkglist);
   pkglist = NULL;
 
+}
+
+bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
+				  unsigned int new_rules ) {
+
+  pkglist->merge_rules = new_rules;
+
+  return true;
+}
+
+unsigned int lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist ) {
+  return pkglist->merge_rules;
 }
 
 LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
@@ -199,8 +212,9 @@ LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * pkglist,
 
 LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
                                       LCFGPackage * new_pkg,
-                                      unsigned int options,
                                       char ** msg ) {
+
+  unsigned int merge_rules = lcfgpkglist_get_merge_rules(pkglist);
 
   *msg = NULL;
 
@@ -262,17 +276,9 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
     }
   }
 
-  /* Might want to just keep everything */
-
-  if ( options&LCFG_PKGS_OPT_KEEP_ALL ) {
-    append_new = true;
-    accept     = true;
-    goto apply;
-  }
-
   /* Apply any prefix rules */
 
-  if ( options&LCFG_PKGS_OPT_USE_PREFIX ) {
+  if ( merge_rules&LCFG_PKGS_OPT_USE_PREFIX ) {
 
     char cur_prefix = cur_pkg != NULL ?
                       lcfgpackage_get_prefix(cur_pkg) : '\0';
@@ -331,7 +337,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
   /* If the package in the list is identical then replace (updates
      the derivation) */
 
-  if ( options&LCFG_PKGS_OPT_SQUASH_IDENTICAL ) {
+  if ( merge_rules&LCFG_PKGS_OPT_SQUASH_IDENTICAL ) {
 
     if ( lcfgpackage_equals( cur_pkg, new_pkg ) ) {
       remove_old = true;
@@ -342,7 +348,17 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   }
 
-  if ( options&LCFG_PKGS_OPT_USE_PRIORITY ) {
+  /* Might want to just keep everything */
+
+  if ( merge_rules&LCFG_PKGS_OPT_KEEP_ALL ) {
+    append_new = true;
+    accept     = true;
+    goto apply;
+  }
+
+  /* Use the priorities from the context evaluations */
+
+  if ( merge_rules&LCFG_PKGS_OPT_USE_PRIORITY ) {
 
     int priority  = lcfgpackage_get_priority(new_pkg);
     int opriority = lcfgpackage_get_priority(cur_pkg);
@@ -417,7 +433,6 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
 LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
                                    const LCFGPackageList * pkglist2,
-                                   unsigned int options,
                                    char ** msg ) {
 
   *msg = NULL;
@@ -434,7 +449,6 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
     char * merge_msg = NULL;
     LCFGChange merge_rc = lcfgpkglist_merge_package( pkglist1,
                                                      cur_pkg,
-                                                     options,
                                                      &merge_msg );
 
     if ( merge_rc == LCFG_CHANGE_ERROR ) {

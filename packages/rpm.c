@@ -531,6 +531,8 @@ bool lcfgpkglist_from_rpmlist( const char * filename,
   /* Results */
 
   *result = lcfgpkglist_new();
+  lcfgpkglist_set_merge_rules( *result, LCFG_PKGS_OPT_SQUASH_IDENTICAL );
+
   bool ok = true;
 
   unsigned int linenum = 0;
@@ -574,12 +576,18 @@ bool lcfgpkglist_from_rpmlist( const char * filename,
 
       lcfgpackage_set_derivation( pkg, derivation );
 
-      if ( lcfgpkglist_append( *result, pkg )
+      char * merge_msg = NULL;
+      if ( lcfgpkglist_merge_package( *result, pkg, &merge_msg )
            != LCFG_CHANGE_ADDED ) {
         ok = false;
+	asprintf( errmsg,
+		  "Error at line %u: Failed to merge package into list: %s",
+		  linenum, merge_msg );
+
         lcfgpackage_destroy(pkg);
         pkg = NULL;
       }
+      free(merge_msg);
 
     }
 

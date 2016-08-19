@@ -375,6 +375,16 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
   *active   = lcfgpkglist_new();
   *inactive = lcfgpkglist_new();
 
+  unsigned int active_merge_rules =
+    LCFG_PKGS_OPT_SQUASH_IDENTICAL | LCFG_PKGS_OPT_USE_PRIORITY;
+
+  lcfgpkglist_set_merge_rules( *active, active_merge_rules );
+
+  unsigned int inactive_merge_rules =
+    LCFG_PKGS_OPT_SQUASH_IDENTICAL | LCFG_PKGS_OPT_KEEP_ALL;
+
+  lcfgpkglist_set_merge_rules( *inactive, inactive_merge_rules )
+
   /* Need to store the depth of the packages element. */
 
   int topdepth = xmlTextReaderDepth(reader);
@@ -414,10 +424,10 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
           char * merge_errmsg = NULL;
           if ( lcfgpackage_is_active(pkg) ) {
             rc = lcfgpkglist_merge_package( *active, pkg,
-                   LCFG_PKGS_OPT_SQUASH_IDENTICAL | LCFG_PKGS_OPT_USE_PRIORITY,
                                             &merge_errmsg );
           } else {
-            rc = lcfgpkglist_append( *inactive, pkg );
+            rc = lcfgpkglist_merge_package( *inactive, pkg,
+					    &merge_errmsg );
           }
 
           /* Either did not need to store or failed in some way */
