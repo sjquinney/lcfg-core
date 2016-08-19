@@ -1,6 +1,22 @@
-2016-08-05  SVN: new release
+2016-08-19  SVN: new release
 
-	* Release: 1.27.2
+	* Release: 1.28.0
+
+2016-08-19 16:11  squinney@INF.ED.AC.UK
+
+	* xml/packages.c: Added semi-colon
+
+2016-08-19 16:07  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/pkglists.c,
+	  packages/rpm.c, profile/profile.c, xml/packages.c: Reworked the
+	  package list merging support. The rules are now defined on a
+	  per-list basis which makes merging in of packages and lists much
+	  more straightforward and predictable.
+
+2016-08-05 15:52  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.27.2
 
 2016-08-05 15:52  squinney@INF.ED.AC.UK
 
