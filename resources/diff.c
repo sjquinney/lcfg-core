@@ -89,11 +89,20 @@ bool lcfgdiffresource_set_new( LCFGDiffResource * resdiff,
 }
 
 char * lcfgdiffresource_get_name( const LCFGDiffResource * resdiff ) {
-  LCFGResource * res = lcfgdiffresource_has_old(resdiff) ?
-    lcfgdiffresource_get_old(resdiff) :
-    lcfgdiffresource_get_new(resdiff);
+  
+  LCFGResource * res = NULL;
+  
+  /* Check if there is an old resource with a name */
+  if ( lcfgdiffresource_has_old(resdiff) ) {
+    res = lcfgdiffresource_get_old(resdiff);
 
-  char * name = NULL;
+    if ( !lcfgresource_has_name(res) )
+      res = NULL;
+  }
+
+  if ( res == NULL )
+    res = lcfgdiffresource_get_new(resdiff);
+
   if ( res != NULL )
     name = lcfgresource_get_name(res);
 
