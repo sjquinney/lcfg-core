@@ -429,6 +429,7 @@ bool lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
   bool ok = true;
   *result = lcfgpkglist_new();
+  lcfgpkglist_set_merge_rules( *result, LCFG_PKGS_OPT_KEEP_ALL );
 
   /* Scan the directory for any non-hidden files with .rpm suffix */
 
@@ -531,7 +532,8 @@ bool lcfgpkglist_from_rpmlist( const char * filename,
   /* Results */
 
   *result = lcfgpkglist_new();
-  lcfgpkglist_set_merge_rules( *result, LCFG_PKGS_OPT_SQUASH_IDENTICAL );
+  lcfgpkglist_set_merge_rules( *result,
+                    LCFG_PKGS_OPT_SQUASH_IDENTICAL | LCFG_PKGS_OPT_KEEP_ALL );
 
   bool ok = true;
 
