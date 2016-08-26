@@ -1,6 +1,26 @@
-2016-08-19  SVN: new release
+2016-08-26  SVN: new release
 
-	* Release: 1.28.0
+	* Release: 1.28.1
+
+2016-08-26 15:16  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/diff.c: Added missing variable declaration in
+	  lcfgresourcediff_get_name
+
+2016-08-26 14:57  squinney@INF.ED.AC.UK
+
+	* include/differences.h, resources/diff.c: Updated
+	  lcfgdiffresource_to_string to match the standard buffer-based
+	  string building approach
+
+2016-08-26 14:14  squinney@INF.ED.AC.UK
+
+	* resources/diff.c: Reworked lcfgdiffresource_get_name so that it
+	  can handle the 'old' resource not having a name
+
+2016-08-19 16:13  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.28.0
 
 2016-08-19 16:11  squinney@INF.ED.AC.UK
 
