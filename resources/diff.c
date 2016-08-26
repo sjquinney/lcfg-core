@@ -103,6 +103,7 @@ char * lcfgdiffresource_get_name( const LCFGDiffResource * resdiff ) {
   if ( res == NULL )
     res = lcfgdiffresource_get_new(resdiff);
 
+  char * name = NULL;
   if ( res != NULL )
     name = lcfgresource_get_name(res);
 
