@@ -70,10 +70,11 @@ bool lcfgdiffresource_is_added( const LCFGDiffResource * resdiff )
 bool lcfgdiffresource_is_removed( const LCFGDiffResource * resdiff )
   __attribute__((nonnull (1)));
 
-char * lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
-                                   const char * prefix,
-                                   const char * comments,
-                                   bool pending )
+ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
+				    const char * prefix,
+				    const char * comments,
+				    bool pending,
+				    char ** result, size_t * size )
   __attribute__((nonnull (1)));
 
 ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,

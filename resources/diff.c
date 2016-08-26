@@ -165,16 +165,16 @@ bool lcfgdiffresource_is_removed( const LCFGDiffResource * resdiff ) {
   return ( lcfgdiffresource_get_type(resdiff) == LCFG_CHANGE_REMOVED );
 }
 
-char * lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
-                                   const char * prefix,
-                                   const char * comments,
-                                   bool pending ) {
+ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
+				    const char * prefix,
+				    const char * comments,
+				    bool pending,
+				    char ** result, size_t * size ) {
 
-  char * result = NULL;
-  int new_len = 0;
+  size_t new_len = 0;
 
   const char * type;
-  int type_len = 0;
+  size_t type_len = 0;
 
   LCFGChange difftype = lcfgdiffresource_get_type(resdiff);
   switch(difftype)
@@ -202,7 +202,7 @@ char * lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
   /* base of message */
 
   const char * base = "resource";
-  int base_len = strlen(base);
+  size_t base_len = strlen(base);
   new_len += ( base_len + 1 ); /* + 1 for ' ' (space) separator */
 
   /* If the changes are being held we mark them as "pending" */
@@ -212,83 +212,82 @@ char * lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
 
   /* The prefix is typically the component name */
 
-  int prefix_len = prefix != NULL ? strlen(prefix) : 0;
+  size_t prefix_len = prefix != NULL ? strlen(prefix) : 0;
   if ( prefix_len > 0 )
     new_len += ( prefix_len + 1 ); /* + 1 for '.' separator */
 
   /* There is a tiny risk of neither resource having a useful name */
 
   const char * name = lcfgdiffresource_get_name(resdiff);
-  int name_len = name != NULL ? strlen(name) : 0;
+  size_t name_len = name != NULL ? strlen(name) : 0;
   new_len += ( name_len + 2 );    /* +2 for ": " separator */
 
   /* Optional comments */
 
-  int comments_len = comments != NULL ? strlen(comments) : 0;
+  size_t comments_len = comments != NULL ? strlen(comments) : 0;
   if ( comments_len > 0 )
     new_len += ( comments_len + 3 ); /* +3 for brackets and ' ' separator */
 
   /* Allocate the required space */
 
-  result = calloc( ( new_len + 1 ), sizeof(char) );
-  if ( result == NULL ) {
-    perror( "Failed to allocate memory for LCFG string" );
-    exit(EXIT_FAILURE);
+  if ( *result == NULL || *size < ( new_len + 1 ) ) {
+    *size = new_len + 1;
+
+    *result = realloc( *result, ( *size * sizeof(char) ) );
+    if ( *result == NULL ) {
+      perror("Failed to allocate memory for LCFG resource diff string");
+      exit(EXIT_FAILURE);
+    }
+
   }
+
+  /* Always initialise the characters of the full space to nul */
+  memset( *result, '\0', *size );
 
   /* Build the new string */
 
-  char * target = result;
+  char * to = *result;
 
-  memcpy( target, type, type_len );
-  target += type_len;
+  to = stpncpy( to, type, type_len );
 
-  *target = ' ';
-  target++;
+  *to = ' ';
+  to++;
 
-  memcpy( target, base, base_len );
-  target += base_len;
+  to = stpncpy( to, base, base_len );
 
   if (pending) {
-    *target = ' ';
-    target++;
+    *to = ' ';
+    to++;
 
-    memcpy( target, "pending", 7 );
-    target += 7;
+    to = stpncpy( to, "pending", 7 );
   }
 
-  memcpy( target, ": ", 2 );
-  target += 2;
+  to = stpncpy( to, ": ", 2 );
 
   if ( prefix_len > 0 ) {
-    memcpy( target, prefix, prefix_len );
-    target += prefix_len;
+    to = stpncpy( to, prefix, prefix_len );
 
-    *target = '.';
-    target++;
+    *to = '.';
+    to++;
   }
 
-  if ( name_len > 0 ) {
-    memcpy( target, name, name_len );
-    target += name_len;
-  }
+  if ( name_len > 0 )
+    to = stpncpy( to, name, name_len );
 
   if ( comments_len > 0 ) {
-    memcpy( target, " (", 2 );
-    target += 2;
+    to = stpncpy( to, " (", 2 );
 
-    memcpy( target, comments, comments_len );
-    target += comments_len;
+    to = stpncpy( to, comments, comments_len );
 
-    *target = ')';
-    target++;
+    *to = ')';
+    to++;
   }
 
-  *target = '\0';
+  *to = '\0';
 
-  assert( ( result + new_len ) == target );
+  assert( ( *result + new_len ) == to );
 
-  return result;
+  return new_len;
 
 }
 
