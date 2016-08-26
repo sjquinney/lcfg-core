@@ -1,6 +1,15 @@
 2016-08-26  SVN: new release
 
-	* Release: 1.28.1
+	* Release: 1.28.2
+
+2016-08-26 16:27  squinney@INF.ED.AC.UK
+
+	* packages/rpm.c: fixed package list rules from from_rpmlist and
+	  from_rpmdir
+
+2016-08-26 15:52  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.28.1
 
 2016-08-26 15:16  squinney@INF.ED.AC.UK
 
