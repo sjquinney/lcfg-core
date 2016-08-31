@@ -250,13 +250,13 @@ LCFGTemplate * lcfgtemplate_find( const LCFGTemplate * head_template,
                                   const char * field_name ) {
 
   LCFGTemplate * template = NULL;
-  size_t field_len = field_name != NULL ? strlen(field_name) : 0;
+  size_t field_len = strlen(field_name);
 
   LCFGTemplate * cur_template = (LCFGTemplate *) head_template;
   while ( cur_template != NULL ) {
 
     if ( field_len == cur_template->name_len &&
-         strncmp( field_name, cur_template->name, cur_template->name_len ) == 0 ) {
+         strncmp( field_name, cur_template->name, field_len ) == 0 ) {
       template = cur_template;
       break;
     }

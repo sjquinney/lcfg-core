@@ -35,6 +35,6 @@ ssize_t lcfgtemplate_to_string( const LCFGTemplate * head_template,
 
 LCFGTemplate * lcfgtemplate_find( const LCFGTemplate * head_template,
                                   const char * field_name )
-  __attribute__((nonnull (1)));
+  __attribute__((nonnull (1,2)));
 
 /* eof */
