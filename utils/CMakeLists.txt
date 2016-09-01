@@ -50,8 +50,6 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES "^(Darwin|SunOS)$")
 if(REQ_SETSID)
   add_executable(setsid setsid.c)
   set(BIN_TARGETS ${BIN_TARGETS} setsid)
-
-  lcfg_add_man(setsid.8 8)
 endif(REQ_SETSID)
 
 # dnsdomainname is only needed on solaris
@@ -68,11 +66,11 @@ endif(REQ_DNS_DOMAIN_NAME)
 
 # Specify where various files should be installed.
 
-install(TARGETS ${BIN_TARGETS}
-        RUNTIME DESTINATION bin)
+install(PROGRAMS ${BIN_TARGETS}
+        DESTINATION bin)
 
-install(TARGETS ${SBIN_TARGETS}
-        RUNTIME DESTINATION sbin)
+install(PROGRAMS ${SBIN_TARGETS}
+        DESTINATION sbin)
 
 SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
 

@@ -19,7 +19,8 @@
 #define LOGDIR "@LCFGLOG@"
 #define PIDFILE "@LCFGTMP@/client/client.pid"
 #define PROGRESSFILE "@LCFGTMP@/utils.progress"
-#define LCFGACK "@LCFGSBIN@/lcfgack"
+#define LCFGACK "@CMAKE_INSTALL_PREFIX@/sbin/lcfgack"
+#define LCFGMSG "@CMAKE_INSTALL_PREFIX@/sbin/lcfgmsg"
 
 extern int LCFG_FancyStatus( void );
 extern char *LCFG_TimeStamp( void );

@@ -2,10 +2,6 @@ cmake_minimum_required(VERSION 2.6)
 
 project (lcfg-core C)
 
-include(lcfg.cmake)
-
-lcfg_translate()
-
 SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra" )
 
 # Need to look for headers in both source and binary directories, they
@@ -45,12 +41,6 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/pc/ pc/
                   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
 # Documentation
-
-lcfg_add_pod(${CMAKE_BINARY_DIR}/docs/parse_pkgspec.pod docs/parse_pkgspec 1)
-lcfg_add_pod(${CMAKE_BINARY_DIR}/docs/lcfgpackagelib.pod docs/lcfgpackagelib 3)
-lcfg_add_pod(${CMAKE_BINARY_DIR}/docs/lcfgpackageiterator.pod docs/lcfgpackageiterator 3)
-lcfg_add_pod(${CMAKE_BINARY_DIR}/docs/lcfgpackagespec.pod docs/lcfgpackagespec 3)
-lcfg_add_pod(${CMAKE_BINARY_DIR}/docs/lcfgpackagenode.pod docs/lcfgpackagenode 3)
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)

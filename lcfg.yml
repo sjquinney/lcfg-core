@@ -5,6 +5,8 @@ author:
 base: ~
 build: 
   gencmake: 1
+  remove_input_after_translate: 1
+  translate_before_pack: 1
 date: 26/08/16 16:29:31
 group: LCFG
 license: GPLv2
