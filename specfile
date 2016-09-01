@@ -52,9 +52,9 @@ rm -f $RPM_BUILD_ROOT/usr/sbin/setctx
 %files
 %defattr(-,root,root)
 %doc ChangeLog
-%doc @LCFGPOD@/*.pod
-%{_mandir}/man1/*
-%{_mandir}/man3/*
+#%doc @LCFGPOD@/*.pod
+#%{_mandir}/man1/*
+#%{_mandir}/man3/*
 %{_bindir}/parse_pkgspec
 #%{_sbindir}/setctx
 %{_sbindir}/daemon
