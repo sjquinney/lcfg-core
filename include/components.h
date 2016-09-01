@@ -82,10 +82,6 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
                                       LCFGResource    ** res )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgcomponent_remove_resource( LCFGComponent * comp,
-                                          const char * name )
-  __attribute__((warn_unused_result));
-
 #define lcfgcomponent_head(comp) ((comp)->head)
 #define lcfgcomponent_tail(comp) ((comp)->tail)
 #define lcfgcomponent_size(comp) ((comp)->size)
