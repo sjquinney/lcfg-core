@@ -738,10 +738,15 @@ LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
     comp1 != NULL ? lcfgcomponent_head(comp1) : NULL;
 
   while ( ok && cur_node != NULL ) {
-    LCFGResource * res1    = lcfgcomponent_resource(cur_node);
+    LCFGResource * res1 = lcfgcomponent_resource(cur_node);
+
+    /* Only diff 'active' resources which have a name attribute */
+    if ( !lcfgresource_is_active(res1) || !lcfgresource_has_name(res1) )
+      continue;
+
     const char * res1_name = lcfgresource_get_name(res1);
 
-    LCFGResource * res2    = comp2 != NULL ?
+    LCFGResource * res2 = comp2 != NULL ?
       lcfgcomponent_find_resource( comp2, res1_name ) : NULL;
 
     LCFGDiffResource * resdiff = NULL;
@@ -773,11 +778,16 @@ LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
   cur_node = comp2 != NULL ? lcfgcomponent_head(comp2) : NULL;
 
   while ( ok && cur_node != NULL ) {
-    LCFGResource * res2    = lcfgcomponent_resource(cur_node);
+    LCFGResource * res2 = lcfgcomponent_resource(cur_node);
+
+    /* Only diff 'active' resources which have a name attribute */
+    if ( !lcfgresource_is_active(res2) || !lcfgresource_has_name(res2) )
+      continue;
+
     const char * res2_name = lcfgresource_get_name(res2);
 
     if ( comp1 == NULL ||
-         !lcfgcomponent_has_resource( comp1, res2_name ) ) {
+	 !lcfgcomponent_has_resource( comp1, res2_name ) ) {
 
       LCFGDiffResource * resdiff = NULL;
       LCFGStatus rc = lcfgresource_diff( NULL, res2, &resdiff );
@@ -962,9 +972,15 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
   LCFGResourceNode * cur_node = lcfgcomponent_head(comp1);
   while ( cur_node != NULL ) {
     const LCFGResource * res1 = lcfgcomponent_resource(cur_node);
-    const char * res1_name    = lcfgresource_get_name(res1);
 
-    const LCFGResource * res2 = lcfgcomponent_find_resource( comp2, res1_name );
+    /* Only diff 'active' resources which have a name attribute */
+    if ( !lcfgresource_is_active(res1) || !lcfgresource_has_name(res1) )
+      continue;
+
+    const char * res1_name = lcfgresource_get_name(res1);
+
+    const LCFGResource * res2 =
+      lcfgcomponent_find_resource( comp2, res1_name );
 
     if ( res2 == NULL || !lcfgresource_same_value( res1, res2 ) ) {
       status = LCFG_CHANGE_MODIFIED;
@@ -981,7 +997,12 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
     cur_node = lcfgcomponent_head(comp2);
     while ( cur_node != NULL ) {
       const LCFGResource * res2 = lcfgcomponent_resource(cur_node);
-      const char * res2_name    = lcfgresource_get_name(res2);
+
+      /* Only diff 'active' resources which have a name attribute */
+      if ( !lcfgresource_is_active(res2) || !lcfgresource_has_name(res2) )
+	continue;
+
+      const char * res2_name = lcfgresource_get_name(res2);
 
       if ( !lcfgcomponent_has_resource( comp1, res2_name ) ) {
         status = LCFG_CHANGE_MODIFIED;
