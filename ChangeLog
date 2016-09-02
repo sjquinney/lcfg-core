@@ -1,6 +1,55 @@
-2016-08-26  SVN: new release
+2016-09-02  SVN: new release
 
-	* Release: 1.28.2
+	* Release: 1.29.0
+
+2016-09-02 09:08  squinney@INF.ED.AC.UK
+
+	* docs/lcfgpackageiterator.pod.cin, docs/lcfgpackagelib.pod.cin,
+	  docs/lcfgpackagelist.pod.cin, docs/lcfgpackagespec.pod.cin,
+	  docs/lcfgresource.pod.cin: Removed old out-of-date documentation
+
+2016-09-02 09:08  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, specfile: Generate devel docs
+
+2016-09-01 17:28  squinney@INF.ED.AC.UK
+
+	* Doxyfile.in: optimize docs for C code
+
+2016-09-01 17:25  squinney@INF.ED.AC.UK
+
+	* specfile: Avoid including docs for now
+
+2016-09-01 17:23  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, include/utils.h.cin, lcfg.yml,
+	  utils/CMakeLists.txt: Translate any macros before packing the
+	  source. Also various tweaks to the cmake to avoid needing the
+	  entire set of lcfg cmake files
+
+2016-09-01 16:31  squinney@INF.ED.AC.UK
+
+	* resources/components.c: Various checks to ensure that only
+	  'active' resources are used
+
+2016-09-01 16:30  squinney@INF.ED.AC.UK
+
+	* resources/diff.c: Only interested in finding the differences
+	  between 'active' resources in components
+
+2016-09-01 16:29  squinney@INF.ED.AC.UK
+
+	* include/components.h: dropped lcfgcomponent_remove_resource
+	  function as it is not used and doesn't work quite as it should
+
+2016-08-31 08:44  squinney@INF.ED.AC.UK
+
+	* include/templates.h, resources/templates.c: field name parameter
+	  in lcfgtemplate_find should always be non-null
+
+2016-08-26 16:29  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.28.2
 
 2016-08-26 16:27  squinney@INF.ED.AC.UK
 
