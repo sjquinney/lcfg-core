@@ -15,6 +15,7 @@ BuildRequires:  db4-devel
 BuildRequires:  libdb-devel
 %endif
 BuildRequires:  rpm-devel
+BuildRequires:  doxygen, doxygen-latex
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires(post,postun):         /sbin/ldconfig
 
@@ -39,6 +40,11 @@ building software and linking against the LCFG profile libraries.
 
 %build
 make
+
+# Documentation
+
+make doc
+make -C docs/latex
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -71,6 +77,8 @@ rm -f $RPM_BUILD_ROOT/usr/sbin/setctx
 %{_libdir}/liblcfg_xml.so.*
 
 %files devel
+%doc docs/html
+%doc docs/latex/refman.pdf
 %{_datadir}/pkgconfig/*.pc
 %{_includedir}/lcfg/*.h
 %{_libdir}/liblcfg_bdb.a
