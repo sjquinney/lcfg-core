@@ -344,6 +344,8 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
 
     const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
+    if ( !lcfgpackage_is_active(pkg) ) continue;
+
     ssize_t rc = lcfgpackage_to_rpm_filename( pkg,
                                               defarch,
                                               LCFG_OPT_NEWLINE,
@@ -658,6 +660,8 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
     while ( cur_node != NULL ) {
 
       const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
+
+      if ( !lcfgpackage_is_active(pkg) ) continue;
 
       ssize_t rc = lcfgpackage_to_cpp( pkg,
                                        defarch,

@@ -65,9 +65,8 @@ void lcfgpkglist_destroy(LCFGPackageList * pkglist) {
   if ( pkglist == NULL )
     return;
 
-  LCFGPackage * pkg;
-
   while ( lcfgpkglist_size(pkglist) > 0 ) {
+    LCFGPackage * pkg = NULL;
     if ( lcfgpkglist_remove_next( pkglist, NULL, &pkg )
          == LCFG_CHANGE_REMOVED ) {
       lcfgpackage_destroy(pkg);
@@ -170,21 +169,25 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
     return NULL;
 
   const char * match_arch = arch != NULL ? arch : LCFG_PACKAGE_NOVALUE;
+  bool arch_match_iswild = 
+    ( strcmp( LCFG_PACKAGE_WILDCARD, match_arch ) == 0 );
 
   LCFGPackageNode * result = NULL;
 
   LCFGPackageNode * cur_node = lcfgpkglist_head(pkglist);
   while ( cur_node != NULL ) {
 
-    const LCFGPackage * cur_pkg = lcfgpkglist_package(cur_node);
-    const char * pkg_name = lcfgpackage_get_name(cur_pkg);
+    const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
-    if ( strcmp( pkg_name, name ) == 0 ) {
-      const char * pkg_arch = lcfgpackage_has_arch(cur_pkg) ?
-                   lcfgpackage_get_arch(cur_pkg) : LCFG_PACKAGE_NOVALUE;
+    if ( !lcfgpackage_is_active(pkg) ) continue;
 
-      if ( strcmp( LCFG_PACKAGE_WILDCARD, match_arch ) == 0 ||
-           strcmp( pkg_arch, match_arch ) == 0 ) {
+    const char * pkg_name = lcfgpackage_get_name(pkg);
+
+    if ( pkg_name != NULL && strcmp( pkg_name, name ) == 0 ) {
+      const char * pkg_arch = lcfgpackage_has_arch(pkg) ?
+                   lcfgpackage_get_arch(pkg) : LCFG_PACKAGE_NOVALUE;
+
+      if (  arch_match_iswild || strcmp( pkg_arch, match_arch ) == 0 ) {
         result = cur_node;
         break;
       }
@@ -247,8 +250,10 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
     const LCFGPackage * pkg = lcfgpkglist_package(node);
 
+    if ( !lcfgpackage_is_active(pkg) ) continue;
+
     const char * name = lcfgpackage_get_name(pkg);
-    if ( strcmp( name, match_name ) == 0 ) {
+    if ( name != NULL && strcmp( name, match_name ) == 0 ) {
 
       const char * arch = lcfgpackage_has_arch(pkg) ?
 	lcfgpackage_get_arch(pkg) : LCFG_PACKAGE_NOVALUE;
@@ -444,17 +449,19 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
 
   LCFGPackageNode * cur_node = lcfgpkglist_head(pkglist2);
   while ( cur_node != NULL ) {
-    LCFGPackage * cur_pkg = lcfgpkglist_package(cur_node);
+    LCFGPackage * pkg = lcfgpkglist_package(cur_node);
+
+    if ( !lcfgpackage_is_active(pkg) ) continue;
 
     char * merge_msg = NULL;
     LCFGChange merge_rc = lcfgpkglist_merge_package( pkglist1,
-                                                     cur_pkg,
+                                                     pkg,
                                                      &merge_msg );
 
     if ( merge_rc == LCFG_CHANGE_ERROR ) {
       change = LCFG_CHANGE_ERROR;
 
-      *msg = lcfgpackage_build_message( cur_pkg,
+      *msg = lcfgpackage_build_message( pkg,
                                         "Failed to merge package lists: %s",
                                         merge_msg );
 
@@ -518,7 +525,11 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
 
   bool ok = true;
   while ( cur_node != NULL ) {
-    ok = lcfgpackage_print( lcfgpkglist_package(cur_node), defarch, style, options, out );
+    const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
+
+    if ( !lcfgpackage_is_active(pkg) ) continue;
+
+    ok = lcfgpackage_print( pkg, defarch, style, options, out );
 
     if (!ok)
       break;
