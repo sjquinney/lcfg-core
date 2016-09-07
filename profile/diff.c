@@ -156,7 +156,7 @@ void lcfgdiffprofile_destroy(LCFGDiffProfile * profdiff ) {
     return;
 
   while ( lcfgdiffprofile_size(profdiff) > 0 ) {
-    LCFGDiffComponent * compdiff;
+    LCFGDiffComponent * compdiff = NULL;
     if ( lcfgdiffprofile_remove_next( profdiff, NULL, &compdiff )
          == LCFG_CHANGE_REMOVED ) {
       lcfgdiffcomponent_destroy(compdiff);
