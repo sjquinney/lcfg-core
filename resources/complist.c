@@ -398,6 +398,9 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
 
     if ( *comp_name == '.' ) continue; /* ignore any dot files */
 
+    /* ignore any file which is not a valid component name */
+    if ( !lcfgcomponent_valid_name(comp_name) ) continue;
+
     /* Ignore any filename which is not in the list of wanted components. */
     if ( comps_wanted != NULL &&
          !lcfgtaglist_contains( comps_wanted, comp_name ) ) {
