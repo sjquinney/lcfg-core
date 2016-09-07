@@ -198,7 +198,7 @@ LCFGChange lcfgprofile_quickdiff( const LCFGProfile * profile1,
 struct LCFGDiffProfile {
   LCFGDiffComponent * head;
   LCFGDiffComponent * tail;
-  int size;
+  unsigned int size;
 };
 
 typedef struct LCFGDiffProfile LCFGDiffProfile;
