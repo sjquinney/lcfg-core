@@ -206,6 +206,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
 
     /* If not in the list of 'wanted' components just move on to next entry */
     if ( comps_wanted != NULL &&
+         strcmp( this_compname, "profile" ) != 0 &&
          !lcfgtaglist_contains( comps_wanted, this_compname ) )
       continue;
 

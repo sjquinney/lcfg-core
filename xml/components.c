@@ -195,9 +195,12 @@ LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
           if ( cur_comp != NULL ) {
 
           /* If no list of components is defined stash everything.
-             Otherwise only stash components if name is in the list. */
+             Otherwise only stash components if name is in the list.
+             Always keep the 'profile' component as it contains useful
+             meta-data. */
 
             if ( comps_wanted == NULL ||
+                 strcmp( compname, "profile" ) == 0 ||
                  lcfgtaglist_contains( comps_wanted, compname ) ) {
 
               if ( lcfgcomplist_append( complist, cur_comp )
