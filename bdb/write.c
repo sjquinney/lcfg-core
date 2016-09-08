@@ -170,7 +170,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       keylen = lcfgresource_build_key( resource,
                                        compname,
                                        namespace,
-                                       LCFG_RESOURCE_SYMBOL_CONTEXT,
+                                       LCFG_RESOURCE_SYMBOL_PRIORITY,
                                        &reskey, &buf_size );
 
       key.data = reskey;
