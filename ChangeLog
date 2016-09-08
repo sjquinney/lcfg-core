@@ -1,6 +1,35 @@
-2016-09-02  SVN: new release
+2016-09-08  SVN: new release
 
-	* Release: 1.29.0
+	* Release: 1.29.1
+
+2016-09-07 10:51  squinney@INF.ED.AC.UK
+
+	* resources/complist.c: When loading components from a status dir
+	  ignore any file name which is not a valid component name
+
+2016-09-07 09:14  squinney@INF.ED.AC.UK
+
+	* profile/diff.c: Be more careful when destroying a LCFGDiffProfile
+	  struct
+
+2016-09-07 09:13  squinney@INF.ED.AC.UK
+
+	* include/differences.h: use unsigned int for profile diff size
+	  attribute
+
+2016-09-02 14:31  squinney@INF.ED.AC.UK
+
+	* packages/pkglists.c, packages/rpm.c: Only normally process
+	  'active' packages in lists
+
+2016-09-02 09:29  squinney@INF.ED.AC.UK
+
+	* Doxyfile.in, lcfg.yml: avoid doxygen running over cmake generated
+	  files
+
+2016-09-02 09:09  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.29.0
 
 2016-09-02 09:08  squinney@INF.ED.AC.UK
 
