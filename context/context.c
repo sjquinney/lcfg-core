@@ -142,13 +142,27 @@ bool lcfgcontext_unset_value( LCFGContext * ctx ) {
   return true;
 }
 
+static char * valid_false_values[] = {
+  "false", "no", "off", "0", "",
+  NULL
+};
+
 bool lcfgcontext_is_false( const LCFGContext * ctx ) {
 
-  return ( ctx           == NULL ||
-           ctx->value    == NULL ||
-           *(ctx->value) == '\0' ||
-           *(ctx->value) == '0'  ||
-           strcmp( ctx->value, "false" ) == 0 );
+  if ( ctx == NULL || ctx->value == NULL || *( ctx->value ) == '\0' )
+    return true;
+
+  bool is_false = false;
+
+  char ** val_ptr;
+  for ( val_ptr = valid_false_values; *val_ptr != NULL; val_ptr++ ) {
+    if ( strcasecmp( ctx->value, *val_ptr ) == 0 ) {
+      is_false = true;
+      break;
+    }
+  }
+
+  return is_false;
 }
 
 bool lcfgcontext_is_true( const LCFGContext * ctx ) {
