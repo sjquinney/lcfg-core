@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "packages.h"
 #include "utils.h"
@@ -734,9 +735,9 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
     if ( all_contexts ) {
       cpp_cmd[3] = "-DALL_CONTEXTS";
-      cpp_cmd[4] = filename;
+      cpp_cmd[4] = (char *) filename;
     } else {
-      cpp_cmd[3] = filename;
+      cpp_cmd[3] = (char *) filename;
     }
 
     close(pipefd[0]);    /* close reading end in the child */
