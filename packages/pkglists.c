@@ -774,13 +774,6 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     return LCFG_STATUS_ERROR;
   }
 
-  waitpid( pid, &status, WNOHANG );
-  if ( WIFEXITED(status) && WEXITSTATUS(status) != 0 ) {
-    asprintf( msg, "Failed to process '%s' using cpp",
-	      filename );
-    return LCFG_STATUS_ERROR;
-  }
-
   size_t line_len = 128;
   char * line = malloc( line_len * sizeof(char) );
   if ( line == NULL ) {
@@ -798,6 +791,15 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
   bool ok = true;
   unsigned int linenum = 0;
   while( ok && getline( &line, &line_len, fp ) != -1 ) {
+
+    waitpid( pid, &status, WNOHANG );
+    if ( WIFEXITED(status) && WEXITSTATUS(status) != 0 ) {
+      asprintf( msg, "Failed to process '%s' using cpp: %s",
+		filename, line );
+      ok = false;
+      break;
+    }
+
     linenum++;
 
     /* Remove newline/carriage return characters */
