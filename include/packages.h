@@ -323,6 +323,12 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         FILE * out )
   __attribute__((nonnull (1,5))) __attribute__((warn_unused_result));
 
+LCFGStatus lcfgpkglist_from_cpp( const char * filename,
+				 LCFGPackageList ** result,
+				 bool all_contexts,
+				 char ** msg )
+  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+
 LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
                                   LCFGPackageList * inactive,
                                   const char * defarch,

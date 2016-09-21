@@ -715,4 +715,163 @@ LCFGPackageList * lcfgpkglist_search( const LCFGPackageList * pkglist,
   return result;
 }
 
+LCFGStatus lcfgpkglist_from_cpp( const char * filename,
+				 LCFGPackageList ** result,
+				 bool all_contexts,
+				 char ** msg ) {
+
+  int pipefd[2];
+  pipe(pipefd);
+
+  pid_t pid = fork();
+  if ( pid == -1 ) {
+    perror("Failed to fork");
+    exit(EXIT_FAILURE);
+  } else if ( pid == 0 ) {
+
+    char * cpp_cmd[] = { "cpp", "-undef", "-DINCLUDE_META",
+			 NULL, NULL, NULL };
+
+    if ( all_contexts ) {
+      cpp_cmd[3] = "-DALL_CONTEXTS";
+      cpp_cmd[4] = filename;
+    } else {
+      cpp_cmd[3] = filename;
+    }
+
+    close(pipefd[0]);    /* close reading end in the child */
+
+    dup2( pipefd[1], STDOUT_FILENO );  /* send stdout to the pipe */
+    dup2( pipefd[1], STDERR_FILENO );  /* send stderr to the pipe */
+
+    close(pipefd[1]);    /* this descriptor is no longer needed */
+
+    execvp( cpp_cmd[0], cpp_cmd ); 
+
+  }
+
+  close(pipefd[1]);  /* close the write end of the pipe in the parent */
+
+  FILE * fp = fdopen( pipefd[0], "r" );
+
+  size_t line_len = 128;
+  char * line = malloc( line_len * sizeof(char) );
+  if ( line == NULL ) {
+    perror( "Failed to allocate memory whilst processing RPM list file" );
+    exit(EXIT_FAILURE);
+  }
+
+  LCFGPackageList * pkglist = lcfgpkglist_new();
+  lcfgpkglist_set_merge_rules( pkglist,
+	            LCFG_PKGS_OPT_SQUASH_IDENTICAL | LCFG_PKGS_OPT_KEEP_ALL );
+
+  char * pkg_context = NULL;
+  char * pkg_deriv   = NULL;
+
+  bool ok = true;
+  unsigned int linenum = 0;
+  while( ok && getline( &line, &line_len, fp ) != -1 ) {
+    linenum++;
+
+    /* Ignore empty lines */
+    if ( *line == '\0' ) continue;
+
+    if ( *line == '#' ) {
+      if ( strncmp( line, "#pragma LCFG ", 13 ) == 0 ) {
+
+	if ( strncmp( line + 13, "derive \"", 8 ) == 0 ) {
+	  free(pkg_deriv);
+
+	  const char * value = line + 13 + 8;
+	  size_t len = strlen(value);
+	  pkg_deriv = strndup( value, len - 1 ); /* Ignore final '"' */
+
+	} else if ( strncmp( line + 13, "context \"", 9 ) == 0 ) {
+	  free(pkg_context);
+
+	  const char * value = line + 13 + 9;
+	  size_t len = strlen(value);
+	  pkg_context = strndup( value, len - 1 );  /* Ignore final '"' */
+	}
+
+      }
+
+    } else {
+
+      LCFGPackage * pkg = NULL;
+      char * parse_msg = NULL;
+
+      LCFGStatus parse_status =
+	lcfgpackage_from_string( line, &pkg, &parse_msg );
+
+      if ( parse_status != LCFG_STATUS_OK ) {
+	ok = false;
+	asprintf( msg, "Failed to parse package '%s' at line %u: %s",
+		  line, linenum, parse_msg );
+      }
+
+      free(parse_msg);
+
+      if ( ok && pkg_deriv != NULL ) {
+	if ( lcfgpackage_set_derivation( pkg, pkg_deriv ) ) {
+	  pkg_deriv = NULL; /* Ensure memory is NOT immediately freed */
+	} else {
+	  ok = false;
+	  asprintf( msg, "Invalid derivation '%s' at line %u",
+		    pkg_deriv, linenum );
+	}
+      }
+
+      if ( ok && pkg_context != NULL ) {
+	if ( lcfgpackage_set_context( pkg, pkg_context ) ) {
+	  pkg_context = NULL; /* Ensure memory is NOT immediately freed */
+	} else {
+	  ok = false;
+	  asprintf( msg, "Invalid context '%s' at line %u",
+		    pkg_context, linenum );
+	}
+      }
+
+      if (ok) {
+
+	char * merge_msg = NULL;
+	LCFGChange merge_change = 
+	  lcfgpkglist_merge_package( pkglist, pkg, &merge_msg );
+
+	if ( merge_change != LCFG_CHANGE_ADDED ) {
+	  ok = false;
+	  asprintf( msg,
+		    "Error at line %u: Failed to merge package into list: %s",
+		    linenum, merge_msg );
+
+	  lcfgpackage_destroy(pkg);
+	  pkg = NULL;
+	}
+
+	free(merge_msg);
+
+      }
+
+    }
+
+  }
+
+  if ( pkg_context != NULL )
+    free(pkg_context);
+
+  if ( pkg_deriv != NULL )
+    free(pkg_deriv);
+
+  free(line);
+
+  if (!ok) {
+    lcfgpkglist_destroy(pkglist);
+    pkglist = NULL;
+  }
+
+  *result = pkglist;
+
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+}
+
 /* eof */
