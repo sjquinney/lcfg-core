@@ -774,6 +774,18 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
   while( ok && getline( &line, &line_len, fp ) != -1 ) {
     linenum++;
 
+    /* Remove newline/carriage return characters */
+
+    char * ptr = line;
+    while ( *ptr != '\0' ) {
+      if ( *ptr == '\n' || *ptr == '\r' ) {
+	*ptr = '\0';
+	break;
+      }
+
+      ptr++;
+    }
+
     /* Ignore empty lines */
     if ( *line == '\0' ) continue;
 
