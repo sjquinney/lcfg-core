@@ -59,6 +59,8 @@ char * lcfgutils_basename( const char * path, const char * suffix );
 
 char * lcfgutils_dirname( const char * path);
 
+bool lcfgutils_file_readable( const char * path );
+
 void lcfgutils_chomp( char * str );
 
 void lcfgutils_trim_whitespace( char * str );

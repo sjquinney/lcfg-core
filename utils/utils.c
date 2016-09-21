@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/stat.h>
 
 #include "utils.h"
 
@@ -255,6 +256,30 @@ char * lcfgutils_dirname( const char * path) {
   }
 
   return dir;
+}
+
+bool lcfgutils_file_readable( const char * path ) {
+
+  struct stat sb;
+  if ( stat( path, &sb ) != 0 )
+    return false;
+
+  bool is_readable = false;
+  if ( S_ISDIR(sb.st_mode) ) {
+    DIR * dh = opendir(path);
+    if ( dh != NULL ) {
+      is_readable = true;
+      closedir(dh);
+    }
+  } else {
+    FILE * fh = fopen( path, "r" );
+    if ( fh != NULL ) {
+      is_readable = true;
+      fclose(fh);
+    }
+  }
+
+  return is_readable;
 }
 
 /* eof */

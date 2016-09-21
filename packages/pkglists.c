@@ -721,8 +721,17 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 				 bool all_contexts,
 				 char ** msg ) {
 
+  if ( !lcfgutils_file_readable(filename) ) {
+    asprintf( msg, "File '%s' does not exist or is not readable",
+	      filename );
+    return LCFG_STATUS_ERROR;
+  }
+
   int pipefd[2];
-  pipe(pipefd);
+  if ( pipe(pipefd) == -1 ) {
+    perror("Failed to create pipe");
+    exit(EXIT_FAILURE);
+  }
 
   pid_t pid = fork();
   if ( pid == -1 ) {
