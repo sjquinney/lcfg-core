@@ -1,6 +1,7 @@
 #define _GNU_SOURCE   /* asprintf */
 #define _WITH_GETLINE /* for BSD */
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -758,11 +759,16 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
     execvp( cpp_cmd[0], cpp_cmd ); 
 
+    exit(errno); /* Not normally reached */
   }
 
   close(pipefd[1]);  /* close the write end of the pipe in the parent */
 
   FILE * fp = fdopen( pipefd[0], "r" );
+  if ( fp == NULL ) {
+    asprintf( msg, "Failed to process '%s' using cpp", filename );
+    return LCFG_STATUS_ERROR;
+  }
 
   size_t line_len = 128;
   char * line = malloc( line_len * sizeof(char) );
