@@ -744,14 +744,15 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     exit(EXIT_FAILURE);
   } else if ( pid == 0 ) {
 
-    char * cpp_cmd[] = { "cpp", "-undef", "-DINCLUDE_META",
+    char * cpp_cmd[] = { "cpp", "-undef", "-nostdinc",
+			 "-DINCLUDE_META",
 			 NULL, NULL, NULL };
 
     if ( all_contexts ) {
-      cpp_cmd[3] = "-DALL_CONTEXTS";
-      cpp_cmd[4] = (char *) filename;
+      cpp_cmd[4] = "-DALL_CONTEXTS";
+      cpp_cmd[5] = (char *) filename;
     } else {
-      cpp_cmd[3] = (char *) filename;
+      cpp_cmd[4] = (char *) filename;
     }
 
     close(pipefd[0]);    /* close reading end in the child */
