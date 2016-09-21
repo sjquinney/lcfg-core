@@ -774,7 +774,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     return LCFG_STATUS_ERROR;
   }
 
-  wait(&status);
+  waitpid( pid, &status, WNOHANG );
   if ( WIFEXITED(status) && WEXITSTATUS(status) != 0 ) {
     asprintf( msg, "Failed to process '%s' using cpp",
 	      filename );
