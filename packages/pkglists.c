@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "packages.h"
 #include "utils.h"
@@ -734,6 +736,8 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     exit(EXIT_FAILURE);
   }
 
+  int status;
+
   pid_t pid = fork();
   if ( pid == -1 ) {
     perror("Failed to fork");
@@ -759,7 +763,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
     execvp( cpp_cmd[0], cpp_cmd ); 
 
-    exit(errno); /* Not normally reached */
+    _exit(errno); /* Not normally reached */
   }
 
   close(pipefd[1]);  /* close the write end of the pipe in the parent */
@@ -767,6 +771,13 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
   FILE * fp = fdopen( pipefd[0], "r" );
   if ( fp == NULL ) {
     asprintf( msg, "Failed to process '%s' using cpp", filename );
+    return LCFG_STATUS_ERROR;
+  }
+
+  wait(&status);
+  if ( WIFEXITED(status) && WEXITSTATUS(status) != 0 ) {
+    asprintf( msg, "Failed to process '%s' using cpp",
+	      filename );
     return LCFG_STATUS_ERROR;
   }
 
