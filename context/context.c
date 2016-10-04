@@ -557,9 +557,9 @@ char * lcfgcontext_combine_expressions( const char * expr1,
           free(ctx2_safe);
         } else {
           if ( cmp == -1 ) {
-            new_expr = lcfgutils_join_strings( ctx1_safe, ctx2_safe, " & " );
+            new_expr = lcfgutils_join_strings( " & ", ctx1_safe, ctx2_safe );
           } else {
-            new_expr = lcfgutils_join_strings( ctx2_safe, ctx1_safe, " & " );
+            new_expr = lcfgutils_join_strings( " & ", ctx2_safe, ctx1_safe );
           }
           free(ctx1_safe);
           free(ctx2_safe);

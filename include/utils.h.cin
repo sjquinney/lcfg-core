@@ -49,9 +49,9 @@ extern void LCFG_Ack();
 
 char * lcfgutils_safe_tmpfile( const char * path );
 
-char * lcfgutils_join_strings( const char * str1,
-                               const char * str2,
-                               const char * sep );
+char * lcfgutils_join_strings( const char * sep,
+                               const char * str1,
+                               const char * str2 );
 
 bool lcfgutils_endswith( const char * str, const char * suffix );
 

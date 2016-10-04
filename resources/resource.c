@@ -1496,7 +1496,7 @@ bool lcfgresource_add_derivation( LCFGResource * resource,
   } else if ( strstr( resource->derivation, extra_deriv ) == NULL ) {
 
     new_deriv =
-      lcfgutils_join_strings( resource->derivation, extra_deriv, " " );
+      lcfgutils_join_strings( " ", resource->derivation, extra_deriv );
     if ( new_deriv == NULL ) {
       perror( "Failed to build LCFG derivation string" );
       exit(EXIT_FAILURE);

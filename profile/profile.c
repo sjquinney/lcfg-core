@@ -141,7 +141,7 @@ char * lcfgprofile_nodename( const LCFGProfile * profile ) {
     if ( domain_res != NULL && lcfgresource_has_value(domain_res) ) {
       const char * domain = lcfgresource_get_value(domain_res);
 
-      nodename = lcfgutils_join_strings( node, domain, "." );
+      nodename = lcfgutils_join_strings( ".", node, domain );
     } else {
       nodename = strdup(node);
     }

@@ -17,6 +17,11 @@
 
 char * lcfgutils_safe_tmpfile( const char * path ) {
 
+  if ( path == NULL ) {
+    perror("Cannot generate a temporary file name from a NULL");
+    exit(EXIT_FAILURE);
+  }
+
   size_t base_len = 0;
   char * match = strrchr( path, '/' );
   if ( match != NULL ) {
@@ -50,11 +55,11 @@ char * lcfgutils_safe_tmpfile( const char * path ) {
 
 /* Join two strings together with an optional separator */
 
-char * lcfgutils_join_strings( const char * str1,
-                               const char * str2,
-                               const char * sep ) {
+char * lcfgutils_join_strings( const char * sep,
+                               const char * str1,
+                               const char * str2 ) {
 
-  size_t str1_len = strlen(str1);
+  size_t str1_len = str1 != NULL ? strlen(str1) : 0;
   size_t str2_len = str2 != NULL ? strlen(str2) : 0;
   size_t sep_len  = sep  != NULL ? strlen(sep)  : 0;
 
@@ -68,14 +73,14 @@ char * lcfgutils_join_strings( const char * str1,
 
   char * to = result;
 
-  to = stpncpy( to, str1, str1_len );
+  if ( str1_len > 0 )
+    to = stpncpy( to, str1, str1_len );
 
-  if ( str2 != NULL ) {
-    if ( sep_len != 0 )
-      to = stpncpy( to, sep, sep_len );
+  if ( sep_len > 0 )
+    to = stpncpy( to, sep, sep_len );
 
+  if ( str2_len > 0 )
     to = stpncpy( to, str2, str2_len );
-  }
 
   *to = '\0';
 
@@ -199,6 +204,9 @@ char * lcfgutils_catfile( const char * dir, const char * file ) {
 
 bool lcfgutils_endswith( const char * str, const char * suffix ) {
 
+  if ( str == NULL || suffix == NULL )
+    return false;
+
   size_t str_len    = strlen(str);
   size_t suffix_len = strlen(suffix);
 
@@ -207,6 +215,9 @@ bool lcfgutils_endswith( const char * str, const char * suffix ) {
 }
 
 char * lcfgutils_basename( const char * path, const char * suffix ) {
+
+  if ( path == NULL )
+    return NULL;
 
   char * start = (char *) path;
   char * end   = start + strlen(path) - 1;
@@ -236,6 +247,9 @@ char * lcfgutils_basename( const char * path, const char * suffix ) {
 
 char * lcfgutils_dirname( const char * path) {
 
+  if ( path == NULL )
+    return NULL;
+
   char * start = (char *) path;
   char * end   = start + strlen(path) - 1;
 
@@ -261,6 +275,8 @@ char * lcfgutils_dirname( const char * path) {
 }
 
 bool lcfgutils_file_readable( const char * path ) {
+
+  assert( path != NULL );
 
   struct stat sb;
   if ( stat( path, &sb ) != 0 )

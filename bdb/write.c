@@ -285,6 +285,12 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
      DB_EXCL flag. */
 
   char * dirname = lcfgutils_dirname(dbfile);
+  if ( dirname == NULL ) {
+    status = LCFG_STATUS_ERROR;
+    asprintf( errmsg, "Failed to get directory part of path '%s'", dbfile );
+    goto cleanup;
+  }
+
   char * tmpfile = tempnam( dirname, ".lcfg" );
   free(dirname);
 
