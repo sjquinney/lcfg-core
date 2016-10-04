@@ -6,14 +6,29 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <assert.h>
 
 #include "utils.h"
 
-/* Given a path this will generate a temporary file path in the same
-   directory which is suitable for use with mkstemp. The particular
-   advantage of being in the same directory as the target file is that
-   it can always be renamed atomically. */
+/**
+ * @brief Generate a safe temporary file name
+ *
+ * Given a target file name this will generate a safe temporary file
+ * path in the same directory which is suitable for use with
+ * mkstemp. The particular advantage of being in the same directory as
+ * the target file is that it can always be renamed atomically.
+ *
+ * If the target file path is @c NULL then this will return @c NULL.
+ * If the memory allocation for the new string is not successful
+ * the @c exit() function will be called with a non-zero value.
+ *
+ * @param[in] path Pointer to target file name
+ *
+ * @return Pointer to a new string (call @c free(3) when no longer required)
+ * 
+ */
 
 char * lcfgutils_safe_tmpfile( const char * path ) {
 
@@ -53,7 +68,26 @@ char * lcfgutils_safe_tmpfile( const char * path ) {
   return result;
 }
 
-/* Join two strings together with an optional separator */
+/**
+ * @brief Combine two strings with an optional separator.
+ *
+ * This creates a new string using the separator string and the two
+ * strings which should be combined. If the separator is @c NULL then
+ * the strings are combined without a separator. If either string is
+ * @c NULL then it will be considered to be an empty string. For
+ * example, if the separator is @c "-" (hyphen) then this will result
+ * in strings like @c "A-", @c "-B" or @c "-" (if both are @c NULL).
+ *
+ * If the memory allocation for the new string is not successful the
+ * @c exit() function will be called with a non-zero value.
+ *
+ * @param[in] sep Pointer to separator string
+ * @param[in] str1 Pointer to first string
+ * @param[in] str2 Pointer to second string
+ *
+ * @return Pointer to a new string (call @c free(3) when no longer required)
+ *
+ */
 
 char * lcfgutils_join_strings( const char * sep,
                                const char * str1,
@@ -89,8 +123,15 @@ char * lcfgutils_join_strings( const char * sep,
   return result;
 }
 
-/* trim any trailing newline characters, note this works * in place *,
-   it does NOT make a new string */
+/**
+ * @brief In-place trim trailing newline characters
+ *
+ * This trims any newline or carriage return characters from the end
+ * of the specified string by replacing them with a nul character.
+ *
+ * @param[in,out] str Pointer to string which should be trimmed
+ *
+ */
 
 void lcfgutils_chomp( char * str ) {
 
@@ -109,8 +150,16 @@ void lcfgutils_chomp( char * str ) {
 
 }
 
-/* remove any leading or trailing whitespace in a string, note this
-   works * in place *, it does NOT make a new string */
+/**
+ * @brief In-place trim leading and trailing whitespace
+ *
+ * This will remove any whitespace characters (according to the
+ * @c isspace(3) function) from the start and end of the specified
+ * string.
+ *
+ * @param[in,out] str Pointer to string which should be trimmed
+ *
+ */
 
 void lcfgutils_trim_whitespace( char * str ) {
 
@@ -143,6 +192,23 @@ void lcfgutils_trim_whitespace( char * str ) {
     *ptr = '\0';
 
 }
+
+/**
+ * @brief Combine directory and file name to create full path.
+ *
+ * This combines a directory path and a file name to create a full
+ * path. A @c "/" (forward slash) separator will be inserted between
+ * the two parts if the specified directory does not have one as the
+ * final character.
+ *
+ * If the memory allocation for the new string is not successful the
+ * @c exit() function will be called with a non-zero value.
+ *
+ * @param[in] dir Pointer to string containing directory path
+ * @param[in] file Pointer to string containing file name
+ *
+ * @return Pointer to a new string (call @c free(3) when no longer required)
+ */
 
 char * lcfgutils_catfile( const char * dir, const char * file ) {
 
@@ -202,6 +268,20 @@ char * lcfgutils_catfile( const char * dir, const char * file ) {
   return result;
 }
 
+/**
+ * @brief Check if a string ends with a particular suffix
+ *
+ * Checks if the specified suffix string is found at the end of the
+ * specified string. Note that if either of the string or suffix are
+ * @c NULL then this will always return @c false.
+ *
+ * @param[in] str Pointer to string which should be checked
+ * @param[in] suffix Pointer to suffix string
+ *
+ * @return boolean which indicates if string has specified suffix
+ *
+ */
+
 bool lcfgutils_endswith( const char * str, const char * suffix ) {
 
   if ( str == NULL || suffix == NULL )
@@ -213,6 +293,20 @@ bool lcfgutils_endswith( const char * str, const char * suffix ) {
   return ( str_len >= suffix_len &&
            strncmp( str + str_len - suffix_len, suffix, suffix_len ) == 0 );
 }
+
+/**
+ * @brief Strip the directory and suffix parts of a path
+ *
+ * Given a path this will remove any leading directory parts of the
+ * path. If the suffix is not @c NULL then that will also be stripped.
+ *
+ * If this fails a @c NULL value will be returned.
+ *
+ * @param[in] path Pointer to string containing full path
+ * @param[in] suffix Pointer to string containing suffix be stripped
+ *
+ * @return Pointer to a new string (call @c free(3) when no longer required)
+ */
 
 char * lcfgutils_basename( const char * path, const char * suffix ) {
 
@@ -245,7 +339,20 @@ char * lcfgutils_basename( const char * path, const char * suffix ) {
   return base;
 }
 
-char * lcfgutils_dirname( const char * path) {
+/**
+ * @brief Extract the directory part of a path
+ *
+ * Given a path this will extract the directory part of the path with
+ * any file name stripped and any trailing slashes removed.
+ *
+ * If this fails a @c NULL value will be returned.
+ *
+ * @param[in] path Pointer to string containing path
+ *
+ * @return Pointer to a new string (call @c free(3) when no longer required)
+ */
+
+char * lcfgutils_dirname( const char * path ) {
 
   if ( path == NULL )
     return NULL;
@@ -274,6 +381,25 @@ char * lcfgutils_dirname( const char * path) {
   return dir;
 }
 
+/**
+ * @brief Check if a path is readable
+ *
+ * Checks if a path is readable. The path can be either a file or a
+ * directory. Firstly the path is checked using @c stat(2). If the
+ * path exists it is then checked for genuine readability. For a
+ * directory the read access is checked by calling @c opendir(3) and
+ * for files the read access is checked using @c open(2).
+ *
+ * Note that this does NOT guarantee the path will still be readable
+ * when any subsequent attempt is made to open the path for reading,
+ * it may have been deleted or had the access mode changed.
+ *
+ * @param[in] path Pointer to string for path to be checked
+ *
+ * @return boolean which indicates if path is readable
+ *
+ */
+
 bool lcfgutils_file_readable( const char * path ) {
 
   assert( path != NULL );
@@ -290,10 +416,10 @@ bool lcfgutils_file_readable( const char * path ) {
       closedir(dh);
     }
   } else {
-    FILE * fh = fopen( path, "r" );
-    if ( fh != NULL ) {
+    int fd = open( path, O_RDONLY );
+    if ( fd != -1 ) {
       is_readable = true;
-      fclose(fh);
+      close(fd);
     }
   }
 
