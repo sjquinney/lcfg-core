@@ -727,19 +727,36 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
   bool include_meta = options & LCFG_OPT_USE_META;
   bool all_contexts = options & LCFG_OPT_ALL_CONTEXTS;
+  bool ok = true;
+
+  /* Variables which need to be declared ahead of any jumps to 'cleanup' */
+
+  LCFGPackageList * pkglist = NULL;
+  char * tmpfile = NULL;
+  FILE * fp = NULL;
+
+  /* Simple check to see if the file is readable at this point */
 
   if ( !lcfgutils_file_readable(filename) ) {
+    ok = false;
     asprintf( msg, "File '%s' does not exist or is not readable",
 	      filename );
-    return LCFG_STATUS_ERROR;
+    goto cleanup;
   }
 
-  char * tmpfile = strdup("@LCFGTMP@/.lcfg.XXXXXX");
+  /* Temporary file for cpp output, honour any TMPDIR env variable */
+
+  char * tmpdir = getenv("TMPDIR");
+  if ( tmpdir == NULL )
+    tmpdir = "/tmp";
+
+  tmpfile = lcfgutils_catfile( tmpdir, ".lcfg.XXXXXX" );
 
   int tmpfd = mkstemp(tmpfile);
   if ( tmpfd == -1 ) {
-    perror("Failed to open temporary file");
-    exit(EXIT_FAILURE);
+    ok = false;
+    asprintf( msg, "Failed to create temporary file '%s'", tmpfile );
+    goto cleanup;
   }
 
   pid_t pid = fork();
@@ -767,20 +784,20 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     _exit(errno); /* Not normally reached */
   }
 
-  bool ok = true;
-
   int status = 0;
   waitpid( pid, &status, 0 );
   if ( WIFEXITED(status) && WEXITSTATUS(status) != 0 ) {
+    ok = false;
     asprintf( msg, "Failed to process '%s' using cpp",
               filename );
-    ok = false;
+    goto cleanup;
   }
 
-  FILE * fp = fdopen( tmpfd, "r" );
+  fp = fdopen( tmpfd, "r" );
   if ( fp == NULL ) {
-    perror("Failed to open temporary file");
-    exit(EXIT_FAILURE);
+    ok = false;
+    asprintf( msg, "Failed to open temporary file '%s'", tmpfile );
+    goto cleanup;
   }
 
   /* Setup the getline buffer */
@@ -788,13 +805,13 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
   size_t line_len = 128;
   char * line = malloc( line_len * sizeof(char) );
   if ( line == NULL ) {
-    perror( "Failed to allocate memory whilst processing RPM list file" );
+    perror( "Failed to allocate memory whilst processing package list file" );
     exit(EXIT_FAILURE);
   }
 
   /* Results */
 
-  LCFGPackageList * pkglist = lcfgpkglist_new();
+  pkglist = lcfgpkglist_new();
 
   unsigned int merge_rules = LCFG_PKGS_OPT_SQUASH_IDENTICAL;
   if (all_contexts)
@@ -909,16 +926,19 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     free(error_msg);
   }
 
+  free(pkg_deriv);
+  free(pkg_context);
   free(line);
-  fclose(fp);
+
+ cleanup:
+
+  if ( fp != NULL )
+    fclose(fp);
 
   if ( tmpfile != NULL ) {
     unlink(tmpfile);
     free(tmpfile);
   }
-
-  free(pkg_deriv);
-  free(pkg_context);
 
   if ( !ok ) {
 
