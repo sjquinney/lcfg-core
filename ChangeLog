@@ -1,6 +1,101 @@
-2016-09-08  SVN: new release
+2016-10-07  SVN: new release
 
-	* Release: 1.29.1
+	* Release: 1.30.0
+
+2016-10-07 11:04  squinney@INF.ED.AC.UK
+
+	* packages/pkglists.c: Use @LCFGTMP@ instead of /tmp for temporary
+	  file directory
+
+2016-10-07 11:03  squinney@INF.ED.AC.UK
+
+	* include/common.h, include/packages.h, lcfg.yml,
+	  packages/pkglists.c: Completely reworked lcfgpkglist_from_cpp, it
+	  now uses a temporary output file which is parsed. There is no
+	  longer any trapping of stdout/stderr from the cpp command, just
+	  let any messages go to the console of the caller, this makes
+	  things much simpler
+
+2016-10-04 13:40  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, utils/utils.c: Finished adding doxygen docs for
+	  functions
+
+2016-10-04 09:40  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, context/context.c, include/utils.h.cin, lcfg.yml,
+	  packages/package.c, profile/profile.c, resources/resource.c,
+	  utils/utils.c: Tweaked various util functions so that things
+	  should not explode if a NULL is passed in
+
+2016-09-21 17:13  squinney@INF.ED.AC.UK
+
+	* packages/pkglists.c: pass -nostdinc to cpp
+
+2016-09-21 14:19  squinney@INF.ED.AC.UK
+
+	* packages/pkglists.c: wait in a different place
+
+2016-09-21 14:09  squinney@INF.ED.AC.UK
+
+	* packages/pkglists.c: waitpid instead of wait
+
+2016-09-21 14:01  squinney@INF.ED.AC.UK
+
+	* packages/pkglists.c: wait for child and check exit status when
+	  running cpp
+
+2016-09-21 13:47  squinney@INF.ED.AC.UK
+
+	* utils/utils.c: Needed to include dirent.h
+
+2016-09-21 13:45  squinney@INF.ED.AC.UK
+
+	* packages/pkglists.c: Improved error handling when calling cpp
+	  program fails
+
+2016-09-21 12:48  squinney@INF.ED.AC.UK
+
+	* include/utils.h.cin, packages/pkglists.c, utils/utils.c: Added
+	  lcfgutils_file_readable which can be used to test if a file or
+	  directory is readable
+
+2016-09-21 09:49  squinney@INF.ED.AC.UK
+
+	* packages/pkglists.c: Ignore newline characters when reading cpp
+	  package list
+
+2016-09-21 09:41  squinney@INF.ED.AC.UK
+
+	* packages/pkglists.c: Need to include unistd.h
+
+2016-09-21 09:39  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/pkglists.c: Added first attempt at
+	  lfgpkglist_from_cpp which can read a package list from an rpmcfg
+	  file
+
+2016-09-09 13:10  squinney@INF.ED.AC.UK
+
+	* context/context.c, lcfg.yml: Updated lcfgcontext_is_false to be
+	  consistent with the boolean canonicalisation for resource values.
+	  This also fixes a bug where any value string beginning with a 0
+	  (zero) would be considered false
+
+2016-09-08 15:48  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: Write the priority for a resource into the DB using
+	  the correct key
+
+2016-09-08 13:50  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, xml/components.c: Ensure the profile component is
+	  always loaded even when only looking for specific components.
+	  This ensures useful metadata is always easily accessible
+
+2016-09-08 13:28  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.29.1
 
 2016-09-07 10:51  squinney@INF.ED.AC.UK
 
