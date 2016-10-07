@@ -27,6 +27,8 @@ typedef enum {
 #define LCFG_OPT_NOTEMPLATES   16
 #define LCFG_OPT_ALLOW_NOEXIST 32
 #define LCFG_OPT_ENCODE        64
+#define LCFG_OPT_ALL_CONTEXTS 128
+#define LCFG_OPT_USE_META     256
 
 /* Generic single-linked list */
 

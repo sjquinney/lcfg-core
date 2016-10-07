@@ -721,8 +721,11 @@ LCFGPackageList * lcfgpkglist_search( const LCFGPackageList * pkglist,
 
 LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 				 LCFGPackageList ** result,
-				 bool all_contexts,
+                                 unsigned int options,
 				 char ** msg ) {
+
+  bool include_meta = options & LCFG_OPT_USE_META;
+  bool all_contexts = options & LCFG_OPT_ALL_CONTEXTS;
 
   if ( !lcfgutils_file_readable(filename) ) {
     asprintf( msg, "File '%s' does not exist or is not readable",
@@ -730,13 +733,13 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     return LCFG_STATUS_ERROR;
   }
 
-  int pipefd[2];
-  if ( pipe(pipefd) == -1 ) {
-    perror("Failed to create pipe");
+  char * tmpfile = strdup("/tmp/.lcfg.XXXXXX");
+
+  int tmpfd = mkstemp(tmpfile);
+  if ( tmpfd == -1 ) {
+    perror("Failed to open temporary file");
     exit(EXIT_FAILURE);
   }
-
-  int status;
 
   pid_t pid = fork();
   if ( pid == -1 ) {
@@ -744,36 +747,42 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     exit(EXIT_FAILURE);
   } else if ( pid == 0 ) {
 
-    char * cpp_cmd[] = { "cpp", "-undef", "-nostdinc",
-			 "-DINCLUDE_META",
-			 NULL, NULL, NULL };
+    char * cpp_cmd[] = { "cpp", "-undef", "-nostdinc", 
+                         "-Wall", "-Wundef",
+			 NULL, NULL, NULL, NULL, NULL };
+    int i = 4;
 
-    if ( all_contexts ) {
-      cpp_cmd[4] = "-DALL_CONTEXTS";
-      cpp_cmd[5] = (char *) filename;
-    } else {
-      cpp_cmd[4] = (char *) filename;
-    }
+    if ( all_contexts )
+      cpp_cmd[++i] = "-DALL_CONTEXTS";
 
-    close(pipefd[0]);    /* close reading end in the child */
+    if ( include_meta )
+      cpp_cmd[++i] = "-DINCLUDE_META";
 
-    dup2( pipefd[1], STDOUT_FILENO );  /* send stdout to the pipe */
-    dup2( pipefd[1], STDERR_FILENO );  /* send stderr to the pipe */
-
-    close(pipefd[1]);    /* this descriptor is no longer needed */
+    cpp_cmd[++i] = (char *) filename; /* input */
+    cpp_cmd[++i] = tmpfile;           /* output */
 
     execvp( cpp_cmd[0], cpp_cmd ); 
 
     _exit(errno); /* Not normally reached */
   }
 
-  close(pipefd[1]);  /* close the write end of the pipe in the parent */
+  bool ok = true;
 
-  FILE * fp = fdopen( pipefd[0], "r" );
-  if ( fp == NULL ) {
-    asprintf( msg, "Failed to process '%s' using cpp", filename );
-    return LCFG_STATUS_ERROR;
+  int status = 0;
+  waitpid( pid, &status, 0 );
+  if ( WIFEXITED(status) && WEXITSTATUS(status) != 0 ) {
+    asprintf( msg, "Failed to process '%s' using cpp",
+              filename );
+    ok = false;
   }
+
+  FILE * fp = fdopen( tmpfd, "r" );
+  if ( fp == NULL ) {
+    perror("Failed to open temporary file");
+    exit(EXIT_FAILURE);
+  }
+
+  /* Setup the getline buffer */
 
   size_t line_len = 128;
   char * line = malloc( line_len * sizeof(char) );
@@ -782,131 +791,128 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     exit(EXIT_FAILURE);
   }
 
+  /* Results */
+
   LCFGPackageList * pkglist = lcfgpkglist_new();
-  lcfgpkglist_set_merge_rules( pkglist,
-	            LCFG_PKGS_OPT_SQUASH_IDENTICAL | LCFG_PKGS_OPT_KEEP_ALL );
 
-  char * pkg_context = NULL;
+  unsigned int merge_rules = LCFG_PKGS_OPT_SQUASH_IDENTICAL;
+  if (all_contexts)
+    merge_rules = merge_rules | LCFG_PKGS_OPT_KEEP_ALL;
+
+  lcfgpkglist_set_merge_rules( pkglist, merge_rules );
+
   char * pkg_deriv   = NULL;
+  char * pkg_context = NULL;
 
-  bool ok = true;
   unsigned int linenum = 0;
   while( ok && getline( &line, &line_len, fp ) != -1 ) {
-
-    waitpid( pid, &status, WNOHANG );
-    if ( WIFEXITED(status) && WEXITSTATUS(status) != 0 ) {
-      asprintf( msg, "Failed to process '%s' using cpp: %s",
-		filename, line );
-      ok = false;
-      break;
-    }
-
     linenum++;
 
-    /* Remove newline/carriage return characters */
+    lcfgutils_trim_whitespace(line);
 
-    char * ptr = line;
-    while ( *ptr != '\0' ) {
-      if ( *ptr == '\n' || *ptr == '\r' ) {
-	*ptr = '\0';
-	break;
-      }
-
-      ptr++;
-    }
-
-    /* Ignore empty lines */
     if ( *line == '\0' ) continue;
 
     if ( *line == '#' ) {
-      if ( strncmp( line, "#pragma LCFG ", 13 ) == 0 ) {
+      if ( strncmp( line, "#pragma LCFG ", 13 ) == 0 && include_meta ) {
 
-	if ( strncmp( line + 13, "derive \"", 8 ) == 0 ) {
-	  free(pkg_deriv);
-
-	  const char * value = line + 13 + 8;
-	  size_t len = strlen(value);
-	  pkg_deriv = strndup( value, len - 1 ); /* Ignore final '"' */
-
-	} else if ( strncmp( line + 13, "context \"", 9 ) == 0 ) {
-	  free(pkg_context);
-
-	  const char * value = line + 13 + 9;
-	  size_t len = strlen(value);
-	  pkg_context = strndup( value, len - 1 );  /* Ignore final '"' */
-	}
+        if ( strncmp( line + 13, "derive \"", 8 ) == 0 ) {
+          free(pkg_deriv);
+          const char * value = line + 13 + 8;
+          size_t len = strlen(value);
+          pkg_deriv = strndup( value, len - 1 ); /* Ignore final '"' */
+        } else if ( strncmp( line + 13, "context \"", 9 ) == 0 ) {
+          free(pkg_context);
+          const char * value = line + 13 + 9;
+          size_t len = strlen(value);
+          pkg_context = strndup( value, len - 1 ); /* Ignore final '"' */
+        }
 
       }
 
-    } else {
+      continue;
+    }
 
-      LCFGPackage * pkg = NULL;
-      char * parse_msg = NULL;
+    char * error_msg = NULL;
+    bool keep_package = true;
 
-      LCFGStatus parse_status =
-	lcfgpackage_from_string( line, &pkg, &parse_msg );
+    LCFGPackage * pkg = NULL;
+    LCFGStatus parse_status
+      = lcfgpackage_from_string( line, &pkg, &error_msg );
 
-      if ( parse_status != LCFG_STATUS_OK ) {
-	ok = false;
-	asprintf( msg, "Failed to parse package '%s' at line %u: %s",
-		  line, linenum, parse_msg );
-      }
+    ok = ( parse_status != LCFG_STATUS_ERROR );
 
-      free(parse_msg);
+    if ( ok && include_meta ) {
+      free(error_msg);
+      error_msg = NULL;
 
       if ( ok && pkg_deriv != NULL ) {
-	if ( lcfgpackage_set_derivation( pkg, pkg_deriv ) ) {
-	  pkg_deriv = NULL; /* Ensure memory is NOT immediately freed */
-	} else {
-	  ok = false;
-	  asprintf( msg, "Invalid derivation '%s' at line %u",
-		    pkg_deriv, linenum );
-	}
+        if ( lcfgpackage_set_derivation( pkg, pkg_deriv ) ) {
+          pkg_deriv = NULL; /* Ensure memory is NOT immediately freed */
+        } else {
+          ok = false;
+          error_msg = strdup("Invalid derivation");
+        }
       }
 
       if ( ok && pkg_context != NULL ) {
-	if ( lcfgpackage_set_context( pkg, pkg_context ) ) {
-	  pkg_context = NULL; /* Ensure memory is NOT immediately freed */
-	} else {
-	  ok = false;
-	  asprintf( msg, "Invalid context '%s' at line %u",
-		    pkg_context, linenum );
-	}
-      }
-
-      if (ok) {
-
-	char * merge_msg = NULL;
-	LCFGChange merge_change = 
-	  lcfgpkglist_merge_package( pkglist, pkg, &merge_msg );
-
-	if ( merge_change != LCFG_CHANGE_ADDED ) {
-	  ok = false;
-	  asprintf( msg,
-		    "Error at line %u: Failed to merge package into list: %s",
-		    linenum, merge_msg );
-
-	  lcfgpackage_destroy(pkg);
-	  pkg = NULL;
-	}
-
-	free(merge_msg);
-
+        if ( lcfgpackage_set_context( pkg, pkg_context ) ) {
+          pkg_context = NULL; /* Ensure memory is NOT immediately freed */
+        } else {
+          ok = false;
+          error_msg = strdup("Invalid context");
+        }
       }
 
     }
 
+    if (ok) {
+      free(error_msg);
+      error_msg = NULL;
+
+      LCFGChange merge_status =
+        lcfgpkglist_merge_package( pkglist, pkg, &error_msg );
+
+      if ( merge_status == LCFG_CHANGE_ERROR ) {
+        ok = false;
+      } else if ( merge_status == LCFG_CHANGE_NONE ) {
+        keep_package = false;
+      }
+
+    }
+
+    if (!ok) {
+      keep_package = false;
+
+      if ( error_msg == NULL ) {
+        asprintf( msg, "Error at line %u", linenum );
+      } else {
+        asprintf( msg, "Error at line %u: %s", linenum, error_msg );
+      }
+
+    }
+
+    if (!keep_package)
+      lcfgpackage_destroy(pkg);
+
+    free(error_msg);
   }
 
-  if ( pkg_context != NULL )
-    free(pkg_context);
-
-  if ( pkg_deriv != NULL )
-    free(pkg_deriv);
-
   free(line);
+  fclose(fp);
 
-  if (!ok) {
+  if ( tmpfile != NULL ) {
+    unlink(tmpfile);
+    free(tmpfile);
+  }
+
+  free(pkg_deriv);
+  free(pkg_context);
+
+  if ( !ok ) {
+
+    if ( *msg == NULL )
+      asprintf( msg, "Failed to process package list file" );
+
     lcfgpkglist_destroy(pkglist);
     pkglist = NULL;
   }

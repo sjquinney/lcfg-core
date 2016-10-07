@@ -325,7 +325,7 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
 
 LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 				 LCFGPackageList ** result,
-				 bool all_contexts,
+                                 unsigned int options,
 				 char ** msg )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
