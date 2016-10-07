@@ -733,7 +733,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     return LCFG_STATUS_ERROR;
   }
 
-  char * tmpfile = strdup("/tmp/.lcfg.XXXXXX");
+  char * tmpfile = strdup("@LCFGTMP@/.lcfg.XXXXXX");
 
   int tmpfd = mkstemp(tmpfile);
   if ( tmpfd == -1 ) {
