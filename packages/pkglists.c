@@ -721,6 +721,7 @@ LCFGPackageList * lcfgpkglist_search( const LCFGPackageList * pkglist,
 
 LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 				 LCFGPackageList ** result,
+				 const char * defarch,
                                  unsigned int options,
 				 char ** msg ) {
 
@@ -840,6 +841,17 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
       = lcfgpackage_from_string( line, &pkg, &error_msg );
 
     ok = ( parse_status != LCFG_STATUS_ERROR );
+
+    if ( ok && !lcfgpackage_has_arch(pkg) && defarch != NULL ) {
+      free(error_msg);
+      error_msg = NULL;
+
+      if ( !lcfgpackage_set_arch( pkg, defarch ) ) {
+	ok = false;
+	asprintf( &error_msg, "Failed to set package architecture to '%s'",
+		  defarch );
+      }
+    }
 
     if ( ok && include_meta ) {
       free(error_msg);
