@@ -1,6 +1,26 @@
 2016-10-07  SVN: new release
 
-	* Release: 1.30.0
+	* Release: 1.30.1
+
+2016-10-07 13:11  squinney@INF.ED.AC.UK
+
+	* packages/pkglists.c: Need to dup the default architecture string
+	  for each pacakge where is needed
+
+2016-10-07 13:06  squinney@INF.ED.AC.UK
+
+	* packages/pkglists.c: Improved error handling for
+	  lcfgpkglist_from_cpp
+
+2016-10-07 12:44  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/pkglists.c: Added support for
+	  specifying the default architecture when read a package list from
+	  a cpp-style file
+
+2016-10-07 11:05  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.30.0
 
 2016-10-07 11:04  squinney@INF.ED.AC.UK
 
