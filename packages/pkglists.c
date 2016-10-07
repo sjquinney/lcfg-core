@@ -863,7 +863,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
       free(error_msg);
       error_msg = NULL;
 
-      if ( !lcfgpackage_set_arch( pkg, defarch ) ) {
+      if ( !lcfgpackage_set_arch( pkg, strdup(defarch) ) ) {
 	ok = false;
 	asprintf( &error_msg, "Failed to set package architecture to '%s'",
 		  defarch );
