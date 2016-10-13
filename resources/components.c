@@ -933,7 +933,7 @@ char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp) {
 
     if ( lcfgtaglist_contains( reslist, res_name ) ) continue;
 
-    if ( lcfgtaglist_append( reslist, res_name )
+    if ( lcfgtaglist_append( reslist, (char *) res_name )
          != LCFG_CHANGE_ADDED ) {
 
       ok = false;
