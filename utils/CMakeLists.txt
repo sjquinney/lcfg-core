@@ -66,10 +66,10 @@ endif(REQ_DNS_DOMAIN_NAME)
 
 # Specify where various files should be installed.
 
-install(PROGRAMS ${BIN_TARGETS}
+install(TARGETS ${BIN_TARGETS}
         DESTINATION bin)
 
-install(PROGRAMS ${SBIN_TARGETS}
+install(TARGETS ${SBIN_TARGETS}
         DESTINATION sbin)
 
 SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
