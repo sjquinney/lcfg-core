@@ -12,6 +12,37 @@
 
 #include "bdb.h"
 
+/**
+ * @brief Load LCFG profile from Berkeley DB
+ *
+ * This will load the components and resources for an LCFG profile
+ * from a Berkeley DB file. If the @c comps_wanted parameter is @c
+ * NULL then all components are loaded, otherwise the set of
+ * components can be restricted by passing in an @c LCFGTagList of the
+ * component names.
+ *
+ * Typically the keys in the DB will be stored with a @e namespace
+ * prefix which is the short nodename for a profile (e.g. foo for
+ * foo.lcfg.org).
+ *
+ * By default the function will return an error status if the file
+ * does not exist. This behaviour can be altered to returning success
+ * and an empty @c LCFGProfile struct by specifying the @c
+ * LCFG_OPT_ALLOW_NOEXIST option. This is useful when loading an 'old'
+ * profile for comparison with a 'new' one when the old file might
+ * legitimately not exist.
+ *
+ * @param[in] filename Path to the Berkeley DB file.
+ * @param[out] result Reference to the pointer for the @c LCFGProfile struct.
+ * @param[in] comps_wanted Whitelist for component names.
+ * @param[in] namespace Namespace for the DB keys (usually the nodename)
+ * @param[in] options Controls the behaviour of the process.
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgprofile_from_bdb( const char * filename,
                                  LCFGProfile ** result,
                                  const LCFGTagList * comps_wanted,
@@ -20,7 +51,6 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
                                  char ** msg ) {
 
   *msg = NULL;
-  *result = NULL;
 
   LCFGStatus status = LCFG_STATUS_OK;
 
@@ -45,9 +75,7 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
                                          msg );
   }
 
- cleanup:
-
-  lcfgbdb_end_reader(dbh);
+  lcfgbdb_close_db(dbh);
 
   if ( status != LCFG_STATUS_OK ) {
     lcfgprofile_destroy(profile);
@@ -59,6 +87,33 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
   return status;
 }
 
+/**
+ * @brief Load LCFG component from Berkeley DB
+ *
+ * This will load the resources for the specified LCFG component from
+ * a Berkeley DB file.
+ *
+ * Typically the keys in the DB will be stored with a @e namespace
+ * prefix which is the short nodename for a profile (e.g. foo for
+ * foo.lcfg.org).
+ *
+ * By default the function will return an error status if the file
+ * does not exist. This behaviour can be altered to returning success
+ * by specifying the @c LCFG_OPT_ALLOW_NOEXIST option. This is useful
+ * when loading an 'old' profile for comparison with a 'new' one when
+ * the old file might legitimately not exist.
+ *
+ * @param[in] filename Path to the Berkeley DB file.
+ * @param[out] result Reference to the pointer for the @c LCFGComponent struct.
+ * @param[in] compname Name of required component
+ * @param[in] namespace Namespace for the DB keys (usually the nodename)
+ * @param[in] options Controls the behaviour of the process.
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgcomponent_from_bdb( const char * filename,
                                    LCFGComponent ** result,
                                    const char * compname,
@@ -67,20 +122,8 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
                                    char ** msg ) {
 
   *msg = NULL;
-  *result = NULL;
 
   if ( !lcfgcomponent_valid_name(compname) ) {
-    asprintf( msg, "Invalid component name '%s'", compname );
-    return LCFG_STATUS_ERROR;
-  }
-
-  LCFGTagList * collect_comps = lcfgtaglist_new();
-  collect_comps->manage = false;
-  if ( lcfgtaglist_append( collect_comps, (char *) compname )
-       != LCFG_CHANGE_ADDED ) {
-
-    lcfgtaglist_destroy(collect_comps);
-
     asprintf( msg, "Invalid component name '%s'", compname );
     return LCFG_STATUS_ERROR;
   }
@@ -88,59 +131,96 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
   /* Any failures after this point should go via the 'cleanup' phase */
 
   LCFGStatus status = LCFG_STATUS_OK;
-  LCFGComponentList * components = NULL;
   LCFGComponent * component = NULL;
 
   DB * dbh = lcfgbdb_init_reader( filename, msg );
 
   if ( dbh == NULL ) {
-    if ( errno != ENOENT || !(options&LCFG_OPT_ALLOW_NOEXIST) ) {
+    if ( errno != ENOENT || !(options&LCFG_OPT_ALLOW_NOEXIST) )
       status = LCFG_STATUS_ERROR;
-    }
-    goto cleanup;
-  }
-
-  status = lcfgbdb_process_components( dbh,
-                                       &components,
-                                       collect_comps,
-                                       namespace,
-                                       msg );
-
-  if ( status != LCFG_STATUS_OK )
-    goto cleanup;
-
-  component = lcfgcomplist_find_component( components, compname );
-
-  if ( component != NULL ) {
-    /* If a component was found then it must not be destroyed when the
-       complist is destroyed. */
-
-    lcfgcomponent_inc_ref(component);
 
   } else {
-    status = LCFG_STATUS_ERROR;
-    asprintf( msg, "Failed to load resources for component '%s'",
-              compname );
+
+    /* Create a new tag list containing the component name. Need to
+       ensure that when the tag list is destroyed the compname is not
+       freed. */
+  
+    LCFGTagList * collect_comps = lcfgtaglist_new();
+    collect_comps->manage = false;
+    if ( lcfgtaglist_append( collect_comps, (char *) compname )
+	 != LCFG_CHANGE_ADDED ) {
+
+      status = LCFG_STATUS_ERROR;
+      asprintf( msg, "Invalid component name '%s'", compname );
+    }
+
+    LCFGComponentList * components = NULL;
+
+    if ( status != LCFG_STATUS_ERROR ) {
+      status = lcfgbdb_process_components( dbh,
+					   &components,
+					   collect_comps,
+					   namespace,
+					   msg );
+    }
+
+    lcfgtaglist_destroy(collect_comps);
+
+    if ( status != LCFG_STATUS_ERROR ) {
+      component = lcfgcomplist_find_component( components, compname );
+
+      if ( component != NULL ) {
+	/* If a component was found then it must not be destroyed when the
+	   complist is destroyed. */
+
+	lcfgcomponent_inc_ref(component);
+
+      } else {
+	status = LCFG_STATUS_ERROR;
+	asprintf( msg, "Failed to load resources for component '%s'",
+		  compname );
+      }
+    }
+
+    lcfgcomplist_destroy(components);
+
+    /* Once complist is destroyed we decrement the component reference
+       count so it can be cleaned up later. */
+
+    if ( component != NULL )
+      lcfgcomponent_dec_ref(component);
+
   }
-
- cleanup:
-
-  lcfgbdb_end_reader(dbh);
-
-  lcfgtaglist_destroy(collect_comps);
-
-  lcfgcomplist_destroy(components);
-
-  /* Once complist is destroyed we decrement the component reference
-     count so it can be cleaned up later. */
-
-  if ( component != NULL )
-    lcfgcomponent_dec_ref(component);
+  
+  lcfgbdb_close_db(dbh);
 
   *result = component;
 
   return status;
 }
+
+/**
+ * @brief Process DB file to load LCFG components
+ *
+ * Iterates through all records in the database and loads the LCFG
+ * component and resource structures. If the @c comps_wanted parameter
+ * is @c NULL then all components are loaded, otherwise the set of
+ * components can be restricted by passing in an @c LCFGTagList of the
+ * component names.
+ *
+ * Typically the keys in the DB will be stored with a @e namespace
+ * prefix which is the short nodename for a profile (e.g. foo for
+ * foo.lcfg.org).
+ *
+ * @param[in] dbh Handle for database.
+ * @param[out] result Reference to the pointer for the @c LCFGComponentList struct.
+ * @param[in] comps_wanted Whitelist for component names.
+ * @param[in] namespace Namespace for the DB keys (usually the nodename).
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process.
+ *
+ */
 
 LCFGStatus lcfgbdb_process_components( DB * dbh,
                                        LCFGComponentList ** result,
@@ -291,6 +371,27 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
   return status;
 }
 
+/**
+ * @brief Open a Berkeley DB file
+ *
+ * Low-level function to open a DB file using the @c DB_HASH access
+ * method and return the database handle. It is normally preferable to
+ * use either lcfgbdb_init_writer() or lcfgbdb_init_reader().
+ * 
+ * The flags are passed through to the @c open function call. See the
+ * Berkeley DB documentation for full details (e.g. @c DB_CREATE,
+ * @c DB_EXCL and @c DB_RDONLY).
+ *
+ * If the file cannot be opened a @c NULL value will be returned.
+ *
+ * @param[in] filename The path to the Berkeley DB file.
+ * @param[in] flags Flags which control how the file is opened.
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Database handle
+ *
+ */
+
 DB * lcfgbdb_open_db( const char * filename,
                       u_int32_t flags,
                       char ** msg ) {
@@ -325,6 +426,21 @@ DB * lcfgbdb_open_db( const char * filename,
   return dbp;
 }
 
+/**
+ * @brief Open a Berkeley DB file for reading
+ *
+ * Opens a Berkeley DB file for reading using the @c DB_HASH access
+ * method and returns the database handle.
+ *
+ * If the file cannot be opened a @c NULL value will be returned.
+ *
+ * @param[in] filename The path to the Berkeley DB file.
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Database handle
+ *
+ */
+
 DB * lcfgbdb_init_reader( const char * filename,
                           char ** msg ) {
 
@@ -345,10 +461,21 @@ DB * lcfgbdb_init_reader( const char * filename,
   return lcfgbdb_open_db( filename, DB_RDONLY, msg );
 }
 
-void lcfgbdb_end_reader( DB * dbh ) {
+/**
+ * @brief Close a database handle
+ *
+ * If the specified database handle is not @c NULL then it will be
+ * closed.
+ *
+ * @param[in] dbh Database handle
+ *
+ */
+
+void lcfgbdb_close_db( DB * dbh ) {
 
   if ( dbh != NULL )
-    dbh->close( dbh, 0 ); 
+    dbh->close( dbh, 0 );
+
 }
 
 /* eof */
