@@ -319,7 +319,7 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
   }
 
   /* even if the store fails we need to close the DB handle at this point */
-  lcfgbdb_end_reader(dbh);
+  lcfgbdb_close_db(dbh);
 
   if ( status == LCFG_STATUS_OK ) {
 

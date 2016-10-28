@@ -19,7 +19,7 @@ DB * lcfgbdb_init_reader( const char * filename,
                           char ** msg )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-void lcfgbdb_end_reader( DB * dbh );
+void lcfgbdb_close_db( DB * dbh );
 
 DB * lcfgbdb_init_writer( const char * filename,
                           char ** msg )
