@@ -264,6 +264,10 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
 
   *errmsg = NULL;
 
+  /* Early declarations so available if jumping to cleanup */
+  LCFGStatus status = LCFG_STATUS_OK;
+  char * tmpfile = NULL;
+
   /* Only use the value for profile.node when the namespace has not
      been specified */
 
@@ -274,8 +278,6 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
       node = NULL;
     }
   }
-
-  LCFGStatus status = LCFG_STATUS_OK;
 
   /* This generates a 'safe' temporary file name in the same directory
      as the target DB file so that a rename will work. Note that this
@@ -291,7 +293,7 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
     goto cleanup;
   }
 
-  char * tmpfile = tempnam( dirname, ".lcfg" );
+  tmpfile = tempnam( dirname, ".lcfg" );
   free(dirname);
 
   if ( tmpfile == NULL ) {
