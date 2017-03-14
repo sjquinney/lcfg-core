@@ -2,6 +2,10 @@ project(context C)
 
 cmake_minimum_required(VERSION 2.6)
 
+find_package(BISON)
+BISON_TARGET(ctxparser ctxparser.y ${CMAKE_CURRENT_BINARY_DIR}/ctxparser.c
+             COMPILE_FLAGS -Wall)
+ 
 # Generate the lcfg context shared library.
 
 set(MY_SOURCES context.c  ctxlist.c  setctx.c  tools.c)
