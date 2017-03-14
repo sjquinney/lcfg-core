@@ -9,6 +9,7 @@ Source:         @LCFG_TARNAME@
 Provides:       lcfg-utils
 BuildRequires:  cmake >= 2.6.0, pkgconfig
 BuildRequires:  libxml2-devel
+BuildRequires:  bison, flex
 %if 0%{?rhel} && %{rhel} < 7
 BuildRequires:  db4-devel
 %else
