@@ -3,12 +3,24 @@ project(context C)
 cmake_minimum_required(VERSION 2.6)
 
 find_package(BISON)
-BISON_TARGET(ctxparser ctxparser.y ${CMAKE_CURRENT_BINARY_DIR}/ctxparser.c
+if(NOT BISON_FOUND)
+  message(FATAL_ERROR "Could not find bison")
+endif(NOT BISON_FOUND)
+
+find_package(FLEX)
+if(NOT FLEX_FOUND)
+  message(FATAL_ERROR "Could not find flex")
+endif(NOT FLEX_FOUND)
+
+BISON_TARGET(CtxParser ctxparser.y ${CMAKE_CURRENT_BINARY_DIR}/ctxparser.c
              COMPILE_FLAGS -Wall)
- 
+FLEX_TARGET(CtxScanner ctxlexer.l  ${CMAKE_CURRENT_BINARY_DIR}/ctxlexer.c)
+ADD_FLEX_BISON_DEPENDENCY(CtxScanner CtxParser)
+
 # Generate the lcfg context shared library.
 
-set(MY_SOURCES context.c  ctxlist.c  setctx.c  tools.c)
+set(MY_SOURCES context.c  ctxlist.c  setctx.c  tools.c 
+               ${BISON_CtxParser_OUTPUTS} ${FLEX_CtxScanner_OUTPUTS} )
 
 add_library(lcfg_context SHARED ${MY_SOURCES})
 
