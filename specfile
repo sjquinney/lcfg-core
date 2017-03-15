@@ -37,7 +37,7 @@ building software and linking against the LCFG profile libraries.
 
 %prep
 %setup
-%cmake
+%cmake -DLCFGLOG:STRING=/var/lcfg/log -DLCFGTMP:STRING=/var/lcfg/tmp
 
 %build
 make

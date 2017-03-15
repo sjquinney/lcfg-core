@@ -4,6 +4,11 @@ project (lcfg-core C)
 
 SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra" )
 
+set(LCFGTMP "/var/lcfg/tmp" CACHE PATH "Default directory for temporary files")
+set(LCFGLOG "/var/lcfg/log" CACHE PATH "Default directory for log files")
+
+configure_file(include/utils.h.cin include/utils.h @ONLY)
+
 # Need to look for headers in both source and binary directories, they
 # are not always the same location. Anything translated from a *.cin
 # file will be found in the binary directory.

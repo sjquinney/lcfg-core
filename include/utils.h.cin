@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-#define LOGDIR "@LCFGLOG@"
+#define LCFGLOG "@LCFGLOG@"
 #define PROGRESSFILE "@LCFGTMP@/utils.progress"
 
 extern int LCFG_FancyStatus( void );
