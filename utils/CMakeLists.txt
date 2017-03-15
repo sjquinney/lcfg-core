@@ -50,18 +50,6 @@ if(REQ_SETSID)
   set(BIN_TARGETS ${BIN_TARGETS} setsid)
 endif(REQ_SETSID)
 
-# dnsdomainname is only needed on solaris
-
-IF(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
-  SET(REQ_DNS_DOMAIN_NAME yes CACHE BOOL "Is the dnsdomainname helper required?")
-ELSE(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
-  SET(REQ_DNS_DOMAIN_NAME no CACHE BOOL "Is the dnsdomainname helper required?")
-ENDIF(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
-
-if(REQ_DNS_DOMAIN_NAME)
-  install(PROGRAMS dnsdomainname DESTINATION bin)
-endif(REQ_DNS_DOMAIN_NAME)
-
 # Specify where various files should be installed.
 
 install(TARGETS ${BIN_TARGETS}
