@@ -7,7 +7,8 @@ SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra" )
 set(LCFGTMP "/var/lcfg/tmp" CACHE PATH "Default directory for temporary files")
 set(LCFGLOG "/var/lcfg/log" CACHE PATH "Default directory for log files")
 
-configure_file(include/utils.h.cin include/utils.h @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/utils.h.in
+               ${CMAKE_CURRENT_BINARY_DIR}/include/utils.h @ONLY)
 
 # Need to look for headers in both source and binary directories, they
 # are not always the same location. Anything translated from a *.cin
