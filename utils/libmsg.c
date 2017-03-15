@@ -76,6 +76,44 @@ static void LCFG_Escalate( char *omp, char *msg, char *arg );
 
 static FILE *where = NULL;
 
+#ifndef PATH_MAX
+#define PATH_MAX        4096
+#endif
+
+static char * LCFG_LogDir( const char * new_logdir ) {
+
+  static char logdir[PATH_MAX+1] = "";
+
+  if ( new_logdir != NULL ) {
+    if ( strlen(new_logdir) <= PATH_MAX ) {
+      strncpy( logdir, new_logdir, PATH_MAX );
+    } else {
+      errno = ENAMETOOLONG;
+      return NULL;
+    }
+  }
+
+  if ( logdir[0] == '\0' ) {
+
+    const char * env_logdir = getenv("_LOGDIR");
+    if ( env_logdir != NULL ) {
+      if ( strlen(env_logdir) <= PATH_MAX ) {
+        strncpy( logdir, env_logdir, PATH_MAX );
+      } else {
+        errno = ENAMETOOLONG;
+        return NULL;
+      }
+    }
+
+  }
+
+  /* Final default */
+  if ( logdir[0] == '\0' )
+    strncpy( logdir, LCFGLOG, PATH_MAX );
+
+  return logdir;
+}
+
 /*************************************************************************/
   void LCFG_SetOutput( FILE *fp )
 /*************************************************************************/
@@ -385,10 +423,11 @@ static FILE *where = NULL;
   char *logfile, *lf = getenv("_LOGFILE");
   FILE *fp;
   int newfile;
-  
+  const char * logdir = LCFG_LogDir(NULL);
+
   if (s==NULL) return 0;
   if (lf && *lf) { logfile = LCFG_Append(lf,(ext?ext:NULL),NULL); }
-  else { logfile = LCFG_Append(LOGDIR,"/",comp,(ext?ext:NULL),NULL); }
+  else { logfile = LCFG_Append(logdir,"/",comp,(ext?ext:NULL),NULL); }
   if (logfile==NULL) { free(k); return 0; }
   
   newfile = access(logfile,F_OK);
@@ -560,9 +599,10 @@ static FILE *where = NULL;
   /* Use this to reset errors, warnings and other events */
   
   char *logfile, *lf = getenv("_LOGFILE");
-  
+  const char * logdir = LCFG_LogDir(NULL);
+
   if (lf && *lf) { logfile = LCFG_Append(lf,".",event,NULL); }
-  else { logfile = LCFG_Append(LOGDIR,"/",comp,".",event,NULL); }
+  else { logfile = LCFG_Append(logdir,"/",comp,".",event,NULL); }
   if (logfile==NULL) { return; }
   
   if (unlink(logfile) != 0) {
