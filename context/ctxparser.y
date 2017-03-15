@@ -4,9 +4,10 @@
   void lcfgctx_yyerror (void * ctxscanner, int * priority, char const * msg);
 %}
 
-%define api.pure
+%define api.pure full
 %lex-param {void * ctxscanner}
-%parse-param {void * ctxscanner} {int *priority}
+%parse-param {void * ctxscanner}
+%parse-param {int *priority}
 %name-prefix "lcfgctx_yy"
 %output  "ctxparser.c"
 %defines "ctxparser.h"
@@ -31,14 +32,14 @@
 %token OP_AND
 %right OP_NOT
 
-%token END 0 "end of data"
+%token END 0
 
 %type <intValue> expression term
 
 %%
 
 query:
-  %empty            { *priority = 0; }
+  /* empty */       { *priority = 0; }
   | expression      { printf("result: %d\n", $expression);
                       *priority = $expression; }
   ;
