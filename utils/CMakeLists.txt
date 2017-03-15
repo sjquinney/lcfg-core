@@ -28,15 +28,13 @@ SET_TARGET_PROPERTIES(lcfg_utils-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 
 add_executable(daemon daemon.c)
 
-add_executable(lcfgack lcfgack.c)
-
 add_executable(lcfgmsg lcfgmsg.c)
 target_link_libraries(lcfgmsg lcfg_utils)
 
 add_executable(shiftpressed shiftpressed.c)
 target_link_libraries(shiftpressed lcfg_utils)
 
-set(SBIN_TARGETS daemon lcfgack lcfgmsg shiftpressed)
+set(SBIN_TARGETS daemon lcfgmsg shiftpressed)
 set(BIN_TARGETS)
 
 # setsid is needed on solaris and macosx

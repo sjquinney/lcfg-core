@@ -65,7 +65,6 @@ rm -f $RPM_BUILD_ROOT/usr/sbin/setctx
 %{_bindir}/parse_pkgspec
 #%{_sbindir}/setctx
 %{_sbindir}/daemon
-%{_sbindir}/lcfgack
 %{_sbindir}/lcfgmsg
 %{_sbindir}/shiftpressed
 %{_bindir}/lcfg_xml_reader

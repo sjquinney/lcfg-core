@@ -659,6 +659,6 @@ static FILE *where = NULL;
     }
   }
 
-  execl(LCFGACK,"lcfgack",(char*)0);
+  execlp("lcfgack","lcfgack",(char*)NULL);
   exit(1);
 }
