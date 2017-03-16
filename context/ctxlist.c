@@ -324,14 +324,12 @@ LCFGStatus lcfgctxlist_from_file( const char * filename,
     if ( status == LCFG_STATUS_OK ) {
 
       LCFGChange rc = lcfgctxlist_update( ctxlist, ctx );
+      lcfgcontext_release(ctx);
 
       if ( rc == LCFG_CHANGE_ERROR ) {
         asprintf( msg, "Failed to store context '%s'", ctx_str );
         status = LCFG_STATUS_ERROR;
       }
-
-      if ( rc == LCFG_CHANGE_NONE )
-        lcfgcontext_release(ctx);
 
     }
 
