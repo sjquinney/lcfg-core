@@ -24,18 +24,12 @@ LCFGContextNode * lcfgctxnode_new(LCFGContext * ctx) {
   ctxnode->context = ctx;
   ctxnode->next    = NULL;
 
-  lcfgcontext_inc_ref(ctx);
-
   return ctxnode;
 }
 
 void lcfgctxnode_destroy(LCFGContextNode * ctxnode) {
 
-  if ( ctxnode == NULL )
-    return;
-
-  if ( ctxnode->context != NULL )
-    lcfgcontext_dec_ref(ctxnode->context);
+  if ( ctxnode == NULL ) return;
 
   ctxnode->context = NULL;
   ctxnode->next    = NULL;
@@ -71,7 +65,7 @@ void lcfgctxlist_destroy(LCFGContextList * ctxlist) {
     LCFGContext * ctx = NULL;
     if ( lcfgctxlist_remove_after( ctxlist, NULL,
                                    &ctx ) == LCFG_CHANGE_REMOVED ) {
-      lcfgcontext_destroy(ctx);
+      lcfgcontext_release(ctx);
     }
   }
 
@@ -115,6 +109,8 @@ LCFGChange lcfgctxlist_insert_after( LCFGContextList * ctxlist,
   LCFGContextNode * new_node = lcfgctxnode_new(ctx);
   if ( new_node == NULL )
     return LCFG_CHANGE_ERROR;
+
+  lcfgcontext_acquire(ctx);
 
   if ( ctxnode == NULL ) { /* New HEAD */
 
@@ -243,11 +239,10 @@ LCFGChange lcfgctxlist_update( LCFGContextList * ctxlist,
 	 modifying a context in one list would also change the other
 	 list. */
 
-      lcfgcontext_inc_ref(new_ctx);
+      lcfgcontext_acquire(new_ctx);
       cur_node->context = new_ctx;
 
-      lcfgcontext_dec_ref(cur_ctx);
-      lcfgcontext_destroy(cur_ctx);
+      lcfgcontext_release(cur_ctx);
 
       result = LCFG_CHANGE_MODIFIED;
     }
@@ -336,12 +331,12 @@ LCFGStatus lcfgctxlist_from_file( const char * filename,
       }
 
       if ( rc == LCFG_CHANGE_NONE )
-        lcfgcontext_destroy(ctx);
+        lcfgcontext_release(ctx);
 
     }
 
     if ( status != LCFG_STATUS_OK ) {
-      lcfgcontext_destroy(ctx);
+      lcfgcontext_release(ctx);
       break;
     }
 

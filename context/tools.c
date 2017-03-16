@@ -210,11 +210,10 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
       if ( rc == LCFG_CHANGE_ERROR ) {
         asprintf( msg, "Failed to merge context '%s'", contexts[i] );
         ok = false;
-      } else {
+      } else if ( rc == LCFG_CHANGE_NONE ) {
 
         /* no update, throw away spare struct */
-        if ( rc == LCFG_CHANGE_NONE )
-          lcfgcontext_destroy(ctx);
+	lcfgcontext_release(ctx);
       }
 
     }
@@ -222,7 +221,7 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
     free(parse_msg);
 
     if ( !ok )
-      lcfgcontext_destroy(ctx);
+      lcfgcontext_release(ctx);
   }
 
   if (!ok) goto cleanup;

@@ -18,47 +18,51 @@ struct LCFGContext {
 
 typedef struct LCFGContext LCFGContext;
 
-#define lcfgcontext_inc_ref(ctx) (((ctx)->_refcount)++)
-#define lcfgcontext_dec_ref(ctx) (((ctx)->_refcount)--)
-
 LCFGContext * lcfgcontext_new(void);
+
+void lcfgcontext_acquire( LCFGContext * ctx );
 
 void lcfgcontext_destroy( LCFGContext * ctx );
 
-bool lcfgcontext_has_name( const LCFGContext * ctx )
-  __attribute__((nonnull (1)));
+void lcfgcontext_release( LCFGContext * ctx );
+
+/* Name */
+
+bool lcfgcontext_has_name( const LCFGContext * ctx );
 
 bool lcfgcontext_valid_name( const char * name );
 
-char * lcfgcontext_get_name( const LCFGContext * ctx )
-  __attribute__((nonnull (1)));
+char * lcfgcontext_get_name( const LCFGContext * ctx );
 
 bool lcfgcontext_set_name(LCFGContext * ctx, char * new_value )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
-bool lcfgcontext_has_value(  const LCFGContext * ctx )
-  __attribute__((nonnull (1)));
+/* Value */
+
+bool lcfgcontext_has_value( const LCFGContext * ctx );
 
 bool lcfgcontext_valid_value( const char * value );
 
-char * lcfgcontext_get_value( const LCFGContext * ctx )
-  __attribute__((nonnull (1)));
+char * lcfgcontext_get_value( const LCFGContext * ctx );
 
 bool lcfgcontext_set_value(LCFGContext * ctx, char * new_value )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 bool lcfgcontext_unset_value( LCFGContext * ctx )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 bool lcfgcontext_is_false( const LCFGContext * ctx );
 
 bool lcfgcontext_is_true(  const LCFGContext * ctx );
 
-int lcfgcontext_get_priority( const LCFGContext * ctx )
-  __attribute__((nonnull (1)));
+/* Priority */
+
+int lcfgcontext_get_priority( const LCFGContext * ctx );
 
 bool lcfgcontext_set_priority( LCFGContext * ctx, int priority )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
+
+/* Input/Output */
 
 LCFGStatus lcfgcontext_from_string( const char * string, int priority,
                                     LCFGContext ** ctx,
@@ -68,29 +72,38 @@ LCFGStatus lcfgcontext_from_string( const char * string, int priority,
 ssize_t lcfgcontext_to_string( const LCFGContext * ctx,
                                unsigned int options,
                                char ** result, size_t * size )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 bool lcfgcontext_print( const LCFGContext * ctx,
                         FILE * out )
-  __attribute__((nonnull (1,2)))  __attribute__((warn_unused_result));
-
-bool lcfgcontext_equals( const LCFGContext * ctx1,
-                         const LCFGContext * ctx2 )
-  __attribute__((nonnull (1,2)));
-
-bool lcfgcontext_identical( const LCFGContext * ctx1,
-                            const LCFGContext * ctx2 )
-  __attribute__((nonnull (1,2)));
+  __attribute__((warn_unused_result));
 
 char * lcfgcontext_profile_path( const LCFGContext * ctx,
 				 const char * basedir,
-				 const char * suffix )
-  __attribute__((nonnull (1)));
+				 const char * suffix );
+
+/* Comparisons */
+
+bool lcfgcontext_same_name( const LCFGContext * ctx1,
+                            const LCFGContext * ctx2 );
+
+bool lcfgcontext_same_value( const LCFGContext * ctx1,
+                             const LCFGContext * ctx2 );
+
+bool lcfgcontext_equals( const LCFGContext * ctx1,
+                         const LCFGContext * ctx2 );
+
+bool lcfgcontext_identical( const LCFGContext * ctx1,
+                            const LCFGContext * ctx2 );
+
+/* Expressions */
 
 bool lcfgcontext_valid_expression( const char * expr );
 char * lcfgcontext_bracketify_expression( const char * expr );
 char * lcfgcontext_combine_expressions( const char * expr1,
                                         const char * expr2 );
+
+/* Lists */
 
 struct LCFGContextNode {
   LCFGContext * context;
@@ -113,8 +126,7 @@ typedef struct LCFGContextList LCFGContextList;
 
 LCFGContextList * lcfgctxlist_new(void);
 
-LCFGContextList * lcfgctxlist_clone(const LCFGContextList * ctxlist)
-  __attribute__((nonnull (1)));
+LCFGContextList * lcfgctxlist_clone(const LCFGContextList * ctxlist);
 
 void lcfgctxlist_destroy(LCFGContextList * ctxlist);
 
@@ -130,34 +142,31 @@ void lcfgctxlist_destroy(LCFGContextList * ctxlist);
 LCFGChange lcfgctxlist_insert_after( LCFGContextList * ctxlist,
                                      LCFGContextNode * ctxnode,
                                      LCFGContext     * ctx )
-  __attribute__((nonnull (1,3))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGChange lcfgctxlist_remove_after( LCFGContextList * ctxlist,
                                      LCFGContextNode * ctxnode,
                                      LCFGContext    ** ctx )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 #define lcfgctxlist_append(ctxlist, ctx) ( lcfgctxlist_insert_after( ctxlist, lcfgctxlist_tail(ctxlist), ctx ) )
 
 LCFGChange lcfgctxlist_update( LCFGContextList * ctxlist,
                                LCFGContext     * new_ctx )
-  __attribute__((nonnull (1,2))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGContextNode * lcfgctxlist_find_node( const LCFGContextList * ctxlist,
-                                         const char * name )
-  __attribute__((nonnull (2)));
+                                         const char * name );
 
 LCFGContext * lcfgctxlist_find_context( const LCFGContextList * ctxlist,
-                                        const char * name )
-  __attribute__((nonnull (2)));
+                                        const char * name );
 
 bool lcfgctxlist_contains( const LCFGContextList * ctxlist,
-			   const char * name )
-  __attribute__((nonnull (1,2)));
+			   const char * name );
 
 bool lcfgctxlist_print( const LCFGContextList * ctxlist,
                         FILE * out )
-  __attribute__((nonnull (1,2))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGStatus lcfgctxlist_from_file( const char * filename,
                                   LCFGContextList ** result,
@@ -170,19 +179,16 @@ LCFGStatus lcfgctxlist_to_file( LCFGContextList * ctxlist,
                                 const char * filename,
                                 time_t mtime,
                                 char ** errmsg )
-  __attribute__((nonnull (1,2))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
-void lcfgctxlist_sort_by_priority( LCFGContextList * ctxlist )
-  __attribute__((nonnull (1)));
+void lcfgctxlist_sort_by_priority( LCFGContextList * ctxlist );
 
-int lcfgctxlist_max_priority( const LCFGContextList * ctxlist )
-  __attribute__((nonnull (1)));
+int lcfgctxlist_max_priority( const LCFGContextList * ctxlist );
 
 bool lcfgctxlist_diff( const LCFGContextList * ctxlist1,
                        const LCFGContextList * ctxlist2,
 		       const char * ctx_profile_dir,
-                       time_t prevtime )
-  __attribute__((nonnull (1,2)));
+                       time_t prevtime );
 
 int lcfgctxlist_simple_query( const LCFGContextList * ctxlist,
                               const char * ctxq_name,
@@ -192,8 +198,7 @@ int lcfgctxlist_simple_query( const LCFGContextList * ctxlist,
 bool lcfgctxlist_eval_expression( const LCFGContextList * ctxlist,
                                   const char * expr,
                                   int * result,
-                                  char ** errmsg )
-  __attribute__((nonnull (2)));
+                                  char ** errmsg );
 
 /* Tools */
 
