@@ -141,7 +141,7 @@ bool lcfgcontext_valid_value( const char * value ) {
 bool lcfgcontext_has_value( const LCFGContext * ctx ) {
   assert( ctx != NULL );
 
-  return !isempty(ctx->value)
+  return !isempty(ctx->value);
 }
 
 char * lcfgcontext_get_value( const LCFGContext * ctx ) {
@@ -436,8 +436,6 @@ char * lcfgcontext_profile_path( const LCFGContext * ctx,
   const char * name = lcfgcontext_get_name(ctx);
   if ( isempty(name) ) return NULL;
 
-  size_t name_len = strlen(name);
-
   /* Value, must be non-empty string */
   const char * value = lcfgcontext_get_value(ctx);
   if ( isempty(value) ) return NULL;
@@ -462,7 +460,7 @@ char * lcfgcontext_profile_path( const LCFGContext * ctx,
 
 bool lcfgcontext_valid_expression( const char * expr ) {
   /* TODO: this needs to hook into the new flex/bison parser */
-  return true;
+  return ( expr != NULL );
 }
 
 char * lcfgcontext_bracketify_expression( const char * expr ) {
