@@ -152,12 +152,10 @@ LCFGChange lcfgctxlist_remove_after( LCFGContextList * ctxlist,
     if ( lcfgctxlist_size(ctxlist) == 1 )
       ctxlist->tail = NULL;
 
-    ctxlist->size = 0;
-
   } else {
 
     if ( ctxnode->next == NULL )
-      return -1;
+      return LCFG_CHANGE_ERROR;
 
     old_node      = ctxnode->next;
     ctxnode->next = ctxnode->next->next;
@@ -166,9 +164,9 @@ LCFGChange lcfgctxlist_remove_after( LCFGContextList * ctxlist,
       ctxlist->tail = ctxnode;
     }
 
-    ctxlist->size--;
-
   }
+
+  ctxlist->size--;
 
   *ctx = old_node->context;
 
@@ -324,7 +322,6 @@ LCFGStatus lcfgctxlist_from_file( const char * filename,
     if ( status == LCFG_STATUS_OK ) {
 
       LCFGChange rc = lcfgctxlist_update( ctxlist, ctx );
-      lcfgcontext_release(ctx);
 
       if ( rc == LCFG_CHANGE_ERROR ) {
         asprintf( msg, "Failed to store context '%s'", ctx_str );
@@ -333,10 +330,9 @@ LCFGStatus lcfgctxlist_from_file( const char * filename,
 
     }
 
-    if ( status != LCFG_STATUS_OK ) {
-      lcfgcontext_release(ctx);
-      break;
-    }
+    lcfgcontext_release(ctx);
+
+    if ( status != LCFG_STATUS_OK ) break;
 
   }
 
