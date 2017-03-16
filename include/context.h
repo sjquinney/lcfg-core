@@ -184,6 +184,11 @@ bool lcfgctxlist_diff( const LCFGContextList * ctxlist1,
                        time_t prevtime )
   __attribute__((nonnull (1,2)));
 
+int lcfgctxlist_simple_query( const LCFGContextList * ctxlist,
+                              const char * ctxq_name,
+                              const char * ctxq_val,
+                              LCFGTest ctxq_cmp );
+
 bool lcfgctxlist_eval_expression( const LCFGContextList * ctxlist,
                                   const char * expr,
                                   int * result,

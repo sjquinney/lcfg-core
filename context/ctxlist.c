@@ -552,6 +552,49 @@ bool lcfgctxlist_diff( const LCFGContextList * ctxlist1,
   return changed;
 }
 
+int lcfgctxlist_simple_query( const LCFGContextList * ctxlist,
+                              const char * ctxq_name,
+                              const char * ctxq_val,
+                              LCFGTest cmp ) {
+
+  LCFGContext * ctx = lcfgctxlist_find_context( ctxlist, ctxq_name );
+
+  int priority = 1;
+  char * ctx_value = NULL;
+
+  if ( ctx != NULL ) {
+    priority  = lcfgcontext_get_priority(ctx);
+    ctx_value = lcfgcontext_get_value(ctx);
+  }
+
+  bool query_is_true = false;
+  switch (cmp)
+    {
+    case LCFG_TEST_ISTRUE:
+      query_is_true = lcfgcontext_is_true(ctx);
+      break;
+    case LCFG_TEST_ISFALSE:
+      query_is_true = lcfgcontext_is_false(ctx);
+      break;
+    case LCFG_TEST_ISEQ:
+    case LCFG_TEST_ISNE:
+      ;
+
+      bool same_value = false;
+      if ( ctx_value == NULL ) {
+        same_value = ( ctxq_val == NULL );
+      } else if ( ctxq_val != NULL ) {
+        same_value = ( strcmp( ctxq_val, ctx_value ) == 0 );
+      }
+
+      query_is_true = (  same_value && cmp == LCFG_TEST_ISEQ ) ||
+                      ( !same_value && cmp == LCFG_TEST_ISNE );
+      break;
+    }
+
+  return ( query_is_true ? priority : -1 * priority );
+}
+
 bool lcfgctxlist_eval_expression( const LCFGContextList * ctxlist,
                                   const char * expr,
                                   int * result,

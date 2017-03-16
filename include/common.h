@@ -30,6 +30,13 @@ typedef enum {
 #define LCFG_OPT_ALL_CONTEXTS 128
 #define LCFG_OPT_USE_META     256
 
+typedef enum {
+  LCFG_TEST_ISTRUE,
+  LCFG_TEST_ISFALSE,
+  LCFG_TEST_ISEQ,
+  LCFG_TEST_ISNE
+} LCFGTest;
+
 /* Generic single-linked list */
 
 struct LCFGSListNode {
