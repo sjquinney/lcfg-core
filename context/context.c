@@ -182,8 +182,7 @@ static char * valid_false_values[] = {
 
 bool lcfgcontext_is_false( const LCFGContext * ctx ) {
 
-  if ( ctx == NULL || isempty(ctx->value) )
-    return true;
+  if ( ctx == NULL || isempty(ctx->value) ) return true;
 
   bool is_false = false;
 
@@ -302,8 +301,7 @@ ssize_t lcfgcontext_to_string( const LCFGContext * ctx,
   assert( ctx != NULL );
 
   const char * name = lcfgcontext_get_name(ctx);
-  if ( name == NULL )
-    return -1;
+  if ( name == NULL ) return -1;
 
   size_t name_len = strlen(name);
 
@@ -436,15 +434,13 @@ char * lcfgcontext_profile_path( const LCFGContext * ctx,
 
   /* Name, must be non-empty string */
   const char * name = lcfgcontext_get_name(ctx);
-  if ( isempty(name) )
-    return NULL;
+  if ( isempty(name) ) return NULL;
 
   size_t name_len = strlen(name);
 
   /* Value, must be non-empty string */
   const char * value = lcfgcontext_get_value(ctx);
-  if ( isempty(value) )
-    return NULL;
+  if ( isempty(value) ) return NULL;
 
   char * result = NULL;
   int rc = 0;
@@ -471,12 +467,11 @@ bool lcfgcontext_valid_expression( const char * expr ) {
 
 char * lcfgcontext_bracketify_expression( const char * expr ) {
 
-  if ( expr == NULL )
-    return NULL;
+  if ( expr == NULL ) return NULL;
 
   /* Simply return copy if already bracketed or empty */
   if ( *expr == '\0' || *expr == '(' )
-    return strndup(expr, expr_len);
+    return strdup(expr);
 
   char * result = NULL;
   if ( asprintf( &result, "(%s)", expr ) < 0 ) {
