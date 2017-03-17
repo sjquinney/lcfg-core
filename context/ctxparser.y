@@ -49,13 +49,28 @@
 
 query:
   /* empty */       { *priority = 0; }
-  | expression      { printf("result: %d\n", $expression);
-                      *priority = $expression; }
+  | expression      { *priority = $expression; }
   ;
 
 expression:
-    expression OP_OR term   { printf(" ... or ... \n"); $<intValue>$ = 0; }
-  | expression OP_AND term  { printf(" ... and ... \n"); $<intValue>$ = 0; }
+    expression OP_OR term   {
+                              if ( $<intValue>1 < 0 && $<intValue>3 < 0 ) {
+                                 $<intValue>$ = ( $<intValue>1 < $<intValue>3 ?
+                                                  $<intValue>1 : $<intValue>3 );
+                              } else {
+                                 $<intValue>$ = ( $<intValue>1 > $<intValue>3 ?
+                                                  $<intValue>1 : $<intValue>3 );
+                              }
+                            }
+  | expression OP_AND term  { 
+                              if ( $<intValue>1 > 0 && $<intValue>3 > 0 ) {
+                                 $<intValue>$ = ( $<intValue>1 > $<intValue>3 ?
+                                                  $<intValue>1 : $<intValue>3 );
+                              } else {
+                                 $<intValue>$ = ( $<intValue>1 < $<intValue>3 ?
+                                                  $<intValue>1 : $<intValue>3 );
+                              }
+                            }
   | term { $<intValue>$ = $term; }
   ;
 

@@ -197,8 +197,7 @@ int lcfgctxlist_simple_query( const LCFGContextList * ctxlist,
 
 bool lcfgctxlist_eval_expression( const LCFGContextList * ctxlist,
                                   const char * expr,
-                                  int * result,
-                                  char ** errmsg );
+                                  int * result );
 
 /* Tools */
 

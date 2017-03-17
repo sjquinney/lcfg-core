@@ -18,10 +18,8 @@ void * lcfgctx_yy_scan_string (const char * str, lcfgctx_yyscan_t ctxscanner );
 
 bool lcfgctxlist_eval_expression( const LCFGContextList * ctxlist,
                                   const char * expr,
-                                  int * result,
-                                  char ** errmsg ) {
+                                  int * result ) {
 
-  *errmsg = NULL;
   *result = 0;
 
   lcfgctx_yyscan_t ctxscanner = lcfgctx_scanner_init();
@@ -29,8 +27,6 @@ bool lcfgctxlist_eval_expression( const LCFGContextList * ctxlist,
   lcfgctx_yy_scan_string( expr, ctxscanner );
 
   int rc = lcfgctx_yyparse ( ctxscanner, ctxlist, result );
-  printf( "parse: %s, priority: %d\n",
-	  (rc == 0 ? "success" : "fail"), *result );
 
   lcfgctx_scanner_destroy(ctxscanner);
 
