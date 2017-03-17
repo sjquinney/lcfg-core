@@ -470,8 +470,19 @@ char * lcfgcontext_profile_path( const LCFGContext * ctx,
 }
 
 bool lcfgcontext_valid_expression( const char * expr ) {
-  /* TODO: this needs to hook into the new flex/bison parser */
-  return ( expr != NULL );
+
+  /* NULL is forbidden but empty string is acceptable */
+
+  if ( expr == NULL )
+    return false;
+  else if ( *expr == '\0' )
+    return true;
+
+  /* Anything else needs to be parsed (with a NULL context list) to
+     check the validity. */
+
+  int result = 0;
+  return lcfgctxlist_eval_expression( NULL, expr, &result );
 }
 
 char * lcfgcontext_bracketify_expression( const char * expr ) {
