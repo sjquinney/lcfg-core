@@ -11,13 +11,37 @@
 #include "context.h"
 #include "utils.h"
 
+/* Test if a string (i.e. a char *) is 'empty' */
+
 #define isempty(STR) ( STR == NULL || *(STR) == '\0' )
+
+/* Extends the standard alpha-numeric test to include the '_'
+   (underscore) character. This is similar to the '\w' in Perl
+   regexps, this gives the set of characters [A-Za-z0-9_] */
+
 #define isword(CHR) ( isalnum(CHR) || CHR == '_' )
 
 static LCFGStatus invalid_context( char ** msg, const char * reason ) {
   lcfgutils_build_message( msg, "Invalid context (%s)", reason );
   return LCFG_STATUS_ERROR;
 }
+
+/**
+ * @brief Create and initialise a new context
+ *
+ * Creates a new @c LCFGContext struct and initialises the
+ * parameters to the default values.
+ *
+ * The reference count for the new struct is initialised to 1. To
+ * avoid memory leaks, when you no longer require access to the struct
+ * you should call @c lcfgcontext_release().
+ *
+ * If the memory allocation for the new struct is not successful the
+ * @c exit() function will be called with a non-zero value.
+ *
+ * @return Pointer to new @c LCFGContext struct
+ *
+ */
 
 LCFGContext * lcfgcontext_new(void) {
 
@@ -37,6 +61,27 @@ LCFGContext * lcfgcontext_new(void) {
   return ctx;
 }
 
+/**
+ * @brief Destroy the context
+ *
+ * When the specified @c LCFGContext struct is no longer required this
+ * can be used to free all associated memory. It is important to note
+ * that this function ignores the reference count and thus is almost
+ * certainly @b NOT the function you need to call, you will nearly
+ * always want @c lcfgcontext_release().
+ *
+ * This will call @c free(3) on each parameter of the struct and then
+ * set each value to be @c NULL.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * context which has already been destroyed (or potentially was never
+ * created).
+ *
+ * @param[in] ctx Pointer to @c LCFGContext struct to be destroyed.
+ *
+ */
+
 void lcfgcontext_destroy( LCFGContext * ctx ) {
 
   if ( ctx == NULL ) return;
@@ -52,11 +97,40 @@ void lcfgcontext_destroy( LCFGContext * ctx ) {
 
 }
 
+/**
+ * @brief Acquire reference to context
+ *
+ * This is used to record a reference to the @c LCFGContext struct, it
+ * does this by simply incrementing the reference count. To avoid
+ * memory leaks, once the reference to the struct is no longer
+ * required the @c lcfgcontext_release() function should be called.
+ *
+ * @param[in] ctx Pointer to @c LCFGContext struct
+ *
+ */
+
 void lcfgcontext_acquire( LCFGContext * ctx ) {
   assert( ctx != NULL );
 
   ctx->_refcount += 1;
 }
+
+/**
+ * @brief Release reference to context
+ *
+ * This is used to release a reference to the @c LCFGContext struct,
+ * it does this by simply decrementing the reference count. If the
+ * reference count reaches zero the @c lcfgcontext_destroy function
+ * will be called to clean up the memory associated with the struct.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * context which has already been destroyed (or potentially was never
+ * created).
+ *
+ * @param[in] ctx Pointer to @c LCFGContext struct
+ *
+ */
 
 void lcfgcontext_release( LCFGContext * ctx ) {
 
@@ -69,6 +143,22 @@ void lcfgcontext_release( LCFGContext * ctx ) {
     lcfgcontext_destroy(ctx);
 
 }
+
+/**
+ * @brief Check if a string is a valid LCFG context name
+ *
+ * Checks the contents of a specified string against the specification
+ * for an LCFG context name.
+ *
+ * An LCFG context name MUST be at least one character in length. The
+ * first character MUST be in the class @c [A-Za-z] and all other
+ * characters MUST be in the class @c [A-Za-z0-9_].
+ *
+ * @param[in] name String to be tested
+ *
+ * @return boolean which indicates if string is a valid context name
+ *
+ */
 
 bool lcfgcontext_valid_name( const char * name ) {
 
@@ -87,17 +177,71 @@ bool lcfgcontext_valid_name( const char * name ) {
   return valid;
 }
 
+/**
+ * @brief Check if the context has a name
+ *
+ * Checks if the specified @c LCFGContext struct currently has a
+ * value set for the @e name attribute.
+ *
+ * Although a name is required for an LCFG context to be considered
+ * valid it is possible for the value of the name to be set to @c NULL
+ * when the struct is first created.
+ *
+ * @param[in] ctx Pointer to an @c LCFGContext struct
+ *
+ * @return boolean which indicates if a context has a name
+ *
+ */
+
 bool lcfgcontext_has_name( const LCFGContext * ctx ) {
   assert( ctx != NULL );
 
   return !isempty(ctx->name);
 }
 
+/**
+ * @brief Get the name for the context
+ *
+ * This returns the value of the @e name parameter for the @c
+ * LCFGContext struct. If the context does not currently have a
+ * @e name then the pointer returned will be @c NULL.
+ *
+ * It is important to note that this is NOT a copy of the string,
+ * changing the returned string will modify the @e name for the
+ * context.
+ *
+ * @param[in] ctx Pointer to an @c LCFGContext struct
+ *
+ * @return The name for the context (possibly NULL).
+ */
+
 char * lcfgcontext_get_name( const LCFGContext * ctx ) {
   assert( ctx != NULL );
 
   return ctx->name;
 }
+
+/**
+ * @brief Set the name for the context
+ *
+ * Sets the value of the @e name parameter for the @c LCFGContext
+ * struct to that specified. It is important to note that this does
+ * NOT take a copy of the string. Furthermore, once the value is set
+ * the context assumes "ownership", the memory will be freed if the
+ * name is further modified or the context struct is destroyed.
+ *
+ * Before changing the value of the @e name to be the new string it
+ * will be validated using the @c lcfgcontext_valid_name()
+ * function. If the new string is not valid then no change will occur,
+ * the @c errno will be set to @c EINVAL and the function will return
+ * a @c false value.
+ *
+ * @param[in] ctx Pointer to an @c LCFGContext struct
+ * @param[in] new_name String which is the new name
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgcontext_set_name( LCFGContext * ctx, char * new_name ) {
   assert( ctx != NULL );
@@ -115,6 +259,21 @@ bool lcfgcontext_set_name( LCFGContext * ctx, char * new_name ) {
   return ok;
 }
 
+/**
+ * @brief Check if a string is a valid LCFG context value
+ *
+ * Checks the contents of a specified string against the specification
+ * for an LCFG context value.
+ *
+ * An LCFG context value MUST NOT be a @c NULL, anything else
+ * including the empty string is permitted.
+ *
+ * @param[in] version String to be tested
+ *
+ * @return boolean which indicates if string is a valid context value
+ *
+ */
+
 bool lcfgcontext_valid_value( const char * value ) {
 
   /* Note that the empty string is intentionally valid */
@@ -124,17 +283,67 @@ bool lcfgcontext_valid_value( const char * value ) {
   return valid;
 }
 
+/**
+ * @brief Check if the context has a name
+ *
+ * Checks if the specified @c LCFGContext struct currently has a
+ * value set for the @e value attribute.
+ *
+ * @param[in] ctx Pointer to an @c LCFGContext struct
+ *
+ * @return boolean which indicates if a context has a value
+ *
+ */
+
 bool lcfgcontext_has_value( const LCFGContext * ctx ) {
   assert( ctx != NULL );
 
   return !isempty(ctx->value);
 }
 
+/**
+ * @brief Get the value for the context
+ *
+ * This returns the value of the @e value parameter for the
+ * @c LCFGContext struct. If the context does not currently have a
+ * @e value then the pointer returned will be @c NULL.
+ *
+ * It is important to note that this is NOT a copy of the string,
+ * changing the returned string will modify the @e value for the
+ * context.
+ *
+ * @param[in] ctx Pointer to an @c LCFGContext struct
+ *
+ * @return The value for the context (possibly NULL).
+ */
+
 char * lcfgcontext_get_value( const LCFGContext * ctx ) {
   assert( ctx != NULL );
 
   return ctx->value;
 }
+
+/**
+ * @brief Set the value for the context
+ *
+ * Sets the value of the @e value parameter for the @c LCFGContext
+ * struct to that specified. It is important to note that this does
+ * NOT take a copy of the string. Furthermore, once the value is set
+ * the context assumes "ownership", the memory will be freed if the
+ * value is further modified or the context struct is destroyed.
+ *
+ * Before changing the value of the @e value to be the new string it
+ * will be validated using the @c lcfgcontext_valid_value()
+ * function. If the new string is not valid then no change will occur,
+ * the @c errno will be set to @c EINVAL and the function will return
+ * a @c false value.
+ *
+ * @param[in] ctx Pointer to an @c LCFGContext struct
+ * @param[in] new_value String which is the new value
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgcontext_set_value( LCFGContext * ctx, char * new_value ) {
   assert( ctx != NULL );
@@ -152,6 +361,19 @@ bool lcfgcontext_set_value( LCFGContext * ctx, char * new_value ) {
   return ok;
 }
 
+/**
+ * @brief Remove the value for the context
+ *
+ * Sets the value of the @e value parameter for the @c LCFGContext
+ * struct to @c NULL. If there was previously a value string the
+ * associated memory will be freed.
+ *
+ * @param[in] ctx Pointer to an @c LCFGContext struct
+ *
+ * @return boolean indicating success
+ *
+ */
+
 bool lcfgcontext_unset_value( LCFGContext * ctx ) {
   assert( ctx != NULL );
 
@@ -165,6 +387,24 @@ static char * valid_false_values[] = {
   "false", "no", "off", "0", "",
   NULL
 };
+
+/**
+ * @brief Check if the value for a context is @e false
+ *
+ * This can be used to check if the @e value for the context is
+ * considered to be @e false. A @e value is considered to be @e false
+ * if any of the following criteria are satisfied:
+ *
+ *   - The value of the LCFGContext struct pointer is @c NULL.
+ *   - The context value is @c NULL.
+ *   - The context value is an empty string.
+ *   - The context value is any of false/no/off/0 (case-insensitive).
+ *
+ * @param[in] ctx Pointer to an @c LCFGContext struct
+ *
+ * @return boolean indicating whether the value is @e false
+ * 
+ */
 
 bool lcfgcontext_is_false( const LCFGContext * ctx ) {
 
@@ -183,15 +423,60 @@ bool lcfgcontext_is_false( const LCFGContext * ctx ) {
   return is_false;
 }
 
+/**
+ * @brief Check if the value for a context is @e true
+ *
+ * This can be used to check if the @e value for the context is
+ * considered to be @e true. A @e value is considered to be @e true if
+ * none of the criteria used by the @c lcfgcontext_is_false() function
+ * are satisfied.
+ *
+ * @param[in] ctx Pointer to an @c LCFGContext struct
+ *
+ * @return boolean indicating whether the value is @e true
+ * 
+ */
+
 bool lcfgcontext_is_true( const LCFGContext * ctx ) {
   return !lcfgcontext_is_false(ctx);
 }
+
+/**
+ * @brief Get the priority for the context
+ *
+ * This returns the value of the integer @e priority attribute for the
+ * @c LCFGContext struct. This is expected to be a positive integer
+ * value.
+ *
+ * The priority is used to resolve conflicts when an LCFG resource has
+ * multiple possible values associated with currently active contexts.
+ *
+ * @param[in] ctx Pointer to an @c LCFGContext struct
+ *
+ * @return The priority for the context.
+ */
 
 int lcfgcontext_get_priority( const LCFGContext * ctx ) {
   assert( ctx != NULL );
 
   return ctx->priority;
 }
+
+/**
+ * @brief Set the priority for the context
+ *
+ * Sets the value of the @e priority attribute for the @c LCFGContext
+ * struct to that specified. Note that although this is an integer
+ * attribute only positive values are permitted .If the new value is
+ * not valid then no change will occur, the @c errno will be set to
+ * @c EINVAL and the function will return a @c false value.
+ *
+ * @param[in] ctx Pointer to an @c LCFGContext struct
+ * @param[in] priority Integer which is the new context priority
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgcontext_set_priority( LCFGContext * ctx, int priority ) {
   assert( ctx != NULL );
@@ -210,6 +495,27 @@ bool lcfgcontext_set_priority( LCFGContext * ctx, int priority ) {
 
   return ok;
 }
+
+/**
+ * @brief Create a new context from a string
+ *
+ * This parses an LCFG context specification as a string in the form
+ * "NAME = VALUE" and creates a new @c LCFGContext struct. The context
+ * name and @c = (equals) are required, the value is optional. Any
+ * whitespace will be ignored.
+ *
+ * To avoid memory leaks, when the newly created context struct is no
+ * longer required you should call the @c lcfgcontext_release()
+ * function.
+ *
+ * @param[in] input The context specification string.
+ * @param[in] priority The integer priority to be set for the new context.
+ * @param[out] result Reference to the pointer for the @c LCFGContext struct.
+ * @param[out] msg Pointer to any diagnostic messages.
+
+ * @return Status value indicating success of the process
+ *
+ */
 
 LCFGStatus lcfgcontext_from_string( const char * input, int priority,
                                     LCFGContext ** result,
@@ -291,6 +597,41 @@ LCFGStatus lcfgcontext_from_string( const char * input, int priority,
 
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
+
+/**
+ * @brief Get the context as a string.
+ *
+ * Generates a new string representation of the @c LCFGContext
+ * struct. This will have the form of "NAME = VALUE". A value is
+ * required for the @e name attribute, the @e value attribute is
+ * optional.
+ *
+ * Specifying the @c LCFG_OPT_NEWLINE option will result in a newline
+ * character being added at the end of the string.
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many context strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated. 
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required.
+ *
+ * @param[in] ctx Pointer to @c LCFGContext struct
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
 
 ssize_t lcfgcontext_to_string( const LCFGContext * ctx,
                                unsigned int options,
