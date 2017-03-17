@@ -1733,10 +1733,8 @@ bool lcfgresource_set_priority( LCFGResource * res, int priority ) {
 }
 
 bool lcfgresource_eval_priority( LCFGResource * res,
-                                 const LCFGContextList * ctxlist,
-                                 char ** errmsg ) {
+                                 const LCFGContextList * ctxlist ) {
 
-  *errmsg = NULL;
   bool ok = true;
 
   int priority = 0;
@@ -1747,7 +1745,7 @@ bool lcfgresource_eval_priority( LCFGResource * res,
 
     ok = lcfgctxlist_eval_expression( ctxlist,
                                       lcfgresource_get_context(res),
-                                      &priority, errmsg );
+                                      &priority );
 
   }
 

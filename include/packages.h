@@ -168,9 +168,8 @@ bool lcfgpackage_is_active( const LCFGPackage * pkg )
   __attribute__((nonnull (1)));
 
 bool lcfgpackage_eval_priority( LCFGPackage * pkg,
-                                const LCFGContextList * ctxlist,
-                                char ** msg )
-    __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+                                const LCFGContextList * ctxlist )
+  __attribute__((warn_unused_result));
 
 void lcfgpackage_set_defaults(LCFGPackage *pkg)
   __attribute__((nonnull (1)));

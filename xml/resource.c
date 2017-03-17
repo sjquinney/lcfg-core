@@ -631,16 +631,12 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
     /* Evaluate the priority */
 
     if ( status == LCFG_STATUS_OK ) {
-      char * eval_errmsg = NULL;
-      if ( !lcfgresource_eval_priority( resource, ctxlist, &eval_errmsg ) ) {
+      if ( !lcfgresource_eval_priority( resource, ctxlist ) ) {
         status = LCFG_STATUS_ERROR;
 
         *errmsg = lcfgresource_build_message( resource, compname,
-                                              "Failed to evaluate context: %s",
-                                              eval_errmsg);
+                                              "Failed to evaluate context" );
       }
-
-      free(eval_errmsg);
     }
 
     /* Stash the resource into the component if it is active (priority

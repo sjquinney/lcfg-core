@@ -1350,10 +1350,8 @@ bool lcfgpackage_set_priority( LCFGPackage * pkg, int new_prio ) {
  */
 
 bool lcfgpackage_eval_priority( LCFGPackage * pkg,
-                                const LCFGContextList * ctxlist,
-                                char ** msg ) {
+                                const LCFGContextList * ctxlist ) {
 
-  *msg = NULL;
   bool ok = true;
 
   int priority = 0;
@@ -1364,7 +1362,7 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkg,
 
     ok = lcfgctxlist_eval_expression( ctxlist,
                                       pkg->context,
-                                      &priority, msg );
+                                      &priority );
 
   }
 
