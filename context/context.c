@@ -210,8 +210,19 @@ int lcfgcontext_get_priority( const LCFGContext * ctx ) {
 bool lcfgcontext_set_priority( LCFGContext * ctx, int priority ) {
   assert( ctx != NULL );
 
-  ctx->priority = priority;
-  return true;
+  /* The priority associated with a context is always positive. When a
+     context query expression is evaluated the result might be
+     negative, in that case the sign indicates truthiness. */
+
+  bool ok=false;
+  if ( priority >= 0 ) {
+    ctx->priority = priority;
+    ok = true;
+  } else {
+    errno = EINVAL;
+  }
+
+  return ok;
 }
 
 LCFGStatus lcfgcontext_from_string( const char * input, int priority,
