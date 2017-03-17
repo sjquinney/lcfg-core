@@ -1,4 +1,7 @@
+#define _GNU_SOURCE /* for asprintf */
+
 #include <ctype.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -424,6 +427,19 @@ bool lcfgutils_file_readable( const char * path ) {
   }
 
   return is_readable;
+}
+
+void lcfgutils_build_message( char ** strp, const char *fmt, ... ) {
+  free( *strp );
+  *strp = NULL;
+
+  va_list ap;
+  va_start( ap, fmt );
+
+  if ( vasprintf( strp, fmt, ap ) < 0 ) {
+    perror( "Failed to build error string" );
+    exit(EXIT_FAILURE);
+  }
 }
 
 /* eof */

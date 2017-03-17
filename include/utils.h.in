@@ -66,6 +66,8 @@ char * lcfgutils_catfile( const char * dir, const char * file );
 
 size_t lcfgutils_decode_html_entities_utf8(char *dest, const char *src);
 
+void lcfgutils_build_message( char ** strp, const char *fmt, ... );
+
 /* MD5 support - for secure mode */
 
 typedef unsigned char md5_byte_t; /* 8-bit byte */

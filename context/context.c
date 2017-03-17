@@ -1,6 +1,5 @@
 #define _GNU_SOURCE /* for asprintf */
 
-#include <stdarg.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,21 +14,8 @@
 #define isempty(STR) ( STR == NULL || *(STR) == '\0' )
 #define isword(CHR) ( isalnum(CHR) || CHR == '_' )
 
-void lcfg_build_message( char ** strp, const char *fmt, ... ) {
-  free( *strp );
-  *strp = NULL;
-
-  va_list ap;
-  va_start( ap, fmt );
-
-  if ( vasprintf( strp, fmt, ap ) < 0 ) {
-    perror( "Failed to build error string" );
-    exit(EXIT_FAILURE);
-  }
-}
-
 static LCFGStatus invalid_context( char ** msg, const char * reason ) {
-  lcfg_build_message( msg, "Invalid context (%s)", reason );
+  lcfgutils_build_message( msg, "Invalid context (%s)", reason );
   return LCFG_STATUS_ERROR;
 }
 

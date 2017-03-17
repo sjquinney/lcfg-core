@@ -1,4 +1,3 @@
-#define _GNU_SOURCE /* for asprintf */
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -269,11 +268,11 @@ LCFGStatus lcfgctxlist_from_file( const char * filename,
 	/* No file so just create an empty list */
 	*result = lcfgctxlist_new();
       } else {
-	asprintf( msg, "'%s' does not exist.", filename );
+	lcfgutils_build_message( msg, "'%s' does not exist.", filename );
 	status = LCFG_STATUS_ERROR;
       }
     } else {
-      asprintf( msg, "'%s' is not readable.", filename );
+      lcfgutils_build_message( msg, "'%s' is not readable.", filename );
       status = LCFG_STATUS_ERROR;
     }
 
@@ -312,7 +311,8 @@ LCFGStatus lcfgctxlist_from_file( const char * filename,
     LCFGStatus parse_rc = lcfgcontext_from_string( ctx_str, linenum,
                                                    &ctx, &parse_msg );
     if ( parse_rc != LCFG_STATUS_OK || ctx == NULL ) {
-      asprintf( msg, "Failed to parse context '%s' on line %d of %s: %s",
+      lcfgutils_build_message( msg,
+                "Failed to parse context '%s' on line %d of %s: %s",
                 ctx_str, linenum, filename, parse_msg );
       status = LCFG_STATUS_ERROR;
     }
@@ -324,7 +324,7 @@ LCFGStatus lcfgctxlist_from_file( const char * filename,
       LCFGChange rc = lcfgctxlist_update( ctxlist, ctx );
 
       if ( rc == LCFG_CHANGE_ERROR ) {
-        asprintf( msg, "Failed to store context '%s'", ctx_str );
+        lcfgutils_build_message( msg, "Failed to store context '%s'", ctx_str );
         status = LCFG_STATUS_ERROR;
       }
 
@@ -401,7 +401,8 @@ LCFGStatus lcfgctxlist_to_file( LCFGContextList * ctxlist,
 
   FILE *file;
   if ((file = fopen(filename, "w")) == NULL) {
-    asprintf( errmsg, "Failed to open file '%s' for writing", filename );
+    lcfgutils_build_message( errmsg, "Failed to open file '%s' for writing",
+                             filename );
     return LCFG_STATUS_ERROR;
   }
 
@@ -409,7 +410,7 @@ LCFGStatus lcfgctxlist_to_file( LCFGContextList * ctxlist,
 
   if (ok) {
     if ( fclose(file) != 0 ) {
-      asprintf( errmsg, "Failed to close file '%s'", filename );
+      lcfgutils_build_message( errmsg, "Failed to close file '%s'", filename );
       ok = false;
     }
 

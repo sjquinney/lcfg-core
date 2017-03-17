@@ -1,4 +1,3 @@
-#define _GNU_SOURCE /* for asprintf */
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -27,13 +26,16 @@ bool lcfgcontext_check_cfgdir( const char * contextdir, char ** msg ) {
     if ( S_ISDIR(buf.st_mode) ) {
       ok = true;
     } else {
-      asprintf( msg, "'%s' exists but is not a directory", contextdir );
+     lcfgutils_build_message( msg, "'%s' exists but is not a directory",
+                              contextdir );
     }
   } else if ( errno == ENOENT ) {
     if ( mkdir( contextdir, mode ) == 0 ) {
       ok = true;
     } else {
-      asprintf( msg, "'%s' does not exist and could not be created", contextdir );
+      lcfgutils_build_message( msg,
+                               "'%s' does not exist and could not be created",
+                               contextdir );
     }
   }
 
@@ -86,7 +88,8 @@ bool lcfgcontext_lock( const char * contextdir,
   bool locked = ( symlink( file, lockfile ) == 0 );
   while ( !locked && !giveup ) {
     if ( errno != EEXIST ) {
-      asprintf( msg, "Cannot link '%s' => '%s'", file, lockfile );
+      lcfgutils_build_message( msg, "Cannot link '%s' => '%s'",
+                               file, lockfile );
       giveup = true;
     } else {
 
@@ -120,7 +123,7 @@ bool lcfgcontext_unlock( const char * contextdir, char ** msg ) {
     if ( errno == ENOENT ) {  /* deleted in some other way */
       unlocked = true;
     } else {
-      asprintf( msg, "Failed to remove lockfile" );
+      lcfgutils_build_message( msg, "Failed to remove lockfile" );
     }
   }
 
@@ -159,7 +162,8 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
   char * lock_msg = NULL;
   bool locked = lcfgcontext_lock( contextdir, tmpfile, 5, &lock_msg );
   if ( !locked ) {
-    asprintf( msg, "Failed to lock context directory: %s", lock_msg );
+    lcfgutils_build_message( msg, "Failed to lock context directory: %s",
+                             lock_msg );
     ok = false;
   }
   free(lock_msg);
@@ -174,7 +178,8 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
 
   ok = ( rc != LCFG_STATUS_ERROR );
   if (!ok) {
-    asprintf( msg, "Failed to load pending contexts: %s", load_msg );
+    lcfgutils_build_message( msg, "Failed to load pending contexts: %s",
+                             load_msg );
   }
   free(load_msg);
   if (!ok) goto cleanup;
@@ -183,7 +188,7 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
 
   newlist = lcfgctxlist_clone(pending);
   if ( newlist == NULL ) {
-    asprintf( msg, "Failed to clone pending context list" );
+    lcfgutils_build_message( msg, "Failed to clone pending context list" );
     ok = false;
     goto cleanup;
   }
@@ -201,14 +206,15 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
                                &ctx, &parse_msg );
 
     if ( parse_rc != LCFG_STATUS_OK || ctx == NULL ) {
-      asprintf( msg, "Failed to parse context '%s': %s", contexts[i],
-               parse_msg );
+      lcfgutils_build_message( msg, "Failed to parse context '%s': %s",
+                               contexts[i], parse_msg );
       ok = false;
     } else {
 
       LCFGChange rc = lcfgctxlist_update( newlist, ctx );
       if ( rc == LCFG_CHANGE_ERROR ) {
-        asprintf( msg, "Failed to merge context '%s'", contexts[i] );
+        lcfgutils_build_message( msg, "Failed to merge context '%s'",
+                                 contexts[i] );
         ok = false;
       } else if ( rc == LCFG_CHANGE_NONE ) {
 
@@ -241,7 +247,7 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
       if ( fclose(tmpfh) == 0 ) {
         tmpfh = NULL; /* Avoids a further attempt to close in cleanup */
       } else {
-        asprintf( msg, "Failed to close file '%s'", tmpfile );
+        lcfgutils_build_message( msg, "Failed to close file '%s'", tmpfile );
         ok = false;
       }
     }
@@ -265,7 +271,7 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
   char * unlock_msg = NULL;
   if ( !lcfgcontext_unlock( contextdir, &unlock_msg ) ) {
     ok = false;
-    asprintf( msg, "Failed to unlock: %s", unlock_msg );
+    lcfgutils_build_message( msg, "Failed to unlock: %s", unlock_msg );
   }
   free(unlock_msg);
 
@@ -342,7 +348,8 @@ LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
   if ( lcfgcontext_load_pending( contextdir, &pending, &pending_mtime,
 				 &load_msg ) == LCFG_STATUS_ERROR ) {
     ok = false;
-    asprintf( msg, "Failed to load pending contexts: %s", load_msg );
+    lcfgutils_build_message( msg, "Failed to load pending contexts: %s",
+                             load_msg );
   }
 
   free(load_msg);
@@ -353,7 +360,8 @@ LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
   if ( lcfgcontext_load_active( contextdir, &active, &active_mtime,
 				&load_msg ) == LCFG_STATUS_ERROR ) {
     ok = false;
-    asprintf( msg, "Failed to load active contexts: %s", load_msg );
+    lcfgutils_build_message( msg, "Failed to load active contexts: %s",
+                             load_msg );
   }
 
   free(load_msg);
@@ -378,7 +386,7 @@ LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
 
     if (ok) {
       if ( fclose(tmpfh) != 0 ) {
-        asprintf( msg, "Failed to close file '%s'", tmpfile );
+        lcfgutils_build_message( msg, "Failed to close file '%s'", tmpfile );
         ok = false;
       }
     } else {
