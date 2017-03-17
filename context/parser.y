@@ -18,8 +18,8 @@
 %parse-param {const LCFGContextList * ctxlist}
 %parse-param {int * priority}
 %name-prefix "lcfgctx_yy"
-%output  "ctxparser.c"
-%defines "ctxparser.h"
+%output  "parser.c"
+%defines "parser.h"
 
 %union
 {

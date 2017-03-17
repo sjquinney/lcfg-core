@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "context.h"
-#include "ctxparser.h"
+#include "parser.h"
 
 /* Used to handle the contents of quoted strings */
 
@@ -23,8 +23,8 @@ void lcfgctx_yyerror( yyscan_t ctxscanner,
                       const char * s, ... );
 %}
 
-%option outfile="ctxlexer.c"
-%option header-file="ctxlexer.h"
+%option outfile="lexer.c"
+%option header-file="lexer.h"
 %option prefix="lcfgctx_yy"
 %option warn
 %option nodefault
