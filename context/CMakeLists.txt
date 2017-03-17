@@ -19,7 +19,7 @@ ADD_FLEX_BISON_DEPENDENCY(CtxScanner CtxParser)
 
 # Generate the lcfg context shared library.
 
-set(MY_SOURCES context.c  ctxlist.c  setctx.c  tools.c 
+set(MY_SOURCES context.c  ctxlist.c  setctx.c  tools.c scanner.c
                ${BISON_CtxParser_OUTPUTS} ${FLEX_CtxScanner_OUTPUTS} )
 
 add_library(lcfg_context SHARED ${MY_SOURCES})

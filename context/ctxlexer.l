@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "context.h"
 #include "ctxparser.h"
 
 /* Used to handle the contents of quoted strings */
@@ -17,7 +18,9 @@ typedef struct lcfgctx_yylex_extra lcfgctx_yylex_extra_type;
 #define strbuf_get() ( yyextra->strbuf )
 static void strbuf_init( yyscan_t yyscanner );
 static void strbuf_append( yyscan_t yyscanner, const char *ytext, int yleng );
-void lcfgctx_yyerror( yyscan_t yyscanner, int * priority, char * s, ... );
+void lcfgctx_yyerror( yyscan_t ctxscanner,
+                      const LCFGContextList * ctxlist, int * priority,
+                      const char * s, ... );
 %}
 
 %option outfile="ctxlexer.c"
@@ -122,8 +125,16 @@ newline                 [\r\n]
 			 yylval->stringValue = strdup(strbuf_get());
 			 return VALUE_STRING;
                        }
-     <<EOF>>           { lcfgctx_yyerror( yyscanner, NULL, "unterminated double-quoted string"); return END; }
-     {newline}+        { lcfgctx_yyerror( yyscanner, NULL, "unterminated double-quoted string"); return END; }
+     <<EOF>>           {
+                         lcfgctx_yyerror( yyscanner, NULL, NULL,
+                                          "unterminated double-quoted string");
+                         return END;
+                       }
+     {newline}+        {
+                         lcfgctx_yyerror( yyscanner, NULL, NULL,
+                                          "unterminated double-quoted string");
+                                          return END;
+                       }
 }
 
 {xsstart}              {
@@ -139,28 +150,42 @@ newline                 [\r\n]
 			 return VALUE_STRING;
 
                        }
-     <<EOF>>           { lcfgctx_yyerror( yyscanner, NULL, "unterminated single-quoted string"); return END; }
-     {newline}+        { lcfgctx_yyerror( yyscanner, NULL, "unterminated single-quoted string"); return END; }
+     <<EOF>>           {
+                         lcfgctx_yyerror( yyscanner, NULL, NULL,
+                                          "unterminated single-quoted string");
+                         return END;
+                       }
+     {newline}+        {
+                         lcfgctx_yyerror( yyscanner, NULL, NULL,
+                                          "unterminated single-quoted string");
+                         return END;
+                       }
 }
 
-{paren}	                  return yytext[0];
+{paren}	                 return yytext[0];
 			 
-{context_name}            {
-                            yylval->stringValue = strndup( yytext, yyleng );
-                            return CTX_NAME;
-                          }
+{context_name}         {
+                         yylval->stringValue = strndup( yytext, yyleng );
+                         return CTX_NAME;
+                       }
 
-{simple_value}            {
-                            yylval->stringValue = strndup( yytext, yyleng );
-			    return VALUE_STRING;
-                          }
+{simple_value}         {
+                         yylval->stringValue = strndup( yytext, yyleng );
+			 return VALUE_STRING;
+                       }
 
-{whitespace}+             /* eat whitespace */
+{whitespace}+          /* eat whitespace */
 
-.                         { lcfgctx_yyerror( yyscanner, NULL, "Invalid character: %s", yytext ); return yytext[0]; }
+.                      {
+                         lcfgctx_yyerror( yyscanner, NULL, NULL,
+                                          "Invalid character: %s", yytext );
+                         return yytext[0];
+                       }
 %%
 
-void lcfgctx_yyerror( yyscan_t ctxscanner, int * priority, char * s, ... ) {
+void lcfgctx_yyerror( yyscan_t ctxscanner,
+                      const LCFGContextList * ctxlist, int * priority,
+                      const char * s, ... ) {
   va_list ap;
   va_start( ap, s );
 

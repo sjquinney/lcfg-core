@@ -1,13 +1,22 @@
 %{
   #include <stdio.h>
+  #include "context.h"
   int lcfgctx_yylex (void *, void * ctxscanner );
-  void lcfgctx_yyerror (void * ctxscanner, int * priority, char const * msg);
+  void lcfgctx_yyerror ( void * ctxscanner,
+                         const LCFGContextList * ctxlist, int * priority, 
+                         const char * msg, ... );
+  static void release_var(char * var);
 %}
+
+%code top {
+#include "context.h"
+}
 
 %define api.pure full
 %lex-param {void * ctxscanner}
 %parse-param {void * ctxscanner}
-%parse-param {int *priority}
+%parse-param {const LCFGContextList * ctxlist}
+%parse-param {int * priority}
 %name-prefix "lcfgctx_yy"
 %output  "ctxparser.c"
 %defines "ctxparser.h"
@@ -52,24 +61,96 @@ expression:
 
 term:
     '(' expression ')'            { $<intValue>$ = $expression; }
-  | CTX_NAME                      { printf( "NAME: %s\n", $<stringValue>1 );
-				    $<intValue>$ = 1; }
-  | OP_NOT CTX_NAME               { printf( "NOT NAME: %s\n", $<stringValue>2 );
-                                    $<intValue>$ = -1; }
-  | CTX_NAME CMP_EQ VALUE_STRING  { printf( "%s eq %s\n", $<stringValue>1, $<stringValue>3 );
-				    $<intValue>$ = 0; }
-  | CTX_NAME CMP_NE VALUE_STRING  { printf( "%s ne %s\n", $<stringValue>1, $<stringValue>3 );
-				    $<intValue>$ = 0; }
-  | CTX_NAME CMP_EQ CTX_NAME      { printf( "%s eq %s\n", $<stringValue>1, $<stringValue>3 );
-				    $<intValue>$ = 0; }
-  | CTX_NAME CMP_NE CTX_NAME      { printf( "%s ne %s\n", $<stringValue>1, $<stringValue>3 );
-				    $<intValue>$ = 0; }
-  | CTX_NAME CMP_EQ VALUE_BOOL    { printf( "%s eq %u\n", $<stringValue>1, $<boolValue>3 );
-                                    $<intValue>$ = $<boolValue>3 == 0 ? 0 : 1; }
-  | CTX_NAME CMP_NE VALUE_BOOL    { printf( "%s ne %u\n", $<stringValue>1, $<boolValue>3 );
-				    $<intValue>$ = $<boolValue>3 == 1 ? 0 : 1; }
+  | OP_NOT '(' expression ')'     { $<intValue>$ = -1 * $expression; }
+  | CTX_NAME                      {
+				    $<intValue>$ = lcfgctxlist_simple_query(
+                                                    ctxlist,
+                                                    $<stringValue>1,
+                                                    NULL,
+                                                    LCFG_TEST_ISTRUE );
+
+                                    release_var($<stringValue>1);
+                                  }
+  | OP_NOT CTX_NAME               {
+				    $<intValue>$ = lcfgctxlist_simple_query(
+                                                    ctxlist,
+                                                    $<stringValue>2,
+                                                    NULL,
+                                                    LCFG_TEST_ISFALSE );
+
+                                    release_var($<stringValue>2);
+                                  }
+  | CTX_NAME CMP_EQ VALUE_STRING  {
+				    $<intValue>$ = lcfgctxlist_simple_query(
+                                                    ctxlist,
+                                                    $<stringValue>1,
+                                                    $<stringValue>3,
+                                                    LCFG_TEST_ISEQ );
+
+                                    release_var($<stringValue>1);
+                                    release_var($<stringValue>3);
+                                  }
+  | CTX_NAME CMP_NE VALUE_STRING  {
+				    $<intValue>$ = lcfgctxlist_simple_query(
+                                                    ctxlist,
+                                                    $<stringValue>1,
+                                                    $<stringValue>3,
+                                                    LCFG_TEST_ISNE );
+
+                                    release_var($<stringValue>1);
+                                    release_var($<stringValue>3);
+                                  }
+  | CTX_NAME CMP_EQ CTX_NAME      {
+				    $<intValue>$ = lcfgctxlist_simple_query(
+                                                    ctxlist,
+                                                    $<stringValue>1,
+                                                    $<stringValue>3,
+                                                    LCFG_TEST_ISEQ );
+
+                                    release_var($<stringValue>1);
+                                    release_var($<stringValue>3);
+                                  }
+  | CTX_NAME CMP_NE CTX_NAME      {
+				    $<intValue>$ = lcfgctxlist_simple_query(
+                                                    ctxlist,
+                                                    $<stringValue>1,
+                                                    $<stringValue>3,
+                                                    LCFG_TEST_ISNE );
+
+                                    release_var($<stringValue>1);
+                                    release_var($<stringValue>3);
+                                  }
+  | CTX_NAME CMP_EQ VALUE_BOOL    {
+                                    LCFGTest cmp = ( $<boolValue>3 == 1 ?
+                                                    LCFG_TEST_ISTRUE   :
+                                                    LCFG_TEST_ISFALSE );
+
+				    $<intValue>$ = lcfgctxlist_simple_query(
+                                                    ctxlist,
+                                                    $<stringValue>1,
+                                                    NULL,
+                                                    cmp );
+
+                                    release_var($<stringValue>1);
+                                  }
+  | CTX_NAME CMP_NE VALUE_BOOL    {
+                                    LCFGTest cmp = ( $<boolValue>3 == 1 ?
+                                                    LCFG_TEST_ISTRUE   :
+                                                    LCFG_TEST_ISFALSE );
+
+				    $<intValue>$ = lcfgctxlist_simple_query(
+                                                    ctxlist,
+                                                    $<stringValue>1,
+                                                    NULL,
+                                                    cmp ) * -1;
+
+                                    release_var($<stringValue>1);
+                                  }
 ;
 
 %%
 
-
+static void release_var(char * var) {
+  free(var);
+  var = NULL;
+}
