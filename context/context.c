@@ -21,6 +21,10 @@
 
 #define isword(CHR) ( isalnum(CHR) || CHR == '_' )
 
+/* Simple internal wrapper function which can be used to generate a
+   consistently formatted error message. Returns the error status
+   value so that it can be called alongside return */
+
 static LCFGStatus invalid_context( char ** msg, const char * reason ) {
   lcfgutils_build_message( msg, "Invalid context (%s)", reason );
   return LCFG_STATUS_ERROR;
@@ -268,7 +272,7 @@ bool lcfgcontext_set_name( LCFGContext * ctx, char * new_name ) {
  * An LCFG context value MUST NOT be a @c NULL, anything else
  * including the empty string is permitted.
  *
- * @param[in] version String to be tested
+ * @param[in] value String to be tested
  *
  * @return boolean which indicates if string is a valid context value
  *
@@ -284,7 +288,7 @@ bool lcfgcontext_valid_value( const char * value ) {
 }
 
 /**
- * @brief Check if the context has a name
+ * @brief Check if the context has a value
  *
  * Checks if the specified @c LCFGContext struct currently has a
  * value set for the @e value attribute.
@@ -467,7 +471,7 @@ int lcfgcontext_get_priority( const LCFGContext * ctx ) {
  *
  * Sets the value of the @e priority attribute for the @c LCFGContext
  * struct to that specified. Note that although this is an integer
- * attribute only positive values are permitted .If the new value is
+ * attribute only positive values are permitted. If the new value is
  * not valid then no change will occur, the @c errno will be set to
  * @c EINVAL and the function will return a @c false value.
  *
@@ -699,6 +703,20 @@ ssize_t lcfgcontext_to_string( const LCFGContext * ctx,
   return new_len;
 }
 
+/**
+ * @brief Print formatted context to file stream
+ *
+ * This uses @c lcfgcontext_to_string to format the context as a
+ * string with a trailing newline character. The generated string is
+ * written to the specified file stream which must have already been
+ * opened for writing.
+ *
+ * @param[in] ctx Pointer to @c LCFGContext struct
+ * @param[in] out Stream to which the context string should be written
+ *
+ * @return boolean indicating success
+ */
+ 
 bool lcfgcontext_print( const LCFGContext * ctx,
                         FILE * out ) {
   assert( ctx != NULL );
@@ -725,6 +743,21 @@ bool lcfgcontext_print( const LCFGContext * ctx,
   return ok;
 }
 
+/**
+ * @brief Compare names of two contexts
+ *
+ * This uses @c strcmp(3) to compare the values of the @e name
+ * attribute for the two contexts. For simplicity, if the value of
+ * the @e name attribute for a context is @c NULL then it is treated
+ * as an empty string.
+ *
+ * @param[in] ctx1 Pointer to @c LCFGContext struct
+ * @param[in] ctx1 Pointer to @c LCFGContext struct
+ *
+ * @return boolean which indicates if the names are the same
+ *
+ */
+
 bool lcfgcontext_same_name( const LCFGContext * ctx1,
                             const LCFGContext * ctx2 ) {
   assert( ctx1 != NULL && ctx2 != NULL );
@@ -736,6 +769,21 @@ bool lcfgcontext_same_name( const LCFGContext * ctx1,
 
   return ( strcmp( name1, name2 ) == 0 );
 }
+
+/**
+ * @brief Compare values of two contexts
+ *
+ * This uses @c strcmp(3) to compare the values of the @e value
+ * attribute for the two contexts. For simplicity, if the value of
+ * the @e value attribute for a context is @c NULL then it is treated
+ * as an empty string.
+ *
+ * @param[in] ctx1 Pointer to @c LCFGContext struct
+ * @param[in] ctx1 Pointer to @c LCFGContext struct
+ *
+ * @return boolean which indicates if the values are the same
+ *
+ */
 
 bool lcfgcontext_same_value( const LCFGContext * ctx1,
                              const LCFGContext * ctx2 ) {
@@ -749,12 +797,39 @@ bool lcfgcontext_same_value( const LCFGContext * ctx1,
   return ( strcmp( value1, value2 ) == 0 );
 }
 
+/**
+ * @brief Test if two contexts are equal
+ *
+ * The equality of two contexts is checked by comparing the values for
+ * the @e name and @e value attributes.
+ *
+ * @param[in] ctx1 Pointer to @c LCFGContext struct
+ * @param[in] ctx1 Pointer to @c LCFGContext struct
+ *
+ * @return boolean which indicates if the contexts are equal
+ *
+ */
+
 bool lcfgcontext_equals( const LCFGContext * ctx1,
                          const LCFGContext * ctx2 ) {
 
   return ( lcfgcontext_same_name( ctx1, ctx2 ) &&
            lcfgcontext_same_value( ctx1, ctx2 ) );
 }
+
+/**
+ * @brief Test if two contexts are identical
+ *
+ * This is a stronger version of the test used in
+ * @c lcfgcontext_equals with the values for the priority also being
+ * compared.
+ *
+ * @param[in] ctx1 Pointer to @c LCFGContext struct
+ * @param[in] ctx1 Pointer to @c LCFGContext struct
+ *
+ * @return boolean which indicates if the contexts are identical
+ *
+ */
 
 bool lcfgcontext_identical( const LCFGContext * ctx1,
                             const LCFGContext * ctx2 ) {
@@ -764,6 +839,40 @@ bool lcfgcontext_identical( const LCFGContext * ctx1,
            ( lcfgcontext_get_priority(ctx1) ==
              lcfgcontext_get_priority(ctx2) ) );
 }
+
+/**
+ * @brief Generate the path for a context-specific profile
+ *
+ * The LCFG client supports the use of context-specific XML
+ * profiles. A context-specific profile can be used to add or modify
+ * components and resources when a context is enabled.
+ *
+ * The path to the context profile is based on a combination of the
+ * values for the @e name and @e value attributes for the context, if
+ * either is missing then this function will return a @c NULL
+ * value.
+ *
+ * Optionally a base directory and a file suffix (typically ".xml")
+ * can be specified.
+ *
+ * The value for the context name is taken to be a directory name and
+ * the context value is used as a file name. This makes it possible to
+ * change groups of resources when the value for a context is
+ * altered. For example, if the context name is "temperature" the
+ * values of "hot", "medium" and "cold" would typically give
+ * "basedir/temperature/hot.xml", "basedir/temperature/medium.xml" and
+ * "basedir/temperature/cold.xml".
+ * 
+ * To avoid memory leaks the generated string should be freed when it
+ * is no longer required.
+ *
+ * @param[in] ctx Pointer to @c LCFGContext struct
+ * @param[in] basedir Optional base directory
+ * @param[in] suffix Optional file suffix
+ *
+ * @return Pointer to new string (call @c free() when no longer required)
+ *
+ */
 
 char * lcfgcontext_profile_path( const LCFGContext * ctx,
                                  const char * basedir,
@@ -796,6 +905,23 @@ char * lcfgcontext_profile_path( const LCFGContext * ctx,
   return result;
 }
 
+/**
+ * @brief Test if a context query expression is valid
+ *
+ * This can be used to test whether a context query expression
+ * (e.g. @c foo!=5 or @c ( install | booting ) is valid. The test is
+ * done by calling @c lcfgctxlist_eval_expression() with a @c NULL
+ * context list.
+ *
+ * This is used in functions such as @c lcfgresource_valid_context()
+ * and @c lcfgpackage_valid_context()
+ *
+ * @param[in] expr Pointer to query expression string
+ *
+ * @return boolean which indicates if expression is valid
+ *
+ */
+
 bool lcfgcontext_valid_expression( const char * expr ) {
 
   /* NULL is forbidden but empty string is acceptable */
@@ -811,6 +937,23 @@ bool lcfgcontext_valid_expression( const char * expr ) {
   int result = 0;
   return lcfgctxlist_eval_expression( NULL, expr, &result );
 }
+
+/**
+ * @brief Wrap a context query expression in brackets
+ *
+ * When combining arbitrary context query expressions (e.g. using AND
+ * or OR) it is safest to first wrap them in brackets. This function
+ * will generate a new string, where necessary the original expression
+ * will be wrapped with additional brackets.
+ *
+ * To avoid memory leaks the generated string should be freed when it
+ * is no longer required.
+ *
+ * @param[in] expr Context query expression string
+ *
+ * @return Pointer to new string (call @c free() when no longer required)
+ *
+ */
 
 char * lcfgcontext_bracketify_expression( const char * expr ) {
 
@@ -829,6 +972,36 @@ char * lcfgcontext_bracketify_expression( const char * expr ) {
   return result;
 }
 
+/**
+ * @brief Combine two context query expressions
+ *
+ * This can be used to logically combine (using an AND) two context
+ * query expressions.
+ *
+ * An attempt is made to ensure that the order in which the
+ * expressions are specified as arguments to the function does not
+ * affect the combined expression which is created.
+ *
+ * To ensure it is safe to combine the expressions they are wrapped
+ * with brackets using the @c lcfgcontext_bracketify_expression()
+ * function.
+ *
+ * If the query expression strings are identical a copy of only the
+ * first specified will be returned.
+ *
+ * If either query expression is a @c NULL value or an empty string it
+ * will be ignored and a copy of the other parameter is returned. If
+ * both are empty then an empty string will be returned.
+ * 
+ * To avoid memory leaks the generated string should be freed when it
+ * is no longer required.
+ *
+ * @param[in] expr1 Context query expression string
+ * @param[in] expr2 Context query expression string
+ *
+ * @return Pointer to new string (call @c free() when no longer required)
+ *
+ */
 
 char * lcfgcontext_combine_expressions( const char * expr1,
                                         const char * expr2 ) {
