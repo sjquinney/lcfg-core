@@ -368,20 +368,22 @@ bool lcfgctxlist_print( const LCFGContextList * ctxlist,
   bool ok = true;
 
   LCFGContextNode * cur_node = lcfgctxlist_head(ctxlist);
-  while ( cur_node != NULL && ok ) {
+  while ( cur_node != NULL ) {
     const LCFGContext * ctx = lcfgctxlist_context(cur_node);
 
     /* No need to write out those contexts which do not have a value */
-    if ( lcfgcontext_has_value(ctx) ) {
+    if ( !lcfgcontext_has_name(ctx) || !lcfgcontext_has_value(ctx) )
+      continue;
 
-      if ( lcfgcontext_to_string( ctx, LCFG_OPT_NEWLINE,
-                                  &str_buf, &buf_size ) < 0 ) {
-        ok = false;
-      }
+    if ( lcfgcontext_to_string( ctx, LCFG_OPT_NEWLINE,
+				&str_buf, &buf_size ) < 0 ) {
+      ok = false;
+      break;
+    }
 
-      if ( fputs( str_buf, out ) < 0 )
-        ok = false;
-
+    if ( fputs( str_buf, out ) < 0 ) {
+      ok = false;
+      break;
     }
 
     cur_node = lcfgctxlist_next(cur_node);
