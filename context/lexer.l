@@ -59,7 +59,7 @@ cmp_ne                  !=
 op_not                  \!
 op_or                   \|
 op_and                  &
-op_xor                  ^
+op_xor                  \^
 
 /* Boolean values */
 
