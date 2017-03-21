@@ -23,7 +23,6 @@ void lcfgctx_yyerror( yyscan_t ctxscanner,
                       const char * s, ... );
 %}
 
-%option outfile="lexer.c"
 %option header-file="lexer.h"
 %option prefix="lcfgctx_yy"
 %option warn
@@ -60,6 +59,7 @@ cmp_ne                  !=
 op_not                  \!
 op_or                   \|
 op_and                  &
+op_xor                  ^
 
 /* Boolean values */
 
@@ -108,6 +108,8 @@ newline                 [\r\n]
 {cmp_eq}                  return CMP_EQ;
 
 {op_or}                   return OP_OR;
+
+{op_xor}                  return OP_XOR;
 
 {op_not}                  return OP_NOT;
 

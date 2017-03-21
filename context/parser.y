@@ -1,11 +1,14 @@
 %{
   #include <stdio.h>
+  #include <stdlib.h>
   #include "context.h"
   int lcfgctx_yylex (void *, void * ctxscanner );
   void lcfgctx_yyerror ( void * ctxscanner,
                          const LCFGContextList * ctxlist, int * priority, 
                          const char * msg, ... );
   static void release_var(char * var);
+  static int greater( int a, int b );
+  static int lesser( int a, int b );
 %}
 
 %code top {
@@ -18,7 +21,7 @@
 %parse-param {const LCFGContextList * ctxlist}
 %parse-param {int * priority}
 %name-prefix "lcfgctx_yy"
-%output  "parser.c"
+
 %defines "parser.h"
 
 %union
@@ -38,6 +41,7 @@
 %token CMP_NE
 
 %token OP_OR
+%token OP_XOR
 %token OP_AND
 %right OP_NOT
 
@@ -53,24 +57,36 @@ query:
   ;
 
 expression:
-    expression OP_OR term   {
-                              if ( $<intValue>1 < 0 && $<intValue>3 < 0 ) {
-                                 $<intValue>$ = ( $<intValue>1 < $<intValue>3 ?
-                                                  $<intValue>1 : $<intValue>3 );
-                              } else {
-                                 $<intValue>$ = ( $<intValue>1 > $<intValue>3 ?
-                                                  $<intValue>1 : $<intValue>3 );
-                              }
-                            }
-  | expression OP_AND term  { 
-                              if ( $<intValue>1 > 0 && $<intValue>3 > 0 ) {
-                                 $<intValue>$ = ( $<intValue>1 > $<intValue>3 ?
-                                                  $<intValue>1 : $<intValue>3 );
-                              } else {
-                                 $<intValue>$ = ( $<intValue>1 < $<intValue>3 ?
-                                                  $<intValue>1 : $<intValue>3 );
-                              }
-                            }
+    expression OP_OR term  {
+                            if ( $<intValue>1 < 0 && $<intValue>3 < 0 ) {
+			      $<intValue>$ = lesser( $<intValue>1,
+						     $<intValue>3 );
+			    } else {
+			      $<intValue>$ = greater( $<intValue>1,
+						      $<intValue>3 );
+			    }
+                           }
+  | expression OP_XOR term {
+                            if ( $<intValue>1 < 0 && $<intValue>3 < 0 ) {
+			      $<intValue>$ = lesser( $<intValue>1,
+						     $<intValue>3 );
+			    } else if ( $<intValue>1 > 0 && $<intValue>3 > 0 ) {
+			      $<intValue>$ = greater( $<intValue>1,
+						      $<intValue>3 ) * -1;
+                            } else {
+			      $<intValue>$ = greater( $<intValue>1,
+						      $<intValue>3 );
+			    }
+                           }
+  | expression OP_AND term { 
+                            if ( $<intValue>1 > 0 && $<intValue>3 > 0 ) {
+			      $<intValue>$ = greater( $<intValue>1,
+						      $<intValue>3 );
+			    } else {
+			      $<intValue>$ = lesser( $<intValue>1,
+						     $<intValue>3 );
+			    }
+                           }
   | term { $<intValue>$ = $term; }
   ;
 
@@ -169,3 +185,12 @@ static void release_var(char * var) {
   free(var);
   var = NULL;
 }
+
+static int greater( int a, int b ) {
+  return ( a > b ? a : b );
+}
+
+static int lesser( int a, int b )  {
+  return ( a < b ? a : b );
+}
+
