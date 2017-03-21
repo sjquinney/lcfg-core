@@ -949,7 +949,7 @@ int lcfgctxlist_simple_query( const LCFGContextList * ctxlist,
                               const char * ctxq_name,
                               const char * ctxq_val,
                               LCFGTest cmp ) {
-  assert( ctxlist != NULL );
+  /* NOTE: May be called with a NULL ctxlist */
   assert( ctxq_name != NULL );
 
   LCFGContext * ctx = lcfgctxlist_find_context( ctxlist, ctxq_name );
