@@ -2,6 +2,8 @@ project(context C)
 
 cmake_minimum_required(VERSION 2.6)
 
+include_directories(${CMAKE_SOURCE_DIR}/context)
+
 find_package(BISON)
 if(NOT BISON_FOUND)
   message(FATAL_ERROR "Could not find bison")
