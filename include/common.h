@@ -4,9 +4,9 @@
 #define LCFG_COMMON_H
 
 typedef enum {
-  LCFG_STATUS_OK,
+  LCFG_STATUS_ERROR,
   LCFG_STATUS_WARN,
-  LCFG_STATUS_ERROR
+  LCFG_STATUS_OK
 } LCFGStatus;
 
 typedef enum {
