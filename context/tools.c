@@ -434,4 +434,84 @@ LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
   	      : LCFG_CHANGE_ERROR );
 }
 
+/* Query the contents of the pending file */
+
+bool setctx_eval( const char * contextdir, const char * expr ) {
+
+  LCFGContextList * pending = NULL;
+  time_t modtime = 0;
+  char * load_msg = NULL;
+  LCFGStatus rc = lcfgcontext_load_pending( contextdir,
+					    &pending, &modtime, &load_msg );
+
+  bool ok = ( rc == LCFG_STATUS_OK );
+  if (ok) {
+    int result;
+
+    ok = lcfgctxlist_eval_expression( pending, expr, &result );
+    if (ok) {
+      printf("Ctx: '%s', Result: %d\n", expr, result );
+    } else {
+      fprintf( stderr, "Failed to evaluate context expression\n" );
+    }
+
+  } else {
+    fprintf( stderr, "Failed to read context file: %s\n", load_msg );
+  }
+
+  free(load_msg);
+  lcfgctxlist_destroy(pending);
+
+  return ok;
+}
+
+bool setctx_show(const char * contextdir) {
+
+  LCFGContextList * pending = NULL;
+  time_t modtime = 0;
+  char * load_msg = NULL;
+  LCFGStatus rc = lcfgcontext_load_pending( contextdir,
+					    &pending, &modtime, &load_msg );
+
+  bool ok = ( rc == LCFG_STATUS_OK );
+  if (ok) {
+    ok = lcfgctxlist_print( pending, stdout );
+  } else {
+    fprintf( stderr, "Failed to read context file: %s\n", load_msg );
+  }
+
+  free(load_msg);
+  lcfgctxlist_destroy(pending);
+
+  return ok;
+}
+
+/* Update the contents of the pending file */
+
+bool setctx_update( const char * contextdir,
+                    int count, char * contexts[] ) {
+
+  char * msg = NULL;
+  LCFGChange changed = lcfgcontext_update_pending( contextdir,
+                                                   count, contexts,
+                                                   &msg );
+
+  switch (changed)
+    {
+    case LCFG_CHANGE_ERROR:
+      fprintf( stderr, "Failed to update contexts: %s\n", msg );
+      break;
+    case LCFG_CHANGE_NONE:
+      printf("No changes to contexts\n");
+      break;
+    default:
+      printf("Contexts changed\n");
+      break;
+  }
+
+  free(msg);
+
+  return ( changed != LCFG_CHANGE_ERROR );
+}
+
 /* eof */
