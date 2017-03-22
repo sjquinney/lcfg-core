@@ -13,6 +13,24 @@
 #include "context.h"
 #include "utils.h"
 
+/**
+ * @brief Check the context directory is accessible
+ *
+ * This can be used to verify that the specified location is a
+ * directory and is accessible. If it does not exist then a simple
+ * attempt will be made to create the directory. Note that this does
+ * not test whether it is possible to write a file into the
+ * directory. It is also important to note that the directory might
+ * disappear between this check succeeding and any attempt to actually
+ * access the files.
+ *
+ * @param[in] contextdir Location of contexts directory
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return boolean indicating success
+ *
+ */
+
 bool lcfgcontext_check_cfgdir( const char * contextdir, char ** msg ) {
 
   *msg = NULL;
@@ -54,6 +72,22 @@ static char * lcfgcontext_lockfile(const char * contextdir) {
   return lcfgutils_catfile( contextdir, ".lockfile" );
 }
 
+/**
+ * @brief Open a secure temporary context file
+ *
+ * This can be used to generate a secure temporary file name and open
+ * the file ready for writing.
+ *
+ * A failure will result in the @c exit() function being called with a
+ * non-zero value.
+ *
+ * @param[in] contextdir Location of contexts directory
+ * @param[out] tmpfile Path to temporary file
+ *
+ * @return File stream opened for writing
+ *
+ */
+
 FILE * lcfgcontext_tmpfile(const char * contextdir, char ** tmpfile ) {
 
   char * file = lcfgutils_catfile( contextdir, ".context.XXXXXX" );
@@ -78,6 +112,23 @@ FILE * lcfgcontext_tmpfile(const char * contextdir, char ** tmpfile ) {
 
   return tmpfh;
 }
+
+/**
+ * @brief Lock the context directory
+ *
+ * This can be used to lock the specified context directory to block
+ * any other updates. If the directory is already locked then this
+ * function will wait for the specified number of seconds before
+ * attempting to break the lock.
+ *
+ * @param[in] contextdir Location of contexts directory
+ * @param[in] file Context file which should be locked
+ * @param[in] timeout Integer timeout in seconds
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgcontext_lock( const char * contextdir,
 		       const char * file, int timeout, char ** msg ) {
@@ -113,6 +164,18 @@ bool lcfgcontext_lock( const char * contextdir,
   return locked;
 }
 
+/**
+ * @brief Unlock the context directory
+ *
+ * This can be used to unlock the specified context directory.
+ *
+ * @param[in] contextdir Location of contexts directory
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return boolean indicating success
+ *
+ */
+
 bool lcfgcontext_unlock( const char * contextdir, char ** msg ) {
 
   char * lockfile = lcfgcontext_lockfile(contextdir);
@@ -131,6 +194,18 @@ bool lcfgcontext_unlock( const char * contextdir, char ** msg ) {
 
   return unlocked;
 }
+
+/**
+ * @brief Update the pending contexts file
+ *
+ * @param[in] contextdir Location of contexts directory
+ * @param[in] change_count Number of context updates
+ * @param[in] contexts Array of context updates
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return boolean indicating success
+ *
+ */
 
 LCFGChange lcfgcontext_update_pending( const char * contextdir,
                                        int change_count, char * contexts[],
@@ -216,18 +291,13 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
         lcfgutils_build_message( msg, "Failed to merge context '%s'",
                                  contexts[i] );
         ok = false;
-      } else if ( rc == LCFG_CHANGE_NONE ) {
-
-        /* no update, throw away spare struct */
-	lcfgcontext_release(ctx);
       }
-
     }
 
+    lcfgcontext_release(ctx);
     free(parse_msg);
 
-    if ( !ok )
-      lcfgcontext_release(ctx);
+    if (!ok) break;
   }
 
   if (!ok) goto cleanup;
@@ -293,6 +363,22 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
               : LCFG_CHANGE_ERROR );
 }
 
+/**
+ * @brief Load pending contexts
+ *
+ * Loads the contexts of the pending file in the specified directory
+ * into a new @c LCFGContextList. If the file does not exist
+ * an empty list will be returned.
+ *
+ * @param[in] contextdir Location of contexts directory
+ * @param[out] newactive Reference to pointer to pending @c LCFGContextList
+ * @param[out] modtime Modification time of pending contexts file
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return boolean indicating success
+ *
+ */
+
 LCFGStatus lcfgcontext_load_pending( const char * contextdir,
 				     LCFGContextList ** ctxlist,
                                      time_t * modtime,
@@ -307,6 +393,22 @@ LCFGStatus lcfgcontext_load_pending( const char * contextdir,
 
   return rc;
 }
+
+/**
+ * @brief Load active contexts
+ *
+ * Loads the contexts of the active context file in the specified
+ * directory into a new @c LCFGContextList. If the file does not exist
+ * an empty list will be returned.
+ *
+ * @param[in] contextdir Location of contexts directory
+ * @param[out] newactive Reference to pointer to active @c LCFGContextList
+ * @param[out] modtime Modification time of active contexts file
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return boolean indicating success
+ *
+ */
 
 LCFGStatus lcfgcontext_load_active( const char * contextdir,
 				    LCFGContextList ** ctxlist,
@@ -323,7 +425,20 @@ LCFGStatus lcfgcontext_load_active( const char * contextdir,
   return rc;
 }
 
+/**
+ * @brief Activate pending contexts
+ *
+ * @param[in] contextdir Location of contexts directory
+ * @param[in] ctx_profile_dir Location of contexts profile directory
+ * @param[out] newactive Reference to pointer to active @c LCFGContextList
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return boolean indicating success
+ *
+ */
+
 LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
+                                          const char * ctx_profile_dir,
                                           LCFGContextList ** newactive,
                                           char ** msg ) {
 
@@ -370,7 +485,7 @@ LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
   /* Check for changes */
 
   bool changed = lcfgctxlist_diff( active, pending,
-				   contextdir,
+				   ctx_profile_dir,
 				   active_mtime );
 
   char * afile = lcfgcontext_activefile(contextdir);
@@ -390,7 +505,7 @@ LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
         ok = false;
       }
     } else {
-      fclose(tmpfh); /* Ignoring any errors */
+      int rc = fclose(tmpfh); /* Ignoring any errors */
     }
 
     /* Rename to the active file */
@@ -434,7 +549,15 @@ LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
   	      : LCFG_CHANGE_ERROR );
 }
 
-/* Query the contents of the pending file */
+/**
+ * @brief Query the contents of the pending contexts file
+ *
+ * @param[in] contextdir Location of contexts directory
+ * @param[in] expr Context query string
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool setctx_eval( const char * contextdir, const char * expr ) {
 
@@ -465,6 +588,15 @@ bool setctx_eval( const char * contextdir, const char * expr ) {
   return ok;
 }
 
+/**
+ * @brief Show the contents of the pending contexts file
+ *
+ * @param[in] contextdir Location of contexts directory
+ *
+ * @return boolean indicating success
+ *
+ */
+
 bool setctx_show(const char * contextdir) {
 
   LCFGContextList * pending = NULL;
@@ -486,7 +618,16 @@ bool setctx_show(const char * contextdir) {
   return ok;
 }
 
-/* Update the contents of the pending file */
+/**
+ * @brief Update the contents of the pending contexts file
+ *
+ * @param[in] contextdir Location of contexts directory
+ * @param[in] count Number of context updates
+ * @param[in] contexts Array of context updates
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool setctx_update( const char * contextdir,
                     int count, char * contexts[] ) {
