@@ -1,6 +1,227 @@
-2016-10-07  SVN: new release
+2017-03-22  SVN: new release
 
-	* Release: 1.30.1
+	* Release: 1.31.0
+
+2017-03-22 15:36  squinney@INF.ED.AC.UK
+
+	* context/tools.c, lcfg.yml: completed API docs
+
+2017-03-22 15:07  squinney@INF.ED.AC.UK
+
+	* context/tools.c: Added more API docs
+
+2017-03-22 15:07  squinney@INF.ED.AC.UK
+
+	* include/context.h: lcfgcontext_pending_to_active needs to also
+	  pass through the context profile directory path
+
+2017-03-22 14:22  squinney@INF.ED.AC.UK
+
+	* context/setctx.c, context/tools.c: Moved some functions from
+	  setctx into tools so that they are available for using elsewhere
+
+2017-03-22 14:21  squinney@INF.ED.AC.UK
+
+	* Doxyfile.in: Excluded a few internal C files
+
+2017-03-22 13:54  squinney@INF.ED.AC.UK
+
+	* context/scanner.c, lcfg.yml: Added API docs
+
+2017-03-21 17:20  squinney@INF.ED.AC.UK
+
+	* context/list.c: lcfgctxlist_simple_query can be called with a
+	  NULL context list
+
+2017-03-21 17:14  squinney@INF.ED.AC.UK
+
+	* context/lexer.l: need to escape xor '^' symbol in lexer
+
+2017-03-21 17:10  squinney@INF.ED.AC.UK
+
+	* context/lexer.l, context/parser.y: Added support for XOR, tidied
+	  up AND and OR
+
+2017-03-21 17:10  squinney@INF.ED.AC.UK
+
+	* context/CMakeLists.txt: need to search context source directory
+	  for includes
+
+2017-03-21 13:59  squinney@INF.ED.AC.UK
+
+	* context/context.c, context/list.c, include/common.h, lcfg.yml:
+	  Completed API docs for context lists
+
+2017-03-20 14:20  squinney@INF.ED.AC.UK
+
+	* context/list.c: Tweaked lcfgctxist_print so that it avoids
+	  contexts with no name
+
+2017-03-20 14:02  squinney@INF.ED.AC.UK
+
+	* context/context.c: Finished API docs
+
+2017-03-17 15:42  squinney@INF.ED.AC.UK
+
+	* context/context.c, lcfg.yml: Started documenting functions
+
+2017-03-17 14:09  squinney@INF.ED.AC.UK
+
+	* context/context.c, context/list.c, context/tools.c,
+	  include/utils.h.in, lcfg.yml, utils/utils.c: Added a simple
+	  lcfgutils_build_message function and use it for context code
+
+2017-03-17 13:50  squinney@INF.ED.AC.UK
+
+	* context/CMakeLists.txt, context/ctxlexer.l, context/ctxlist.c,
+	  context/ctxparser.y, context/lexer.l, context/list.c,
+	  context/parser.y: Renamed some files for neatness
+
+2017-03-17 12:11  squinney@INF.ED.AC.UK
+
+	* context/setctx.c, include/packages.h, include/resources.h,
+	  lcfg.yml, packages/package.c, resources/resource.c,
+	  xml/packages.c, xml/resource.c: Updated for change to
+	  lcfgctxlist_eval_expression API
+
+2017-03-17 12:10  squinney@INF.ED.AC.UK
+
+	* context/context.c: lcfgcontext_valid_expression now uses
+	  lcfgctxlist_eval_expression to check validity of non-empty
+	  strings
+
+2017-03-17 12:00  squinney@INF.ED.AC.UK
+
+	* context/context.c: Ensure that the priority associated with a
+	  context is always positive
+
+2017-03-17 11:44  squinney@INF.ED.AC.UK
+
+	* context/ctxparser.y, context/scanner.c, include/context.h,
+	  lcfg.yml: Added support for AND and OR in context queries. Tidied
+	  up code.
+
+2017-03-17 10:43  squinney@INF.ED.AC.UK
+
+	* context/CMakeLists.txt, context/ctxlexer.l, context/ctxlist.c,
+	  context/ctxparser.y, context/scanner.c, lcfg.yml:
+	  lcfgctxlist_eval_expression can now handle simple queries (no AND
+	  or OR yet)
+
+2017-03-16 18:04  squinney@INF.ED.AC.UK
+
+	* context/ctxlist.c: Fixed remove_after when called with head
+
+2017-03-16 17:28  squinney@INF.ED.AC.UK
+
+	* context/ctxlist.c: need to release context once it has been added
+	  to the list in from_file
+
+2017-03-16 17:21  squinney@INF.ED.AC.UK
+
+	* context/context.c: fixed missing semi-colon
+
+2017-03-16 17:18  squinney@INF.ED.AC.UK
+
+	* context/context.c: Fixed call to strdup in _bracketify_expression
+
+2017-03-16 17:14  squinney@INF.ED.AC.UK
+
+	* context/context.c, context/ctxlist.c, context/tools.c,
+	  include/context.h: Modified many functions to check the context
+	  is not NULL using an assert (and dropped some attributes which
+	  were not the right way to do it). Also improved reference
+	  counting implementation
+
+2017-03-16 12:40  squinney@INF.ED.AC.UK
+
+	* context/ctxlist.c, include/common.h, include/context.h: Added
+	  lcfgctxlist_simple_query which can be used to make a very simple
+	  query using the given context list
+
+2017-03-15 15:02  squinney@INF.ED.AC.UK
+
+	* context/ctxparser.y, lcfg.yml: Tweaked so that bison 2.7 (the
+	  default on EL7) is supported
+
+2017-03-15 15:02  squinney@INF.ED.AC.UK
+
+	* context/CMakeLists.txt: Run bison and flex to generate scanner
+	  code
+
+2017-03-15 14:35  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, include/utils.h.cin, include/utils.h.in: changed
+	  suffix to avoid clash with lcfg buildtools pre-processed files
+
+2017-03-15 14:35  squinney@INF.ED.AC.UK
+
+	* utils/CMakeLists.txt, utils/dnsdomainname.cin: Dropped ancient
+	  dnsdomainname helper script which is never needed
+
+2017-03-15 14:29  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, include/utils.h.cin, specfile: Added LCFGLOG and
+	  LCFGTMP cmake variables to make the code configurable at
+	  build-time, this is only used for the utils library
+
+2017-03-15 14:28  squinney@INF.ED.AC.UK
+
+	* utils/libmsg.c: Added a new LCFG_LogDir function to handle the
+	  discovery of the log directory.
+
+2017-03-15 11:42  squinney@INF.ED.AC.UK
+
+	* include/utils.h.cin, lcfg.yml, specfile, utils/CMakeLists.txt,
+	  utils/lcfgack.c, utils/libmsg.c: Removed lcfgack utility which is
+	  now part of the lcfg-client package
+
+2017-03-14 20:07  squinney@INF.ED.AC.UK
+
+	* context/CMakeLists.txt: run bison
+
+2017-03-14 20:07  squinney@INF.ED.AC.UK
+
+	* specfile: Added build-dep on bison and flex
+
+2017-03-14 15:15  squinney@INF.ED.AC.UK
+
+	* context/ctxlexer.l, context/ctxparser.y, context/scanner.c: First
+	  check-in of new code for lexing/parsing and evaluating context
+	  expressions
+
+2016-10-28 14:39  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: Added more doxygen docs
+
+2016-10-28 11:43  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: moved a couple of variable declarations in
+	  lcfgprofile_to_bdb so they are always available when jumping to
+	  cleanup
+
+2016-10-28 11:21  squinney@INF.ED.AC.UK
+
+	* bdb/read.c: Added doxygen docs for functions.
+
+2016-10-28 11:21  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, include/bdb.h: Renamed lcfgbdb_end_reader to
+	  lcfgbdb_close_db for clarity
+
+2016-10-13 09:56  squinney@INF.ED.AC.UK
+
+	* utils/CMakeLists.txt: Need to install compiled binaries using the
+	  TARGETS option
+
+2016-10-13 09:47  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/components.c: Added cast to silence warning
+	  about how lcfgtaglist_append is called
+
+2016-10-07 13:30  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.30.1
 
 2016-10-07 13:11  squinney@INF.ED.AC.UK
 
