@@ -231,8 +231,19 @@ LCFGStatus lcfgcontext_load_active( const char * contextdir,
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
+                                          const char * ctx_profile_dir,
                                           LCFGContextList ** newactive,
                                           char ** msg )
+  __attribute__((warn_unused_result));
+
+bool setctx_eval( const char * contextdir, const char * expr )
+  __attribute__((warn_unused_result));
+
+bool setctx_show(const char * contextdir)
+  __attribute__((warn_unused_result));
+
+bool setctx_update( const char * contextdir,
+                    int count, char * contexts[] )
   __attribute__((warn_unused_result));
 
 #endif /*  LCFG_CONTEXT_H */
