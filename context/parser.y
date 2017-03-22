@@ -40,12 +40,14 @@
 %token CMP_EQ
 %token CMP_NE
 
-%token OP_OR
-%token OP_XOR
-%token OP_AND
+%left OP_OR
+%left OP_XOR
+%left OP_AND
 %right OP_NOT
 
 %token END 0
+
+%destructor { free($$); $$ = NULL; } <stringValue>
 
 %type <intValue> expression term
 
