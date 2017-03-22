@@ -75,8 +75,8 @@ static char * lcfgcontext_lockfile(const char * contextdir) {
 /**
  * @brief Open a secure temporary context file
  *
- * This can be used to generate a secure temporary file name and open
- * the file ready for writing.
+ * This can be used to generate a secure temporary contexts file in
+ * the specified directory and open the file ready for writing.
  *
  * A failure will result in the @c exit() function being called with a
  * non-zero value.
@@ -197,6 +197,19 @@ bool lcfgcontext_unlock( const char * contextdir, char ** msg ) {
 
 /**
  * @brief Update the pending contexts file
+ *
+ * This takes a list of context updates and applies them to the
+ * current pending contexts list. Each item in the list is parsed
+ * using the @c lcfgcontext_from_string() function and thus the
+ * expected format is "NAME = VALUE". To remove a context an empty
+ * value should be specified.
+ *
+ * Whilst the pending contexts file is being updated the directory
+ * will be locked so that other processes attempting to do the same
+ * thing are blocked and have to wait.
+ *
+ * If the application of the context updates does not result in any
+ * functional differences then the pending file will not be altered.
  *
  * @param[in] contextdir Location of contexts directory
  * @param[in] change_count Number of context updates
@@ -428,6 +441,15 @@ LCFGStatus lcfgcontext_load_active( const char * contextdir,
 /**
  * @brief Activate pending contexts
  *
+ * This activates the list of pending contexts. If there are no
+ * functional differences between the pending and active context lists
+ * then the file contents will not be altered. If the modification
+ * time is specified as a non-zero value then it will always be
+ * updated even when no changes occur. If the list of pending contexts
+ * is empty then an empty active file will be created. An
+ * @c LCFGContextList holding the newly loaded active contexts is
+ * returned.
+ *
  * @param[in] contextdir Location of contexts directory
  * @param[in] ctx_profile_dir Location of contexts profile directory
  * @param[out] newactive Reference to pointer to active @c LCFGContextList
@@ -552,6 +574,13 @@ LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
 /**
  * @brief Query the contents of the pending contexts file
  *
+ * This is a high-level function which can be used to evaluate a
+ * context query expression given the current list of pending contexts
+ * stored in the specified directory. This is really just a wrapper
+ * around the @c lcfgctxlist_eval_expression() function. The result is
+ * printed on stdout. If an error occurs a suitable message is printed
+ * on stderr.
+ *
  * @param[in] contextdir Location of contexts directory
  * @param[in] expr Context query string
  *
@@ -591,6 +620,12 @@ bool setctx_eval( const char * contextdir, const char * expr ) {
 /**
  * @brief Show the contents of the pending contexts file
  *
+ * This is a high-level function which can be used to display the
+ * current list of pending contexts stored in the specified
+ * directory. The result is printed on stdout using the
+ * @c lcfgctxlist_print() function. If an error occurs a suitable message
+ * is printed on stderr.
+ *
  * @param[in] contextdir Location of contexts directory
  *
  * @return boolean indicating success
@@ -620,6 +655,12 @@ bool setctx_show(const char * contextdir) {
 
 /**
  * @brief Update the contents of the pending contexts file
+ *
+ * This is a high-level function which can be used to update the
+ * current list of pending contexts stored in the specified
+ * directory. This is really just a wrapper around the
+ * @c lcfgcontext_update_pending() function. The result is printed on
+ * stdout. If an error occurs a suitable message is printed on stderr.
  *
  * @param[in] contextdir Location of contexts directory
  * @param[in] count Number of context updates
