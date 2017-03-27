@@ -443,12 +443,15 @@ LCFGStatus lcfgcontext_load_active( const char * contextdir,
  *
  * This activates the list of pending contexts. If there are no
  * functional differences between the pending and active context lists
- * then the file contents will not be altered. If the modification
- * time is specified as a non-zero value then it will always be
- * updated even when no changes occur. If the list of pending contexts
- * is empty then an empty active file will be created. An
- * @c LCFGContextList holding the newly loaded active contexts is
- * returned.
+ * then the file contents will not be altered. The file modification
+ * time will always be updated even when no changes occur. If the list
+ * of pending contexts is empty then an empty active file will be
+ * created. An @c LCFGContextList holding the newly loaded active
+ * contexts is returned.
+ *
+ * Optionally a base directory for context-specific XML profiles can
+ * be specified in which case they will also be examined for relevant
+ * changes. When not required this parameter should be set to @c NULL.
  *
  * @param[in] contextdir Location of contexts directory
  * @param[in] ctx_profile_dir Location of contexts profile directory

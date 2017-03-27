@@ -693,10 +693,10 @@ bool lcfgctxlist_print( const LCFGContextList * ctxlist,
  *
  * This opens the specified file for writing and calls
  * @c lcfgctxlist_print() to write the list to the file. Before it is
- * written out the list is sorted into priority order. If the list is
- * empty an empty file will be created. If required the modification
- * time for the file can be specified, otherwise set the mtime to
- * zero.
+ * written out the list is sorted into priority order (note that this
+ * may alter the list). If the list is empty an empty file will be
+ * created. If required the modification time for the file can be
+ * specified, otherwise set the mtime to zero.
  *
  * @param[in] ctx Pointer to @c LCFGContextList
  * @param[in] filename File to which the context list should be written
@@ -816,7 +816,8 @@ void lcfgctxlist_sort_by_priority( LCFGContextList * ctxlist ) {
  * This will compare the contents of two @c LCFGContextList and return
  * a boolean which indicates if they differ. Contexts which are found
  * in both lists are compared using the @c lcfgcontext_identical()
- * function.
+ * function. Note that the order of the contexts in the lists is not
+ * important.
  *
  * If a directory for context-specific profiles is specified then the
  * modification times for any which are relevant will be compared with

@@ -68,7 +68,7 @@ void * lcfgctx_yy_scan_string (const char * str, lcfgctx_yyscan_t ctxscanner );
  * @brief Evaluate an LCFG context query expression
  *
  * This can be used to evaluate any arbitrary context query string for
- * the specified the specified @c LCFGContextList.
+ * the specified @c LCFGContextList.
  *
  * The magnitude of the value returned is based on a combination of
  * the priorities associated with the contexts evaluated. The sign of
