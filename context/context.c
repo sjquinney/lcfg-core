@@ -34,7 +34,7 @@ static LCFGStatus invalid_context( char ** msg, const char * reason ) {
  * @brief Create and initialise a new context
  *
  * Creates a new @c LCFGContext and initialises the parameters to the
- * default values.
+ * default values. The default priority is 1 (one).
  *
  * The reference count for the new struct is initialised to 1. To
  * avoid memory leaks, when you no longer require access to the struct
@@ -59,7 +59,7 @@ LCFGContext * lcfgcontext_new(void) {
 
   ctx->name      = NULL;
   ctx->value     = NULL;
-  ctx->priority  = 0;
+  ctx->priority  = 1;
   ctx->_refcount = 1;
 
   return ctx;
@@ -490,7 +490,7 @@ bool lcfgcontext_set_priority( LCFGContext * ctx, int priority ) {
      negative, in that case the sign indicates truthiness. */
 
   bool ok=false;
-  if ( priority >= 0 ) {
+  if ( priority >= 1 ) {
     ctx->priority = priority;
     ok = true;
   } else {
