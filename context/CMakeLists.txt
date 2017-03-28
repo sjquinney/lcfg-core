@@ -21,7 +21,7 @@ ADD_FLEX_BISON_DEPENDENCY(CtxScanner CtxParser)
 
 # Generate the lcfg context shared library.
 
-set(MY_SOURCES context.c  list.c  setctx.c  tools.c scanner.c
+set(MY_SOURCES context.c list.c tools.c scanner.c
                ${BISON_CtxParser_OUTPUTS} ${FLEX_CtxScanner_OUTPUTS} )
 
 add_library(lcfg_context SHARED ${MY_SOURCES})
@@ -44,17 +44,11 @@ SET_TARGET_PROPERTIES(lcfg_context-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 
 target_link_libraries(lcfg_context lcfg_utils)
 
-# Create the setctx tool and link it to the lcfg_context library.
-
-add_executable(setctx setctx.c)
-
-target_link_libraries(setctx lcfg_context)
-
 # Specify where various files should be installed.
 
 SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
 
-install(TARGETS setctx lcfg_context lcfg_context-static
+install(TARGETS lcfg_context lcfg_context-static
         RUNTIME DESTINATION sbin
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}
         ARCHIVE DESTINATION ${LIB_INSTALL_DIR})

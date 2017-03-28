@@ -9,6 +9,8 @@
 #include "context.h"
 #include "utils.h"
 
+#define DEFAULT_CONTEXTDIR "/var/lcfg/conf/profile/context"
+
 int main(int argc, char* argv[]) {
 
   int c;

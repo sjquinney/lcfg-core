@@ -50,7 +50,6 @@ make -C docs/latex
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-rm -f $RPM_BUILD_ROOT/usr/sbin/setctx
 
 %post -p /sbin/ldconfig
 
@@ -63,7 +62,6 @@ rm -f $RPM_BUILD_ROOT/usr/sbin/setctx
 #%{_mandir}/man1/*
 #%{_mandir}/man3/*
 %{_bindir}/parse_pkgspec
-#%{_sbindir}/setctx
 %{_sbindir}/daemon
 %{_sbindir}/lcfgmsg
 %{_sbindir}/shiftpressed

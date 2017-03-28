@@ -7,8 +7,6 @@
 
 #include "common.h"
 
-#define DEFAULT_CONTEXTDIR "/var/lcfg/conf/profile/context"
-
 struct LCFGContext {
   char * name;
   char * value;
