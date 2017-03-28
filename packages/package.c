@@ -18,27 +18,27 @@
 #include "packages.h"
 #include "utils.h"
 
+/* Test if a string (i.e. a char *) is 'empty' */
+
+#define isempty(STR) ( STR == NULL || *(STR) == '\0' )
+
 /* Extends the standard alpha-numeric test to include the '_'
    (underscore) character. This is similar to the '\w' in Perl
    regexps, this gives the set of characters [A-Za-z0-9_] */
 
-inline static bool isword( const char chr ) {
-  return ( isalnum(chr) || chr == '_' );
-}
+#define isword(CHR) ( isalnum(CHR) || CHR == '_' )
 
 /* Permit [A-Za-z0-9_-.+] characters in package names */
 
-inline static bool isnamechr( const char chr ) {
-  return ( isword(chr) || strchr( "-.+", chr ) != NULL );
-}
+#define isnamechr(CHR) ( isword(CHR) || strchr( "-.+", CHR ) != NULL )
 
 /* Currently there are five supported prefixes for LCFG package
    specifications:
 
-   +  insert package into list, replaces any existing package of same name/arch
+   +  Insert package into list, replaces any existing package of same name/arch
    =  Similar to + but "pins" the version so it cannot be overridden
-   -  remove any package from list which matches this name/arch
-   ?  replace any existing package in list which matches this name/arch
+   -  Remove any package from list which matches this name/arch
+   ?  Replace any existing package in list which matches this name/arch
    ~  Add package to list if name/arch is not already present
 */
 
@@ -74,7 +74,7 @@ LCFGPackage * lcfgpackage_new(void) {
   pkg->derivation = NULL;
   pkg->prefix     = '\0';
   pkg->priority   = 0;
-  pkg->_refcount  = 0;
+  pkg->_refcount  = 1;
 
   return pkg;
 }
@@ -107,11 +107,7 @@ LCFGPackage * lcfgpackage_new(void) {
 
 void lcfgpackage_destroy(LCFGPackage * pkg) {
 
-  if ( pkg == NULL )
-    return;
-
-  if ( pkg->_refcount > 0 )
-    return;
+  if ( pkg == NULL ) return;
 
   free(pkg->name);
   pkg->name = NULL;
@@ -140,6 +136,55 @@ void lcfgpackage_destroy(LCFGPackage * pkg) {
 }
 
 /**
+ * @brief Acquire reference to package
+ *
+ * This is used to record a reference to the @c LCFGPackage, it
+ * does this by simply incrementing the reference count.
+ *
+ * To avoid memory leaks, once the reference to the struct is no
+ * longer required the @c lcfgpackage_release() function should be
+ * called.
+ *
+ * @param[in] pkg Pointer to @c LCFGPackage
+ *
+ */
+
+void lcfgpackage_acquire( LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
+  pkg->_refcount += 1;
+}
+
+/**
+ * @brief Release reference to package
+ *
+ * This is used to release a reference to the @c LCFGPackage,
+ * it does this by simply decrementing the reference count. If the
+ * reference count reaches zero the @c lcfgpackage_destroy() function
+ * will be called to clean up the memory associated with the struct.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * package which has already been destroyed (or potentially was never
+ * created).
+ *
+ * @param[in] pkg Pointer to @c LCFGPackage
+ *
+ */
+
+void lcfgpackage_release( LCFGPackage * pkg ) {
+
+  if ( pkg == NULL ) return;
+
+  if ( pkg->_refcount > 0 )
+    pkg->_refcount -= 1;
+
+  if ( pkg->_refcount == 0 )
+    lcfgpackage_destroy(pkg);
+
+}
+
+/**
  * @brief Clone the package
  *
  * Creates a new @c LCFGPackage struct and copies the values of
@@ -160,8 +205,7 @@ void lcfgpackage_destroy(LCFGPackage * pkg) {
 LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkg ) {
 
   LCFGPackage * clone = lcfgpackage_new();
-  if ( clone == NULL )
-    return NULL;
+  if ( clone == NULL ) return NULL;
 
   bool ok = true;
   if ( pkg->name != NULL ) {
@@ -248,14 +292,11 @@ bool lcfgpackage_valid_name( const char * name ) {
   /* MUST be at least one character long and first character MUST be
      an alpha-numeric. */
 
-  bool valid = ( name  != NULL &&
-                 *name != '\0' &&
-                 isalnum(*name) );
+  bool valid = ( !isempty(name) && isalnum(*name) );
 
   char * ptr;
   for ( ptr = (char *) ( name + 1 ); valid && *ptr != '\0'; ptr++ ) {
-    if ( !isnamechr(*ptr) )
-      valid = false;
+    if ( !isnamechr(*ptr) ) valid = false;
   }
 
   return valid;
@@ -276,7 +317,7 @@ bool lcfgpackage_valid_name( const char * name ) {
  */
 
 bool lcfgpackage_has_name( const LCFGPackage * pkg ) {
-  return ( pkg->name != NULL && *( pkg->name ) != '\0' );
+  return !isempty(pkg->name);
 }
 
 /**
@@ -357,15 +398,13 @@ bool lcfgpackage_valid_arch( const char * arch ) {
 
   /* MUST be at least one character long */
 
-  bool valid = ( arch  != NULL &&
-                 *arch != '\0' );
+  bool valid = !isempty(arch);
 
   /* Permit [a-zA-Z0-9_-] characters */
 
   char * ptr;
   for ( ptr = (char *) arch; valid && *ptr != '\0'; ptr++ ) {
-    if ( !isword(*ptr) && *ptr != '-' )
-      valid = false;
+    if ( !isword(*ptr) && *ptr != '-' ) valid = false;
   }
 
   return valid;
@@ -384,7 +423,7 @@ bool lcfgpackage_valid_arch( const char * arch ) {
  */
 
 bool lcfgpackage_has_arch( const LCFGPackage * pkg ) {
-  return ( pkg->arch != NULL && *( pkg->arch ) != '\0' );
+  return !isempty(pkg->arch);
 }
 
 /**
@@ -465,16 +504,14 @@ bool lcfgpackage_valid_version( const char * version ) {
 
   /* Must be at least one character long. */
 
-  bool valid = ( version  != NULL &&
-                 *version != '\0' );
+  bool valid = !isempty(version);
 
   /* It is not entirely clear exactly which characters are allowed but
      it is necessary to forbid '-' (hyphen) and any whitespace */
 
   char * ptr;
   for ( ptr = (char *) version; valid && *ptr != '\0'; ptr++ ) {
-    if ( *ptr == '-' || isspace(*ptr) )
-      valid = false;
+    if ( *ptr == '-' || isspace(*ptr) ) valid = false;
   }
 
   return valid;
@@ -493,7 +530,7 @@ bool lcfgpackage_valid_version( const char * version ) {
  */
 
 bool lcfgpackage_has_version( const LCFGPackage * pkg ) {
-  return ( pkg->version != NULL && *( pkg->version ) != '\0' );
+  return !isempty(pkg->version);
 }
 
 /**
@@ -589,7 +626,7 @@ bool lcfgpackage_valid_release( const char * release ) {
  */
 
 bool lcfgpackage_has_release( const LCFGPackage * pkg ) {
-  return ( pkg->release != NULL && *( pkg->release ) != '\0' );
+  return !isempty(pkg->release);
 }
 
 /**
@@ -795,15 +832,13 @@ bool lcfgpackage_valid_flags( const char * flags ) {
 
   /* MUST be at least one character long. */
 
-  bool valid = ( flags  != NULL &&
-                 *flags != '\0' );
+  bool valid = !isempty(flags);
 
   /* This only permits [a-zA-Z0-9] characters */
 
   char * ptr;
   for ( ptr = (char *) flags; valid && *ptr != '\0'; ptr++ ) {
-    if ( !lcfgpackage_valid_flag_chr(*ptr) )
-      valid = false;
+    if ( !lcfgpackage_valid_flag_chr(*ptr) ) valid = false;
   }
 
   return valid;
@@ -822,7 +857,7 @@ bool lcfgpackage_valid_flags( const char * flags ) {
  */
 
 bool lcfgpackage_has_flags( const LCFGPackage * pkg ) {
-  return ( pkg->flags != NULL && *( pkg->flags ) != '\0' );
+  return !isempty(pkg->flags);
 }
 
 /**
@@ -941,8 +976,7 @@ bool lcfgpackage_clear_flags( LCFGPackage * pkg ) {
 bool lcfgpackage_add_flags( LCFGPackage * pkg,
                             const char * extra_flags ) {
 
-  if ( extra_flags == NULL || *extra_flags == '\0' )
-    return true;
+  if ( isempty(extra_flags) ) return true;
 
   /* No point doing any work if there are invalid flags */
 
@@ -1066,7 +1100,7 @@ bool lcfgpackage_valid_context( const char * ctx ) {
  */
 
 bool lcfgpackage_has_context( const LCFGPackage * pkg ) {
-  return ( pkg->context != NULL && *( pkg->context ) != '\0' );
+  return !isempty(pkg->context);
 }
 
 /**
@@ -1150,8 +1184,7 @@ bool lcfgpackage_set_context( LCFGPackage * pkg, char * new_ctx ) {
 bool lcfgpackage_add_context( LCFGPackage * pkg,
                               const char * extra_context ) {
 
-  if ( extra_context == NULL || *extra_context == '\0' )
-    return true;
+  if ( isempty(extra_context) ) return true;
 
   char * new_context = NULL;
   if ( !lcfgpackage_has_context(pkg) ) {
@@ -1183,7 +1216,7 @@ bool lcfgpackage_add_context( LCFGPackage * pkg,
  */
 
 bool lcfgpackage_has_derivation( const LCFGPackage * pkg ) {
-  return ( pkg->derivation != NULL && *( pkg->derivation ) != '\0' );
+  return !isempty(pkg->derivation);
 }
 
 /**
@@ -1255,8 +1288,7 @@ bool lcfgpackage_set_derivation( LCFGPackage * pkg, char * new_deriv ) {
 bool lcfgpackage_add_derivation( LCFGPackage * pkg,
                                  const char * extra_deriv ) {
 
-  if ( extra_deriv == NULL || *extra_deriv == '\0' )
-    return true;
+  if ( isempty(extra_deriv) ) return true;
 
   char * new_deriv = NULL;
   if ( !lcfgpackage_has_derivation(pkg) ) {
@@ -1825,7 +1857,7 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
   if ( lcfgpackage_has_arch(pkg) ) {
 
     /* Not added to the spec when same as default architecture */
-    if ( defarch == NULL ||
+    if ( isempty(defarch) ||
          strcmp( pkg->arch, defarch ) != 0 ) {
 
       pkgarch = pkg->arch;
