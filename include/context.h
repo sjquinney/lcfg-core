@@ -7,10 +7,16 @@
 
 #include "common.h"
 
+/**
+ * @brief A structure to represent an LCFG context
+ */
+
 struct LCFGContext {
-  char * name;
-  char * value;
-  int priority;
+  /*@{*/
+  char * name;  /**< The name of the context (required) */
+  char * value; /**< The value for the context (optional) */
+  int priority; /**< The priority for the context (default is 1) */
+  /*@}*/
   unsigned int _refcount;
 };
 
@@ -103,8 +109,14 @@ char * lcfgcontext_combine_expressions( const char * expr1,
 
 /* Lists */
 
+/**
+ * @brief A structure to wrap an LCFG context as a single-linked list item
+ */
+
 struct LCFGContextNode {
-  LCFGContext * context;
+  /*@{*/
+  LCFGContext * context; /**< Pointer to the context structure */
+  /*@}*/
   struct LCFGContextNode * next;
 };
 
@@ -114,10 +126,16 @@ LCFGContextNode * lcfgctxnode_new(LCFGContext * ctx);
 
 void lcfgctxnode_destroy(LCFGContextNode * ctxnode);
 
+/**
+ * @brief A structure for storing LCFG contexts as a single-linked list */
+ */
+
 struct LCFGContextList {
-  LCFGContextNode * head;
-  LCFGContextNode * tail;
-  unsigned int size;
+  /*@{*/
+  LCFGContextNode * head; /**< The first context in the list */
+  LCFGContextNode * tail; /**< The last context in the list */
+  unsigned int size;      /**< The length of the list */
+  /*@}*/
 };
 
 typedef struct LCFGContextList LCFGContextList;
@@ -128,13 +146,103 @@ LCFGContextList * lcfgctxlist_clone(const LCFGContextList * ctxlist);
 
 void lcfgctxlist_destroy(LCFGContextList * ctxlist);
 
+/**
+ * @brief Retrieve the first context in the list
+ *
+ * This is a simple macro which can be used to get the first context
+ * structure in the list. Note that if the list is empty this will be
+ * the @c NULL value.
+ *
+ * Note that this does @b NOT increment the reference count for the
+ * returned context structure. To retain the context call the
+ * @c lcfgcontext_acquire() function.
+ *
+ * @param[in] ctxlist Pointer to @c LCFGContextList
+ *
+ * @return Pointer to first @c LCFGContext structure in list
+ *
+ */
+
 #define lcfgctxlist_head(ctxlist) ((ctxlist)->head)
+
+/**
+ * @brief Retrieve the last context in the list
+ *
+ * This is a simple macro which can be used to get the last context
+ * structure in the list. Note that if the list is empty this will be
+ * the @c NULL value.
+ *
+ * Note that this does @b NOT increment the reference count for the
+ * returned context structure. To retain the context call the
+ * @c lcfgcontext_acquire() function.
+ *
+ * @param[in] ctxlist Pointer to @c LCFGContextList
+ *
+ * @return Pointer to last @c LCFGContext structure in list
+ *
+ */
+
 #define lcfgctxlist_tail(ctxlist) ((ctxlist)->tail)
+
+/**
+ * @brief Get the number of items in the context list
+ *
+ * This is a simple macro which can be used to get the length of the
+ * single-linked context list.
+ *
+ * @param[in] ctxlist Pointer to @c LCFGContextList
+ *
+ * @return Integer length of the context list
+ *
+ */
+
 #define lcfgctxlist_size(ctxlist) ((ctxlist)->size)
+
+/**
+ * @brief Test if the context list is empty
+ *
+ * This is a simple macro which can be used to test if the
+ * single-linked context list contains any items.
+ *
+ * @param[in] ctxlist Pointer to @c LCFGContextList
+ *
+ * @return Boolean which indicates whether the list contains any items
+ *
+ */
 
 #define lcfgctxlist_is_empty(ctxlist) ((ctxlist)->size == 0)
 
+/**
+ * @brief Retrieve the next context node in the list
+ *
+ * This is a simple macro which can be used to fetch the next node in
+ * the single-linked context list for a given node. If the node
+ * specified is the final item in the list this will return a @c NULL
+ * value.
+ *
+ * @param[in] ctxnode Pointer to current @c LCFGContextNode
+ *
+ * @return Pointer to next @c LCFGContextNode
+ */
+
 #define lcfgctxlist_next(ctxnode) ((ctxnode)->next)
+
+/**
+ * @brief Retrieve the context for a list node
+ *
+ * This is a simple macro which can be used to get the context
+ * structure from the specified node. 
+ *
+ * Note that this does @b NOT increment the reference count for the
+ * returned context structure. To retain the context call the
+ * @c lcfgcontext_acquire() function.
+ *
+ * @param[in] ctxlist Pointer to @c LCFGContextNode
+ *
+ * @return Pointer to @c LCFGContext structure
+ *
+ */
+
 #define lcfgctxlist_context(ctxnode) ((ctxnode)->context)
 
 LCFGChange lcfgctxlist_insert_after( LCFGContextList * ctxlist,
@@ -146,6 +254,20 @@ LCFGChange lcfgctxlist_remove_after( LCFGContextList * ctxlist,
                                      LCFGContextNode * ctxnode,
                                      LCFGContext    ** ctx )
   __attribute__((warn_unused_result));
+
+/**
+ * @brief Append a context to a list
+ *
+ * This is a simple macro wrapper around the
+ * @c lcfgctxlist_insert_after() function which can be used to append
+ * a context structure on to the end of the specified context list.
+ *
+ * @param[in] ctxlist Pointer to @c LCFGContextList
+ * @param[in] ctx Pointer to @c LCFGContext
+ * 
+ * @return Integer value indicating type of change
+ *
+ */
 
 #define lcfgctxlist_append(ctxlist, ctx) ( lcfgctxlist_insert_after( ctxlist, lcfgctxlist_tail(ctxlist), ctx ) )
 
