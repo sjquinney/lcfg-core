@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
   bool apply_local       = true; /* apply local contexts and overrides */
 
   char * override_dir = "/var/lcfg/conf/profile/local";
-  char * context_dir  = DEFAULT_CONTEXTDIR;
+  char * context_dir  = "/var/lcfg/conf/profile/context";
 
   LCFGStatus status = LCFG_STATUS_OK;
   char * msg = NULL;
