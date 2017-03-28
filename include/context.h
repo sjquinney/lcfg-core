@@ -127,7 +127,7 @@ LCFGContextNode * lcfgctxnode_new(LCFGContext * ctx);
 void lcfgctxnode_destroy(LCFGContextNode * ctxnode);
 
 /**
- * @brief A structure for storing LCFG contexts as a single-linked list */
+ * @brief A structure for storing LCFG contexts as a single-linked list
  */
 
 struct LCFGContextList {
