@@ -24,21 +24,12 @@ LCFGPackageNode * lcfgpkgnode_new(LCFGPackage * pkg) {
   pkgnode->pkg  = pkg;
   pkgnode->next = NULL;
 
-  lcfgpackage_inc_ref(pkg);
-
   return pkgnode;
 }
 
 void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode) {
 
-  if ( pkgnode == NULL )
-    return;
-
-  /* It is intentional that the pkg is NOT destroyed here, that is
-     handled elsewhere (e.g. lcfgpkglist_destroy) when required. */
-
-  if ( pkgnode->pkg != NULL )
-    lcfgpackage_dec_ref(pkgnode->pkg);
+  if ( pkgnode == NULL ) return;
 
   pkgnode->pkg  = NULL;
   pkgnode->next = NULL;
@@ -66,14 +57,13 @@ LCFGPackageList * lcfgpkglist_new(void) {
 
 void lcfgpkglist_destroy(LCFGPackageList * pkglist) {
 
-  if ( pkglist == NULL )
-    return;
+  if ( pkglist == NULL ) return;
 
   while ( lcfgpkglist_size(pkglist) > 0 ) {
     LCFGPackage * pkg = NULL;
     if ( lcfgpkglist_remove_next( pkglist, NULL, &pkg )
          == LCFG_CHANGE_REMOVED ) {
-      lcfgpackage_destroy(pkg);
+      lcfgpackage_release(pkg);
     }
   }
 
@@ -99,8 +89,9 @@ LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
                                     LCFGPackage * pkg ) {
 
   LCFGPackageNode * new_node = lcfgpkgnode_new(pkg);
-  if ( new_node == NULL )
-    return LCFG_CHANGE_ERROR;
+  if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
+
+  lcfgcontext_acquire(pkg);
 
   if ( pkgnode == NULL ) { /* HEAD */
 
@@ -112,7 +103,7 @@ LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
 
   } else {
     
-    if ( pkgnode->next == NULL )
+    if ( pkgnode->next == NULL ) /* TAIL */
       pkglist->tail = new_node;
 
     new_node->next = pkgnode->next;
@@ -129,8 +120,7 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
                                     LCFGPackageNode * pkgnode,
                                     LCFGPackage ** pkg ) {
 
-  if ( lcfgpkglist_is_empty(pkglist) )
-    return LCFG_CHANGE_ERROR;
+  if ( lcfgpkglist_is_empty(pkglist) ) return LCFG_CHANGE_ERROR;
 
   LCFGPackageNode * old_node;
 
@@ -144,15 +134,13 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
 
   } else {
 
-    if ( pkgnode->next == NULL )
-      return LCFG_CHANGE_ERROR;
+    if ( pkgnode->next == NULL ) return LCFG_CHANGE_ERROR;
 
     old_node = pkgnode->next;
     pkgnode->next = pkgnode->next->next;
 
-    if ( pkgnode->next == NULL ) {
+    if ( pkgnode->next == NULL )
       pkglist->tail = pkgnode;
-    }
 
   }
 
@@ -169,7 +157,7 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
                                          const char * name,
                                          const char * arch ) {
 
-  if ( lcfgpkglist_is_empty(pkglist) )
+  if ( pkglist == NULL || lcfgpkglist_is_empty(pkglist) )
     return NULL;
 
   const char * match_arch = arch != NULL ? arch : LCFG_PACKAGE_NOVALUE;
