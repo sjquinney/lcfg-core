@@ -190,8 +190,11 @@ LCFGContextList * lcfgctxlist_clone( const LCFGContextList * ctxlist ) {
   /* Note that this does NOT clone the contexts themselves only the nodes. */
   bool ok = true;
 
-  LCFGContextNode * cur_node = lcfgctxlist_head(ctxlist);
-  while ( cur_node != NULL ) {
+  LCFGContextNode * cur_node = NULL;
+  for ( cur_node = lcfgctxlist_head(ctxlist);
+        cur_node != NULL;
+        cur_node = lcfgctxlist_next(cur_node) ) {
+
     LCFGContext * ctx = lcfgctxlist_context(cur_node);
 
     LCFGChange rc = lcfgctxlist_append( clone, ctx );
@@ -200,7 +203,6 @@ LCFGContextList * lcfgctxlist_clone( const LCFGContextList * ctxlist ) {
       break;
     }
 
-    cur_node = lcfgctxlist_next(cur_node);
   }
 
   if (!ok) {
@@ -358,15 +360,20 @@ LCFGContextNode * lcfgctxlist_find_node( const LCFGContextList * ctxlist,
 
   LCFGContextNode * result = NULL;
 
-  LCFGContextNode * cur_node = lcfgctxlist_head(ctxlist);
-  while ( cur_node != NULL ) {
+  LCFGContextNode * cur_node = NULL;
+  for ( cur_node = lcfgctxlist_head(ctxlist);
+        cur_node != NULL;
+        cur_node = lcfgctxlist_next(cur_node) ) {
 
-    if ( strcmp( cur_node->context->name, name ) == 0 ) {
+    LCFGContext * ctx = lcfgctxlist_context(cur_node);
+
+    if ( !lcfgcontext_has_name(ctx) ) continue;
+
+    if ( strcmp( lcfgcontext_get_name(ctx), name ) == 0 ) {
       result = cur_node;
       break;
     }
 
-    cur_node = lcfgctxlist_next(cur_node);
   }
 
   return result;
@@ -658,27 +665,28 @@ bool lcfgctxlist_print( const LCFGContextList * ctxlist,
 
   bool ok = true;
 
-  LCFGContextNode * cur_node = lcfgctxlist_head(ctxlist);
-  while ( cur_node != NULL ) {
+  LCFGContextNode * cur_node = NULL;
+  for ( cur_node = lcfgctxlist_head(ctxlist);
+        cur_node != NULL;
+        cur_node = lcfgctxlist_next(cur_node) ) {
+
     const LCFGContext * ctx = lcfgctxlist_context(cur_node);
 
     /* Ignore any contexts which do not have a name or value */
-    if ( lcfgcontext_has_name(ctx) && lcfgcontext_has_value(ctx) ) {
+    if ( !lcfgcontext_has_name(ctx) || !lcfgcontext_has_value(ctx) )
+      continue;
 
-      if ( lcfgcontext_to_string( ctx, LCFG_OPT_NEWLINE,
-                                  &str_buf, &buf_size ) < 0 ) {
-        ok = false;
-        break;
-      }
-
-      if ( fputs( str_buf, out ) < 0 ) {
-        ok = false;
-        break;
-      }
-
+    if ( lcfgcontext_to_string( ctx, LCFG_OPT_NEWLINE,
+                                &str_buf, &buf_size ) < 0 ) {
+      ok = false;
+      break;
     }
 
-    cur_node = lcfgctxlist_next(cur_node);
+    if ( fputs( str_buf, out ) < 0 ) {
+      ok = false;
+      break;
+    }
+
   }
 
   free(str_buf);
@@ -758,14 +766,15 @@ int lcfgctxlist_max_priority( const LCFGContextList * ctxlist ) {
 
   int max_priority = 0;
 
-  LCFGContextNode * cur_node = lcfgctxlist_head(ctxlist);
+  LCFGContextNode * cur_node = NULL;
+  for ( cur_node = lcfgctxlist_head(ctxlist);
+        cur_node != NULL;
+        cur_node = lcfgctxlist_next(cur_node) ) {
 
-  while ( cur_node != NULL ) {
     int priority = lcfgcontext_get_priority(lcfgctxlist_context(cur_node));
     if ( priority > max_priority )
       max_priority = priority;
 
-    cur_node = lcfgctxlist_next(cur_node);
   }
 
   return max_priority;
@@ -791,9 +800,12 @@ void lcfgctxlist_sort_by_priority( LCFGContextList * ctxlist ) {
   bool swapped=true;
   while (swapped) {
     swapped=false;
-    LCFGContextNode * cur_node = lcfgctxlist_head(ctxlist);
 
-    while ( cur_node != NULL && cur_node->next != NULL ) {
+    LCFGContextNode * cur_node = NULL;
+    for ( cur_node = lcfgctxlist_head(ctxlist);
+          cur_node != NULL && cur_node->next != NULL;
+          cur_node = lcfgctxlist_next(cur_node) ) {
+
       LCFGContext * cur_ctx  = lcfgctxlist_context(cur_node);
       LCFGContext * next_ctx = lcfgctxlist_context(cur_node->next);
 
@@ -804,7 +816,6 @@ void lcfgctxlist_sort_by_priority( LCFGContextList * ctxlist ) {
         swapped = true;
       }
 
-      cur_node = lcfgctxlist_next(cur_node);
     }
   }
 
@@ -842,8 +853,10 @@ bool lcfgctxlist_diff( const LCFGContextList * ctxlist1,
 
   /* Check for missing nodes and also compare values for common nodes */
 
-  cur_node = lcfgctxlist_head(ctxlist1);
-  while ( cur_node != NULL && !changed ) {
+  for ( cur_node = lcfgctxlist_head(ctxlist1);
+        cur_node != NULL && !changed;
+        cur_node = lcfgctxlist_next(cur_node) ) {
+
     const LCFGContext * cur_ctx = lcfgctxlist_context(cur_node);
 
     /* Ignore nodes without a name */
@@ -883,29 +896,27 @@ bool lcfgctxlist_diff( const LCFGContextList * ctxlist1,
       if (changed) break;
     }
 
-    cur_node = lcfgctxlist_next(cur_node);
   }
 
   /* If nothing changed so far then check for missing nodes the other way */
 
-  if ( !changed ) {
-    cur_node = lcfgctxlist_head(ctxlist2);
-    while ( cur_node != NULL ) {
-      const LCFGContext * cur_ctx = lcfgctxlist_context(cur_node);
+  for ( cur_node = lcfgctxlist_head(ctxlist2);
+        cur_node != NULL && !changed;
+        cur_node = lcfgctxlist_next(cur_node) ) {
 
-      /* Ignore nodes without a name */
-      if ( !lcfgcontext_has_name(cur_ctx) ) continue;
+    const LCFGContext * cur_ctx = lcfgctxlist_context(cur_node);
 
-      const LCFGContext * other_ctx =
-        lcfgctxlist_find_context( ctxlist1, lcfgcontext_get_name(cur_ctx) );
+    /* Ignore nodes without a name */
+    if ( !lcfgcontext_has_name(cur_ctx) ) continue;
 
-      if ( other_ctx == NULL ) {
-        changed = true;
-        break;
-      }
+    const LCFGContext * other_ctx =
+      lcfgctxlist_find_context( ctxlist1, lcfgcontext_get_name(cur_ctx) );
 
-      cur_node = lcfgctxlist_next(cur_node);
+    if ( other_ctx == NULL ) {
+      changed = true;
+      break;
     }
+
   }
 
   return changed;
