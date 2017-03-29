@@ -1392,10 +1392,12 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkg,
     /* Calculate the priority using the context expression for this
        package spec. */
 
+    char * msg = NULL;
     ok = lcfgctxlist_eval_expression( ctxlist,
                                       pkg->context,
-                                      &priority );
+                                      &priority, &msg );
 
+    free(msg); /* TODO: feed this back to caller */
   }
 
   if (ok)

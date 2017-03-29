@@ -602,13 +602,16 @@ bool setctx_eval( const char * contextdir, const char * expr ) {
   bool ok = ( rc == LCFG_STATUS_OK );
   if (ok) {
     int result;
+    char * msg = NULL;
 
-    ok = lcfgctxlist_eval_expression( pending, expr, &result );
+    ok = lcfgctxlist_eval_expression( pending, expr, &result, &msg );
     if (ok) {
       printf("Ctx: '%s', Result: %d\n", expr, result );
     } else {
-      fprintf( stderr, "Failed to evaluate context expression\n" );
+      fprintf( stderr, "Failed to evaluate context expression: %s\n", msg );
     }
+
+    free(msg);
 
   } else {
     fprintf( stderr, "Failed to read context file: %s\n", load_msg );

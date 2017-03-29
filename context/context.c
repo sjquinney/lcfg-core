@@ -937,7 +937,11 @@ bool lcfgcontext_valid_expression( const char * expr ) {
      check the validity. */
 
   int result = 0;
-  return lcfgctxlist_eval_expression( NULL, expr, &result );
+  char * msg = NULL;
+  bool valid = lcfgctxlist_eval_expression( NULL, expr, &result, &msg );
+  free(msg); 
+
+  return valid;
 }
 
 /**

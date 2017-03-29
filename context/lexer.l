@@ -1,4 +1,5 @@
 %{
+#define _GNU_SOURCE /* for vasprintf */
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +11,7 @@
 
 struct lcfgctx_yylex_extra {
   char * strbuf;
+  char * errmsg;
   size_t strbuflen;
   size_t strbufalloc;
 };
@@ -180,19 +182,24 @@ newline                 [\r\n]
 
 .                      {
                          lcfgctx_yyerror( yyscanner, NULL, NULL,
-                                          "Invalid character: %s", yytext );
+                                          "Invalid character '%s'", yytext );
                          return yytext[0];
                        }
 %%
 
 void lcfgctx_yyerror( yyscan_t ctxscanner,
                       const LCFGContextList * ctxlist, int * priority,
-                      const char * s, ... ) {
-  va_list ap;
-  va_start( ap, s );
+                      const char * fmt, ... ) {
 
-  vfprintf( stderr, s, ap );
-  fprintf( stderr, "\n" );
+  va_list ap;
+  va_start( ap, fmt );
+
+  lcfgctx_yylex_extra_type * extra = lcfgctx_yyget_extra(ctxscanner);
+
+  /* Avoid being called by both flex and bison */
+  if ( extra->errmsg == NULL )
+    vasprintf( &(extra->errmsg), fmt, ap );
+
 }
 
 static void strbuf_init( yyscan_t ctxscanner ) {
@@ -258,6 +265,7 @@ yyscan_t lcfgctx_scanner_init(void) {
     exit(EXIT_FAILURE);
   }
 
+  yyext->errmsg      = NULL;
   yyext->strbuf      = NULL;
   yyext->strbuflen   = 0;
   yyext->strbufalloc = 0;
@@ -271,12 +279,26 @@ void lcfgctx_scanner_destroy(yyscan_t ctxscanner) {
 
   lcfgctx_yylex_extra_type * extra = lcfgctx_yyget_extra(ctxscanner);
 
+  free(extra->errmsg);
+  extra->errmsg = NULL;
   free(extra->strbuf);
+  extra->strbuf = NULL;
   free(extra);
 
   lcfgctx_yylex_destroy(ctxscanner);
   ctxscanner = NULL;
 
+}
+
+char * lcfgctx_scanner_errmsg(yyscan_t ctxscanner) {
+
+  lcfgctx_yylex_extra_type * extra = lcfgctx_yyget_extra(ctxscanner);
+
+  char * errmsg = NULL;
+  if ( extra->errmsg != NULL )
+    errmsg = strdup(extra->errmsg);
+
+  return errmsg;
 }
 
 /* eof */
