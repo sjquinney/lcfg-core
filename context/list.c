@@ -298,8 +298,7 @@ LCFGChange lcfgctxlist_remove_after( LCFGContextList * ctxlist,
                                      LCFGContext    ** ctx ) {
   assert( ctxlist != NULL );
 
-  if ( lcfgctxlist_is_empty(ctxlist) )
-    return LCFG_CHANGE_NONE;
+  if ( lcfgctxlist_is_empty(ctxlist) ) return LCFG_CHANGE_NONE;
 
   LCFGContextNode * old_node;
 
@@ -313,15 +312,13 @@ LCFGChange lcfgctxlist_remove_after( LCFGContextList * ctxlist,
 
   } else {
 
-    if ( ctxnode->next == NULL )
-      return LCFG_CHANGE_ERROR;
+    if ( ctxnode->next == NULL ) return LCFG_CHANGE_ERROR;
 
     old_node      = ctxnode->next;
     ctxnode->next = ctxnode->next->next;
 
-    if ( ctxnode->next == NULL ) {
+    if ( ctxnode->next == NULL )
       ctxlist->tail = ctxnode;
-    }
 
   }
 
@@ -665,19 +662,20 @@ bool lcfgctxlist_print( const LCFGContextList * ctxlist,
   while ( cur_node != NULL ) {
     const LCFGContext * ctx = lcfgctxlist_context(cur_node);
 
-    /* No need to write out those contexts which do not have a value */
-    if ( !lcfgcontext_has_name(ctx) || !lcfgcontext_has_value(ctx) )
-      continue;
+    /* Ignore any contexts which do not have a name or value */
+    if ( lcfgcontext_has_name(ctx) && lcfgcontext_has_value(ctx) ) {
 
-    if ( lcfgcontext_to_string( ctx, LCFG_OPT_NEWLINE,
-				&str_buf, &buf_size ) < 0 ) {
-      ok = false;
-      break;
-    }
+      if ( lcfgcontext_to_string( ctx, LCFG_OPT_NEWLINE,
+                                  &str_buf, &buf_size ) < 0 ) {
+        ok = false;
+        break;
+      }
 
-    if ( fputs( str_buf, out ) < 0 ) {
-      ok = false;
-      break;
+      if ( fputs( str_buf, out ) < 0 ) {
+        ok = false;
+        break;
+      }
+
     }
 
     cur_node = lcfgctxlist_next(cur_node);
@@ -785,6 +783,8 @@ int lcfgctxlist_max_priority( const LCFGContextList * ctxlist ) {
  */
 
 void lcfgctxlist_sort_by_priority( LCFGContextList * ctxlist ) {
+
+  if ( lcfgctxlist_size(ctxlist) < 2 ) return;
 
   /* bubble sort since this should be a very short list */
 

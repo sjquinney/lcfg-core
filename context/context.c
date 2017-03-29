@@ -104,12 +104,14 @@ void lcfgcontext_destroy( LCFGContext * ctx ) {
 /**
  * @brief Acquire reference to context
  *
- * This is used to record a reference to the @c LCFGContext struct, it
- * does this by simply incrementing the reference count. To avoid
- * memory leaks, once the reference to the struct is no longer
- * required the @c lcfgcontext_release() function should be called.
+ * This is used to record a reference to the @c LCFGContext, it
+ * does this by simply incrementing the reference count.
  *
- * @param[in] ctx Pointer to @c LCFGContext struct
+ * To avoid memory leaks, once the reference to the struct is no
+ * longer required the @c lcfgcontext_release() function should be
+ * called.
+ *
+ * @param[in] ctx Pointer to @c LCFGContext
  *
  */
 
@@ -122,9 +124,9 @@ void lcfgcontext_acquire( LCFGContext * ctx ) {
 /**
  * @brief Release reference to context
  *
- * This is used to release a reference to the @c LCFGContext struct,
+ * This is used to release a reference to the @c LCFGContext,
  * it does this by simply decrementing the reference count. If the
- * reference count reaches zero the @c lcfgcontext_destroy function
+ * reference count reaches zero the @c lcfgcontext_destroy() function
  * will be called to clean up the memory associated with the struct.
  *
  * If the value of the pointer passed in is @c NULL then the function
@@ -132,7 +134,7 @@ void lcfgcontext_acquire( LCFGContext * ctx ) {
  * context which has already been destroyed (or potentially was never
  * created).
  *
- * @param[in] ctx Pointer to @c LCFGContext struct
+ * @param[in] ctx Pointer to @c LCFGContext
  *
  */
 
