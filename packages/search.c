@@ -1,7 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h
+#include <string.h>
+#include <assert.h>
 
 #include "packages.h"
 
@@ -105,6 +106,7 @@ LCFGPackageList * lcfgpkglist_search( const LCFGPackageList * pkglist,
                                       const char * pkgarch,
                                       const char * pkgver,
                                       const char * pkgrel ) {
+  assert( pkglist != NULL );
 
   LCFGPackageList * result = lcfgpkglist_new();
 
