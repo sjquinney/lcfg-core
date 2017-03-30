@@ -332,7 +332,7 @@ bool lcfgprofile_print(const LCFGProfile * profile,
 
     if (ok) {
       ok = lcfgpkglist_print( profile->active_packages,
-                              defarch, LCFG_PKGS_STYLE_DEFAULT, 0, out );
+                              defarch, LCFG_PKG_STYLE_DEFAULT, 0, out );
     }
 
   }

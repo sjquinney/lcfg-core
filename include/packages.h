@@ -196,10 +196,11 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
   __attribute__((warn_unused_result));
 
 typedef enum {
-  LCFG_PKGS_STYLE_DEFAULT,
-  LCFG_PKGS_STYLE_RPM,
-  LCFG_PKGS_STYLE_CPP,
-  LCFG_PKGS_STYLE_XML
+  LCFG_PKG_STYLE_DEFAULT,
+  LCFG_PKG_STYLE_RPM,
+  LCFG_PKG_STYLE_CPP,
+  LCFG_PKG_STYLE_XML,
+  LCFG_PKG_STYLE_EVAL
 } LCFGPkgStyle;
 
 bool lcfgpackage_print( const LCFGPackage * pkg,

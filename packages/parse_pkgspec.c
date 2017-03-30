@@ -12,11 +12,6 @@ static void usage(void) {
 
 }
 
-typedef enum {
-  LCFG_PKG_STYLE_DEFAULT,
-  LCFG_PKG_STYLE_EVAL
-} LCFGPkgStyle;
-
 static void myoutput(const char *key, const char *value, LCFGPkgStyle style) {
 
   char * out_value = value != NULL ? (char *) value : "";

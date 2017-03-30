@@ -2488,15 +2488,15 @@ bool lcfgpackage_print( const LCFGPackage * pkg,
 
   switch(style)
     {
-    case LCFG_PKGS_STYLE_XML:
+    case LCFG_PKG_STYLE_XML:
       rc = lcfgpackage_to_xml( pkg, defarch, options,
                                &lcfgspec, &buf_size );
       break;
-    case LCFG_PKGS_STYLE_CPP:
+    case LCFG_PKG_STYLE_CPP:
       rc = lcfgpackage_to_cpp( pkg, defarch, options,
                                &lcfgspec, &buf_size );
       break;
-    case LCFG_PKGS_STYLE_RPM:
+    case LCFG_PKG_STYLE_RPM:
       rc = lcfgpackage_to_rpm_filename( pkg, defarch, 
                                         (options | LCFG_OPT_NEWLINE),
                                         &lcfgspec, &buf_size );
