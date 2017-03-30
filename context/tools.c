@@ -688,7 +688,7 @@ bool setctx_update( const char * contextdir,
                     int count, char * contexts[] ) {
 
   char * msg = NULL;
-  LCFGContextList * pending = NULL,
+  LCFGContextList * pending = NULL;
 
   LCFGChange changed = lcfgcontext_update_pending( contextdir,
                                                    count, contexts,
