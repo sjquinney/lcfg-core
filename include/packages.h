@@ -29,6 +29,8 @@ typedef struct LCFGPackage LCFGPackage;
 
 LCFGPackage * lcfgpackage_new(void);
 void lcfgpackage_destroy(LCFGPackage * pkg);
+void lcfgpackage_acquire( LCFGPackage * pkg );
+void lcfgpackage_release( LCFGPackage * pkg );
 
 LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkg );
 
