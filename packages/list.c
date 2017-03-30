@@ -91,7 +91,7 @@ LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
   LCFGPackageNode * new_node = lcfgpkgnode_new(pkg);
   if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
 
-  lcfgcontext_acquire(pkg);
+  lcfgpackage_acquire(pkg);
 
   if ( pkgnode == NULL ) { /* HEAD */
 
@@ -510,14 +510,15 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         unsigned int options,
                         FILE * out ) {
 
-  if ( lcfgpkglist_is_empty(pkglist) ) return true;
-
   bool ok = true;
+
+  if ( style == LCFG_PKG_STYLE_XML )
+    ok = ( fputs( "  <packages>\n", out ) >= 0 );
 
   LCFGPackageNode * cur_node = NULL;
   for ( cur_node = lcfgpkglist_head(pkglist);
-        cur_node != NULL;
-        cur_node = lcfgpkglist_next(cur_node) )         
+        ok && cur_node != NULL;
+        cur_node = lcfgpkglist_next(cur_node) ) {
 
     const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
@@ -527,6 +528,9 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
 
     if (!ok) break;
   }
+
+  if ( ok && style == LCFG_PKG_STYLE_XML )
+    ok = ( fputs( "  </packages>\n", out ) >= 0 );
 
   return ok;
 }
