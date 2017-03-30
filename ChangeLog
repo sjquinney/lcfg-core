@@ -1,6 +1,19 @@
 2017-03-30  SVN: new release
 
-	* Release: 1.32.0
+	* Release: 1.32.1
+
+2017-03-30 06:07  squinney@INF.ED.AC.UK
+
+	* context/tools.c: missing semi-colon
+
+2017-03-30 06:05  squinney@INF.ED.AC.UK
+
+	* context/tools.c, include/context.h: lcfgcontext_update_pending
+	  now returns the updated pending contexts list
+
+2017-03-30 05:42  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.32.0
 
 2017-03-30 05:34  squinney@INF.ED.AC.UK
 
