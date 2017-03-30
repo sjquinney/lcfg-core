@@ -42,6 +42,24 @@
    ~  Add package to list if name/arch is not already present
 */
 
+static LCFGStatus invalid_package( char ** msg, const char * base, ... ) {
+
+  va_list ap;
+  va_start( ap, base );
+
+  char * reason = NULL;
+  int rc = vasprintf( &reason, base, ap );
+  if ( rc < 0 ) {
+    perror("Failed to allocate memory for error string");
+    exit(EXIT_FAILURE);
+  }
+
+  lcfgutils_build_message( msg, "Invalid package (%s)", reason );
+  free(reason);
+
+  return LCFG_STATUS_ERROR;
+}
+
 static const char * permitted_prefixes = "?+-=~";
 
 /**
@@ -1696,18 +1714,14 @@ LCFGStatus lcfgpackage_from_string( const char * input,
   *result = NULL;
   *msg = NULL;
 
-  if ( input == NULL ) {
-    asprintf( msg, "Invalid LCFG package specification" );
-    return LCFG_STATUS_ERROR;
-  }
+  if ( input == NULL ) return invalid_package( msg, "empty spec string" );
+
+  /* Move past any leading whitespace */
 
   char * start = (char *) input;
   while ( *start != '\0' && isspace(*start) ) start++;
 
-  if ( *start == '\0' ) {
-    asprintf( msg, "Invalid LCFG package specification" );
-    return LCFG_STATUS_ERROR;
-  }
+  if ( *start == '\0' ) return invalid_package( msg, "empty spec string" );
 
   bool ok = true;
   LCFGPackage * pkg = lcfgpackage_new();
@@ -1722,7 +1736,7 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
     if ( !lcfgpackage_set_prefix( pkg, first_char ) ) {
       ok = false;
-      asprintf( msg, "Invalid LCFG package prefix '%c'.", first_char );
+      invalid_package( msg,  "bad prefix '%c'", first_char );
       goto failure;
     }
 
@@ -1754,7 +1768,7 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
         ok = lcfgpackage_set_context( pkg, pkg_context );
         if (!ok) {
-          asprintf( msg, "Invalid LCFG package context '%s'.", pkg_context );
+          invalid_package( msg, "bad context '%s'", pkg_context );
           free(pkg_context);
           goto failure;
         }
@@ -1773,8 +1787,9 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
     ok = lcfgpackage_set_flags( pkg, pkg_flags );
     if (!ok) {
-      asprintf( msg, "Invalid LCFG package flags '%s'.", pkg_flags );
+      invalid_package( msg, "bad flags '%s'", pkg_flags );
       free(pkg_flags);
+      pkg_flags = NULL;
       goto failure;
     }
 
@@ -1789,14 +1804,16 @@ LCFGStatus lcfgpackage_from_string( const char * input,
     pkg_arch = arch2;
   } else {
     free(arch2);
+    arch2 = NULL;
   }
 
   if ( pkg_arch != NULL ) {
 
     ok = lcfgpackage_set_arch( pkg, pkg_arch );
     if (!ok) {
-      asprintf( msg, "Invalid LCFG package architecture '%s'.", pkg_arch );
+      invalid_package( msg, "bad architecture '%s'", pkg_arch );
       free(pkg_arch);
+      pkg_arch = NULL;
       goto failure;
     }
 
@@ -1809,36 +1826,38 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
   if ( pkg_release == NULL ) {
     ok = false;
-    asprintf( msg, "Failed to extract package release." );
+    invalid_package( msg, "failed to extract release" );
     goto failure;
   } else {
 
     ok = lcfgpackage_set_release( pkg, pkg_release );
 
     if (!ok) {
-      asprintf( msg, "Invalid LCFG package release '%s'.", pkg_release );
+      invalid_package( msg, "bad release '%s'", pkg_release );
       free(pkg_release);
+      pkg_release = NULL;
       goto failure;
     }
 
   }
 
-  /* Release - required */
+  /* Version - required */
 
   char * pkg_version = NULL;
   walk_backwards_until( start, &len, '-', NULL, &pkg_version );
 
   if ( pkg_version == NULL ) {
     ok = false;
-    asprintf( msg, "Failed to extract package version." );
+    invalid_package( msg, "failed to extract version" );
     goto failure;
   } else {
 
     ok = lcfgpackage_set_version( pkg, pkg_version );
 
     if (!ok) {
-      asprintf( msg, "Invalid LCFG package version '%s'.", pkg_version );
+      invalid_package( msg, "bad version '%s'", pkg_version );
       free(pkg_version);
+      pkg_version = NULL;
       goto failure;
     }
 
@@ -1850,7 +1869,7 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
   if ( len == 0 ) {
     ok = false;
-    asprintf( msg, "Failed to extract package name." );
+    invalid_package( msg, "failed to extract name" );
     goto failure;
   } else {
     char * pkg_name = strndup( start, len );
@@ -1858,7 +1877,7 @@ LCFGStatus lcfgpackage_from_string( const char * input,
     ok = lcfgpackage_set_name( pkg, pkg_name );
 
     if ( !ok ) {
-      asprintf( msg, "Invalid LCFG package name '%s'.", pkg_name );
+      invalid_package( msg, "bad name '%s'", pkg_name );
       free(pkg_name);
       goto failure;
     }
@@ -2457,7 +2476,7 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
 
 bool lcfgpackage_print( const LCFGPackage * pkg,
                         const char * defarch,
-                        const char * style,
+                        LCFGPkgStyle style,
                         unsigned int options,
                         FILE * out ) {
   assert( pkg != NULL );
@@ -2466,21 +2485,27 @@ bool lcfgpackage_print( const LCFGPackage * pkg,
   size_t buf_size = 0;
 
   ssize_t rc = 0;
-  if ( style != NULL && strcmp( style, "cpp" ) == 0 ) {
-    rc = lcfgpackage_to_cpp( pkg, defarch, options,
-                             &lcfgspec, &buf_size );
-  } else {
-    unsigned int my_options = options | LCFG_OPT_NEWLINE;
 
-    if ( style != NULL && strcmp( style, "rpm" ) == 0 ) {
-      rc = lcfgpackage_to_rpm_filename( pkg, defarch, my_options,
+  switch(style)
+    {
+    case LCFG_PKGS_STYLE_XML:
+      rc = lcfgpackage_to_xml( pkg, defarch, options,
+                               &lcfgspec, &buf_size );
+      break;
+    case LCFG_PKGS_STYLE_CPP:
+      rc = lcfgpackage_to_cpp( pkg, defarch, options,
+                               &lcfgspec, &buf_size );
+      break;
+    case LCFG_PKGS_STYLE_RPM:
+      rc = lcfgpackage_to_rpm_filename( pkg, defarch, 
+                                        (options | LCFG_OPT_NEWLINE),
                                         &lcfgspec, &buf_size );
-    } else {
-      rc = lcfgpackage_to_string( pkg, defarch, my_options,
+      break;
+    default:
+      rc = lcfgpackage_to_string( pkg, defarch,
+                                  (options | LCFG_OPT_NEWLINE),
                                   &lcfgspec, &buf_size );
     }
-
-  }
 
   bool ok = ( rc >= 0 );
 
