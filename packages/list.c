@@ -506,27 +506,26 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
 
 bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         const char * defarch,
-                        const char * style,
+                        LCFGPkgStyle style,
                         unsigned int options,
                         FILE * out ) {
 
-  if ( lcfgpkglist_is_empty(pkglist) )
-    return true;
-
-  LCFGPackageNode * cur_node = lcfgpkglist_head(pkglist);
+  if ( lcfgpkglist_is_empty(pkglist) ) return true;
 
   bool ok = true;
-  while ( cur_node != NULL ) {
+
+  LCFGPackageNode * cur_node = NULL;
+  for ( cur_node = lcfgpkglist_head(pkglist);
+        cur_node != NULL;
+        cur_node = lcfgpkglist_next(cur_node) )         
+
     const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
     if ( !lcfgpackage_is_active(pkg) ) continue;
 
     ok = lcfgpackage_print( pkg, defarch, style, options, out );
 
-    if (!ok)
-      break;
-
-    cur_node = lcfgpkglist_next(cur_node);
+    if (!ok) break;
   }
 
   return ok;

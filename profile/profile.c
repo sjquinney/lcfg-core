@@ -325,14 +325,14 @@ bool lcfgprofile_print(const LCFGProfile * profile,
 
   }
 
-  if ( ok && show_pkgs && profile->active_packages != NULL ) {
+  if ( ok && show_pkgs && !lcfgpkglist_is_empty(profile->active_packages) ) {
 
     if ( fputs( "\n", out ) < 0 )
       ok = false;
 
     if (ok) {
       ok = lcfgpkglist_print( profile->active_packages,
-                              defarch, NULL, 0, out );
+                              defarch, LCFG_PKGS_STYLE_DEFAULT, 0, out );
     }
 
   }

@@ -195,9 +195,16 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
                             char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
+typedef enum {
+  LCFG_PKGS_STYLE_DEFAULT,
+  LCFG_PKGS_STYLE_RPM,
+  LCFG_PKGS_STYLE_CPP,
+  LCFG_PKGS_STYLE_XML
+} LCFGPkgStyle;
+
 bool lcfgpackage_print( const LCFGPackage * pkg,
                         const char * defarch,
-                        const char * style,
+                        LCFGPkgStyle style,
                         unsigned int options,
                         FILE * out )
   __attribute__((warn_unused_result));
@@ -250,7 +257,7 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
 #define lcfgpkglist_tail(pkglist) ((pkglist)->tail)
 #define lcfgpkglist_size(pkglist) ((pkglist)->size)
 
-#define lcfgpkglist_is_empty(pkglist) ((pkglist)->size == 0)
+#define lcfgpkglist_is_empty(pkglist) (pkglist == NULL || (pkglist)->size == 0)
 
 #define lcfgpkglist_next(pkgnode)     ((pkgnode)->next)
 #define lcfgpkglist_package(pkgnode)  ((pkgnode)->pkg)
@@ -286,7 +293,7 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist );
 
 bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         const char * defarch,
-                        const char * style,
+                        LCFGPkgStyle style,
                         unsigned int options,
                         FILE * out )
   __attribute__((warn_unused_result));
