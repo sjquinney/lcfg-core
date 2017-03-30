@@ -215,10 +215,6 @@ void lcfgresource_destroy(LCFGResource * res) {
 
 /* Names */
 
-inline static bool isword( const char chr ) {
-  return ( isalnum(chr) || chr == '_' );
-}
-
 /**
  * @brief Check if a string is a valid LCFG resource name
  *
