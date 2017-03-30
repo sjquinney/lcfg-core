@@ -245,12 +245,12 @@ void lcfgctxlist_destroy(LCFGContextList * ctxlist);
 
 #define lcfgctxlist_context(ctxnode) ((ctxnode)->context)
 
-LCFGChange lcfgctxlist_insert_after( LCFGContextList * ctxlist,
+LCFGChange lcfgctxlist_insert_next( LCFGContextList * ctxlist,
                                      LCFGContextNode * ctxnode,
                                      LCFGContext     * ctx )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgctxlist_remove_after( LCFGContextList * ctxlist,
+LCFGChange lcfgctxlist_remove_next( LCFGContextList * ctxlist,
                                      LCFGContextNode * ctxnode,
                                      LCFGContext    ** ctx )
   __attribute__((warn_unused_result));
@@ -259,7 +259,7 @@ LCFGChange lcfgctxlist_remove_after( LCFGContextList * ctxlist,
  * @brief Append a context to a list
  *
  * This is a simple macro wrapper around the
- * @c lcfgctxlist_insert_after() function which can be used to append
+ * @c lcfgctxlist_insert_next() function which can be used to append
  * a context structure on to the end of the specified context list.
  *
  * @param[in] ctxlist Pointer to @c LCFGContextList
@@ -269,7 +269,7 @@ LCFGChange lcfgctxlist_remove_after( LCFGContextList * ctxlist,
  *
  */
 
-#define lcfgctxlist_append(ctxlist, ctx) ( lcfgctxlist_insert_after( ctxlist, lcfgctxlist_tail(ctxlist), ctx ) )
+#define lcfgctxlist_append(ctxlist, ctx) ( lcfgctxlist_insert_next( ctxlist, lcfgctxlist_tail(ctxlist), ctx ) )
 
 LCFGChange lcfgctxlist_update( LCFGContextList * ctxlist,
                                LCFGContext     * new_ctx )

@@ -21,7 +21,7 @@
  * singly-linked @c LCFGContextList data structure.
  *
  * It is typically not necessary to call this function. The usual
- * approach is to use the @c lcfgctxlist_insert_after() or @c
+ * approach is to use the @c lcfgctxlist_insert_next() or @c
  * lcfgctxlist_append() functions to add @c LCFGContext structures to
  * the list.
  *
@@ -61,7 +61,7 @@ LCFGContextNode * lcfgctxnode_new(LCFGContext * ctx) {
  * set each value to be @c NULL.
  *
  * It is typically not necessary to call this function. The usual
- * approach is to use the @c lcfgctxlist_remove_after() function to
+ * approach is to use the @c lcfgctxlist_remove_next() function to
  * remove a @c LCFGContext from the list.
  *
  * If the value of the pointer passed in is @c NULL then the function
@@ -145,7 +145,7 @@ void lcfgctxlist_destroy(LCFGContextList * ctxlist) {
 
   while ( lcfgctxlist_size(ctxlist) > 0 ) {
     LCFGContext * ctx = NULL;
-    if ( lcfgctxlist_remove_after( ctxlist, NULL,
+    if ( lcfgctxlist_remove_next( ctxlist, NULL,
                                    &ctx ) == LCFG_CHANGE_REMOVED ) {
       lcfgcontext_release(ctx);
     }
@@ -235,7 +235,7 @@ LCFGContextList * lcfgctxlist_clone( const LCFGContextList * ctxlist ) {
  * @return Integer value indicating type of change
  */
 
-LCFGChange lcfgctxlist_insert_after( LCFGContextList * ctxlist,
+LCFGChange lcfgctxlist_insert_next( LCFGContextList * ctxlist,
                                      LCFGContextNode * ctxnode,
                                      LCFGContext     * ctx ) {
   assert( ctxlist != NULL );
@@ -295,7 +295,7 @@ LCFGChange lcfgctxlist_insert_after( LCFGContextList * ctxlist,
  * @return Integer value indicating type of change
  */
 
-LCFGChange lcfgctxlist_remove_after( LCFGContextList * ctxlist,
+LCFGChange lcfgctxlist_remove_next( LCFGContextList * ctxlist,
                                      LCFGContextNode * ctxnode,
                                      LCFGContext    ** ctx ) {
   assert( ctxlist != NULL );
