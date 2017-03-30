@@ -937,6 +937,7 @@ bool lcfgcontext_valid_expression( const char * expr, char ** msg ) {
   /* Anything else needs to be parsed (with a NULL context list) to
      check the validity. */
 
+  int result = 0;
   return lcfgctxlist_eval_expression( NULL, expr, &result, msg );
 }
 
