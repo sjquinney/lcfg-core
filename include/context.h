@@ -341,6 +341,7 @@ LCFGStatus lcfgcontext_load_pending( const char * contextdir,
 
 LCFGChange lcfgcontext_update_pending( const char * contextdir,
                                        int change_count, char * contexts[],
+				       LCFGContextList ** ctxlist,
                                        char ** errmsg )
   __attribute__((warn_unused_result));
 

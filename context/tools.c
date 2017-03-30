@@ -214,6 +214,7 @@ bool lcfgcontext_unlock( const char * contextdir, char ** msg ) {
  * @param[in] contextdir Location of contexts directory
  * @param[in] change_count Number of context updates
  * @param[in] contexts Array of context updates
+ * @param[out] result Reference to pointer to updated pending @c LCFGContextList
  * @param[out] msg Pointer to any diagnostic messages.
  *
  * @return boolean indicating success
@@ -222,6 +223,7 @@ bool lcfgcontext_unlock( const char * contextdir, char ** msg ) {
 
 LCFGChange lcfgcontext_update_pending( const char * contextdir,
                                        int change_count, char * contexts[],
+				       LCFGContextList ** result,
                                        char ** msg ) {
 
   if ( change_count <= 0 )
@@ -370,7 +372,13 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
     fclose(tmpfh);
 
   lcfgctxlist_destroy(pending);
-  lcfgctxlist_destroy(newlist);
+
+  if (!ok) {
+    lcfgctxlist_destroy(newlist);
+    newlist = NULL;
+  }
+
+  *result = newlist;
 
   return ( ok ? ( changed ? LCFG_CHANGE_MODIFIED : LCFG_CHANGE_NONE )
               : LCFG_CHANGE_ERROR );
@@ -680,9 +688,14 @@ bool setctx_update( const char * contextdir,
                     int count, char * contexts[] ) {
 
   char * msg = NULL;
+  LCFGContextList * pending = NULL,
+
   LCFGChange changed = lcfgcontext_update_pending( contextdir,
                                                    count, contexts,
+						   &pending,
                                                    &msg );
+
+  lcfgctxlist_destroy(pending);
 
   switch (changed)
     {
