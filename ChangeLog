@@ -1,6 +1,99 @@
-2017-03-22  SVN: new release
+2017-03-30  SVN: new release
 
-	* Release: 1.31.0
+	* Release: 1.32.0
+
+2017-03-30 05:34  squinney@INF.ED.AC.UK
+
+	* context/context.c: Fixed lcfgcontext_valid_expression
+
+2017-03-30 05:31  squinney@INF.ED.AC.UK
+
+	* context/context.c, context/lexer.l, include/context.h,
+	  packages/package.c, resources/resource.c:
+	  lcfgcontext_valid_expression now returns a diagnostic message for
+	  invalid strings
+
+2017-03-30 05:30  squinney@INF.ED.AC.UK
+
+	* context/scanner.c: Added docs for lcfgctx_scanner_errmsg
+
+2017-03-29 15:34  squinney@INF.ED.AC.UK
+
+	* context/context.c, context/lexer.l, context/scanner.c,
+	  context/tools.c, include/context.h, lcfg.yml, packages/package.c,
+	  resources/resource.c: Improved error handling in the context
+	  expression scanner so that a useful message is returned when bad
+	  things happen
+
+2017-03-29 15:06  squinney@INF.ED.AC.UK
+
+	* context/list.c: Improved how various functions iterate through
+	  context list items
+
+2017-03-29 14:06  squinney@INF.ED.AC.UK
+
+	* context/context.c, context/list.c: Fixed lcfgctxlist_print to
+	  properly ignore contexts with missing name or value.
+	  lcfgctxlist_sort_by_priority now doesn't bother if less than 2
+	  items in list
+
+2017-03-28 14:14  squinney@INF.ED.AC.UK
+
+	* include/packages.h: Dropped nonnull attribute which doesn't work
+	  the way I hoped
+
+2017-03-28 14:04  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Updated for changes to package reference
+	  counting
+
+2017-03-28 13:47  squinney@INF.ED.AC.UK
+
+	* packages/CMakeLists.txt, packages/list.c, packages/pkglists.c:
+	  Renamed package list file for consistency
+
+2017-03-28 13:47  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Reworked reference counting to use
+	  lcfgpackage_acquire and lcfgpackage_release
+
+2017-03-28 11:07  squinney@INF.ED.AC.UK
+
+	* include/context.h: fixed comment marker
+
+2017-03-28 11:03  squinney@INF.ED.AC.UK
+
+	* include/context.h: Documented structs and macros
+
+2017-03-28 10:34  squinney@INF.ED.AC.UK
+
+	* xml/lcfg_xml_reader.c: Tweaked context directory
+
+2017-03-28 10:33  squinney@INF.ED.AC.UK
+
+	* context/CMakeLists.txt, context/setctx.c, include/context.h,
+	  lcfg.yml, specfile: Avoid installing setctx, just keep it as an
+	  example
+
+2017-03-27 15:17  squinney@INF.ED.AC.UK
+
+	* context/context.c: changed the default priority to 1 and made the
+	  validity check only allow context priority values greater than
+	  zero
+
+2017-03-27 13:53  squinney@INF.ED.AC.UK
+
+	* context/list.c, context/scanner.c, context/tools.c: Minor
+	  improvements to the docs
+
+2017-03-22 20:00  squinney@INF.ED.AC.UK
+
+	* context/parser.y: Added a destructor to remove some chances to
+	  leak memory
+
+2017-03-22 15:38  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.31.0
 
 2017-03-22 15:36  squinney@INF.ED.AC.UK
 
