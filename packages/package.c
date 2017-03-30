@@ -32,16 +32,6 @@
 
 #define isnamechr(CHR) ( isword(CHR) || strchr( "-.+", CHR ) != NULL )
 
-/* Currently there are five supported prefixes for LCFG package
-   specifications:
-
-   +  Insert package into list, replaces any existing package of same name/arch
-   =  Similar to + but "pins" the version so it cannot be overridden
-   -  Remove any package from list which matches this name/arch
-   ?  Replace any existing package in list which matches this name/arch
-   ~  Add package to list if name/arch is not already present
-*/
-
 static LCFGStatus invalid_package( char ** msg, const char * base, ... ) {
 
   va_list ap;
@@ -59,6 +49,16 @@ static LCFGStatus invalid_package( char ** msg, const char * base, ... ) {
 
   return LCFG_STATUS_ERROR;
 }
+
+/* Currently there are five supported prefixes for LCFG package
+   specifications:
+
+   +  Insert package into list, replaces any existing package of same name/arch
+   =  Similar to + but "pins" the version so it cannot be overridden
+   -  Remove any package from list which matches this name/arch
+   ?  Replace any existing package in list which matches this name/arch
+   ~  Add package to list if name/arch is not already present
+*/
 
 static const char * permitted_prefixes = "?+-=~";
 
