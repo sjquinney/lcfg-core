@@ -20,6 +20,9 @@ static const char * rpm_file_suffix = ".rpm";
 static bool file_needs_update( const char * cur_file,
                                const char * new_file ) {
 
+  assert( cur_file != NULL );
+  assert( new_file != NULL );
+
   struct stat sb;
   if ( ( stat( cur_file, &sb ) != 0 ) || !S_ISREG(sb.st_mode) )
     return true;
@@ -228,6 +231,7 @@ ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
                                      const char * defarch,
                                      unsigned int options,
                                      char ** result, size_t * size ) {
+  assert( pkg != NULL );
 
   const char * pkgnam  = lcfgpackage_get_name(pkg);
   const char * pkgver  = lcfgpackage_get_version(pkg);
@@ -318,6 +322,8 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
                                    const char * filename,
                                    time_t mtime,
                                    char ** msg ) {
+  assert( pkglist  != NULL );
+  assert( filename != NULL );
 
   *msg = NULL;
 
@@ -653,7 +659,7 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
   /* The sort is not just cosmetic - there needs to be a deterministic
      order so that we can compare the RPM list for changes using cmp */
 
-  if ( active != NULL && !lcfgpkglist_is_empty(active) ) {
+  if ( !lcfgpkglist_is_empty(active) ) {
     lcfgpkglist_sort(active);
 
     LCFGPackageNode * cur_node = lcfgpkglist_head(active);
@@ -694,7 +700,7 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
   if ( fprintf( out, "#ifdef ALL_CONTEXTS\n" ) < 0 )
     ok = false;
 
-  if ( ok && inactive != NULL && !lcfgpkglist_is_empty(inactive) ) {
+  if ( ok && !lcfgpkglist_is_empty(inactive) ) {
     lcfgpkglist_sort(inactive);
 
     LCFGPackageNode * cur_node = lcfgpkglist_head(inactive);

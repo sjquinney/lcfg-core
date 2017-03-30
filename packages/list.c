@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <assert.h>
 
 #include "packages.h"
 #include "utils.h"
@@ -74,6 +75,7 @@ void lcfgpkglist_destroy(LCFGPackageList * pkglist) {
 
 bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
 				  unsigned int new_rules ) {
+  assert( pkglist != NULL );
 
   pkglist->merge_rules = new_rules;
 
@@ -81,12 +83,15 @@ bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
 }
 
 unsigned int lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist ) {
+  assert( pkglist != NULL );
+
   return pkglist->merge_rules;
 }
 
 LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
                                     LCFGPackageNode * pkgnode,
                                     LCFGPackage * pkg ) {
+  assert( pkglist != NULL );
 
   LCFGPackageNode * new_node = lcfgpkgnode_new(pkg);
   if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
@@ -119,6 +124,7 @@ LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
 LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
                                     LCFGPackageNode * pkgnode,
                                     LCFGPackage ** pkg ) {
+  assert( pkglist != NULL );
 
   if ( lcfgpkglist_is_empty(pkglist) ) return LCFG_CHANGE_ERROR;
 
@@ -156,6 +162,8 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
 LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
                                          const char * name,
                                          const char * arch ) {
+
+  assert( name != NULL );
 
   if ( pkglist == NULL || lcfgpkglist_is_empty(pkglist) )
     return NULL;
@@ -208,6 +216,8 @@ LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * pkglist,
 LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
                                       LCFGPackage * new_pkg,
                                       char ** msg ) {
+  assert( pkglist != NULL );
+  assert( new_pkg != NULL );
 
   unsigned int merge_rules = lcfgpkglist_get_merge_rules(pkglist);
 
@@ -431,6 +441,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
                                    const LCFGPackageList * pkglist2,
                                    char ** msg ) {
+  assert( pkglist1 != NULL );
 
   *msg = NULL;
 
@@ -471,6 +482,7 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
 }
 
 void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
+  assert( pkglist != NULL );
 
   if ( lcfgpkglist_is_empty(pkglist) )
     return;
@@ -509,6 +521,7 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         LCFGPkgStyle style,
                         unsigned int options,
                         FILE * out ) {
+  assert( pkglist != NULL );
 
   bool ok = true;
 
@@ -715,6 +728,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 				 const char * defarch,
                                  unsigned int options,
 				 char ** msg ) {
+  assert( filename != NULL );
 
   bool include_meta = options & LCFG_OPT_USE_META;
   bool all_contexts = options & LCFG_OPT_ALL_CONTEXTS;
