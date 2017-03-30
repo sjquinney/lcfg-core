@@ -1520,8 +1520,11 @@ bool lcfgresource_add_derivation( LCFGResource * resource,
 
 /* Context Expression */
 
-bool lcfgresource_valid_context( const char * expr ) {
-  return lcfgcontext_valid_expression(expr);
+bool lcfgresource_valid_context( const char * ctx ) {
+  char * msg = NULL;
+  bool valid = lcfgcontext_valid_expression( ctx, &msg );
+  free(msg); /* Just ignore any error message */
+  return valid;
 }
 
 /**

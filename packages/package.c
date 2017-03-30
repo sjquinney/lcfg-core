@@ -1084,7 +1084,10 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
  */
 
 bool lcfgpackage_valid_context( const char * ctx ) {
-  return lcfgcontext_valid_expression(ctx);
+  char * msg = NULL;
+  bool valid = lcfgcontext_valid_expression( ctx, &msg );
+  free(msg); /* Just ignore any error message */
+  return valid;
 }
 
 /**

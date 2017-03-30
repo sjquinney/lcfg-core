@@ -196,9 +196,14 @@ void lcfgctx_yyerror( yyscan_t ctxscanner,
 
   lcfgctx_yylex_extra_type * extra = lcfgctx_yyget_extra(ctxscanner);
 
-  /* Avoid being called by both flex and bison */
-  if ( extra->errmsg == NULL )
-    vasprintf( &(extra->errmsg), fmt, ap );
+  /* Avoid being called twice by both flex and bison */
+  if ( extra->errmsg == NULL ) {
+    int rc = vasprintf( &(extra->errmsg), fmt, ap );
+    if ( rc < 0 ) {
+      perror("Failed to allocate memory for error string");
+      exit(EXIT_FAILURE);
+    }
+  }
 
 }
 

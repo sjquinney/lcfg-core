@@ -102,7 +102,7 @@ bool lcfgcontext_identical( const LCFGContext * ctx1,
 
 /* Expressions */
 
-bool lcfgcontext_valid_expression( const char * expr );
+bool lcfgcontext_valid_expression( const char * expr, char ** msg );
 char * lcfgcontext_bracketify_expression( const char * expr );
 char * lcfgcontext_combine_expressions( const char * expr1,
                                         const char * expr2 );

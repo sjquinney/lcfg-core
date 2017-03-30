@@ -919,12 +919,13 @@ char * lcfgcontext_profile_path( const LCFGContext * ctx,
  * and @c lcfgpackage_valid_context()
  *
  * @param[in] expr Pointer to query expression string
+ * @param[out] msg Pointer to any diagnostic messages.
  *
  * @return boolean which indicates if expression is valid
  *
  */
 
-bool lcfgcontext_valid_expression( const char * expr ) {
+bool lcfgcontext_valid_expression( const char * expr, char ** msg ) {
 
   /* NULL is forbidden but empty string is acceptable */
 
@@ -936,12 +937,7 @@ bool lcfgcontext_valid_expression( const char * expr ) {
   /* Anything else needs to be parsed (with a NULL context list) to
      check the validity. */
 
-  int result = 0;
-  char * msg = NULL;
-  bool valid = lcfgctxlist_eval_expression( NULL, expr, &result, &msg );
-  free(msg); 
-
-  return valid;
+  return lcfgctxlist_eval_expression( NULL, expr, &result, msg );
 }
 
 /**
