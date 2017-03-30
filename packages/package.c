@@ -203,6 +203,7 @@ void lcfgpackage_release( LCFGPackage * pkg ) {
  */
 
 LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
 
   LCFGPackage * clone = lcfgpackage_new();
   if ( clone == NULL ) return NULL;
@@ -317,6 +318,8 @@ bool lcfgpackage_valid_name( const char * name ) {
  */
 
 bool lcfgpackage_has_name( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return !isempty(pkg->name);
 }
 
@@ -337,6 +340,8 @@ bool lcfgpackage_has_name( const LCFGPackage * pkg ) {
  */
 
 char * lcfgpackage_get_name( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return pkg->name;
 }
 
@@ -363,6 +368,7 @@ char * lcfgpackage_get_name( const LCFGPackage * pkg ) {
  */
 
 bool lcfgpackage_set_name( LCFGPackage * pkg, char * new_name ) {
+  assert( pkg != NULL );
 
   bool ok = false;
   if ( lcfgpackage_valid_name(new_name) ) {
@@ -423,6 +429,8 @@ bool lcfgpackage_valid_arch( const char * arch ) {
  */
 
 bool lcfgpackage_has_arch( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return !isempty(pkg->arch);
 }
 
@@ -443,6 +451,8 @@ bool lcfgpackage_has_arch( const LCFGPackage * pkg ) {
  */
 
 char * lcfgpackage_get_arch( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return pkg->arch;
 }
 
@@ -469,6 +479,7 @@ char * lcfgpackage_get_arch( const LCFGPackage * pkg ) {
  */
 
 bool lcfgpackage_set_arch( LCFGPackage * pkg, char * new_arch ) {
+  assert( pkg != NULL );
 
   bool ok = false;
   if ( lcfgpackage_valid_arch(new_arch) ) {
@@ -530,6 +541,8 @@ bool lcfgpackage_valid_version( const char * version ) {
  */
 
 bool lcfgpackage_has_version( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return !isempty(pkg->version);
 }
 
@@ -550,6 +563,8 @@ bool lcfgpackage_has_version( const LCFGPackage * pkg ) {
  */
 
 char * lcfgpackage_get_version( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return pkg->version;
 }
 
@@ -576,6 +591,7 @@ char * lcfgpackage_get_version( const LCFGPackage * pkg ) {
  */
 
 bool lcfgpackage_set_version( LCFGPackage * pkg, char * new_version ) {
+  assert( pkg != NULL );
 
   bool ok = false;
   if ( lcfgpackage_valid_version(new_version) ) {
@@ -626,6 +642,8 @@ bool lcfgpackage_valid_release( const char * release ) {
  */
 
 bool lcfgpackage_has_release( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return !isempty(pkg->release);
 }
 
@@ -646,6 +664,8 @@ bool lcfgpackage_has_release( const LCFGPackage * pkg ) {
  */
 
 char * lcfgpackage_get_release( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return pkg->release;
 }
 
@@ -672,6 +692,7 @@ char * lcfgpackage_get_release( const LCFGPackage * pkg ) {
  */
 
 bool lcfgpackage_set_release( LCFGPackage * pkg, char * new_release ) {
+  assert( pkg != NULL );
 
   bool ok = false;
   if ( lcfgpackage_valid_release(new_release) ) {
@@ -726,6 +747,8 @@ bool lcfgpackage_valid_prefix( char prefix ) {
  */
 
 bool lcfgpackage_has_prefix( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return ( pkg->prefix != '\0' );
 }
 
@@ -742,6 +765,8 @@ bool lcfgpackage_has_prefix( const LCFGPackage * pkg ) {
  */
 
 char lcfgpackage_get_prefix( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return pkg->prefix;
 }
 
@@ -759,8 +784,10 @@ char lcfgpackage_get_prefix( const LCFGPackage * pkg ) {
  */
 
 bool lcfgpackage_clear_prefix( LCFGPackage * pkg ) {
-    pkg->prefix = '\0';
-    return true;
+  assert( pkg != NULL );
+
+  pkg->prefix = '\0';
+  return true;
 }
 
 /**
@@ -783,6 +810,7 @@ bool lcfgpackage_clear_prefix( LCFGPackage * pkg ) {
  */
 
 bool lcfgpackage_set_prefix( LCFGPackage * pkg, char new_prefix ) {
+  assert( pkg != NULL );
 
   bool ok = false;
   if ( lcfgpackage_valid_prefix(new_prefix) ) {
@@ -857,6 +885,8 @@ bool lcfgpackage_valid_flags( const char * flags ) {
  */
 
 bool lcfgpackage_has_flags( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return !isempty(pkg->flags);
 }
 
@@ -874,6 +904,7 @@ bool lcfgpackage_has_flags( const LCFGPackage * pkg ) {
  */
 
 bool lcfgpackage_has_flag( const LCFGPackage * pkg, char flag ) {
+  assert( pkg != NULL );
 
   return ( lcfgpackage_has_flags(pkg) &&
            strchr( pkg->flags, flag ) != NULL );
@@ -896,6 +927,8 @@ bool lcfgpackage_has_flag( const LCFGPackage * pkg, char flag ) {
  */
 
 char * lcfgpackage_get_flags( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return pkg->flags;
 }
 
@@ -922,6 +955,7 @@ char * lcfgpackage_get_flags( const LCFGPackage * pkg ) {
  */
 
 bool lcfgpackage_set_flags( LCFGPackage * pkg, char * new_flags ) {
+  assert( pkg != NULL );
 
   bool ok = false;
   if ( lcfgpackage_valid_flags(new_flags) ) {
@@ -949,6 +983,8 @@ bool lcfgpackage_set_flags( LCFGPackage * pkg, char * new_flags ) {
  */
 
 bool lcfgpackage_clear_flags( LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   free(pkg->flags);
   pkg->flags = NULL;
 
@@ -975,6 +1011,7 @@ bool lcfgpackage_clear_flags( LCFGPackage * pkg ) {
 
 bool lcfgpackage_add_flags( LCFGPackage * pkg,
                             const char * extra_flags ) {
+  assert( pkg != NULL );
 
   if ( isempty(extra_flags) ) return true;
 
@@ -1103,6 +1140,8 @@ bool lcfgpackage_valid_context( const char * ctx ) {
  */
 
 bool lcfgpackage_has_context( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return !isempty(pkg->context);
 }
 
@@ -1123,6 +1162,8 @@ bool lcfgpackage_has_context( const LCFGPackage * pkg ) {
  */
 
 char * lcfgpackage_get_context( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return pkg->context;
 }
 
@@ -1149,6 +1190,7 @@ char * lcfgpackage_get_context( const LCFGPackage * pkg ) {
  */
 
 bool lcfgpackage_set_context( LCFGPackage * pkg, char * new_ctx ) {
+  assert( pkg != NULL );
 
   bool ok = false;
   if ( lcfgpackage_valid_context(new_ctx) ) {
@@ -1186,6 +1228,7 @@ bool lcfgpackage_set_context( LCFGPackage * pkg, char * new_ctx ) {
 
 bool lcfgpackage_add_context( LCFGPackage * pkg,
                               const char * extra_context ) {
+  assert( pkg != NULL );
 
   if ( isempty(extra_context) ) return true;
 
@@ -1219,6 +1262,8 @@ bool lcfgpackage_add_context( LCFGPackage * pkg,
  */
 
 bool lcfgpackage_has_derivation( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return !isempty(pkg->derivation);
 }
 
@@ -1239,6 +1284,8 @@ bool lcfgpackage_has_derivation( const LCFGPackage * pkg ) {
  */
 
 char * lcfgpackage_get_derivation( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return pkg->derivation;
 }
 
@@ -1259,6 +1306,7 @@ char * lcfgpackage_get_derivation( const LCFGPackage * pkg ) {
  */
 
 bool lcfgpackage_set_derivation( LCFGPackage * pkg, char * new_deriv ) {
+  assert( pkg != NULL );
 
   /* Currently no validation of the derivation */
 
@@ -1290,6 +1338,7 @@ bool lcfgpackage_set_derivation( LCFGPackage * pkg, char * new_deriv ) {
 
 bool lcfgpackage_add_derivation( LCFGPackage * pkg,
                                  const char * extra_deriv ) {
+  assert( pkg != NULL );
 
   if ( isempty(extra_deriv) ) return true;
 
@@ -1341,6 +1390,8 @@ bool lcfgpackage_add_derivation( LCFGPackage * pkg,
  */
 
 int lcfgpackage_get_priority( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return pkg->priority;
 }
 
@@ -1358,6 +1409,8 @@ int lcfgpackage_get_priority( const LCFGPackage * pkg ) {
  */
 
 bool lcfgpackage_set_priority( LCFGPackage * pkg, int new_prio ) {
+  assert( pkg != NULL );
+
   pkg->priority = new_prio;
   return true;
 }
@@ -1386,6 +1439,7 @@ bool lcfgpackage_set_priority( LCFGPackage * pkg, int new_prio ) {
 
 bool lcfgpackage_eval_priority( LCFGPackage * pkg,
                                 const LCFGContextList * ctxlist ) {
+  assert( pkg != NULL );
 
   bool ok = true;
 
@@ -1426,10 +1480,13 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkg,
  */
 
 bool lcfgpackage_is_active( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
   return ( pkg->priority >= 0 );
 }
 
 void lcfgpackage_set_defaults(LCFGPackage * pkg) {
+  assert( pkg != NULL );
 
   /* This is used to set defaults for anything which is not yet defined */
 
@@ -1479,6 +1536,7 @@ void lcfgpackage_set_defaults(LCFGPackage * pkg) {
  */
 
 char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
 
   const char * v = lcfgpackage_has_version(pkg) ?
                    lcfgpackage_get_version(pkg) : LCFG_PACKAGE_WILDCARD;
@@ -1512,6 +1570,7 @@ char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
  */
 
 char * lcfgpackage_id( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
 
   char * id = NULL;
   if ( lcfgpackage_has_arch(pkg) ) {
@@ -1822,9 +1881,9 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
                                const char * defarch,
                                unsigned int options,
                                char ** result, size_t * size ) {
+  assert( pkg != NULL );
 
-  if ( !lcfgpackage_has_name(pkg) )
-    return -1;
+  if ( !lcfgpackage_has_name(pkg) ) return -1;
 
   /* This is rather long-winded but it is done this way to avoid
      multiple calls to realloc. It is actually the cheapest way to
@@ -1978,6 +2037,7 @@ ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
                             const char * defarch,
                             unsigned int options,
                             char ** result, size_t * size ) {
+  assert( pkg != NULL );
 
   unsigned int spec_options = ( options            |
                                 LCFG_OPT_NOCONTEXT |
@@ -2080,9 +2140,9 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
                             const char * defarch,
                             unsigned int options,
                             char ** result, size_t * size ) {
+  assert( pkg != NULL );
 
-  if ( !lcfgpackage_has_name(pkg) )
-    return -1;
+  if ( !lcfgpackage_has_name(pkg) ) return -1;
 
   static const char * indent = "   ";
   size_t indent_len = strlen(indent);
@@ -2263,6 +2323,8 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
 
 int lcfgpackage_compare_versions( const LCFGPackage * pkg1,
                                   const LCFGPackage * pkg2 ) {
+  assert( pkg1 != NULL );
+  assert( pkg2 != NULL );
 
   int result = 0;
 
@@ -2301,6 +2363,8 @@ int lcfgpackage_compare_versions( const LCFGPackage * pkg1,
 
 int lcfgpackage_compare_names( const LCFGPackage * pkg1,
                                const LCFGPackage * pkg2 ) {
+  assert( pkg1 != NULL );
+  assert( pkg2 != NULL );
 
   return strcasecmp( pkg1->name,
                      pkg2->name );
@@ -2308,6 +2372,8 @@ int lcfgpackage_compare_names( const LCFGPackage * pkg1,
 
 int lcfgpackage_compare_archs( const LCFGPackage * pkg1,
                                const LCFGPackage * pkg2 ) {
+  assert( pkg1 != NULL );
+  assert( pkg2 != NULL );
 
   const char * arch1 = lcfgpackage_has_arch(pkg1) ? pkg1->arch : LCFG_PACKAGE_NOVALUE;
   const char * arch2 = lcfgpackage_has_arch(pkg2) ? pkg2->arch : LCFG_PACKAGE_NOVALUE;
@@ -2317,6 +2383,8 @@ int lcfgpackage_compare_archs( const LCFGPackage * pkg1,
 
 int lcfgpackage_compare( const LCFGPackage * pkg1,
                          const LCFGPackage * pkg2 ) {
+  assert( pkg1 != NULL );
+  assert( pkg2 != NULL );
 
   /* Name */
 
@@ -2337,6 +2405,8 @@ int lcfgpackage_compare( const LCFGPackage * pkg1,
 
 bool lcfgpackage_equals( const LCFGPackage * pkg1,
                          const LCFGPackage * pkg2 ) {
+  assert( pkg1 != NULL );
+  assert( pkg2 != NULL );
 
   /* Name */
 
@@ -2390,6 +2460,7 @@ bool lcfgpackage_print( const LCFGPackage * pkg,
                         const char * style,
                         unsigned int options,
                         FILE * out ) {
+  assert( pkg != NULL );
 
   char * lcfgspec = NULL;
   size_t buf_size = 0;
