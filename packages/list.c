@@ -174,26 +174,28 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
 
   LCFGPackageNode * result = NULL;
 
-  LCFGPackageNode * cur_node = lcfgpkglist_head(pkglist);
-  while ( cur_node != NULL ) {
-
+  LCFGPackageNode * cur_node = NULL;
+  for ( cur_node = lcfgpkglist_head(pkglist);
+        cur_node != NULL;
+        cur_node = lcfgpkglist_next(cur_node) ) {
+        
     const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
-    if ( !lcfgpackage_is_active(pkg) ) continue;
+    if ( !lcfgpackage_has_name(pkg) || !lcfgpackage_is_active(pkg) )
+      continue;
 
     const char * pkg_name = lcfgpackage_get_name(pkg);
 
-    if ( pkg_name != NULL && strcmp( pkg_name, name ) == 0 ) {
+    if ( strcmp( pkg_name, name ) == 0 ) {
       const char * pkg_arch = lcfgpackage_has_arch(pkg) ?
                    lcfgpackage_get_arch(pkg) : LCFG_PACKAGE_NOVALUE;
 
-      if (  arch_match_iswild || strcmp( pkg_arch, match_arch ) == 0 ) {
+      if ( arch_match_iswild || strcmp( pkg_arch, match_arch ) == 0 ) {
         result = cur_node;
         break;
       }
     }
 
-    cur_node = lcfgpkglist_next(cur_node);
   }
 
   return result;
@@ -247,15 +249,18 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
   const char * match_arch = lcfgpackage_has_arch(new_pkg) ?
     lcfgpackage_get_arch(new_pkg) : LCFG_PACKAGE_NOVALUE;
 
-  LCFGPackageNode * node = lcfgpkglist_head(pkglist);
-  while ( node != NULL ) {
+  LCFGPackageNode * node = NULL;
+  for ( node = lcfgpkglist_head(pkglist);
+        node != NULL;
+        node = lcfgpkglist_next(node) ) {
 
     const LCFGPackage * pkg = lcfgpkglist_package(node);
 
-    if ( !lcfgpackage_is_active(pkg) ) continue;
+    if ( !lcfgpackage_has_name(pkg) || !lcfgpackage_is_active(pkg) )
+      continue;
 
     const char * name = lcfgpackage_get_name(pkg);
-    if ( name != NULL && strcmp( name, match_name ) == 0 ) {
+    if ( strcmp( name, match_name ) == 0 ) {
 
       const char * arch = lcfgpackage_has_arch(pkg) ?
 	lcfgpackage_get_arch(pkg) : LCFG_PACKAGE_NOVALUE;
@@ -266,8 +271,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
       }
     }
 
-    prev_node = node;
-    node = lcfgpkglist_next(node);
+    prev_node = node; /* used later if a removal is required */
   }
 
   if ( cur_node != NULL ) {
@@ -450,11 +454,15 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
-  LCFGPackageNode * cur_node = lcfgpkglist_head(pkglist2);
-  while ( cur_node != NULL ) {
+  LCFGPackageNode * cur_node = NULL;
+  for ( cur_node = lcfgpkglist_head(pkglist2);
+        cur_node != NULL;
+        cur_node = lcfgpkglist_next(cur_node) ) {
+
     LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
-    if ( !lcfgpackage_is_active(pkg) ) continue;
+    if ( !lcfgpackage_has_name(pkg) || !lcfgpackage_is_active(pkg) )
+      continue;
 
     char * merge_msg = NULL;
     LCFGChange merge_rc = lcfgpkglist_merge_package( pkglist1,
@@ -475,7 +483,6 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
       change = LCFG_CHANGE_ADDED;
     }
 
-    cur_node = lcfgpkglist_next(cur_node);
   }
 
   return change;
@@ -484,33 +491,28 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
 void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
   assert( pkglist != NULL );
 
-  if ( lcfgpkglist_is_empty(pkglist) )
-    return;
+  if ( lcfgpkglist_size(pkglist) < 2 ) return;
 
   /* Oo. Oo. bubble sort .oO .oO */
 
-  bool done = false;
+  bool swapped=true;
+  while (swapped) {
+    swapped=false;
 
-  while (!done) {
-
-    LCFGPackageNode * cur_node  = lcfgpkglist_head(pkglist);
-    LCFGPackageNode * next_node = lcfgpkglist_next(cur_node);
-
-    done = true;
-
-    while ( next_node != NULL ) {
+    LCFGPackageNode * cur_node = NULL;
+    for ( cur_node = lcfgpkglist_head(pkglist);
+          cur_node != NULL && cur_node->next != NULL;
+          cur_node = lcfgpkglist_next(cur_node) ) {
 
       LCFGPackage * cur_pkg  = lcfgpkglist_package(cur_node);
-      LCFGPackage * next_pkg = lcfgpkglist_package(next_node);
+      LCFGPackage * next_pkg = lcfgpkglist_package(cur_node->next);
 
       if ( lcfgpackage_compare( cur_pkg, next_pkg ) > 0 ) {
-        cur_node->pkg  = next_pkg;
-        next_node->pkg = cur_pkg;
-        done = false;
+        cur_node->pkg       = next_pkg;
+        cur_node->next->pkg = cur_pkg;
+        swapped = true;
       }
 
-      cur_node  = next_node;
-      next_node = lcfgpkglist_next(next_node);
     }
   }
 
@@ -674,11 +676,12 @@ LCFGPackageList * lcfgpkglist_search( const LCFGPackageList * pkglist,
 
   /* Run the search */
 
-  LCFGPackageNode * cur_node = lcfgpkglist_head(pkglist);
-
   bool ok = true;
 
-  while ( cur_node != NULL ) {
+  LCFGPackageNode * cur_node = NULL;
+  for ( cur_node = lcfgpkglist_head(pkglist);
+        cur_node != NULL;
+        cur_node = lcfgpkglist_next(cur_node) ) {
 
     LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
@@ -701,7 +704,6 @@ LCFGPackageList * lcfgpkglist_search( const LCFGPackageList * pkglist,
       }
     }
 
-    cur_node = lcfgpkglist_next(cur_node);
   }
 
   if (ok) {
