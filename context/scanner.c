@@ -32,6 +32,25 @@ lcfgctx_yyscan_t lcfgctx_scanner_init(void);
 void lcfgctx_scanner_destroy(lcfgctx_yyscan_t ctxscanner);
 
 /**
+ * @brief Accessor for error message from scanner
+ *
+ * If an error occurs during the parsing of an LCFG query expression a
+ * diagnostic error message may be recorded. This function an be used
+ * to retrieve the message string from the scanner. If there is no
+ * message the @c NULL value will be returned.
+ *
+ * To avoid memory leaks the returned string should be freed when it
+ * is no longer required.
+ *
+ * @param[in] ctxscanner Context query scanner
+ *
+ * @return Pointer to error message string (call @c free() when no longer required)
+ *
+ */
+
+char * lcfgctx_scanner_errmsg(lcfgctx_yyscan_t ctxscanner);
+
+/**
  * @brief Parse an LCFG context query expression
  *
  * This is used to parse a context query using flex/bison. It
@@ -45,8 +64,6 @@ void lcfgctx_scanner_destroy(lcfgctx_yyscan_t ctxscanner);
  * @return Integer indicating success (zero) or failure (non-zero)
  *
  */
-
-char * lcfgctx_scanner_errmsg(lcfgctx_yyscan_t ctxscanner);
 
 int lcfgctx_yyparse (lcfgctx_yyscan_t ctxscanner,
                      const LCFGContextList * ctxlist,
