@@ -3,6 +3,23 @@
 #ifndef LCFG_COMMON_H
 #define LCFG_COMMON_H
 
+/**
+ * @brief Test if a string (i.e. a char *) is 'empty'
+ */
+
+#define isempty(STR) ( STR == NULL || *(STR) == '\0' )
+
+/**
+ * @brief Test for word character
+ *
+ * Extends the standard alpha-numeric test to include the '_'
+ * (underscore) character. This is similar to the '\w' in Perl
+ * regexps, this gives the set of characters [A-Za-z0-9_]
+ *
+ */
+
+#define isword(CHR) ( isalnum(CHR) || CHR == '_' )
+
 typedef enum {
   LCFG_STATUS_ERROR,
   LCFG_STATUS_WARN,

@@ -18,16 +18,6 @@
 #include "packages.h"
 #include "utils.h"
 
-/* Test if a string (i.e. a char *) is 'empty' */
-
-#define isempty(STR) ( STR == NULL || *(STR) == '\0' )
-
-/* Extends the standard alpha-numeric test to include the '_'
-   (underscore) character. This is similar to the '\w' in Perl
-   regexps, this gives the set of characters [A-Za-z0-9_] */
-
-#define isword(CHR) ( isalnum(CHR) || CHR == '_' )
-
 /* Permit [A-Za-z0-9_-.+] characters in package names */
 
 #define isnamechr(CHR) ( isword(CHR) || strchr( "-.+", CHR ) != NULL )
