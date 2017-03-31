@@ -124,15 +124,13 @@ int main(int argc, char* argv[])
   LCFGPackage * pkg = NULL;
   char *msg = NULL;
 
-  bool parse_ok = false;
-  if ( rpm_name ) {
-    parse_ok = lcfgpackage_from_rpm_filename( input, &pkg, &msg );
-  } else {
-    if ( lcfgpackage_from_string( input, &pkg, &msg ) == LCFG_STATUS_OK ) 
-      parse_ok = true;
-  }
+  LCFGStatus parse_rc;
+  if ( rpm_name )
+    parse_rc = lcfgpackage_from_rpm_filename( input, &pkg, &msg );
+  else
+    parse_rc = lcfgpackage_from_string( input, &pkg, &msg );
 
-  if ( !parse_ok ) {
+  if ( parse_rc == LCFG_STATUS_ERROR ) {
     fprintf( stderr, "Error: %s\n",
 	     ( msg != NULL ? msg : "unknown problem occurred" ) );
 

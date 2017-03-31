@@ -315,9 +315,9 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
                                   char ** msg )
   __attribute__((warn_unused_result));
 
-bool lcfgpackage_from_rpm_filename( const char * input,
-                                    LCFGPackage ** result,
-                                    char ** msg)
+LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
+                                          LCFGPackage ** result,
+                                          char ** msg)
   __attribute__((warn_unused_result));
 
 ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,

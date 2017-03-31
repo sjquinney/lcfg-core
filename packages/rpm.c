@@ -16,6 +16,27 @@
 #include "utils.h"
 
 static const char * rpm_file_suffix = ".rpm";
+static size_t rpm_file_suffix_len = 4;
+
+static LCFGStatus invalid_rpm( char ** msg, const char * base, ... ) {
+
+  const char * fmt = "Invalid RPM (%s)";
+
+  va_list ap;
+  va_start( ap, base );
+
+  char * reason = NULL;
+  int rc = vasprintf( &reason, base, ap );
+  if ( rc < 0 ) {
+    perror("Failed to allocate memory for error string");
+    exit(EXIT_FAILURE);
+  }
+
+  lcfgutils_build_message( msg, fmt, reason );
+  free(reason);
+
+  return LCFG_STATUS_ERROR;
+}
 
 static bool file_needs_update( const char * cur_file,
                                const char * new_file ) {
@@ -67,33 +88,23 @@ static bool file_needs_update( const char * cur_file,
   return needs_update;
 }
 
-bool lcfgpackage_from_rpm_filename( const char * input,
-                                    LCFGPackage ** result,
-                                    char ** errmsg ) {
+LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
+                                          LCFGPackage ** result,
+                                          char ** msg ) {
 
   *result = NULL;
-  *errmsg = NULL;
 
-  if ( input == NULL || *input == '\0' ) {
-    asprintf( errmsg, "Invalid RPM filename" );
-    return false;
-  }
+  if ( isempty(input) )
+    return invalid_rpm( msg, "bad filename" );
 
-  size_t input_len  = strlen(input);
-  size_t suffix_len = strlen(rpm_file_suffix);
-
-  if ( input_len <= suffix_len ) {
-    asprintf( errmsg, "Invalid RPM filename '%s'", input );
-    return false;
-  }
+  size_t input_len = strlen(input);
+  if ( input_len <= rpm_file_suffix_len )
+    return invalid_rpm( msg, "bad filename" );
 
   /* Check the suffix */
 
-  if ( !lcfgutils_endswith( input, rpm_file_suffix ) ) {
-    asprintf( errmsg, "Invalid RPM filename '%s', does not have '%s' suffix",
-              input, rpm_file_suffix );
-    return false;
-  }
+  if ( !lcfgutils_endswith( input, rpm_file_suffix ) )
+    return invalid_rpm( msg, "lacks '%s' suffix", rpm_file_suffix );
 
   /* Results - note that the file name has to be split apart backwards */
 
@@ -102,7 +113,7 @@ bool lcfgpackage_from_rpm_filename( const char * input,
 
   size_t offset = input_len - suffix_len - 1;
 
-  /* Architecture */
+  /* Architecture - search backwards for '.' */
 
   char * pkg_arch = NULL;
 
@@ -115,19 +126,20 @@ bool lcfgpackage_from_rpm_filename( const char * input,
   }
 
   if ( pkg_arch == NULL ) {
-    asprintf( errmsg, "Invalid RPM filename '%s', failed to find package architecture.", input );
+    invalid_rpm( msg, "failed to extract architecture" );
     ok = false;
     goto failure;
   } else {
     ok = lcfgpackage_set_arch( *result, pkg_arch );
     if ( !ok ) {
-      asprintf( errmsg, "Invalid RPM filename '%s', bad package architecture '%s'", input, pkg_arch );
+      invalid_rpm( msg, "bad package architecture '%s'", pkg_arch );
       free(pkg_arch);
+      pkg_arch = NULL;
       goto failure;
     }
   }
 
-  /* Release field */
+  /* Release field - search backwards for '-' */
 
   char * pkg_release = NULL;
 
@@ -144,19 +156,20 @@ bool lcfgpackage_from_rpm_filename( const char * input,
   }
 
   if ( pkg_release == NULL ) {
-    asprintf( errmsg, "Invalid RPM filename '%s', failed to find package release.", input );
+    invalid_rpm( msg, "failed to extract release" );
     ok = false;
     goto failure;
   } else {
     ok = lcfgpackage_set_release( *result, pkg_release );
     if ( !ok ) {
-      asprintf( errmsg, "Invalid RPM filename '%s', bad package release '%s'", input, pkg_release );
+      invalid_rpm( errmsg, "bad release '%s'", pkg_release );
       free(pkg_release);
+      pkg_release = NULL;
       goto failure;
     }
   }
 
-  /* Version field */
+  /* Version field - search backwards for '-' */
 
   char * pkg_version = NULL;
 
@@ -173,19 +186,20 @@ bool lcfgpackage_from_rpm_filename( const char * input,
   }
 
   if ( pkg_version == NULL ) {
-    asprintf( errmsg, "Invalid RPM filename '%s', failed to find package version.", input );
+    invalid_rpm( msg, "failed to extract version" );
     ok = false;
     goto failure;
   } else {
     ok = lcfgpackage_set_version( *result, pkg_version );
     if ( !ok ) {
-      asprintf( errmsg, "Invalid RPM filename '%s', bad package version '%s'", input, pkg_version );
+      invalid_rpm( msg, "bad version '%s'", pkg_version );
       free(pkg_version);
+      pkg_version = NULL;
       goto failure;
     }
   }
 
-  /* Name field */
+  /* Name field - everything else */
 
   char * pkg_name = NULL;
   if ( i > 0 ) {
@@ -195,14 +209,15 @@ bool lcfgpackage_from_rpm_filename( const char * input,
   }
 
   if ( pkg_name == NULL ) {
-    asprintf( errmsg, "Invalid RPM filename '%s', failed to find package name.", input );
+    invalid_rpm( msg, "failed to find name" );
     ok = false;
     goto failure;
   } else {
     ok = lcfgpackage_set_name( *result, pkg_name );
     if ( !ok ) {
-      asprintf( errmsg, "Invalid RPM filename '%s', bad package name '%s'", input, pkg_name );
+      invalid_rpm( errmsg, "bad name '%s'", pkg_name );
       free(pkg_name);
+      pkg_name = NULL;
       goto failure;
     }
   }
@@ -214,8 +229,8 @@ bool lcfgpackage_from_rpm_filename( const char * input,
   failure:
     ok = false; /* in case we've jumped in from elsewhere */
 
-    if ( *errmsg == NULL )
-      asprintf( errmsg, "Invalid RPM filename '%s'", input );
+    if ( *msg == NULL )
+      invalid_rpm( msg, "bad filename" );
 
     if ( *result != NULL ) {
       lcfgpackage_destroy(*result);
@@ -224,7 +239,7 @@ bool lcfgpackage_from_rpm_filename( const char * input,
 
   }
 
-  return ok;
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
 ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
@@ -458,10 +473,10 @@ bool lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
       LCFGPackage * pkg = NULL;
       char * parse_msg = NULL;
-      ok = lcfgpackage_from_rpm_filename( filename, &pkg,
-                                          &parse_msg );
+      LCFGStatus parse_rc = lcfgpackage_from_rpm_filename( filename, &pkg,
+                                                           &parse_msg );
 
-      if ( !ok ) {
+      if ( parse_rc == LCFG_STATUS_ERROR ) {
 
         asprintf( msg, "Failed to parse '%s': %s", filename,
                   ( parse_msg != NULL ? parse_msg : "unknown error" ) );
@@ -560,9 +575,10 @@ bool lcfgpkglist_from_rpmlist( const char * filename,
 
     LCFGPackage * pkg = NULL;
     char * parse_errmsg = NULL;
-    ok = lcfgpackage_from_rpm_filename( trimmed, &pkg, &parse_errmsg );
+    LCFGStatus parse_rc = lcfgpackage_from_rpm_filename( trimmed, &pkg,
+                                                         &parse_errmsg );
 
-    if ( !ok ) {
+    if ( parse_rc == LCFG_STATUS_ERROR ) {
 
       if ( pkg != NULL ) {
         lcfgpackage_destroy(pkg);
