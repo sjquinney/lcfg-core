@@ -186,6 +186,7 @@ newline                 [\r\n]
                          return yytext[0];
                        }
 %%
+extern int vasprintf(char **strp, const char *fmt, va_list ap);
 
 void lcfgctx_yyerror( yyscan_t ctxscanner,
                       const LCFGContextList * ctxlist, int * priority,
