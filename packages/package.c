@@ -1733,17 +1733,31 @@ LCFGStatus lcfgpackage_from_string( const char * input,
     start++;
   }
 
-  /* Secondary Architecture - optional */
+  /* Secondary Architecture - optional
+
+   If used this is at the front of the string and is separated from
+   the name using a '/' (forward slash). If we find a '-' (hyphen) we
+   give up as that is likely to be the separator between name and
+   version.
+
+   This vallue will get handled when the primary architecture is found.
+
+  */
 
   char * pkg_arch = NULL;
   walk_forwards_until( &start, '/', "-", &pkg_arch );
 
-  while ( *start != '\0' && isspace(*start) ) start++;
+  /* Find the end of the string, ignoring any trailing whitespace */
 
   size_t len = strlen(start);
   while ( len > 0 && isspace( *( start + len - 1 ) ) ) len--;
 
-  /* Context - optional */
+  /* Context - optional 
+
+     If used this is at the end of the string and is surrounded by '['
+     and ']' (square brackets).
+
+  */
 
   char * ctx_end = len > 0 ? start + len - 1 : start;
   if ( *ctx_end == ']' ) {
@@ -1768,7 +1782,17 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
   }
 
-  /* Flags - optional */
+  /* Flags - optional 
+
+   If used this is at the end of the string immediately before any
+   context and after the architecture and version. It is separated
+   from the previous field using a ':' (colon).
+
+   Whilst walking backwards to search for the separator this will give
+   up if a '/' (forward slash - the arch separator) or '-' (hyphen -
+   version/release separator) character is found.
+
+  */
 
   char * pkg_flags = NULL;
   walk_backwards_until( start, &len, ':', "/-", &pkg_flags );
@@ -1785,7 +1809,15 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
   }
   
-  /* Primary Architecture - optional */
+  /* Primary Architecture - optional
+
+     If used this will be at the end of the string after the release
+     field. There is a '/' (forward slash) separator.
+
+     If both the primary and secondary architecture have been
+     specified then the secondary value will be used.
+
+ */
 
   char * arch2 = NULL;
   walk_backwards_until( start, &len, '/', NULL, &arch2 );
@@ -1809,7 +1841,10 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
   }
 
-  /* Release - required */
+  /* Release - required
+
+     This is separated from the version field using a '-' (hyphen) character.
+  */
 
   char * pkg_release = NULL;
   walk_backwards_until( start, &len, '-', NULL, &pkg_release );
@@ -1831,7 +1866,11 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
   }
 
-  /* Version - required */
+  /* Version - required
+
+     This is separated from the version and name fields using a '-'
+     (hyphen) character.
+ */
 
   char * pkg_version = NULL;
   walk_backwards_until( start, &len, '-', NULL, &pkg_version );
@@ -1853,9 +1892,11 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
   }
 
-  /* Name - required */
+  /* Name - required
 
-  while ( len > 0 && isspace( *( start + len - 1 ) ) ) len--;
+   This is using anything which is left after the other fields are discovered.
+
+  */
 
   if ( len == 0 ) {
     ok = false;

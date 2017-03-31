@@ -54,19 +54,6 @@ typedef enum {
   LCFG_TEST_ISNE
 } LCFGTest;
 
-/* Generic single-linked list */
-
-struct LCFGSListNode {
-  void * data;
-  struct LCFGSListNode * next;
-};
-
-typedef struct LCFGSListNode LCFGSListNode;
-
-LCFGSListNode * lcfgslistnode_new(void * data);
-
-void lcfgslistnode_destroy(LCFGSListNode * node);
-
 #endif /* LCFG_COMMON_H */
 
 /* eof */
