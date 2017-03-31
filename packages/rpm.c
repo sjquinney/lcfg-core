@@ -53,23 +53,20 @@ static bool file_needs_update( const char * cur_file,
      request the file is updated in the hope that will fix things. */
 
   FILE * fh1 = fopen( cur_file, "r" );
-  if ( fh1 == NULL )
-    return true;
+  if ( fh1 == NULL ) return true;
 
   fseek(fh1, 0, SEEK_END);
   long size1 = ftell(fh1);
   rewind(fh1);
 
   FILE * fh2 = fopen( new_file, "r" );
-  if ( fh2 == NULL )
-    return true;
+  if ( fh2 == NULL ) return true;
 
   fseek(fh2, 0, SEEK_END);
   long size2 = ftell(fh2);
   rewind(fh2);
 
-  if (size1 != size2)
-    return true;
+  if (size1 != size2) return true;
 
   /* Only if sizes are same do we bother comparing bytes */
 
@@ -360,7 +357,7 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
     tmpfh = fdopen( tmpfd, "w" );
 
   if ( tmpfh == NULL ) {
-    asprintf( msg, "Failed to open temporary rpmlist file");
+    lcfgutils_build_message( msg, "Failed to open temporary rpmlist file" );
     ok = false;
     goto cleanup;
   }
@@ -372,14 +369,14 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
                           tmpfh );
 
   if (!ok) {
-    asprintf( msg, "Failed to write rpmlist file");
+    lcfgutils_build_message( msg, "Failed to write rpmlist file" );
     goto cleanup;
   } else {
 
     if ( fclose(tmpfh) == 0 ) {
       tmpfh = NULL; /* Avoids a further attempt to close in cleanup */
     } else {
-      asprintf( msg, "Failed to close rpmlist file" );
+      lcfgutils_build_message( msg, "Failed to close rpmlist file" );
       ok = false;
     }
 
@@ -427,20 +424,20 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
   *msg = NULL;
 
   if ( rpmdir == NULL || *rpmdir == '\0' ) {
-    asprintf( msg, "Invalid RPM directory" );
-    return false;
+    lcfgutils_build_message( msg, "Invalid RPM directory" );
+    return LCFG_STATUS_ERROR;
   }
 
   DIR * dir;
   if ( ( dir = opendir(rpmdir) ) == NULL ) {
 
     if (errno == ENOENT) {
-      asprintf( msg, "Directory does not exist" );
+      lcfgutils_build_message( msg, "Directory does not exist" );
     } else {
-      asprintf( msg, "Directory is not readable" );
+      lcfgutils_build_message( msg, "Directory is not readable" );
     }
 
-    return false;
+    return LCFG_STATUS_ERROR;
   }
 
   /* Results */
@@ -473,7 +470,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
       if ( parse_rc == LCFG_STATUS_ERROR ) {
 
-        asprintf( msg, "Failed to parse '%s': %s", filename,
+        lcfgutils_build_message( msg, "Failed to parse '%s': %s", filename,
                   ( parse_msg != NULL ? parse_msg : "unknown error" ) );
 
       } else {
@@ -502,7 +499,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
   if ( !ok ) {
 
     if ( *msg == NULL )
-      asprintf( msg, "Failed to read RPM directory" );
+      lcfgutils_build_message( msg, "Failed to read RPM directory" );
 
     if ( *result != NULL ) {
       lcfgpkglist_destroy(*result);
@@ -515,26 +512,25 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
 LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
                                      LCFGPackageList ** result,
-                                     char ** errmsg ) {
+                                     char ** msg ) {
 
   *result = NULL;
-  *errmsg = NULL;
 
   if ( filename == NULL || *filename == '\0' ) {
-    asprintf( errmsg, "Invalid filename" );
-    return false;
+    lcfgutils_build_message( msg, "Invalid filename" );
+    return LCFG_STATUS_ERROR;
   }
 
   FILE * fp;
   if ( (fp = fopen(filename, "r")) == NULL ) {
 
     if (errno == ENOENT) {
-      asprintf( errmsg, "File does not exist" );
+      lcfgutils_build_message( msg, "File does not exist" );
     } else {
-      asprintf( errmsg, "File is not readable" );
+      lcfgutils_build_message( msg, "File is not readable" );
     }
 
-    return false;
+    return LCFG_STATUS_ERROR;
   }
 
   /* Setup the getline buffer */
@@ -575,16 +571,16 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
     if ( parse_rc == LCFG_STATUS_ERROR ) {
 
       if ( parse_errmsg == NULL ) {
-        asprintf( errmsg, "Error at line %u", linenum );
+        lcfgutils_build_message( msg, "Error at line %u", linenum );
       } else {
-        asprintf( errmsg, "Error at line %u: %s", linenum, parse_errmsg );
+        lcfgutils_build_message( msg, "Error at line %u: %s",
+				 linenum, parse_errmsg );
         free(parse_errmsg);
       }
 
     } else {
-      char * derivation;
-      int rc = asprintf( &derivation, "%s:%u", filename, linenum );
-      if ( rc <= 0 ) {
+      char * derivation = lcfgutils_join_strings( ":", filename, linenum );
+      if ( derivation == NULL ) {
         perror( "Failed to build LCFG derivation string" );
         exit(EXIT_FAILURE);
       }
@@ -595,7 +591,7 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
       if ( lcfgpkglist_merge_package( *result, pkg, &merge_msg )
            != LCFG_CHANGE_ADDED ) {
         ok = false;
-	asprintf( errmsg,
+	lcfgutils_build_message( msg,
 		  "Error at line %u: Failed to merge package into list: %s",
 		  linenum, merge_msg );
 
@@ -614,8 +610,8 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 
   if ( !ok ) {
 
-    if ( *errmsg == NULL )
-      asprintf( errmsg, "Failed to parse RPM list file" );
+    if ( *msg == NULL )
+      lcfgutils_build_message( msg, "Failed to parse RPM list file" );
 
     if ( *result != NULL ) {
       lcfgpkglist_destroy(*result);
@@ -647,7 +643,7 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
 
   if ( out == NULL ) {
     ok = false;
-    asprintf( msg, "Failed to open temporary rpmcfg file");
+    lcfgutils_build_message( msg, "Failed to open temporary rpmcfg file");
     goto cleanup;
   }
 
@@ -688,7 +684,7 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
       }
 
       if (!ok) {
-        asprintf( msg, "Failed to write to rpmcfg file" );
+        lcfgutils_build_message( msg, "Failed to write to rpmcfg file" );
         break;
       }
 
@@ -727,7 +723,7 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
       }
 
       if (!ok) {
-        asprintf( msg, "Failed to write to rpmcfg file" );
+        lcfgutils_build_message( msg, "Failed to write to rpmcfg file" );
         break;
       }
 
@@ -750,7 +746,7 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
 
   /* Attempt to close the temporary file whatever happens */
   if ( fclose(out) != 0 ) {
-    asprintf( msg, "Failed to close rpmcfg file" );
+    lcfgutils_build_message( msg, "Failed to close rpmcfg file" );
     ok = false;
   }
 
