@@ -248,9 +248,21 @@ ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
                                      char ** result, size_t * size ) {
   assert( pkg != NULL );
 
+  /* Name, version, release and architecture are required */
+
+  if ( !lcfgpackage_has_name(pkg) ||
+       !lcfgpackage_has_version(pkg) ||
+       !lcfgpackage_has_release(pkg) )
+    return -1;
+
   const char * pkgnam  = lcfgpackage_get_name(pkg);
+  size_t pkgnamlen    = strlen(pkgnam);
+
   const char * pkgver  = lcfgpackage_get_version(pkg);
+  size_t pkgverlen    = strlen(pkgver);
+
   const char * pkgrel  = lcfgpackage_get_release(pkg);
+  size_t pkgrellen    = strlen(pkgrel);
 
   const char * pkgarch;
   if ( lcfgpackage_has_arch(pkg) ) {
@@ -258,22 +270,13 @@ ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
   } else {
     pkgarch = defarch;
   }
-
-  /* Name, version, release and architecture are required */
-
-  if ( pkgnam  == NULL || *pkgnam  == '\0' ||
-       pkgver  == NULL || *pkgver  == '\0' ||
-       pkgrel  == NULL || *pkgrel  == '\0' ||
-       pkgarch == NULL || *pkgarch == '\0' ) {
-    return -1;
-  }
+  size_t pkgarchlen = strlen(pkgarch);
 
   /* +3 for the two '-' separators and one '.' */
-  size_t new_len = ( strlen(pkgnam) +
-		     strlen(pkgver) + 
-		     strlen(pkgrel) +
-		     strlen(pkgarch) +
-		     strlen(rpm_file_suffix) + 3 );
+  size_t new_len = ( pkgnamlen +
+                     pkgverlen +
+                     pkgrellen +
+		     rpm_file_suffix_len + 3 );
 
   if ( options&LCFG_OPT_NEWLINE )
     new_len += 1;
@@ -299,31 +302,31 @@ ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
   char * to = *result;
 
   /* name */
-  to = stpcpy( to, pkgnam );
+  to = stpncpy( to, pkgnam, pkgnamlen );
 
   *to = '-';
   to++;
 
   /* version */
-  to = stpcpy( to, pkgver );
+  to = stpncpy( to, pkgver, pkgverlen );
 
   *to = '-';
   to++;
 
   /* release */
-  to = stpcpy( to, pkgrel );
+  to = stpncpy( to, pkgrel, pkgrellen );
 
   *to = '.';
   to++;
 
   /* arch */
-  to = stpcpy( to, pkgarch );
+  to = stpncpy( to, pkgarch, pkgarchlen );
 
   /* suffix */
-  to = stpcpy( to, rpm_file_suffix );
+  to = stpncpy( to, rpm_file_suffix, rpm_file_suffix_len );
 
   if ( options&LCFG_OPT_NEWLINE )
-    to = stpcpy( to, "\n" );
+    to = stpncpy( to, "\n", 1 );
 
   *to = '\0';
 
@@ -360,8 +363,10 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
   char * buffer = NULL;
   size_t buf_size = 0;
 
-  LCFGPackageNode * cur_node = lcfgpkglist_head(pkglist);
-  while ( cur_node != NULL ) {
+  LCFGPackageNode * cur_node = NULL;
+  for ( cur_node = lcfgpkglist_head(pkglist);
+        cur_node != NULL;
+        cur_node = lcfgpkglist_next(cur_node) ) {
 
     const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
@@ -386,7 +391,6 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
       break;
     }
 
-    cur_node = lcfgpkglist_next(cur_node);
   }
 
   free(buffer);
@@ -424,9 +428,9 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
-bool lcfgpkglist_from_rpm_dir( const char * rpmdir,
-                               LCFGPackageList ** result,
-                               char ** msg ) {
+LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
+                                     LCFGPackageList ** result,
+                                     char ** msg ) {
 
   *result = NULL;
   *msg = NULL;
@@ -516,12 +520,12 @@ bool lcfgpkglist_from_rpm_dir( const char * rpmdir,
     }
   }
 
-  return ok;
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
-bool lcfgpkglist_from_rpmlist( const char * filename,
-                               LCFGPackageList ** result,
-                               char ** errmsg ) {
+LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
+                                     LCFGPackageList ** result,
+                                     char ** errmsg ) {
 
   *result = NULL;
   *errmsg = NULL;
@@ -635,7 +639,7 @@ bool lcfgpkglist_from_rpmlist( const char * filename,
     }
   }
 
-  return ok;
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
 LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,

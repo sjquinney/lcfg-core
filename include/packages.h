@@ -326,14 +326,14 @@ ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
                                      char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
-bool lcfgpkglist_from_rpm_dir( const char * rpmdir,
-                               LCFGPackageList ** result,
-                               char ** msg )
+LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
+                                     LCFGPackageList ** result,
+                                     char ** msg )
   __attribute__((warn_unused_result));
 
-bool lcfgpkglist_from_rpmlist( const char * filename,
-                               LCFGPackageList ** result,
-                               char ** msg )
+LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
+                                     LCFGPackageList ** result,
+                                     char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
