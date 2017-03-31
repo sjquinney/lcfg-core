@@ -1,5 +1,6 @@
 #define _GNU_SOURCE   /* asprintf */
 
+#include <stdarg.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -97,13 +98,18 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
   if ( isempty(input) )
     return invalid_rpm( msg, "bad filename" );
 
-  size_t input_len = strlen(input);
-  if ( input_len <= rpm_file_suffix_len )
+  /* Ignore any leading directories */
+
+  const char * dirsep = strrchr( input, '/' );
+  const char * filename = dirsep != NULL ? dirsep + 1 : input;
+
+  size_t filename_len = strlen(filename);
+  if ( filename_len <= rpm_file_suffix_len )
     return invalid_rpm( msg, "bad filename" );
 
   /* Check the suffix */
 
-  if ( !lcfgutils_endswith( input, rpm_file_suffix ) )
+  if ( !lcfgutils_endswith( filename, rpm_file_suffix ) )
     return invalid_rpm( msg, "lacks '%s' suffix", rpm_file_suffix );
 
   /* Results - note that the file name has to be split apart backwards */
@@ -111,7 +117,7 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
   bool ok = true;
   *result = lcfgpackage_new();
 
-  size_t offset = input_len - suffix_len - 1;
+  size_t offset = filename_len - rpm_file_suffix_len - 1;
 
   /* Architecture - search backwards for '.' */
 
@@ -119,8 +125,8 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
 
   unsigned int i;
   for ( i=offset; i--; ) {
-    if ( input[i] == '.' ) {
-      pkg_arch = strndup( input + i + 1, offset - i );
+    if ( filename[i] == '.' ) {
+      pkg_arch = strndup( filename + i + 1, offset - i );
       break;
     }
   }
@@ -147,8 +153,8 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
     offset = i - 1;
 
     for ( i=offset; i--; ) {
-      if ( input[i] == '-' ) {
-        pkg_release = strndup( input + i + 1, offset - i );
+      if ( filename[i] == '-' ) {
+        pkg_release = strndup( filename + i + 1, offset - i );
         break;
       }
     }
@@ -162,7 +168,7 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
   } else {
     ok = lcfgpackage_set_release( *result, pkg_release );
     if ( !ok ) {
-      invalid_rpm( errmsg, "bad release '%s'", pkg_release );
+      invalid_rpm( msg, "bad release '%s'", pkg_release );
       free(pkg_release);
       pkg_release = NULL;
       goto failure;
@@ -177,8 +183,8 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
     offset = i - 1;
 
     for ( i=offset; i--; ) {
-      if ( input[i] == '-' ) {
-        pkg_version = strndup( input + i + 1, offset - i );
+      if ( filename[i] == '-' ) {
+        pkg_version = strndup( filename + i + 1, offset - i );
         break;
       }
     }
@@ -205,7 +211,7 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
   if ( i > 0 ) {
     offset = i - 1;
 
-    pkg_name = strndup( input, offset + 1 );
+    pkg_name = strndup( filename, offset + 1 );
   }
 
   if ( pkg_name == NULL ) {
@@ -215,7 +221,7 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
   } else {
     ok = lcfgpackage_set_name( *result, pkg_name );
     if ( !ok ) {
-      invalid_rpm( errmsg, "bad name '%s'", pkg_name );
+      invalid_rpm( msg, "bad name '%s'", pkg_name );
       free(pkg_name);
       pkg_name = NULL;
       goto failure;
@@ -232,10 +238,8 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
     if ( *msg == NULL )
       invalid_rpm( msg, "bad filename" );
 
-    if ( *result != NULL ) {
-      lcfgpackage_destroy(*result);
-      *result = NULL;
-    }
+    lcfgpackage_release(*result);
+    *result = NULL;
 
   }
 
@@ -273,9 +277,10 @@ ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
   size_t pkgarchlen = strlen(pkgarch);
 
   /* +3 for the two '-' separators and one '.' */
-  size_t new_len = ( pkgnamlen +
-                     pkgverlen +
-                     pkgrellen +
+  size_t new_len = ( pkgnamlen  +
+                     pkgverlen  +
+                     pkgrellen  +
+                     pkgarchlen +
 		     rpm_file_suffix_len + 3 );
 
   if ( options&LCFG_OPT_NEWLINE )
@@ -349,55 +354,35 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
 
   bool ok = true;
 
-  FILE * out = NULL;
+  FILE * tmpfh = NULL;
   int tmpfd = mkstemp(tmpfile);
   if ( tmpfd >= 0 )
-    out = fdopen( tmpfd, "w" );
+    tmpfh = fdopen( tmpfd, "w" );
 
-  if ( out == NULL ) {
+  if ( tmpfh == NULL ) {
     asprintf( msg, "Failed to open temporary rpmlist file");
     ok = false;
     goto cleanup;
   }
 
-  char * buffer = NULL;
-  size_t buf_size = 0;
+  ok = lcfgpkglist_print( pkglist,
+                          defarch, 
+                          LCFG_PKG_STYLE_RPM,
+                          LCFG_OPT_NEWLINE,
+                          tmpfh );
 
-  LCFGPackageNode * cur_node = NULL;
-  for ( cur_node = lcfgpkglist_head(pkglist);
-        cur_node != NULL;
-        cur_node = lcfgpkglist_next(cur_node) ) {
+  if (!ok) {
+    asprintf( msg, "Failed to write rpmlist file");
+    goto cleanup;
+  } else {
 
-    const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
-
-    if ( !lcfgpackage_is_active(pkg) ) continue;
-
-    ssize_t rc = lcfgpackage_to_rpm_filename( pkg,
-                                              defarch,
-                                              LCFG_OPT_NEWLINE,
-                                              &buffer, &buf_size );
-
-    if ( rc > 0 ) {
-
-      if ( fputs( buffer, out ) < 0 )
-        ok = false;
-
+    if ( fclose(tmpfh) == 0 ) {
+      tmpfh = NULL; /* Avoids a further attempt to close in cleanup */
     } else {
+      asprintf( msg, "Failed to close rpmlist file" );
       ok = false;
     }
 
-    if (!ok) {
-      asprintf( msg, "Failed to write to rpmlist file" );
-      break;
-    }
-
-  }
-
-  free(buffer);
-
-  if ( fclose(out) != 0 ) {
-    asprintf( msg, "Failed to close rpmlist file" );
-    ok = false;
   }
 
   /* rename tmpfile to target if different */
@@ -419,6 +404,12 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
   }
 
  cleanup:
+
+  /* This might have already gone but call fclose and unlink to ensure
+     tidiness. Do not care about the result */
+
+  if ( tmpfh != NULL )
+    fclose(tmpfh);
 
   if ( tmpfile != NULL ) {
     unlink(tmpfile);
@@ -496,8 +487,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
       free(parse_msg);
 
-      if ( !ok )
-        lcfgpackage_destroy(pkg);
+      lcfgpackage_release(pkg);
 
     }
 
@@ -584,11 +574,6 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 
     if ( parse_rc == LCFG_STATUS_ERROR ) {
 
-      if ( pkg != NULL ) {
-        lcfgpackage_destroy(pkg);
-        pkg = NULL;
-      }
-
       if ( parse_errmsg == NULL ) {
         asprintf( errmsg, "Error at line %u", linenum );
       } else {
@@ -614,12 +599,11 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 		  "Error at line %u: Failed to merge package into list: %s",
 		  linenum, merge_msg );
 
-        lcfgpackage_destroy(pkg);
-        pkg = NULL;
       }
       free(merge_msg);
 
     }
+    lcfgpackage_release(pkg);
 
     free(trimmed);
   }
