@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
     myoutput("Context", lcfgpackage_get_context(pkg), style);
   }
 
-  lcfgpackage_destroy(pkg);
+  lcfgpackage_release(pkg);
 
   return 0;
 }
