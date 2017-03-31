@@ -2045,6 +2045,7 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
   }
 
   char * pkgarch = NULL;
+  size_t pkgarchlen = 0;
   if ( lcfgpackage_has_arch(pkg) ) {
 
     /* Not added to the spec when same as default architecture */
@@ -2052,25 +2053,28 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
          strcmp( pkg->arch, defarch ) != 0 ) {
 
       pkgarch = pkg->arch;
-      new_len += ( strlen(pkgarch) + 1 ); /* +1 for '/' separator */
+      pkgarchlen = strlen(pkgarch);
+      new_len += ( pkgarchlen + 1 ); /* +1 for '/' separator */
     }
 
   }
 
   char * pkgflgs = NULL;
+  size_t pkgflgslen = 0;
   if ( lcfgpackage_has_flags(pkg) ) {
     pkgflgs = pkg->flags;
-
-    new_len += ( strlen(pkgflgs) + 1 ); /* +1 for ':' separator */
+    pkgflgslen = strlen(pkgflgs);
+    new_len += ( pkgflgslen + 1 ); /* +1 for ':' separator */
   }
 
   char * pkgctx = NULL;
+  size_t pkgctxlen = 0;
   if ( !(options&LCFG_OPT_NOCONTEXT) &&
        lcfgpackage_has_context(pkg) ) {
 
     pkgctx = pkg->context;
-
-    new_len += ( strlen(pkgctx) + 2 ); /* +2 for '[' and ']' brackets */
+    pkgctxlen = strlen(pkgctx);
+    new_len += ( pkgctxlen + 2 ); /* +2 for '[' and ']' brackets */
   }
 
   if ( options&LCFG_OPT_NEWLINE )
@@ -2103,26 +2107,26 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
   }
 
   /* name */
-  to = stpcpy( to, pkgnam );
+  to = stpncpy( to, pkgnam, pkgnamlen );
 
   *to = '-';
   to++;
 
   /* version */
-  to = stpcpy( to, pkgver );
+  to = stpncpy( to, pkgver, pkgverlen );
 
   *to = '-';
   to++;
 
   /* release */
-  to = stpcpy( to, pkgrel );
+  to = stpncpy( to, pkgrel, pkgrellen );
 
   /* arch */
   if ( pkgarch != NULL ) {
     *to = '/';
     to++;
 
-    to = stpcpy( to, pkgarch );
+    to = stpncpy( to, pkgarch, pkgarchlen );
   }
 
   /* flags */
@@ -2130,7 +2134,7 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
     *to = ':';
     to++;
 
-    to = stpcpy( to, pkgflgs );
+    to = stpncpy( to, pkgflgs, pkgflgslen );
   }
 
   /* context */
@@ -2138,14 +2142,14 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
     *to = '[';
     to++;
 
-    to = stpcpy( to, pkgctx );
+    to = stpncpy( to, pkgctx, pkgctxlen );
 
     *to = ']';
     to++;
   }
 
   if ( options&LCFG_OPT_NEWLINE )
-    to = stpcpy( to, "\n" );
+    to = stpncpy( to, "\n", 1 );
 
   *to = '\0';
 
@@ -2230,17 +2234,19 @@ ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
   size_t meta_len = 0;
 
   char * derivation = NULL;
+  size_t deriv_len = 0;
   if ( lcfgpackage_has_derivation(pkg) ) {
-    derivation = pkg->derivation;
-
-    meta_len += ( pragma_derive_len + strlen(derivation) + pragma_end_len );
+    derivation = lcfgpackage_get_derivation(pkg);
+    deriv_len  = strlen(derivation);
+    meta_len += ( pragma_derive_len + deriv_len + pragma_end_len );
   }
 
   char * context = NULL;
+  size_t ctx_len = 0;
   if ( lcfgpackage_has_context(pkg) ) {
-    context     = pkg->context;
-
-    meta_len += ( pragma_context_len + strlen(context) + pragma_end_len );
+    context = lcfgpackage_get_context(pkg);
+    ctx_len = strlen(context);
+    meta_len += ( pragma_context_len + ctx_len + pragma_end_len );
   }
 
   if ( meta_len == 0 ) {
@@ -2282,7 +2288,7 @@ ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
   if ( derivation != NULL ) {
     to = stpncpy( to, pragma_derive, pragma_derive_len );
 
-    to = stpcpy( to, derivation );
+    to = stpncpy( to, derivation, deriv_len );
 
     to = stpncpy( to, pragma_end, pragma_end_len );
   }
@@ -2292,7 +2298,7 @@ ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
   if ( context != NULL ) {
     to = stpncpy( to, pragma_context, pragma_context_len );
 
-    to = stpcpy( to, context );
+    to = stpncpy( to, context, ctx_len );
 
     to = stpncpy( to, pragma_end, pragma_end_len );
   }
