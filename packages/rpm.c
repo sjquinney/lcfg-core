@@ -662,8 +662,10 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
   if ( !lcfgpkglist_is_empty(active) ) {
     lcfgpkglist_sort(active);
 
-    LCFGPackageNode * cur_node = lcfgpkglist_head(active);
-    while ( cur_node != NULL ) {
+    LCFGPackageNode * cur_node = NULL;
+    for ( cur_node = lcfgpkglist_head(active);
+	  cur_node != NULL;
+	  cur_node = lcfgpkglist_next(cur_node) ) {
 
       const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
@@ -688,7 +690,6 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
         break;
       }
 
-      cur_node = lcfgpkglist_next(cur_node);
     }
 
   }
@@ -703,8 +704,10 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
   if ( ok && !lcfgpkglist_is_empty(inactive) ) {
     lcfgpkglist_sort(inactive);
 
-    LCFGPackageNode * cur_node = lcfgpkglist_head(inactive);
-    while ( cur_node != NULL ) {
+    LCFGPackageNode * cur_node = NULL;
+    for ( cur_node = lcfgpkglist_head(inactive);
+	  cur_node != NULL;
+	  cur_node = lcfgpkglist_next(cur_node) ) {
 
       const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
@@ -727,7 +730,6 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
         break;
       }
 
-      cur_node = lcfgpkglist_next(cur_node);
     }
 
   }
