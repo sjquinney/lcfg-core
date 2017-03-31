@@ -743,8 +743,8 @@ bool lcfgcontext_print( const LCFGContext * ctx,
  * the @e name attribute for a context is @c NULL then it is treated
  * as an empty string.
  *
- * @param[in] ctx1 Pointer to @c LCFGContext struct
- * @param[in] ctx1 Pointer to @c LCFGContext struct
+ * @param[in] ctx1 Pointer to @c LCFGContext
+ * @param[in] ctx2 Pointer to @c LCFGContext
  *
  * @return boolean which indicates if the names are the same
  *
