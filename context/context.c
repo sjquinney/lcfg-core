@@ -686,7 +686,7 @@ ssize_t lcfgcontext_to_string( const LCFGContext * ctx,
   /* Optional newline at the end of the string */
 
   if ( options&LCFG_OPT_NEWLINE )
-    to = stpcpy( to, "\n" );
+    to = stpncpy( to, "\n", 1 );
 
   *to = '\0';
 
