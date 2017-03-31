@@ -579,8 +579,10 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
       }
 
     } else {
-      char * derivation = lcfgutils_join_strings( ":", filename, linenum );
-      if ( derivation == NULL ) {
+      /* Simplest to use asprintf here since we have an unsigned int */
+      char * derivation = NULL;
+      int rc = asprintf( &derivation, "%s:%u", filename, linenum );
+      if ( rc < 0 || derivation == NULL ) {
         perror( "Failed to build LCFG derivation string" );
         exit(EXIT_FAILURE);
       }
