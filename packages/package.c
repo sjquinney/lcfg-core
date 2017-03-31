@@ -102,9 +102,8 @@ LCFGPackage * lcfgpackage_new(void) {
  * the specified package is greater than zero this function will have
  * no affect.
  *
- * This will call @c free() on each parameter of the structure (or
- * @c lcfgtemplate_destroy for the template parameter ) and then set each
- * value to be @c NULL.
+ * This will call @c free() on each parameter of the structure and
+ * then set each value to be @c NULL.
  *
  * If the value of the pointer passed in is @c NULL then the function
  * has no affect. This means it is safe to call with a pointer to a
