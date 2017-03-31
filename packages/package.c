@@ -24,6 +24,8 @@
 
 static LCFGStatus invalid_package( char ** msg, const char * base, ... ) {
 
+  const char * fmt = "Invalid package (%s)";
+
   va_list ap;
   va_start( ap, base );
 
@@ -34,7 +36,7 @@ static LCFGStatus invalid_package( char ** msg, const char * base, ... ) {
     exit(EXIT_FAILURE);
   }
 
-  lcfgutils_build_message( msg, "Invalid package (%s)", reason );
+  lcfgutils_build_message( msg, fmt, reason );
   free(reason);
 
   return LCFG_STATUS_ERROR;
