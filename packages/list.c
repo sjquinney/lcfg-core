@@ -404,7 +404,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
         lcfgpkglist_remove_next( pkglist, prev_node, &old_pkg );
 
       if ( remove_rc == LCFG_CHANGE_REMOVED ) {
-        lcfgpackage_destroy(old_pkg);
+        lcfgpackage_release(old_pkg);
         result = LCFG_CHANGE_REMOVED;
       } else {
         asprintf( msg, "Failed to remove old package" );
@@ -683,7 +683,6 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     }
 
     char * error_msg = NULL;
-    bool keep_package = true;
 
     LCFGPackage * pkg = NULL;
     LCFGStatus parse_status
@@ -735,14 +734,11 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
       if ( merge_status == LCFG_CHANGE_ERROR ) {
         ok = false;
-      } else if ( merge_status == LCFG_CHANGE_NONE ) {
-        keep_package = false;
       }
 
     }
 
     if (!ok) {
-      keep_package = false;
 
       if ( error_msg == NULL ) {
         asprintf( msg, "Error at line %u", linenum );
@@ -752,8 +748,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
     }
 
-    if (!keep_package)
-      lcfgpackage_destroy(pkg);
+    lcfgpackage_release(pkg);
 
     free(error_msg);
   }
