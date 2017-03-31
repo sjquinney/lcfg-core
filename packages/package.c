@@ -55,13 +55,13 @@ static const char * permitted_prefixes = "?+-=~";
 /**
  * @brief Create and initialise a new package
  *
- * Creates a new @c LCFGPackage struct and initialises the
- * parameters to the default values.
+ * Creates a new @c LCFGPackage and initialises the parameters to the
+ * default values.
  *
- * If the memory allocation for the new struct is not successful the
- * @c exit() function will be called with a non-zero value.
+ * If the memory allocation for the new structure is not successful
+ * the @c exit() function will be called with a non-zero value.
  *
- * @return Pointer to new @c LCFGPackage struct
+ * @return Pointer to new @c LCFGPackage
  *
  */
 
@@ -90,18 +90,18 @@ LCFGPackage * lcfgpackage_new(void) {
 /**
  * @brief Destroy the package
  *
- * When the specified @c LCFGPackage struct is no longer required
- * this will free all associated memory.
+ * When the specified @c LCFGPackage is no longer required this will
+ * free all associated memory.
  *
  * *Reference Counting:* There is support for very simple reference
- * counting which allows an @c LCFGPackage struct to appear in
- * multiple lists. Incrementing and decrementing that reference
- * counter is the responsibility of the container code. If the
- * reference count for the specified package is greater than zero
- * this function will have no affect.
+ * counting which allows an @c LCFGPackage to appear in multiple
+ * lists. Incrementing and decrementing that reference counter is the
+ * responsibility of the container code. If the reference count for
+ * the specified package is greater than zero this function will have
+ * no affect.
  *
- * This will call @c free() on each parameter of the struct (or @c
- * lcfgtemplate_destroy for the template parameter ) and then set each
+ * This will call @c free() on each parameter of the structure (or
+ * @c lcfgtemplate_destroy for the template parameter ) and then set each
  * value to be @c NULL.
  *
  * If the value of the pointer passed in is @c NULL then the function
@@ -109,7 +109,7 @@ LCFGPackage * lcfgpackage_new(void) {
  * package which has already been destroyed (or potentially was never
  * created).
  *
- * @param[in] res Pointer to @c LCFGPackage struct to be destroyed.
+ * @param[in] res Pointer to @c LCFGPackage to be destroyed.
  *
  */
 
@@ -149,7 +149,7 @@ void lcfgpackage_destroy(LCFGPackage * pkg) {
  * This is used to record a reference to the @c LCFGPackage, it
  * does this by simply incrementing the reference count.
  *
- * To avoid memory leaks, once the reference to the struct is no
+ * To avoid memory leaks, once the reference to the structure is no
  * longer required the @c lcfgpackage_release() function should be
  * called.
  *
@@ -169,7 +169,7 @@ void lcfgpackage_acquire( LCFGPackage * pkg ) {
  * This is used to release a reference to the @c LCFGPackage,
  * it does this by simply decrementing the reference count. If the
  * reference count reaches zero the @c lcfgpackage_destroy() function
- * will be called to clean up the memory associated with the struct.
+ * will be called to clean up the memory associated with the structure.
  *
  * If the value of the pointer passed in is @c NULL then the function
  * has no affect. This means it is safe to call with a pointer to a
@@ -195,18 +195,18 @@ void lcfgpackage_release( LCFGPackage * pkg ) {
 /**
  * @brief Clone the package
  *
- * Creates a new @c LCFGPackage struct and copies the values of
- * the parameters from the specified package. The values for the
- * parameters are copied (e.g. strings are duplicated using @c
- * strdup() ) so that a later change to a parameter in the source
+ * Creates a new @c LCFGPackage and copies the values of the
+ * parameters from the specified package. The values for the
+ * parameters are copied (e.g. strings are duplicated using
+ * @c strdup(3) ) so that a later change to a parameter in the source
  * package does not affect the new clone package.
  *
- * If the memory allocation for the new struct is not successful the
- * @c exit() function will be called with a non-zero value.
+ * If the memory allocation for the new structure is not successful
+ * the @c exit() function will be called with a non-zero value.
  *
- * @param[in] res Pointer to @c LCFGPackage struct to be cloned.
+ * @param[in] res Pointer to @c LCFGPackage to be cloned.
  *
- * @return Pointer to new @c LCFGPackage struct or NULL if copy fails.
+ * @return Pointer to new @c LCFGPackage or @c NULL if copy fails.
  *
  */
 
@@ -314,12 +314,12 @@ bool lcfgpackage_valid_name( const char * name ) {
 /**
  * @brief Check if the package has a name
  *
- * Checks if the specified @c LCFGPackage struct currently has a
+ * Checks if the specified @c LCFGPackage currently has a
  * value set for the @e name attribute. Although a name is required
  * for an LCFG package to be valid it is possible for the value of the
- * name to be set to @c NULL when the struct is first created.
+ * name to be set to @c NULL when the structure is first created.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return boolean which indicates if a package has a name
  *
@@ -334,15 +334,15 @@ bool lcfgpackage_has_name( const LCFGPackage * pkg ) {
 /**
  * @brief Get the name for the package
  *
- * This returns the value of the @e name parameter for the @c
- * LCFGPackage struct. If the package does not currently have a @e
- * name then the pointer returned will be @c NULL.
+ * This returns the value of the @e name parameter for the
+ * @c LCFGPackage. If the package does not currently have a
+ * @e name then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e name for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return The name for the package (possibly NULL).
  */
@@ -357,7 +357,7 @@ char * lcfgpackage_get_name( const LCFGPackage * pkg ) {
  * @brief Set the name for the package
  *
  * Sets the value of the @e name parameter for the @c LCFGPackage
- * struct to that specified. It is important to note that this does
+ * to that specified. It is important to note that this does
  * NOT take a copy of the string. Furthermore, once the value is set
  * the package assumes "ownership", the memory will be freed if the
  * name is further modified or the package is destroyed.
@@ -368,7 +368,7 @@ char * lcfgpackage_get_name( const LCFGPackage * pkg ) {
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] new_name String which is the new name
  *
  * @return boolean indicating success
@@ -427,10 +427,10 @@ bool lcfgpackage_valid_arch( const char * arch ) {
 /**
  * @brief Check if the package has an architecture 
  *
- * Checks if the specified @c LCFGPackage struct currently has a
+ * Checks if the specified @c LCFGPackage currently has a
  * value set for the @e arch attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return boolean which indicates if a package has an architecture
  *
@@ -445,17 +445,17 @@ bool lcfgpackage_has_arch( const LCFGPackage * pkg ) {
 /**
  * @brief Get the architecture for the package
  *
- * This returns the value of the @e arch parameter for the @c
- * LCFGPackage struct. If the package does not currently have an @e
- * arch then the pointer returned will be @c NULL.
+ * This returns the value of the @e arch parameter for the
+ * @c LCFGPackage. If the package does not currently have an
+ * @e arch then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e arch for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
- * @return The architecture for the package (possibly NULL).
+ * @return The architecture for the package (possibly @c NULL).
  */
 
 char * lcfgpackage_get_arch( const LCFGPackage * pkg ) {
@@ -468,7 +468,7 @@ char * lcfgpackage_get_arch( const LCFGPackage * pkg ) {
  * @brief Set the architecture for the package
  *
  * Sets the value of the @e arch parameter for the @c LCFGPackage
- * struct to that specified. It is important to note that this does
+ * to that specified. It is important to note that this does
  * NOT take a copy of the string. Furthermore, once the value is set
  * the package assumes "ownership", the memory will be freed if the
  * architecture is further modified or the package is destroyed.
@@ -479,7 +479,7 @@ char * lcfgpackage_get_arch( const LCFGPackage * pkg ) {
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] new_arch String which is the new architecture
  *
  * @return boolean indicating success
@@ -539,10 +539,10 @@ bool lcfgpackage_valid_version( const char * version ) {
 /**
  * @brief Check if the package has a version
  *
- * Checks if the specified @c LCFGPackage struct currently has a
+ * Checks if the specified @c LCFGPackage currently has a
  * value set for the @e version attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return boolean which indicates if a package has a version
  *
@@ -557,17 +557,17 @@ bool lcfgpackage_has_version( const LCFGPackage * pkg ) {
 /**
  * @brief Get the version for the package
  *
- * This returns the value of the @e version parameter for the @c
- * LCFGPackage struct. If the package does not currently have a @e
- * version then the pointer returned will be @c NULL.
+ * This returns the value of the @e version parameter for the
+ * @c LCFGPackage. If the package does not currently have a
+ * @e version then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e version for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
- * @return The version for the package (possibly NULL).
+ * @return The version for the package (possibly @c NULL).
  */
 
 char * lcfgpackage_get_version( const LCFGPackage * pkg ) {
@@ -580,7 +580,7 @@ char * lcfgpackage_get_version( const LCFGPackage * pkg ) {
  * @brief Set the version for the package
  *
  * Sets the value of the @e version parameter for the @c LCFGPackage
- * struct to that specified. It is important to note that this does
+ * to that specified. It is important to note that this does
  * NOT take a copy of the string. Furthermore, once the value is set
  * the package assumes "ownership", the memory will be freed if the
  * version is further modified or the package is destroyed.
@@ -591,7 +591,7 @@ char * lcfgpackage_get_version( const LCFGPackage * pkg ) {
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] new_version String which is the new version
  *
  * @return boolean indicating success
@@ -640,10 +640,10 @@ bool lcfgpackage_valid_release( const char * release ) {
 /**
  * @brief Check if the package has a release
  *
- * Checks if the specified @c LCFGPackage struct currently has a
+ * Checks if the specified @c LCFGPackage currently has a
  * value set for the @e release attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return boolean which indicates if a package has a release
  *
@@ -658,15 +658,15 @@ bool lcfgpackage_has_release( const LCFGPackage * pkg ) {
 /**
  * @brief Get the release for the package
  *
- * This returns the value of the @e release parameter for the @c
- * LCFGPackage struct. If the package does not currently have a @e
- * release then the pointer returned will be @c NULL.
+ * This returns the value of the @e release parameter for the
+ * @c LCFGPackage. If the package does not currently have a
+ * @e release then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e release for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return The release for the package (possibly NULL).
  */
@@ -681,7 +681,7 @@ char * lcfgpackage_get_release( const LCFGPackage * pkg ) {
  * @brief Set the release for the package
  *
  * Sets the value of the @e release parameter for the @c LCFGPackage
- * struct to that specified. It is important to note that this does
+ * to that specified. It is important to note that this does
  * NOT take a copy of the string. Furthermore, once the value is set
  * the package assumes "ownership", the memory will be freed if the
  * release is further modified or the package is destroyed.
@@ -692,7 +692,7 @@ char * lcfgpackage_get_release( const LCFGPackage * pkg ) {
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] new_release String which is the new release
  *
  * @return boolean indicating success
@@ -745,10 +745,10 @@ bool lcfgpackage_valid_prefix( char prefix ) {
 /**
  * @brief Check if the package has a prefix
  *
- * Checks if the specified @c LCFGPackage struct currently has a
+ * Checks if the specified @c LCFGPackage currently has a
  * value set for the @e prefix attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return boolean which indicates if a package has a prefix
  *
@@ -763,11 +763,11 @@ bool lcfgpackage_has_prefix( const LCFGPackage * pkg ) {
 /**
  * @brief Get the prefix for the package
  *
- * This returns the value of the @e prefix parameter for the @c
- * LCFGPackage struct. If the package does not currently have a @e
- * release then the null character @c '\0' will be returned.
+ * This returns the value of the @e prefix parameter for the
+ * @c LCFGPackage. If the package does not currently have a
+ * @e release then the null character @c '\0' will be returned.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return The prefix character for the package.
  */
@@ -783,10 +783,9 @@ char lcfgpackage_get_prefix( const LCFGPackage * pkg ) {
  *
  * Removes any prefix which has been previously specified for the
  * package specification. This is done by resetting the @c prefix
- * attribute for the @c LCFGPackage struct to be the null character @c
- * '\0'.
+ * attribute for the @c LCFGPackage to be the null character @c '\0'.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return boolean indicating success
  */
@@ -802,7 +801,7 @@ bool lcfgpackage_clear_prefix( LCFGPackage * pkg ) {
  * @brief Set the prefix for the package
  *
  * Sets the value of the @e prefix parameter for the @c LCFGPackage
- * struct to that specified. 
+ * to that specified. 
  *
  * Before changing the value of the @e prefix to be the new character
  * it will be validated using the @c lcfgpackage_valid_prefix()
@@ -810,7 +809,7 @@ bool lcfgpackage_clear_prefix( LCFGPackage * pkg ) {
  * occur, the @c errno will be set to @c EINVAL and the function will
  * return a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] new_prefix Character which is the new prefix
  *
  * @return boolean indicating success
@@ -883,10 +882,10 @@ bool lcfgpackage_valid_flags( const char * flags ) {
 /**
  * @brief Check if the package has any flags
  *
- * Checks if the specified @c LCFGPackage struct currently has a
+ * Checks if the specified @c LCFGPackage currently has a
  * value set for the @e flags attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return boolean which indicates if a package has flags
  *
@@ -901,10 +900,10 @@ bool lcfgpackage_has_flags( const LCFGPackage * pkg ) {
 /**
  * @brief Check if the package has a particular flag
  *
- * Checks if the specified @c LCFGPackage struct currently has a
+ * Checks if the specified @c LCFGPackage currently has a
  * particular flag enabled.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] flag Character to check
  *
  * @return boolean which indicates if a package has a flag set
@@ -922,14 +921,14 @@ bool lcfgpackage_has_flag( const LCFGPackage * pkg, char flag ) {
  * @brief Get the flags for the package
  *
  * This returns the value of the @e flags parameter for the @c
- * LCFGPackage struct. If the package does not currently have @e
+ * LCFGPackage. If the package does not currently have @e
  * flags then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e flags for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return The flags for the package (possibly NULL).
  */
@@ -944,7 +943,7 @@ char * lcfgpackage_get_flags( const LCFGPackage * pkg ) {
  * @brief Set the flags for the package
  *
  * Sets the value of the @e flags parameter for the @c LCFGPackage
- * struct to that specified. It is important to note that this does
+ * to that specified. It is important to note that this does
  * NOT take a copy of the string. Furthermore, once the value is set
  * the package assumes "ownership", the memory will be freed if the
  * flags are further modified or the package is destroyed.
@@ -955,7 +954,7 @@ char * lcfgpackage_get_flags( const LCFGPackage * pkg ) {
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] new_flags String which is the new flags
  *
  * @return boolean indicating success
@@ -982,9 +981,9 @@ bool lcfgpackage_set_flags( LCFGPackage * pkg, char * new_flags ) {
  * @brief Clear the flags for the package
  *
  * Sets the value of the @e flags parameter for the @c LCFGPackage
- * struct to be NULL
+ * to be NULL
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return boolean indicating success
  *
@@ -1010,7 +1009,7 @@ bool lcfgpackage_clear_flags( LCFGPackage * pkg ) {
  * The new string is passed to @c lcfgpackage_set_flags(), unlike that
  * function this does NOT assume "ownership" of the input string.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] extra_flags String of extra flags to be added
  *
  * @return boolean indicating success
@@ -1138,10 +1137,10 @@ bool lcfgpackage_valid_context( const char * ctx ) {
 /**
  * @brief Check if the package has a context
  *
- * Checks if the specified @c LCFGPackage struct currently has a
+ * Checks if the specified @c LCFGPackage currently has a
  * value set for the @e context attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return boolean which indicates if a package has a context
  *
@@ -1157,16 +1156,16 @@ bool lcfgpackage_has_context( const LCFGPackage * pkg ) {
  * @brief Get the context for the package
  *
  * This returns the value of the @e context parameter for the @c
- * LCFGPackage struct. If the package does not currently have a @e
+ * LCFGPackage. If the package does not currently have a @e
  * context then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e context for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
- * @return The context for the package (possibly NULL).
+ * @return The context for the package (possibly @c NULL).
  */
 
 char * lcfgpackage_get_context( const LCFGPackage * pkg ) {
@@ -1179,7 +1178,7 @@ char * lcfgpackage_get_context( const LCFGPackage * pkg ) {
  * @brief Set the context for the package
  *
  * Sets the value of the @e context parameter for the @c
- * LCFGPackage struct to that specified. It is important to note
+ * LCFGPackage to that specified. It is important to note
  * that this does NOT take a copy of the string. Furthermore, once the
  * value is set the package assumes "ownership", the memory will be
  * freed if the context is further modified or the package is destroyed.
@@ -1190,7 +1189,7 @@ char * lcfgpackage_get_context( const LCFGPackage * pkg ) {
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] new_ctx String which is the new context
  *
  * @return boolean indicating success
@@ -1217,7 +1216,7 @@ bool lcfgpackage_set_context( LCFGPackage * pkg, char * new_ctx ) {
  * @brief Add extra context information for the package
  *
  * Adds the extra context information to the value for the @e context
- * parameter in the @c LCFGPackage struct if it is not already
+ * parameter in the @c LCFGPackage if it is not already
  * found in the string.
  *
  * If not already present in the existing information a new context
@@ -1227,7 +1226,7 @@ bool lcfgpackage_set_context( LCFGPackage * pkg, char * new_ctx ) {
  * lcfgpackage_set_context(), unlike that function this does NOT
  * assume "ownership" of the input string.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] extra_context String which is the additional context
  *
  * @return boolean indicating success
@@ -1260,10 +1259,10 @@ bool lcfgpackage_add_context( LCFGPackage * pkg,
 /**
  * @brief Check if the package has derivation information
  *
- * Checks if the specified @c LCFGPackage struct currently has a
+ * Checks if the specified @c LCFGPackage currently has a
  * value set for the @e derivation attribute. 
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return boolean which indicates if a package has a derivation
  *
@@ -1278,15 +1277,15 @@ bool lcfgpackage_has_derivation( const LCFGPackage * pkg ) {
 /**
  * @brief Get the derivation for the package
  *
- * This returns the value of the @e derivation parameter for the @c
- * LCFGPackage struct. If the package does not currently have a @e
- * derivation then the pointer returned will be @c NULL.
+ * This returns the value of the @e derivation parameter for the
+ * @c LCFGPackage. If the package does not currently have a
+ * @e derivation then the pointer returned will be @c NULL.
  *
  * It is important to note that this is NOT a copy of the string,
  * changing the returned string will modify the @e derivation for the
  * package.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return The derivation for the package (possibly NULL).
  */
@@ -1300,13 +1299,13 @@ char * lcfgpackage_get_derivation( const LCFGPackage * pkg ) {
 /**
  * @brief Set the derivation for the package
  *
- * Sets the value of the @e derivation parameter for the @c
- * LCFGPackage struct to that specified. It is important to note
+ * Sets the value of the @e derivation parameter for the
+ * @c LCFGPackage to that specified. It is important to note
  * that this does NOT take a copy of the string. Furthermore, once the
  * value is set the package assumes "ownership", the memory will be
  * freed if the derivation is further modified or the package is destroyed.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] new_deriv String which is the new derivation
  *
  * @return boolean indicating success
@@ -1328,7 +1327,7 @@ bool lcfgpackage_set_derivation( LCFGPackage * pkg, char * new_deriv ) {
  * @brief Add extra derivation information for the package
  *
  * Adds the extra derivation information to the value for the @e
- * derivation parameter in the @c LCFGPackage struct if it is not
+ * derivation parameter in the @c LCFGPackage if it is not
  * already found in the string.
  *
  * If not already present in the existing information a new derivation
@@ -1337,7 +1336,7 @@ bool lcfgpackage_set_derivation( LCFGPackage * pkg, char * new_deriv ) {
  * lcfgpackage_set_derivation(), unlike that function this does NOT
  * assume "ownership" of the input string.
 
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] extra_deriv String which is the additional derivation
  *
  * @return boolean indicating success
@@ -1388,11 +1387,11 @@ bool lcfgpackage_add_derivation( LCFGPackage * pkg,
  * @brief Get the priority for the package
  *
  * This returns the value of the integer @e priority parameter for the
- * @c LCFGPackage struct. The priority is calculated using the
+ * @c LCFGPackage. The priority is calculated using the
  * context for the package (if any) along with the current active set
  * of contexts for the system.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return The priority for the package.
  */
@@ -1407,9 +1406,9 @@ int lcfgpackage_get_priority( const LCFGPackage * pkg ) {
  * @brief Set the priority for the package
  *
  * Sets the value of the @e priority parameter for the @c LCFGPackage
- * struct to that specified. 
+ * to that specified. 
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] new_prio Integer which is the new priority
  *
  * @return boolean indicating success
@@ -1437,7 +1436,7 @@ bool lcfgpackage_set_priority( LCFGPackage * pkg, int new_prio ) {
  * applicable for the specified list of contexts the priority will be
  * positive otherwise it will be negative.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  * @param[in] ctxlist List of LCFG contexts
  * @param[out] msg Pointer to any diagnostic messages
  *
@@ -1475,13 +1474,13 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkg,
  * @brief Check if the package is considered to be active
  *
  * Checks if the current value for the @c priority attribute in the @c
- * LCFGPackage struct is greater than or equal to zero.
+ * @c LCFGPackage is greater than or equal to zero.
  *
  * The priority is calculated using the value for the @c context
- * attribute and the list of currently active contexts, see @c
- * lcfgpackage_eval_priority() for details.
+ * attribute and the list of currently active contexts, see
+ * @c lcfgpackage_eval_priority() for details.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return boolean indicating if the package is active
  *
@@ -1537,7 +1536,7 @@ void lcfgpackage_set_defaults(LCFGPackage * pkg) {
  * wildcard '*' (asterisk) character will be used. When this string is
  * no longer required it must be freed.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return Pointer to new string (call @c free() when no longer required)
  *
@@ -1571,7 +1570,7 @@ char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
  * the name then this will return a @c NULL value. When this string is
  * no longer required it must be freed.
  *
- * @param[in] res Pointer to an @c LCFGPackage struct
+ * @param[in] res Pointer to an @c LCFGPackage
  *
  * @return Pointer to new string (call @c free() when no longer required)
  *
@@ -1696,6 +1695,39 @@ static bool walk_backwards_until( const char * input, size_t * len,
 
   return found;
 }
+
+/**
+ * @brief Create a new package from a string
+ *
+ * This parses an LCFG package specification as a string and creates a
+ * new @c LCFGPackage. The specification is expected to be of the
+ * following form: @c PrefixArch2/Name-Version-Release/Arch1:Flags[Context]
+ *
+ *   - @b Name - required - must match @c [A-Za-z][A-Za-z0-9_]*
+ *   - @b Architecture - optional - must match @c [a-zA-Z0-9_-]+ - for
+ *     historical reasons it can be specified in one of two ways, if
+ *     both are specified then @c arch2 is preferred over @c arch1.
+ *   - @b Version - required - must not contain a hyphen or whitespace,
+ *     may be a '*' wildcard.
+ *   - @b Release - required - must not contain a hyphen or whitespace,
+ *     may be a '*' wildcard.
+ *   - @b Prefix - optional - single character in @c [+-?=~] 
+ *   - @b Flags - optional - must match @c [a-zA-Z0-9]
+ *   - @b Context - optional - The contexts for which the package is
+ *     applicable, must be valid according to the
+ *     @c lcfgcontext_valid_expression() function.
+ *
+ * To avoid memory leaks, when the newly created package structure is
+ * no longer required you should call the @c lcfgpackage_release()
+ * function.
+ *
+ * @param[in] input The package specification string.
+ * @param[out] result Reference to the pointer for the @c LCFGPackage.
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
 
 LCFGStatus lcfgpackage_from_string( const char * input,
                                     LCFGPackage ** result,
@@ -1927,6 +1959,49 @@ LCFGStatus lcfgpackage_from_string( const char * input,
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
+/**
+ * @brief Format the package as a string
+ *
+ * Generates a new string representation of the @c LCFGPackage. For
+ * details of the format see the documentation for the
+ * @c lcfgpackage_from_string() function. Note that this function will
+ * never generate strings which contain a secondary architecture
+ * field. The package must have a name, if either of the version and
+ * release attributes are not specified then a wildcard '*' character
+ * will be used. If there is a value for the architecture it will only
+ * be used when it is different from the value (if any) specified for
+ * the default architecture.
+ *
+ * The following options are supported:
+ *   - @c LCFG_OPT_NOPREFIX - Do not include any prefix character.
+ *   - @c LCFG_OPT_NOCONTEXT - Do not include any context information.
+ *   - @c LCFG_OPT_NEWLINE - Add a newline at the end of the string.
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many package strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated. 
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required.
+ *
+ * @param[in] pkg Pointer to @c LCFGPackage
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
+
 ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
                                const char * defarch,
                                unsigned int options,
@@ -2083,6 +2158,47 @@ static char const * const pragma_derive  = "#pragma LCFG derive \"";
 static char const * const pragma_context = "#pragma LCFG context \"";
 static char const * const pragma_end     = "\"\n";
 
+/**
+ * @brief Format the package as CPP
+ *
+ * Generates a new C Preprocessor (CPP) representation of the
+ * @c LCFGPackage. This is used by the LCFG client when generating the
+ * rpmcfg file which is used as input for the updaterpms tool. The
+ * package must have a name, if either of the version and release
+ * attributes are not specified then a wildcard '*' character will be
+ * used. If there is a value for the architecture it will only
+ * be used when it is different from the value (if any) specified for
+ * the default architecture.
+ *
+ * This function does not support any additional formatting options,
+ * the input value for that argument will be ignored. The argument is
+ * present for API consistency with other output functions.
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many package strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated. 
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required.
+ *
+ * @param[in] pkg Pointer to @c LCFGPackage
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
+
 ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
                             const char * defarch,
                             unsigned int options,
@@ -2186,6 +2302,48 @@ ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
   return new_len;
 }
 
+/**
+ * @brief Format the package as XML
+ *
+ * Generates a new XML representation of the @c LCFGPackage. This is
+ * used by the LCFG server when generating the XML profile file which
+ * is used as input for the LCFG client. 
+ *
+ * The package must have a name, if either of the version and release
+ * attributes are not specified then a wildcard '*' character will be
+ * used. If there is a value for the architecture it will only
+ * be used when it is different from the value (if any) specified for
+ * the default architecture.
+ *
+ * This function does not support any additional formatting options,
+ * the input value for that argument will be ignored. The argument is
+ * present for API consistency with other output functions.
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many package strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated. 
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required.
+ *
+ * @param[in] pkg Pointer to @c LCFGPackage
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
+
 ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
                             const char * defarch,
                             unsigned int options,
@@ -2222,15 +2380,18 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
 
   new_len += ( rel_len + 7 ); /* <r></r> */
 
-  const char * arch = lcfgpackage_has_arch(pkg) ?
-                      lcfgpackage_get_arch(pkg) : defarch;
-
+  char * arch = NULL;
   size_t arch_len = 0;
-  if ( arch != NULL ) {
-    arch_len = strlen(arch);
+  if ( lcfgpackage_has_arch(pkg) ) {
 
-    if ( arch_len > 0 )
+    /* Not added to the spec when same as default architecture */
+    if ( isempty(defarch) ||
+         strcmp( pkg->arch, defarch ) != 0 ) {
+
+      arch = pkg->arch;
+      arch_len = strlen(arch);
       new_len += ( arch_len + 1 ); /* +1 for '/' separator */
+    }
 
   }
 
@@ -2371,65 +2532,170 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
 
 }
 
+static int compare_vstrings( const char * v1, const char * v2 ) {
+
+  bool v1_isempty = isempty(v1);
+  bool v2_isempty = isempty(v2);
+
+  int result = 0;
+
+  /* empty compares as "less than" any non-empty value */
+
+  if ( v1_isempty || v2_isempty ) {
+
+    if ( v1_isempty ) {
+      if ( !v2_isempty)
+        result = -1;
+    } else {
+      if ( v2_isempty )
+        result = 1;
+    }
+
+  } else {
+
+    bool v1_iswild  = ( strcmp( v1, LCFG_PACKAGE_WILDCARD ) == 0 );
+    bool v2_iswild  = ( strcmp( v2, LCFG_PACKAGE_WILDCARD ) == 0 );
+
+    /* wild compares as "less than" any non-wild value */
+
+    if ( v1_iswild || v2_iswild ) {
+
+      if ( v1_iswild ) {
+        if ( !v2_iswild)
+          result = -1;
+      } else {
+        if ( v2_iswild )
+          result = 1;
+      }
+
+    } else { /* neither is empty or wild */
+
+#ifdef HAVE_RPMLIB
+      result = rpmvercmp( v1, v2 );
+#else
+      result = strcmp( v1, v2 );
+#endif
+
+    }
+
+  }
+
+  return result;
+}
+
+/**
+ * @brief Compare the package versions
+ *
+ * This compares the versions and releases for two packages, this is
+ * mostly useful for sorting lists of packages. An integer value is
+ * returned which indicates lesser than, equal to or greater than in
+ * the same way as @c strcmp(3).
+ *
+ * Comparison rules are:
+ *   - Empty is "less than" non-empty
+ *   - Wild is "less than" non-empty non-wild
+ *   - When rpmlib is available the @c rpmvercmp() function is used
+ *   - Fall back to simple @c strcmp(3)
+ *
+ * @param[in] pkg1 Pointer to @c LCFGPackage
+ * @param[in] pkg2 Pointer to @c LCFGPackage
+ * 
+ * @return Integer (-1,0,+1) indicating lesser,equal,greater
+ *
+ */
+
 int lcfgpackage_compare_versions( const LCFGPackage * pkg1,
                                   const LCFGPackage * pkg2 ) {
   assert( pkg1 != NULL );
   assert( pkg2 != NULL );
 
-  int result = 0;
+  int result = compare_vstrings( pkg1->version, pkg2->version );
 
-  if ( lcfgpackage_has_version(pkg1) &&
-       lcfgpackage_has_version(pkg2) ) {
-
-    const char * ver1 = pkg1->version;
-    const char * ver2 = pkg2->version;
-
-#ifdef HAVE_RPMLIB
-    result = rpmvercmp( ver1, ver2 );
-#else
-    result = strcmp( ver1, ver2 );
-#endif
-
-  }
-
-  if ( result == 0 ) {
-    if ( lcfgpackage_has_release(pkg1) &&
-         lcfgpackage_has_release(pkg2) ) {
-
-      const char * rel1 = pkg1->release;
-      const char * rel2 = pkg2->release;
-
-#ifdef HAVE_RPMLIB
-      result = rpmvercmp( rel1, rel2 );
-#else
-      result = strcmp( rel1, rel2 );
-#endif
-
-    }
-  }
+  if ( result == 0 )
+    result = compare_vstrings( pkg1->release, pkg2->release );
 
   return result;
 }
+
+/**
+ * @brief Compare the package names
+ *
+ * This compares the names for two packages, this is mostly useful for
+ * sorting lists of packages. The names are compared in a
+ * case-independent way using the standard @c strcasecmp(3)
+ * function. If either package does not have a name then the empty
+ * string will be used.
+ *
+ * @param[in] pkg1 Pointer to @c LCFGPackage
+ * @param[in] pkg2 Pointer to @c LCFGPackage
+ * 
+ * @return Integer (-1,0,+1) indicating lesser,equal,greater
+ *
+ */
 
 int lcfgpackage_compare_names( const LCFGPackage * pkg1,
                                const LCFGPackage * pkg2 ) {
   assert( pkg1 != NULL );
   assert( pkg2 != NULL );
 
-  return strcasecmp( pkg1->name,
-                     pkg2->name );
+  const char * name1 = lcfgpackage_has_name(pkg1) ?
+                       lcfgpackage_get_name(pkg1) : "";
+  const char * name2 = lcfgpackage_has_name(pkg2) ?
+                       lcfgpackage_get_name(pkg2) : "";
+
+  return strcasecmp( name1, name2 );
 }
+
+/**
+ * @brief Compare the package architectures
+ *
+ * This compares the architectures for two packages, this is mostly
+ * useful for sorting lists of packages. The architectures are
+ * compared using the standard @c strcmp(3) function. If either
+ * package does not have an architecture then the empty string will be
+ * used.
+ *
+ * @param[in] pkg1 Pointer to @c LCFGPackage
+ * @param[in] pkg2 Pointer to @c LCFGPackage
+ * 
+ * @return Integer (-1,0,+1) indicating lesser,equal,greater
+ *
+ */
 
 int lcfgpackage_compare_archs( const LCFGPackage * pkg1,
                                const LCFGPackage * pkg2 ) {
   assert( pkg1 != NULL );
   assert( pkg2 != NULL );
 
-  const char * arch1 = lcfgpackage_has_arch(pkg1) ? pkg1->arch : LCFG_PACKAGE_NOVALUE;
-  const char * arch2 = lcfgpackage_has_arch(pkg2) ? pkg2->arch : LCFG_PACKAGE_NOVALUE;
+  const char * arch1 = lcfgpackage_has_arch(pkg1) ?
+                       lcfgpackage_get_arch(pkg1) : LCFG_PACKAGE_NOVALUE;
+  const char * arch2 = lcfgpackage_has_arch(pkg2) ?
+                       lcfgpackage_get_arch(pkg2) : LCFG_PACKAGE_NOVALUE;
 
   return strcmp( arch1, arch2 );
 }
+
+/**
+ * @brief Compare the packages
+ *
+ * This compares two packages using the name, architecture and
+ * versions, this is mostly useful for sorting lists of packages. The
+ * comparison uses these functions in the following order:
+ *
+ *   -  @c lcfgpackage_compare_names()
+ *   -  @c lcfgpackage_compare_archs()
+ *   -  @c lcfgpackage_compare_versions()
+ *
+ * with each subsequent function only being called if the previous
+ * returned a value of zero to indicate equality.
+ *
+ * @param[in] pkg1 Pointer to @c LCFGPackage
+ * @param[in] pkg2 Pointer to @c LCFGPackage
+ * 
+ * @return Integer (-1,0,+1) indicating lesser,equal,greater
+
+ * @return
+ */
 
 int lcfgpackage_compare( const LCFGPackage * pkg1,
                          const LCFGPackage * pkg2 ) {
@@ -2453,6 +2719,27 @@ int lcfgpackage_compare( const LCFGPackage * pkg1,
   return result;
 }
 
+/**
+ * @brief Test for package equality
+ *
+ * This can be used to test if two packages are considered to be 
+ * @e equal. The following fields are compared in this order:
+ *
+ *   - name - uses @c lcfgpackage_compare_names()
+ *   - architecture - uses @c lcfgpackage_compare_archs()
+ *   - version - uses @c lcfgpackage_compare_versions()
+ *   - flags - uses @c strcmp(3)
+ *   - context - uses @c strcmp(3)
+ *
+ * Note that prefix, derivation and priority are @b NOT compared.
+ *
+ * @param[in] pkg1 Pointer to @c LCFGPackage
+ * @param[in] pkg2 Pointer to @c LCFGPackage
+ *
+ * @return boolean indicating equality of packages
+ *
+ */
+
 bool lcfgpackage_equals( const LCFGPackage * pkg1,
                          const LCFGPackage * pkg2 ) {
   assert( pkg1 != NULL );
@@ -2464,27 +2751,27 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
 
   /* Architecture */
 
-  if ( !equals ) {
+  if ( !equals )
     return false;
-  } else {
+  else
     equals = ( lcfgpackage_compare_archs( pkg1, pkg2 ) == 0 );
-  }
 
   /* Version and Release */
 
-  if ( !equals ) {
+  if ( !equals )
     return false;
-  } else {
+  else
     equals = ( lcfgpackage_compare_versions( pkg1, pkg2 ) == 0 );
-  }
 
   /* Flags */
 
   if ( !equals ) {
     return false;
   } else {
-    const char * flags1 = lcfgpackage_has_flags(pkg1) ? pkg1->flags : LCFG_PACKAGE_NOVALUE;
-    const char * flags2 = lcfgpackage_has_flags(pkg2) ? pkg2->flags : LCFG_PACKAGE_NOVALUE;
+    const char * flags1 = lcfgpackage_has_flags(pkg1) ?
+                          pkg1->flags : LCFG_PACKAGE_NOVALUE;
+    const char * flags2 = lcfgpackage_has_flags(pkg2) ?
+                          pkg2->flags : LCFG_PACKAGE_NOVALUE;
 
     equals = ( strcmp( flags1, flags2 ) == 0 );
   }
@@ -2494,8 +2781,10 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
   if ( !equals ) {
     return false;
   } else {
-    const char * ctx1 = lcfgpackage_has_context(pkg1) ? pkg1->context : LCFG_PACKAGE_NOVALUE;
-    const char * ctx2 = lcfgpackage_has_context(pkg2) ? pkg2->context : LCFG_PACKAGE_NOVALUE;
+    const char * ctx1 = lcfgpackage_has_context(pkg1) ?
+                        pkg1->context : LCFG_PACKAGE_NOVALUE;
+    const char * ctx2 = lcfgpackage_has_context(pkg2) ?
+                        pkg2->context : LCFG_PACKAGE_NOVALUE;
 
     equals = ( strcmp( ctx1, ctx2 ) == 0 );
   }
@@ -2504,6 +2793,31 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
 
   return equals;
 }
+
+/**
+ * @brief Write formatted package to file stream
+ *
+ * This can be used to write out the package in various formats to the
+ * specified file stream which must have already been opened for
+ * writing. The following styles are supported:
+ * 
+ *   - @c LCFG_PKG_STYLE_XML - uses @c lcfgpackage_to_xml()
+ *   - @c LCFG_PKG_STYLE_CPP - uses @c lcfgpackage_to_cpp()
+ *   - @c LCFG_PKG_STYLE_RPM - uses @c lcfgpackage_to_rpm_filename()
+ *   - @c LCFG_PKG_STYLE_DEFAULT - uses @c lcfgpackage_to_string()
+ *
+ * See the documentation for each function to see which options are
+ * supported.
+ *
+ * @param[in] ctx Pointer to @c LCFGPackage
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] style Integer indicating required style of formatting
+ * @param[in] options Integer for any additional options
+ * @param[in] out Stream to which the context string should be written
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgpackage_print( const LCFGPackage * pkg,
                         const char * defarch,
@@ -2551,6 +2865,19 @@ bool lcfgpackage_print( const LCFGPackage * pkg,
 
   return ok;
 }
+
+/**
+ * @brief Assemble a package-specific message
+ *
+ * This can be used to assemble package-specific message, typically
+ * this is used for generating diagnostic error messages.
+ *
+ * @param[in] Pointer to @c LCFGPackage
+ * @param[in] Format string for message (and any additional arguments)
+ *
+ * @return Pointer to message string (call @c free(3) when no longer required)
+ *
+ */
 
 char * lcfgpackage_build_message( const LCFGPackage * pkg,
                                   const char *fmt, ... ) {
