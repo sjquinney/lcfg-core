@@ -52,9 +52,12 @@ static bool file_needs_update( const char * cur_file,
   /* open files and compare sizes first. If anything fails then just
      request the file is updated in the hope that will fix things. */
 
+  /* Declare here before using goto */
   bool needs_update = false;
+  FILE * fh1 = NULL;
+  FILE * fh2 = NULL;
 
-  FILE * fh1 = fopen( cur_file, "r" );
+  fh1 = fopen( cur_file, "r" );
   if ( fh1 == NULL ) {
     needs_update = true;
     goto cleanup;
@@ -64,7 +67,7 @@ static bool file_needs_update( const char * cur_file,
   long size1 = ftell(fh1);
   rewind(fh1);
 
-  FILE * fh2 = fopen( new_file, "r" );
+  fh2 = fopen( new_file, "r" );
   if ( fh2 == NULL ) {
     needs_update = true;
     goto cleanup;
@@ -107,8 +110,8 @@ static bool file_needs_update( const char * cur_file,
  * @brief Create a new package from an RPM filename
  *
  * This parses an RPM filename into the constituent parts: @e name,
- * @e version, @e release and @e architecture and creates a new 
- * @c LCFGPackage.
+ * @e version, @e release and @e architecture and creates a new
+ * @c LCFGPackage. Any leading directories in the string will be ignored.
  *
  * To avoid memory leaks, when the newly created package structure is
  * no longer required you should call the @c lcfgpackage_release()
@@ -429,6 +432,9 @@ ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
  * @c NULL) then the value returned by the @c default_architecture
  * function will be used.
  *
+ * The package list will be sorted so that the file is generated
+ * consistently.
+ *
  * The file is securely created using a temporary file and it is only
  * renamed to the target name if the contents differ. If the
  * modification time is specified (i.e. non-zero) the mtime for the
@@ -441,11 +447,11 @@ ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
  * @param[in] mtime Modification time to set on file (or zero)
  * @param[out] msg msg Pointer to any diagnostic messages.
  *
- * @return Status value indicating success of the process
+ * @return Integer value indicating type of change
  *
  */
 
-LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
+LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
                                    const char * defarch,
                                    const char * filename,
                                    time_t mtime,
@@ -456,6 +462,7 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
   char * tmpfile = lcfgutils_safe_tmpfile(filename);
 
   bool ok = true;
+  LCFGChange change = LCFG_CHANGE_ERROR;
 
   FILE * tmpfh = NULL;
   int tmpfd = mkstemp(tmpfile);
@@ -471,6 +478,11 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
   /* Ensure we have a default architecture */
   if ( defarch == NULL )
     defarch = default_architecture();
+
+  /* The sort is not just cosmetic - there needs to be a deterministic
+     order so that we can compare the RPM list for changes using cmp */
+
+  lcfgpkglist_sort(pkglist);
 
   ok = lcfgpkglist_print( pkglist,
                           defarch, 
@@ -494,10 +506,19 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
 
   /* rename tmpfile to target if different */
 
-  if ( ok && file_needs_update( filename, tmpfile ) ) {
+  if ( ok ) {
 
-    if ( rename( tmpfile, filename ) != 0 )
-      ok = false;
+    if ( file_needs_update( filename, tmpfile ) ) {
+
+      if ( rename( tmpfile, filename ) == 0 ) {
+        change = LCFG_CHANGE_MODIFIED;
+      } else {
+        ok = false;
+      }
+
+    } else {
+      change = LCFG_CHANGE_NONE;
+    }
 
   }
 
@@ -523,12 +544,21 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
     free(tmpfile);
   }
 
-  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+  return ( ok ? change : LCFG_CHANGE_ERROR );
 }
 
 /**
  * @brief Read package list from RPM directory
  *
+ * This reads the contents of a directory and generates a new
+ * @c LCFGPackageList using the names of files with the @c .rpm
+ * suffix. Note that it does not make any attempt to inspect the
+ * contents of the files to ensure that they really are valid
+ * RPMs. Dot files (starting with a '.') and any other files without
+ * the @c .rpm suffix will be ignored.
+ *
+ * An error will be returned if the directory does not exist or is
+ * inaccessible.
  *
  * @param[in] rpmdir Path to RPM directory
  * @param[out] result Pointer to @c LCFGPackageList
@@ -565,7 +595,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
   bool ok = true;
   *result = lcfgpkglist_new();
-  lcfgpkglist_set_merge_rules( *result, LCFG_PKGS_OPT_KEEP_ALL );
+  ok = lcfgpkglist_set_merge_rules( *result, LCFG_PKGS_OPT_KEEP_ALL );
 
   /* Scan the directory for any non-hidden files with .rpm suffix */
 
@@ -632,12 +662,23 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 }
 
 /**
- * @brief
+ * @brief Read package list from file
  *
+ * This reads the contents of an rpmlist file and generates a new
+ * @c LCFGPackageList. Blank lines and those beginning with a '#' (hash)
+ * character will be ignored. All other lines will be parsed as RPM
+ * filenames using the @c lcfgpackage_from_rpm_filename()
+ * function. The RPM filenames may have leading directories, they will
+ * be ignored.
  *
- * @param[in]
+ * An error will be returned if the file does not exist or is
+ * inaccessible.
  *
- * @return
+ * @param[in] rpmdir Path to rpmlist file
+ * @param[out] result Pointer to @c LCFGPackageList
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
  *
  */
 
@@ -647,7 +688,7 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 
   *result = NULL;
 
-  if ( filename == NULL || *filename == '\0' ) {
+  if ( isempty(filename) ) {
     lcfgutils_build_message( msg, "Invalid filename" );
     return LCFG_STATUS_ERROR;
   }
@@ -675,11 +716,11 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 
   /* Results */
 
-  *result = lcfgpkglist_new();
-  lcfgpkglist_set_merge_rules( *result,
-                    LCFG_PKGS_OPT_SQUASH_IDENTICAL | LCFG_PKGS_OPT_KEEP_ALL );
-
   bool ok = true;
+
+  *result = lcfgpkglist_new();
+  ok = lcfgpkglist_set_merge_rules( *result,
+                    LCFG_PKGS_OPT_SQUASH_IDENTICAL | LCFG_PKGS_OPT_KEEP_ALL );
 
   unsigned int linenum = 0;
   while( ok && getline( &line, &line_len, fp ) != -1 ) {
@@ -689,7 +730,7 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
     lcfgutils_trim_whitespace(trimmed);
 
     /* Ignore empty lines */
-    if ( *trimmed == '\0' ) {
+    if ( *trimmed == '\0' || *trimmed == '#' ) {
       free(trimmed);
       continue;
     }
@@ -718,7 +759,10 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
         exit(EXIT_FAILURE);
       }
 
-      lcfgpackage_set_derivation( pkg, derivation );
+      /* Ignore any problem with setting the derivation */
+      if ( !lcfgpackage_set_derivation( pkg, derivation ) ) {
+        free(derivation);
+      }
 
       char * merge_msg = NULL;
       if ( lcfgpkglist_merge_package( *result, pkg, &merge_msg )
@@ -762,6 +806,39 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
  * @param[in]
  *
  * @return
+ *
+ */
+
+/**
+ * @brief Write a package list to an rpmcfg file
+ *
+ * This can be used to create an rpmcfg file which is used as input by
+ * the updaterpms tool. The file is intended to be passed through the
+ * C Preprocessor (cpp), the packages are formatted using the
+ * @c lcfgpackage_to_cpp() function. The packages which are @e active for
+ * the current contexts are listed first. All other @e inactive
+ * packages are listed afterwards in an @c ALL_CONTEXTS block. They
+ * are used by the rpm cache stuff which needs to be able to cache all
+ * the packages, regardless of context.
+ *
+ * The package list will be sorted so that the file is generated
+ * consistently.
+ *
+ * The file is securely created using a temporary file and it is only
+ * renamed to the target name if the contents differ. If the
+ * modification time is specified (i.e. non-zero) the mtime for the
+ * file will always be updated. If the package list is empty then an
+ * empty file will be created.
+ *
+ * @param[in] active Pointer to active @c LCFGPackageList
+ * @param[in] inactive Pointer to inactive @c LCFGPackageList
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] filename Path of file to be created
+ * @param[in] rpminc
+ * @param[in] mtime Modification time to set on file (or zero)
+ * @param[out] msg msg Pointer to any diagnostic messages.
+ *
+ * @return Integer value indicating type of change
  *
  */
 
