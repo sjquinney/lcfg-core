@@ -2977,7 +2977,7 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
  *
  */
 
-char * default_architecture(void) {
+const char * default_architecture(void) {
 
   static char defarch[ARCH_MAXLEN] = "";
 
