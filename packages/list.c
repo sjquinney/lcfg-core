@@ -49,9 +49,10 @@ LCFGPackageList * lcfgpkglist_new(void) {
   }
 
   pkglist->merge_rules = 0;
-  pkglist->size = 0;
-  pkglist->head = NULL;
-  pkglist->tail = NULL;
+  pkglist->head        = NULL;
+  pkglist->tail        = NULL;
+  pkglist->size        = 0;
+  pkglist->_refcount   = 1;
 
   return pkglist;
 }
@@ -64,12 +65,61 @@ void lcfgpkglist_destroy(LCFGPackageList * pkglist) {
     LCFGPackage * pkg = NULL;
     if ( lcfgpkglist_remove_next( pkglist, NULL, &pkg )
          == LCFG_CHANGE_REMOVED ) {
-      lcfgpackage_release(pkg);
+      lcfgpackage_relinquish(pkg);
     }
   }
 
   free(pkglist);
   pkglist = NULL;
+
+}
+
+/**
+ * @brief Acquire reference to package list
+ *
+ * This is used to record a reference to the @c LCFGPackageList, it
+ * does this by simply incrementing the reference count.
+ *
+ * To avoid memory leaks, once the reference to the structure is no
+ * longer required the @c lcfgpkglist_release() function should be
+ * called.
+ *
+ * @param[in] pkg Pointer to @c LCFGPackageList
+ *
+ */
+
+void lcfgpackage_acquire( LCFGPackageList * pkglist ) {
+  assert( pkglist != NULL );
+
+  pkglist->_refcount += 1;
+}
+
+/**
+ * @brief Release reference to package list
+ *
+ * This is used to release a reference to the @c LCFGPackageList,
+ * it does this by simply decrementing the reference count. If the
+ * reference count reaches zero the @c lcfgpkglist_destroy() function
+ * will be called to clean up the memory associated with the structure.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * package list which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] pkg Pointer to @c LCFGPackageList
+ *
+ */
+
+void lcfgpkglist_relinquish( LCFGPackageList * pkglist ) {
+
+  if ( pkglist == NULL ) return;
+
+  if ( pkglist->_refcount > 0 )
+    pkglist->_refcount -= 1;
+
+  if ( pkglist->_refcount == 0 )
+    lcfgpkglist_destroy(pkglist);
 
 }
 
@@ -404,7 +454,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
         lcfgpkglist_remove_next( pkglist, prev_node, &old_pkg );
 
       if ( remove_rc == LCFG_CHANGE_REMOVED ) {
-        lcfgpackage_release(old_pkg);
+        lcfgpackage_relinquish(old_pkg);
         result = LCFG_CHANGE_REMOVED;
       } else {
         asprintf( msg, "Failed to remove old package" );
@@ -748,7 +798,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
     }
 
-    lcfgpackage_release(pkg);
+    lcfgpackage_relinquish(pkg);
 
     free(error_msg);
   }
