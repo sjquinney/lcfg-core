@@ -9,6 +9,8 @@
 #include "common.h"
 #include "context.h"
 
+const char * default_architecture(void);
+
 #define LCFG_PACKAGE_NOVALUE ""
 #define LCFG_PACKAGE_WILDCARD "*"
 
@@ -336,7 +338,7 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
                                      char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
+LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
                                    const char * defarch,
                                    const char * filename,
                                    time_t mtime,
