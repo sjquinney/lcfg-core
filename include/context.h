@@ -28,7 +28,7 @@ void lcfgcontext_acquire( LCFGContext * ctx );
 
 void lcfgcontext_destroy( LCFGContext * ctx );
 
-void lcfgcontext_release( LCFGContext * ctx );
+void lcfgcontext_relinquish( LCFGContext * ctx );
 
 /* Name */
 

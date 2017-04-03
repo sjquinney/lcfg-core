@@ -126,7 +126,7 @@ LCFGContextList * lcfgctxlist_new(void) {
  * this can be used to free all associated memory.
  *
  * This will iterate through the list to remove and destroy each @c
- * LCFGContextNode item, it also calls @c lcfgcontext_release() for
+ * LCFGContextNode item, it also calls @c lcfgcontext_relinquish() for
  * each context. Note that if the reference count on the context
  * reaches zero then the @c LCFGContext will also be destroyed.
  *
@@ -147,7 +147,7 @@ void lcfgctxlist_destroy(LCFGContextList * ctxlist) {
     LCFGContext * ctx = NULL;
     if ( lcfgctxlist_remove_next( ctxlist, NULL,
                                    &ctx ) == LCFG_CHANGE_REMOVED ) {
-      lcfgcontext_release(ctx);
+      lcfgcontext_relinquish(ctx);
     }
   }
 
@@ -286,7 +286,7 @@ LCFGChange lcfgctxlist_insert_next( LCFGContextList * ctxlist,
  * Note that, since a pointer to the @c LCFGContext is returned
  * to the caller, the reference count will still be at least 1. To
  * avoid memory leaks, when the struct is no longer required it should
- * be released by calling @c lcfgcontext_release().
+ * be released by calling @c lcfgcontext_relinquish().
  *
  * @param[in] ctxlist Pointer to @c LCFGContextList
  * @param[in] ctxnode Pointer to @c LCFGContextNode
@@ -492,7 +492,7 @@ LCFGChange lcfgctxlist_update( LCFGContextList * ctxlist,
       lcfgcontext_acquire(new_ctx);
       cur_node->context = new_ctx;
 
-      lcfgcontext_release(cur_ctx);
+      lcfgcontext_relinquish(cur_ctx);
 
       result = LCFG_CHANGE_MODIFIED;
     }
@@ -611,7 +611,7 @@ LCFGStatus lcfgctxlist_from_file( const char * filename,
 
     }
 
-    lcfgcontext_release(ctx);
+    lcfgcontext_relinquish(ctx);
 
     if ( status != LCFG_STATUS_OK ) break;
 

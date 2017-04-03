@@ -28,7 +28,7 @@ static LCFGStatus invalid_context( char ** msg, const char * reason ) {
  *
  * The reference count for the new struct is initialised to 1. To
  * avoid memory leaks, when you no longer require access to the struct
- * you should call @c lcfgcontext_release().
+ * you should call @c lcfgcontext_relinquish().
  *
  * If the memory allocation for the new struct is not successful the
  * @c exit() function will be called with a non-zero value.
@@ -62,7 +62,7 @@ LCFGContext * lcfgcontext_new(void) {
  * used to free all associated memory. It is important to note that
  * this function ignores the reference count and thus is almost
  * certainly @b NOT the function you need to call, you will nearly
- * always want @c lcfgcontext_release().
+ * always want @c lcfgcontext_relinquish().
  *
  * This will call @c free(3) on each parameter of the struct and then
  * set each value to be @c NULL.
@@ -98,7 +98,7 @@ void lcfgcontext_destroy( LCFGContext * ctx ) {
  * does this by simply incrementing the reference count.
  *
  * To avoid memory leaks, once the reference to the struct is no
- * longer required the @c lcfgcontext_release() function should be
+ * longer required the @c lcfgcontext_relinquish() function should be
  * called.
  *
  * @param[in] ctx Pointer to @c LCFGContext
@@ -128,7 +128,7 @@ void lcfgcontext_acquire( LCFGContext * ctx ) {
  *
  */
 
-void lcfgcontext_release( LCFGContext * ctx ) {
+void lcfgcontext_relinquish( LCFGContext * ctx ) {
 
   if ( ctx == NULL ) return;
 
@@ -501,7 +501,7 @@ bool lcfgcontext_set_priority( LCFGContext * ctx, int priority ) {
  * whitespace will be ignored.
  *
  * To avoid memory leaks, when the newly created context struct is no
- * longer required you should call the @c lcfgcontext_release()
+ * longer required you should call the @c lcfgcontext_relinquish()
  * function.
  *
  * @param[in] input The context specification string.
@@ -582,7 +582,7 @@ LCFGStatus lcfgcontext_from_string( const char * input, int priority,
     ok = lcfgcontext_set_priority( ctx, priority );
 
   if (!ok) {
-    lcfgcontext_release(ctx);
+    lcfgcontext_relinquish(ctx);
     ctx = NULL;
 
     if ( *msg == NULL )

@@ -309,7 +309,7 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
       }
     }
 
-    lcfgcontext_release(ctx);
+    lcfgcontext_relinquish(ctx);
     free(parse_msg);
 
     if (!ok) break;
