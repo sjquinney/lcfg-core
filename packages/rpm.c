@@ -268,9 +268,12 @@ ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
   const char * pkgarch;
   if ( lcfgpackage_has_arch(pkg) ) {
     pkgarch = lcfgpackage_get_arch(pkg);
-  } else {
+  } else if ( defarch != NULL ) {
     pkgarch = defarch;
+  } else {
+    pkgarch = default_architecture();
   }
+
   size_t pkgarchlen = strlen(pkgarch);
 
   /* +3 for the two '-' separators and one '.' */
@@ -361,6 +364,10 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
     ok = false;
     goto cleanup;
   }
+
+  /* Ensure we have a default architecture */
+  if ( defarch == NULL )
+    defarch = default_architecture();
 
   ok = lcfgpkglist_print( pkglist,
                           defarch, 

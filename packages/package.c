@@ -7,6 +7,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <strings.h>
+#include <sys/utsname.h>
 #include <errno.h>
 #include <assert.h>
 
@@ -2959,6 +2960,35 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
   free(pkg_as_str);
 
   return result;
+}
+
+#define ARCH_MAXLEN 8
+
+/**
+ * @brief Get the default processor architecture
+ *
+ * This returns the processor architecture (e.g. x86_64 or i686 )
+ * according to the @c machine field in the @c utsname structure
+ * returned by uname(2). The string will be a maximum of 8 characters
+ * in length which should be sufficient for any normal architecture
+ * identifier.
+ *
+ * @return Pointer to default architecture string
+ *
+ */
+
+char * default_architecture(void) {
+
+  static char defarch[ARCH_MAXLEN] = "";
+
+  if ( defarch[0] == '\0' ) {
+    struct utsname name;
+    uname(&name);
+    strncpy( defarch, name.machine, ARCH_MAXLEN );
+    defarch[ARCH_MAXLEN-1] = '\0';
+  }
+
+  return defarch;
 }
 
 /* eof */
