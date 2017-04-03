@@ -52,39 +52,75 @@ static bool file_needs_update( const char * cur_file,
   /* open files and compare sizes first. If anything fails then just
      request the file is updated in the hope that will fix things. */
 
+  bool needs_update = false;
+
   FILE * fh1 = fopen( cur_file, "r" );
-  if ( fh1 == NULL ) return true;
+  if ( fh1 == NULL ) {
+    needs_update = true;
+    goto cleanup;
+  }
 
   fseek(fh1, 0, SEEK_END);
   long size1 = ftell(fh1);
   rewind(fh1);
 
   FILE * fh2 = fopen( new_file, "r" );
-  if ( fh2 == NULL ) return true;
+  if ( fh2 == NULL ) {
+    needs_update = true;
+    goto cleanup;
+  }
 
   fseek(fh2, 0, SEEK_END);
   long size2 = ftell(fh2);
   rewind(fh2);
 
-  if (size1 != size2) return true;
+  if (size1 != size2) {
+    needs_update = true;
+    goto cleanup;
+  }
 
   /* Only if sizes are same do we bother comparing bytes */
-
-  bool needs_update = false;
 
   char tmp1, tmp2;
   long i;
   for ( i=0; i < size1; i++ ) {
-    fread( &tmp1, sizeof(char), 1, fh1 );
-    fread( &tmp2, sizeof(char), 1, fh2 );
-    if (tmp1 != tmp2) {
+    size_t s1 = fread( &tmp1, sizeof(char), 1, fh1 );
+    size_t s2 = fread( &tmp2, sizeof(char), 1, fh2 );
+    if ( s1 != s2 || tmp1 != tmp2 ) {
       needs_update = true;
       break;
     }
   }
 
+ cleanup:
+
+  if ( fh1 != NULL )
+    fclose(fh1);
+
+  if ( fh2 != NULL )
+    fclose(fh2);
+
   return needs_update;
 }
+
+/**
+ * @brief Create a new package from an RPM filename
+ *
+ * This parses an RPM filename into the constituent parts: @e name,
+ * @e version, @e release and @e architecture and creates a new 
+ * @c LCFGPackage.
+ *
+ * To avoid memory leaks, when the newly created package structure is
+ * no longer required you should call the @c lcfgpackage_release()
+ * function.
+ *
+ * @param[in] input The RPM filename string.
+ * @param[out] result Reference to the pointer for the @c LCFGPackage.
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
 
 LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
                                           LCFGPackage ** result,
@@ -243,6 +279,46 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
+/**
+ * @brief Format the package as an RPM filename.
+ *
+ * Generates a new RPM filename based on the @c LCFGPackage in the
+ * standard @c name-version-release.arch.rpm format.
+ *
+ * The following options are supported:
+ *   - @c LCFG_OPT_NEWLINE - Add a newline at the end of the string.
+ *
+ * Note that the filename must contain a value for each field. If the
+ * package is missing a name, version or release an error will
+ * occur. If the package does not have an architecture specified and
+ * the default architecture is set to @c NULL then the value as
+ * returned by the @c default_architecture() function will be used.
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many package strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated. 
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required.
+ *
+ * @param[in] pkg Pointer to @c LCFGPackage
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
+
 ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
                                      const char * defarch,
                                      unsigned int options,
@@ -340,6 +416,35 @@ ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
   return new_len;
 }
 
+/**
+ * @brief Write a package list to an RPM file
+ *
+ * This can be used to create an rpmlist file which is used as input
+ * by the updaterpms tool.
+ *
+ * Each package in the list is formatted as an RPM filename using the
+ * @c lcfgpackage_to_rpm_filename() function.
+ *
+ * If the default architecture is not specified (i.e. it is set to 
+ * @c NULL) then the value returned by the @c default_architecture
+ * function will be used.
+ *
+ * The file is securely created using a temporary file and it is only
+ * renamed to the target name if the contents differ. If the
+ * modification time is specified (i.e. non-zero) the mtime for the
+ * file will always be updated. If the package list is empty then an
+ * empty file will be created.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] filename Path file to be created
+ * @param[in] mtime Modification time to set on file (or zero)
+ * @param[out] msg msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
                                    const char * defarch,
                                    const char * filename,
@@ -347,8 +452,6 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
                                    char ** msg ) {
   assert( pkglist  != NULL );
   assert( filename != NULL );
-
-  *msg = NULL;
 
   char * tmpfile = lcfgutils_safe_tmpfile(filename);
 
@@ -423,14 +526,25 @@ LCFGStatus lcfgpkglist_to_rpmlist( const LCFGPackageList * pkglist,
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
+/**
+ * @brief Read package list from RPM directory
+ *
+ *
+ * @param[in] rpmdir Path to RPM directory
+ * @param[out] result Pointer to @c LCFGPackageList
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
                                      LCFGPackageList ** result,
                                      char ** msg ) {
 
   *result = NULL;
-  *msg = NULL;
 
-  if ( rpmdir == NULL || *rpmdir == '\0' ) {
+  if ( isempty(rpmdir) ) {
     lcfgutils_build_message( msg, "Invalid RPM directory" );
     return LCFG_STATUS_ERROR;
   }
@@ -516,6 +630,16 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
+
+/**
+ * @brief
+ *
+ *
+ * @param[in]
+ *
+ * @return
+ *
+ */
 
 LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
                                      LCFGPackageList ** result,
@@ -630,6 +754,16 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
+
+/**
+ * @brief
+ *
+ *
+ * @param[in]
+ *
+ * @return
+ *
+ */
 
 LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
                                   LCFGPackageList * inactive,
