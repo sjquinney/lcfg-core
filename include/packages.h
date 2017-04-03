@@ -361,12 +361,10 @@ struct LCFGPackageIterator {
   LCFGPackageList * pkglist;
   LCFGPackageNode * current;
   bool done;
-  bool manage;
 };
 typedef struct LCFGPackageIterator LCFGPackageIterator;
 
-LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * pkglist,
-                                       bool manage );
+LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * pkglist );
 
 void lcfgpkgiter_destroy( LCFGPackageIterator * iterator );
 

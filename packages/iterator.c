@@ -5,8 +5,7 @@
 
 #include "packages.h"
 
-LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * pkglist,
-                                       bool manage ) {
+LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * pkglist ) {
 
   LCFGPackageIterator * iterator = malloc( sizeof(LCFGPackageIterator) );
   if ( iterator == NULL ) {
@@ -14,21 +13,20 @@ LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * pkglist,
     exit(EXIT_FAILURE);
   }
 
+  lcfgpackagelist_acquire(pkglist);
+
   iterator->pkglist = pkglist;
   iterator->current = NULL;
   iterator->done    = false;
-  iterator->manage  = manage;
 
   return iterator;
 }
 
 void lcfgpkgiter_destroy( LCFGPackageIterator * iterator ) {
 
-  if ( iterator == NULL )
-    return;
+  if ( iterator == NULL ) return;
 
-  if ( iterator->manage && iterator->pkglist != NULL )
-    lcfgpkglist_destroy(iterator->pkglist);
+  lcfgpkglist_relinquish(iterator->pkglist);
 
   iterator->pkglist = NULL;
   iterator->current = NULL;
