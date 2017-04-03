@@ -17,13 +17,13 @@ int main(int argc, char *argv[]) {
     fprintf( stderr, "Failed to read rpm directory '%s': %s\n", rpmdir, msg );
   } else {
 
-    LCFGStatus write_rc = lcfgpkglist_to_rpmlist( pkglist,
+    LCFGChange write_rc = lcfgpkglist_to_rpmlist( pkglist,
                                                   NULL,
                                                   outfile, 
                                                   0,
                                                   &msg );
 
-    if ( write_rc == LCFG_STATUS_ERROR )
+    if ( write_rc == LCFG_CHANGE_ERROR )
       fprintf( stderr, "Failed to write rpmlist '%s': %s\n", outfile, msg );
 
   }
