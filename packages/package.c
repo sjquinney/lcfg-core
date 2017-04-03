@@ -64,6 +64,9 @@ static const char * permitted_prefixes = "?+-=~";
  * If the memory allocation for the new structure is not successful
  * the @c exit() function will be called with a non-zero value.
  *
+ * To avoid memory leaks, when you no longer require access to the
+ * package you should call @c lcfgpackage_relinquish()
+ *
  * @return Pointer to new @c LCFGPackage
  *
  */
