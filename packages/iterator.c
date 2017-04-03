@@ -35,7 +35,7 @@ LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * pkglist ) {
     exit(EXIT_FAILURE);
   }
 
-  lcfgpackagelist_acquire(pkglist);
+  lcfgpkglist_acquire(pkglist);
 
   iterator->pkglist = pkglist;
   iterator->current = NULL;
