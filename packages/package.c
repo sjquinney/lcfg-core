@@ -152,7 +152,7 @@ void lcfgpackage_destroy(LCFGPackage * pkg) {
  * does this by simply incrementing the reference count.
  *
  * To avoid memory leaks, once the reference to the structure is no
- * longer required the @c lcfgpackage_release() function should be
+ * longer required the @c lcfgpackage_relinquish() function should be
  * called.
  *
  * @param[in] pkg Pointer to @c LCFGPackage
@@ -182,7 +182,7 @@ void lcfgpackage_acquire( LCFGPackage * pkg ) {
  *
  */
 
-void lcfgpackage_release( LCFGPackage * pkg ) {
+void lcfgpackage_relinquish( LCFGPackage * pkg ) {
 
   if ( pkg == NULL ) return;
 
@@ -1720,7 +1720,7 @@ static bool walk_backwards_until( const char * input, size_t * len,
  *     @c lcfgcontext_valid_expression() function.
  *
  * To avoid memory leaks, when the newly created package structure is
- * no longer required you should call the @c lcfgpackage_release()
+ * no longer required you should call the @c lcfgpackage_relinquish()
  * function.
  *
  * @param[in] input The package specification string.

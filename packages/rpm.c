@@ -114,7 +114,7 @@ static bool file_needs_update( const char * cur_file,
  * @c LCFGPackage. Any leading directories in the string will be ignored.
  *
  * To avoid memory leaks, when the newly created package structure is
- * no longer required you should call the @c lcfgpackage_release()
+ * no longer required you should call the @c lcfgpackage_relinquish()
  * function.
  *
  * @param[in] input The RPM filename string.
@@ -274,7 +274,7 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
     if ( *msg == NULL )
       invalid_rpm( msg, "bad filename" );
 
-    lcfgpackage_release(*result);
+    lcfgpackage_relinquish(*result);
     *result = NULL;
 
   }
@@ -635,7 +635,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
       free(parse_msg);
 
-      lcfgpackage_release(pkg);
+      lcfgpackage_relinquish(pkg);
 
     }
 
@@ -776,7 +776,7 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
       free(merge_msg);
 
     }
-    lcfgpackage_release(pkg);
+    lcfgpackage_relinquish(pkg);
 
     free(trimmed);
   }

@@ -32,7 +32,7 @@ typedef struct LCFGPackage LCFGPackage;
 LCFGPackage * lcfgpackage_new(void);
 void lcfgpackage_destroy(LCFGPackage * pkg);
 void lcfgpackage_acquire( LCFGPackage * pkg );
-void lcfgpackage_release( LCFGPackage * pkg );
+void lcfgpackage_relinquish( LCFGPackage * pkg );
 
 LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkg );
 
@@ -233,12 +233,16 @@ struct LCFGPackageList {
   LCFGPackageNode * tail;
   unsigned int merge_rules;
   unsigned int size;
+  unsigned int _refcount;
 };
 
 typedef struct LCFGPackageList LCFGPackageList;
 
 LCFGPackageList * lcfgpkglist_new(void);
 void lcfgpkglist_destroy(LCFGPackageList * pkglist);
+
+void lcfgpackage_acquire( LCFGPackageList * pkglist );
+void lcfgpkglist_relinquish( LCFGPackageList * pkglist );
 
 unsigned int lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist );
 
