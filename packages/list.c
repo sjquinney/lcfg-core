@@ -88,7 +88,7 @@ void lcfgpkglist_destroy(LCFGPackageList * pkglist) {
  *
  */
 
-void lcfgpackage_acquire( LCFGPackageList * pkglist ) {
+void lcfgpkglist_acquire( LCFGPackageList * pkglist ) {
   assert( pkglist != NULL );
 
   pkglist->_refcount += 1;

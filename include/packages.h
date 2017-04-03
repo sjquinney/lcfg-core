@@ -241,7 +241,7 @@ typedef struct LCFGPackageList LCFGPackageList;
 LCFGPackageList * lcfgpkglist_new(void);
 void lcfgpkglist_destroy(LCFGPackageList * pkglist);
 
-void lcfgpackage_acquire( LCFGPackageList * pkglist );
+void lcfgpkglist_acquire( LCFGPackageList * pkglist );
 void lcfgpkglist_relinquish( LCFGPackageList * pkglist );
 
 unsigned int lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist );
