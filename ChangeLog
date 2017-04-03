@@ -1,6 +1,232 @@
-2017-03-30  SVN: new release
+2017-04-03  SVN: new release
 
-	* Release: 1.32.1
+	* Release: 1.33.0
+
+2017-04-03 13:13  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/iterator.c: Fixed call to lcfgpkglist_acquire
+
+2017-04-03 13:05  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/list.c: Fixed spec for
+	  lcfgpkglist_acquire
+
+2017-04-03 13:03  squinney@INF.ED.AC.UK
+
+	* packages/iterator.c, packages/package.c: Added docs
+
+2017-04-03 12:48  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/iterator.c: Moved package iterator
+	  to new ref counting for lists, this removes the need for the
+	  hacky 'manage' attribute
+
+2017-04-03 12:45  squinney@INF.ED.AC.UK
+
+	* packages/mkrpmlist.c, profile/profile.c: Call
+	  lcfgpkglist_relinquish instead of lcfgpkglist_destroy
+
+2017-04-03 12:40  squinney@INF.ED.AC.UK
+
+	* context/context.c, context/list.c, context/tools.c,
+	  include/context.h: Renamed lcfgcontext_release to
+	  lcfgcontext_relinquish for consistency with packages
+
+2017-04-03 12:40  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/package.c, packages/parse_pkgspec.c,
+	  packages/rpm.c: Renamed lcfgpackage_release as
+	  lcfgpackage_relinquish to avoid potential for confusion with
+	  lcfgpackage_set_release and lcfgpackage_get_release
+
+2017-04-03 12:39  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Added reference counting for package lists
+
+2017-04-03 12:20  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/rpm.c: Finished docs. Minor code tweaks to
+	  silence compiler warnings
+
+2017-04-03 12:19  squinney@INF.ED.AC.UK
+
+	* include/packages.h: Added spec for default_architecture
+
+2017-04-03 12:19  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Tweaked spec for default_architecture
+
+2017-04-03 12:18  squinney@INF.ED.AC.UK
+
+	* packages/mkrpmlist.c: lcfgpkglist_to_rpmlist now returns the type
+	  of change for the file
+
+2017-04-03 11:18  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/rpm.c: Added some more docs.
+
+2017-04-03 11:08  squinney@INF.ED.AC.UK
+
+	* packages/mkrpmlist.c: Example of how to generate an rpmlist file
+	  from a directory of RPMs
+
+2017-04-03 10:28  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/package.c, packages/rpm.c: Printing out rpm
+	  filenames always requires an architecture so make an effort to
+	  find the default architecture when it is not specified
+
+2017-03-31 16:38  squinney@INF.ED.AC.UK
+
+	* packages/rpm.c: Reverted how the package derivation is built
+	  lcfgpkglist_from_rpmlist, simpler to use asprintf
+
+2017-03-31 16:37  squinney@INF.ED.AC.UK
+
+	* context/lexer.l: Added function spec for vasprintf to silence
+	  warning
+
+2017-03-31 16:21  squinney@INF.ED.AC.UK
+
+	* packages/rpm.c: Made iterating over package lists in to_cpp a lot
+	  safer
+
+2017-03-31 16:15  squinney@INF.ED.AC.UK
+
+	* packages/rpm.c: fixed some return types and switched message
+	  building from asprintf to lcfgutils_build_message
+
+2017-03-31 14:28  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/rpm.c: Various minor improvements
+
+2017-03-31 14:27  squinney@INF.ED.AC.UK
+
+	* packages/parse_pkgspec.c: fixes for new reference counting
+
+2017-03-31 14:27  squinney@INF.ED.AC.UK
+
+	* packages/list.c: fixes for new reference counting
+
+2017-03-31 14:26  squinney@INF.ED.AC.UK
+
+	* packages/package.c: fixed docs for lcfgpackage_destroy
+
+2017-03-31 13:32  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/rpm.c: Various tweaks to standardise
+	  the API of functions
+
+2017-03-31 13:28  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Replaced various calls to stpcpy with stpncpy
+	  since we have the string lengths to hand
+
+2017-03-31 13:27  squinney@INF.ED.AC.UK
+
+	* context/context.c: replace call to stpcpy with stpncpy since we
+	  know how long a newline will be
+
+2017-03-31 12:40  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/parse_pkgspec.c,
+	  packages/rpm.c: Improved and standardised the
+	  lcfgpackage_from_rpm_filename function
+
+2017-03-31 12:39  squinney@INF.ED.AC.UK
+
+	* packages/package.c: made invalid_package more generic so that
+	  eventually the code can be shared
+
+2017-03-31 12:17  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Completed API docs
+
+2017-03-31 12:12  squinney@INF.ED.AC.UK
+
+	* context/context.c: minor doc fix
+
+2017-03-31 06:20  squinney@INF.ED.AC.UK
+
+	* include/common.h, lcfg.yml, packages/package.c: More docs for
+	  from_string function
+
+2017-03-30 17:59  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/resource.c: Removed isword function which is
+	  replaced with standard macro
+
+2017-03-30 17:55  squinney@INF.ED.AC.UK
+
+	* context/context.c, include/common.h, packages/package.c: moved
+	  isempty and isword macros into common header so they can be
+	  reused
+
+2017-03-30 15:14  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/search.c: fixed includes of headers
+
+2017-03-30 15:12  squinney@INF.ED.AC.UK
+
+	* packages/CMakeLists.txt, packages/list.c, packages/search.c:
+	  split out search functionality for easier maintenance
+
+2017-03-30 15:10  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Reworked the while-loops which iterate over the
+	  package list into for-loops so they are safer
+
+2017-03-30 14:55  squinney@INF.ED.AC.UK
+
+	* packages/list.c, packages/rpm.c: Added assertions to many
+	  functions to ensure they are called correctly
+
+2017-03-30 13:53  squinney@INF.ED.AC.UK
+
+	* context/list.c, include/context.h: renamed _insert_after to
+	  _insert_next and _remove_after to _remove_next for consistency
+	  with other core libs
+
+2017-03-30 13:52  squinney@INF.ED.AC.UK
+
+	* packages/package.c: put package spec docs back into correct place
+
+2017-03-30 13:36  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/package.c,
+	  packages/parse_pkgspec.c, profile/profile.c: Merged package style
+	  enums
+
+2017-03-30 13:36  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Improved printing of package lists as xml by
+	  also printing opening and closing tags
+
+2017-03-30 12:42  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/list.c, profile/profile.c:
+	  Introduced a new LCFGPkgStyle enum and use it in
+	  lcfgpackage_print and lcfgpkglist_print to control how the
+	  packages are printed out
+
+2017-03-30 12:42  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Introduced an invalid_package function to
+	  improve error message generation
+
+2017-03-30 12:22  squinney@INF.ED.AC.UK
+
+	* include/packages.h: Added lcfgpackage_acquire and
+	  lcfgpackage_release
+
+2017-03-30 10:52  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Added assertions where appropriate to protect
+	  against being called with a NULL package
+
+2017-03-30 06:13  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.32.1
 
 2017-03-30 06:07  squinney@INF.ED.AC.UK
 
