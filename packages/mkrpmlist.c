@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 
   }
 
-  lcfgpkglist_destroy(pkglist);
+  lcfgpkglist_relinquish(pkglist);
   free(msg);
 
   return 0;

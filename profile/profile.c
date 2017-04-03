@@ -38,16 +38,15 @@ LCFGProfile * lcfgprofile_new(void) {
 
 void lcfgprofile_destroy(LCFGProfile * profile) {
 
-  if ( profile == NULL )
-    return;
+  if ( profile == NULL ) return;
 
   lcfgcomplist_destroy(profile->components);
   profile->components = NULL;
 
-  lcfgpkglist_destroy(profile->active_packages);
+  lcfgpkglist_relinquish(profile->active_packages);
   profile->active_packages = NULL;
 
-  lcfgpkglist_destroy(profile->inactive_packages);
+  lcfgpkglist_relinquish(profile->inactive_packages);
   profile->inactive_packages = NULL;
 
   free(profile->published_by);
