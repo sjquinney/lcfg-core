@@ -1043,16 +1043,16 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
      value for that element is switched to true.
 
      This silently ignores any character with an ASCII code greater
-     than LCFG_PKGS_FLAGS_MAXCHAR but that's unlikely to be a huge
+     than LCFG_PKG_FLAGS_MAXCHAR but that's unlikely to be a huge
      problem. Other invalid characters not in the [a-zA-Z0-9] set will
      be flagged up as a problem when set_flags is called at the end of
      this function.
 
   */
 
-#define LCFG_PKGS_FLAGS_MAXCHAR 128
+#define LCFG_PKG_FLAGS_MAXCHAR 128
 
-  bool char_set[LCFG_PKGS_FLAGS_MAXCHAR] = { false };
+  bool char_set[LCFG_PKG_FLAGS_MAXCHAR] = { false };
 
   size_t cur_len = 0;
   if ( pkg->flags != NULL ) {
@@ -1060,7 +1060,7 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
 
     for ( i=0; i<cur_len; i++ ) {
       int val = (pkg->flags)[i] - '0';
-      if ( val < LCFG_PKGS_FLAGS_MAXCHAR ) {
+      if ( val < LCFG_PKG_FLAGS_MAXCHAR ) {
         if ( !char_set[val] ) {
           new_len++;
           char_set[val] = true;
@@ -1074,7 +1074,7 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
   size_t extra_len = strlen(extra_flags);
   for ( i=0; i<extra_len; i++ ) {
     int val = (extra_flags)[i] - '0';
-    if ( val < LCFG_PKGS_FLAGS_MAXCHAR ) {
+    if ( val < LCFG_PKG_FLAGS_MAXCHAR ) {
       if ( !char_set[val] ) {
         new_len++;
         char_set[val] = true;
@@ -1096,7 +1096,7 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
 
   char * to = result;
 
-  for ( i=0; i<LCFG_PKGS_FLAGS_MAXCHAR; i++ ) {
+  for ( i=0; i<LCFG_PKG_FLAGS_MAXCHAR; i++ ) {
     if ( char_set[i] ) {
       *to = i + '0';
       to++;

@@ -48,7 +48,7 @@ LCFGPackageList * lcfgpkglist_new(void) {
     exit(EXIT_FAILURE);
   }
 
-  pkglist->merge_rules = LCFG_PKGS_OPT_NONE;
+  pkglist->merge_rules = LCFG_PKG_OPT_NONE;
   pkglist->head        = NULL;
   pkglist->tail        = NULL;
   pkglist->size        = 0;
@@ -339,7 +339,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   /* Apply any prefix rules */
 
-  if ( merge_rules&LCFG_PKGS_OPT_USE_PREFIX ) {
+  if ( merge_rules&LCFG_PKG_OPT_USE_PREFIX ) {
 
     char cur_prefix = cur_pkg != NULL ?
                       lcfgpackage_get_prefix(cur_pkg) : '\0';
@@ -398,7 +398,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
   /* If the package in the list is identical then replace (updates
      the derivation) */
 
-  if ( merge_rules&LCFG_PKGS_OPT_SQUASH_IDENTICAL ) {
+  if ( merge_rules&LCFG_PKG_OPT_SQUASH_IDENTICAL ) {
 
     if ( lcfgpackage_equals( cur_pkg, new_pkg ) ) {
       remove_old = true;
@@ -411,7 +411,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   /* Might want to just keep everything */
 
-  if ( merge_rules&LCFG_PKGS_OPT_KEEP_ALL ) {
+  if ( merge_rules&LCFG_PKG_OPT_KEEP_ALL ) {
     append_new = true;
     accept     = true;
     goto apply;
@@ -419,7 +419,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   /* Use the priorities from the context evaluations */
 
-  if ( merge_rules&LCFG_PKGS_OPT_USE_PRIORITY ) {
+  if ( merge_rules&LCFG_PKG_OPT_USE_PRIORITY ) {
 
     int priority  = lcfgpackage_get_priority(new_pkg);
     int opriority = lcfgpackage_get_priority(cur_pkg);
@@ -695,9 +695,9 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
   pkglist = lcfgpkglist_new();
 
-  LCFGPkgOption merge_rules = LCFG_PKGS_OPT_SQUASH_IDENTICAL;
+  LCFGPkgOption merge_rules = LCFG_PKG_OPT_SQUASH_IDENTICAL;
   if (all_contexts)
-    merge_rules = merge_rules | LCFG_PKGS_OPT_KEEP_ALL;
+    merge_rules = merge_rules | LCFG_PKG_OPT_KEEP_ALL;
 
   lcfgpkglist_set_merge_rules( pkglist, merge_rules );
 
