@@ -1966,7 +1966,7 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 }
 
 /**
- * @brief Format the package as a string
+ * @brief Format the package as an LCFG specification
  *
  * Generates a new string representation of the @c LCFGPackage. For
  * details of the format see the documentation for the
@@ -2806,6 +2806,46 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
 
   return equals;
 }
+
+/**
+ * @brief Format the package as a string
+ *
+ * Generates a new string representation of the @c LCFGPackage in
+ * various styles. The following styles are supported:
+ * 
+ *   - @c LCFG_PKG_STYLE_XML - uses @c lcfgpackage_to_xml()
+ *   - @c LCFG_PKG_STYLE_CPP - uses @c lcfgpackage_to_cpp()
+ *   - @c LCFG_PKG_STYLE_RPM - uses @c lcfgpackage_to_rpm_filename()
+ *   - @c LCFG_PKG_STYLE_SPEC - uses @c lcfgpackage_to_spec()
+ *
+ * See the documentation for each function to see which options are
+ * supported.
+
+ * These functions use a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many package strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated. 
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required.
+ *
+ * @param[in] pkg Pointer to @c LCFGPackage
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] style Integer indicating required style of formatting
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
 
 ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
 			       const char * defarch,
