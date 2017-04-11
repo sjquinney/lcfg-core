@@ -2838,9 +2838,7 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
       str_options |= LCFG_OPT_NEWLINE;
     }
 
-  ssize_t rc = str_func->( pkg, defarch, str_options, result, size );
-
-  return rc;
+  return (*str_func)( pkg, defarch, str_options, result, size );
 }
 
 /**
