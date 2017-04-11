@@ -239,12 +239,12 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
  */
 
 typedef enum {
-  LCFG_PKG_OPT_NONE             = 0, /**< Null Option */
-  LCFG_PKG_OPT_KEEP_ALL         = 1, /**< Keep all packages */
-  LCFG_PKG_OPT_SQUASH_IDENTICAL = 2, /**< Ignore extra identical package */
-  LCFG_PKG_OPT_USE_PRIORITY     = 4, /**< Merge using context priority */
-  LCFG_PKG_OPT_USE_PREFIX       = 8  /**< Merge using package prefix */
-} LCFGPkgOption;
+  LCFG_PKG_RULE_NONE             = 0, /**< Null Option */
+  LCFG_PKG_RULE_KEEP_ALL         = 1, /**< Keep all packages */
+  LCFG_PKG_RULE_SQUASH_IDENTICAL = 2, /**< Ignore extra identical package */
+  LCFG_PKG_RULE_USE_PRIORITY     = 4, /**< Merge using context priority */
+  LCFG_PKG_RULE_USE_PREFIX       = 8  /**< Merge using package prefix */
+} LCFGPkgRule;
 
 struct LCFGPackageNode {
   LCFGPackage * pkg;
@@ -260,7 +260,7 @@ void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode);
 struct LCFGPackageList {
   LCFGPackageNode * head;
   LCFGPackageNode * tail;
-  LCFGPkgOption merge_rules;
+  LCFGPkgRule merge_rules;
   unsigned int size;
   unsigned int _refcount;
 };
@@ -273,10 +273,10 @@ void lcfgpkglist_destroy(LCFGPackageList * pkglist);
 void lcfgpkglist_acquire( LCFGPackageList * pkglist );
 void lcfgpkglist_relinquish( LCFGPackageList * pkglist );
 
-LCFGPkgOption lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist );
+LCFGPkgRule lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist );
 
 bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
-				  LCFGPkgOption new_rules )
+				  LCFGPkgRule new_rules )
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,

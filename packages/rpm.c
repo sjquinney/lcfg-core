@@ -595,7 +595,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
   bool ok = true;
   *result = lcfgpkglist_new();
-  ok = lcfgpkglist_set_merge_rules( *result, LCFG_PKG_OPT_KEEP_ALL );
+  ok = lcfgpkglist_set_merge_rules( *result, LCFG_PKG_RULE_KEEP_ALL );
 
   /* Scan the directory for any non-hidden files with .rpm suffix */
 
@@ -720,7 +720,7 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 
   *result = lcfgpkglist_new();
   ok = lcfgpkglist_set_merge_rules( *result,
-                    LCFG_PKG_OPT_SQUASH_IDENTICAL | LCFG_PKG_OPT_KEEP_ALL );
+                    LCFG_PKG_RULE_SQUASH_IDENTICAL | LCFG_PKG_RULE_KEEP_ALL );
 
   unsigned int linenum = 0;
   while( ok && getline( &line, &line_len, fp ) != -1 ) {

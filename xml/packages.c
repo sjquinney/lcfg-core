@@ -375,13 +375,13 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
   *active   = lcfgpkglist_new();
   *inactive = lcfgpkglist_new();
 
-  LCFGPkgOption active_merge_rules =
-    LCFG_PKG_OPT_SQUASH_IDENTICAL | LCFG_PKG_OPT_USE_PRIORITY;
+  LCFGPkgRule active_merge_rules =
+    LCFG_PKG_RULE_SQUASH_IDENTICAL | LCFG_PKG_RULE_USE_PRIORITY;
 
   lcfgpkglist_set_merge_rules( *active, active_merge_rules );
 
-  LCFGPkgOption inactive_merge_rules =
-    LCFG_PKG_OPT_SQUASH_IDENTICAL | LCFG_PKG_OPT_KEEP_ALL;
+  LCFGPkgRule inactive_merge_rules =
+    LCFG_PKG_RULE_SQUASH_IDENTICAL | LCFG_PKG_RULE_KEEP_ALL;
 
   lcfgpkglist_set_merge_rules( *inactive, inactive_merge_rules );
 

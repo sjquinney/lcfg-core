@@ -214,10 +214,10 @@ LCFGStatus lcfgprofile_apply_overrides( LCFGProfile * profile1,
   }
 
   /* default rules, only used when creating new empty lists */
-  LCFGPkgOption active_merge_rules =
-    LCFG_PKG_OPT_SQUASH_IDENTICAL | LCFG_PKG_OPT_USE_PRIORITY;
-  LCFGPkgOption inactive_merge_rules =
-    LCFG_PKG_OPT_SQUASH_IDENTICAL | LCFG_PKG_OPT_KEEP_ALL;
+  LCFGPkgRule active_merge_rules =
+    LCFG_PKG_RULE_SQUASH_IDENTICAL | LCFG_PKG_RULE_USE_PRIORITY;
+  LCFGPkgRule inactive_merge_rules =
+    LCFG_PKG_RULE_SQUASH_IDENTICAL | LCFG_PKG_RULE_KEEP_ALL;
 
   /* Merge active packages lists */
 
