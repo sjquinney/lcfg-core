@@ -1745,7 +1745,7 @@ bool lcfgresource_eval_priority( LCFGResource * res,
 
     ok = lcfgctxlist_eval_expression( ctxlist,
                                       lcfgresource_get_context(res),
-                                      &priority, &msg );
+                                      &priority, msg );
 
   }
 

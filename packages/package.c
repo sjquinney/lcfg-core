@@ -1460,7 +1460,7 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkg,
 
     ok = lcfgctxlist_eval_expression( ctxlist,
                                       pkg->context,
-                                      &priority, &msg );
+                                      &priority, msg );
 
   }
 
