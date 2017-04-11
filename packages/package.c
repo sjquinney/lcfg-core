@@ -2820,7 +2820,7 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
   LCFGPkgStrFunc str_func;
   LCFGOption str_options = options;
 
-  switch(style)
+  switch (style)
     {
     case LCFG_PKG_STYLE_XML:
       str_func = &lcfgpackage_to_xml;
@@ -2838,7 +2838,9 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
       str_options |= LCFG_OPT_NEWLINE;
     }
 
-  return str_func->( pkg, defarch, str_options, result, size );
+  ssize_t rc = str_func->( pkg, defarch, str_options, result, size );
+
+  return rc;
 }
 
 /**
