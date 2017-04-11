@@ -322,10 +322,7 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
  *
  */
 
-ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
-                                     const char * defarch,
-				     LCFGOption options,
-                                     char ** result, size_t * size ) {
+ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_STRFUNC_ARGS ) {
   assert( pkg != NULL );
 
   /* Name, version, release and architecture are required */
@@ -476,8 +473,8 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
   }
 
   /* For efficiency, ensure we have a default architecture */
-  char * default_arch = defarch != NULL ? defarch :
-                                          default_architecture();
+  if ( defarch == NULL )
+    defarch = default_architecture();
 
   /* The sort is not just cosmetic - there needs to be a deterministic
      order so that we can compare the RPM list for changes using cmp */
@@ -485,7 +482,7 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
   lcfgpkglist_sort(pkglist);
 
   ok = lcfgpkglist_print( pkglist,
-                          default_arch,
+                          defarch,
                           LCFG_PKG_STYLE_RPM,
                           LCFG_OPT_NEWLINE,
                           tmpfh );

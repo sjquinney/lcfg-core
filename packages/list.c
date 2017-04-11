@@ -580,9 +580,8 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
   /* For RPMs the default architecture is often required. For
      efficiency, look up the default architecture only once */
 
-  char * default_arch = defarch;
-  if ( default_arch == NULL && style == LCFG_PKG_STYLE_RPM )
-    default_arch = default_architecture();
+  if ( defarch == NULL && style == LCFG_PKG_STYLE_RPM )
+    defarch = default_architecture();
 
   bool ok = true;
 
@@ -601,7 +600,7 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
 
     if ( !lcfgpackage_is_active(pkg) && only_active ) continue;
 
-    ssize_t rc = lcfgpackage_to_string( pkg, default_arch, style, options,
+    ssize_t rc = lcfgpackage_to_string( pkg, defarch, style, options,
 					&lcfgspec, &buf_size );
 
     bool ok = ( rc >= 0 );

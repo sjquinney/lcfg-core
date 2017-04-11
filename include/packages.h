@@ -192,34 +192,28 @@ typedef enum {
   LCFG_PKG_STYLE_EVAL  /**< Shell variables */
 } LCFGPkgStyle;
 
-typedef ssize_t (*LCFGPkgStrFunc) ( const LCFGPackage * pkg,
-				    const char * defarch,
-				    LCFGOption options,
-				    char ** result, size_t * size );
-
-ssize_t lcfgpackage_to_string(const LCFGPackage * pkg,
-			      const char * defarch,
-			      LCFGPkgStyle style,
-			      LCFGOption options,
-			      char ** result, size_t * size )
+ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
+                               const char * defarch,
+                               LCFGPkgStyle style,
+                               LCFGOption options,
+                               char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
-ssize_t lcfgpackage_to_spec( const LCFGPackage * pkg,
-			     const char * defarch,
-			     LCFGOption options,
-			     char ** result, size_t * size )
+#define LCFG_PKG_STRFUNC_ARGS \
+    const LCFGPackage * pkg,\
+    const char * defarch,\
+    LCFGOption options,\
+    char ** result, size_t * size
+
+typedef ssize_t (*LCFGPkgStrFunc) ( LCFG_PKG_STRFUNC_ARGS );
+
+ssize_t lcfgpackage_to_spec( LCFG_PKG_STRFUNC_ARGS )
   __attribute__((warn_unused_result));
 
-ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
-                            const char * defarch,
-                            LCFGOption options,
-                            char ** result, size_t * size )
+ssize_t lcfgpackage_to_cpp( LCFG_PKG_STRFUNC_ARGS )
   __attribute__((warn_unused_result));
 
-ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
-                            const char * defarch,
-                            LCFGOption options,
-                            char ** result, size_t * size )
+ssize_t lcfgpackage_to_xml( LCFG_PKG_STRFUNC_ARGS )
   __attribute__((warn_unused_result));
 
 bool lcfgpackage_print( const LCFGPackage * pkg,
