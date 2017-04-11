@@ -20,42 +20,45 @@
 
 #define isword(CHR) ( isalnum(CHR) || CHR == '_' )
 
+/**
+ * @brief Status code
+ */
+
 typedef enum {
-  LCFG_STATUS_ERROR,
-  LCFG_STATUS_WARN,
-  LCFG_STATUS_OK
+  LCFG_STATUS_ERROR, /**< Unrecoverable error occurred */
+  LCFG_STATUS_WARN,  /**< Unexpected behaviour occurred which may require attention */
+  LCFG_STATUS_OK     /**< Success */
 } LCFGStatus;
 
+/**
+ * @brief State change code
+ */
+
 typedef enum {
-  LCFG_CHANGE_ERROR,
-  LCFG_CHANGE_NONE,
-  LCFG_CHANGE_MODIFIED,
-  LCFG_CHANGE_ADDED,
-  LCFG_CHANGE_REPLACED,
-  LCFG_CHANGE_REMOVED
+  LCFG_CHANGE_ERROR,    /**< Unrecoverable error occurred */
+  LCFG_CHANGE_NONE,     /**< Success - No change */
+  LCFG_CHANGE_MODIFIED, /**< Success - Modification */
+  LCFG_CHANGE_ADDED,    /**< Success - Addition */
+  LCFG_CHANGE_REPLACED, /**< Success - Replacement */
+  LCFG_CHANGE_REMOVED   /**< Success - Removal */
 } LCFGChange;
 
-/* Various options for functions which read in and write out resources */
+/**
+ * @brief Various options for functions which read in or write out
+ */
 
 typedef enum {
-  LCFG_OPT_NONE           =   0,
-  LCFG_OPT_NOCONTEXT      =   1,
-  LCFG_OPT_NOPREFIX       =   2,
-  LCFG_OPT_NEWLINE        =   4,
-  LCFG_OPT_NOVALUE        =   8,
-  LCFG_OPT_NOTEMPLATES    =  16,
-  LCFG_OPT_ALLOW_NOEXIST  =  32,
-  LCFG_OPT_ENCODE         =  64,
-  LCFG_OPT_ALL_CONTEXTS   = 128,
-  LCFG_OPT_USE_META       = 256
+  LCFG_OPT_NONE           =   0, /**< Null option */
+  LCFG_OPT_NOCONTEXT      =   1, /**< Ignore context */
+  LCFG_OPT_NOPREFIX       =   2, /**< Ignore prefix */
+  LCFG_OPT_NEWLINE        =   4, /**< Include newline */
+  LCFG_OPT_NOVALUE        =   8, /**< Ignore value */
+  LCFG_OPT_NOTEMPLATES    =  16, /**< Ignore templates */
+  LCFG_OPT_ALLOW_NOEXIST  =  32, /**< Allow object to not exist */
+  LCFG_OPT_ENCODE         =  64, /**< Encode data */
+  LCFG_OPT_ALL_CONTEXTS   = 128, /**< Include all contexts */
+  LCFG_OPT_USE_META       = 256  /**< Include metadata */
 } LCFGOption;
-
-typedef enum {
-  LCFG_TEST_ISTRUE,
-  LCFG_TEST_ISFALSE,
-  LCFG_TEST_ISEQ,
-  LCFG_TEST_ISNE
-} LCFGTest;
 
 #endif /* LCFG_COMMON_H */
 

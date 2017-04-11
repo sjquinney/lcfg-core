@@ -8,6 +8,17 @@
 #include "common.h"
 
 /**
+ * @brief Supported comparison operators for context query expressions
+ */
+
+typedef enum {
+  LCFG_TEST_ISTRUE,   /**< Value is true */
+  LCFG_TEST_ISFALSE,  /**< Value is false */
+  LCFG_TEST_ISEQ,     /**< Value is equal to specified string */
+  LCFG_TEST_ISNE      /**< Value is not equal to specified string */
+} LCFGTest;
+
+/**
  * @brief A structure to represent an LCFG context
  */
 
