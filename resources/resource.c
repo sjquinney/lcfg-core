@@ -1732,7 +1732,8 @@ bool lcfgresource_set_priority( LCFGResource * res, int priority ) {
 }
 
 bool lcfgresource_eval_priority( LCFGResource * res,
-                                 const LCFGContextList * ctxlist ) {
+                                 const LCFGContextList * ctxlist,
+				 char ** msg ) {
 
   bool ok = true;
 
@@ -1741,12 +1742,11 @@ bool lcfgresource_eval_priority( LCFGResource * res,
 
     /* Calculate the priority using the context expression for this
        resource. */
-    char * msg = NULL;
+
     ok = lcfgctxlist_eval_expression( ctxlist,
                                       lcfgresource_get_context(res),
                                       &priority, &msg );
 
-    free(msg); /* TODO: feed this back to caller */
   }
 
   if (ok)

@@ -278,7 +278,8 @@ bool lcfgresource_is_active( const LCFGResource * res )
   __attribute__((nonnull (1)));
 
 bool lcfgresource_eval_priority( LCFGResource * res,
-                                 const LCFGContextList * ctxlist )
+                                 const LCFGContextList * ctxlist,
+				 char ** msg )
   __attribute__((warn_unused_result));
 
 /* Resources: Output */

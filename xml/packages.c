@@ -416,8 +416,9 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
         /* Ignore empty package nodes */
         if ( pkg == NULL ) continue;
 
+	char * eval_msg = NULL;
         if ( !lcfgpackage_has_context(pkg) ||
-             lcfgpackage_eval_priority( pkg, ctxlist ) ) {
+             lcfgpackage_eval_priority( pkg, ctxlist, &eval_msg ) ) {
 
           LCFGChange rc;
           char * merge_errmsg = NULL;
@@ -450,9 +451,10 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
           status = LCFG_STATUS_ERROR;
 
           lcfgpackage_build_message( pkg,
-             "Failed to evaluate context expression" );
+				     "Failed to evaluate context: ",
+				     eval_msg );
         }
-
+	free(eval_msg);
       }
 
       if ( status != LCFG_STATUS_OK ) {

@@ -309,9 +309,8 @@ bool lcfgpackage_valid_name( const char * name ) {
   bool valid = ( !isempty(name) && isalnum(*name) );
 
   char * ptr;
-  for ( ptr = (char *) ( name + 1 ); valid && *ptr != '\0'; ptr++ ) {
+  for ( ptr = (char *) ( name + 1 ); valid && *ptr != '\0'; ptr++ )
     if ( !isnamechr(*ptr) ) valid = false;
-  }
 
   return valid;
 }
@@ -422,9 +421,8 @@ bool lcfgpackage_valid_arch( const char * arch ) {
   /* Permit [a-zA-Z0-9_-] characters */
 
   char * ptr;
-  for ( ptr = (char *) arch; valid && *ptr != '\0'; ptr++ ) {
+  for ( ptr = (char *) arch; valid && *ptr != '\0'; ptr++ )
     if ( !isword(*ptr) && *ptr != '-' ) valid = false;
-  }
 
   return valid;
 }
@@ -534,9 +532,8 @@ bool lcfgpackage_valid_version( const char * version ) {
      it is necessary to forbid '-' (hyphen) and any whitespace */
 
   char * ptr;
-  for ( ptr = (char *) version; valid && *ptr != '\0'; ptr++ ) {
+  for ( ptr = (char *) version; valid && *ptr != '\0'; ptr++ )
     if ( *ptr == '-' || isspace(*ptr) ) valid = false;
-  }
 
   return valid;
 }
@@ -877,9 +874,8 @@ bool lcfgpackage_valid_flags( const char * flags ) {
   /* This only permits [a-zA-Z0-9] characters */
 
   char * ptr;
-  for ( ptr = (char *) flags; valid && *ptr != '\0'; ptr++ ) {
+  for ( ptr = (char *) flags; valid && *ptr != '\0'; ptr++ )
     if ( !lcfgpackage_valid_flag_chr(*ptr) ) valid = false;
-  }
 
   return valid;
 }
@@ -1450,7 +1446,8 @@ bool lcfgpackage_set_priority( LCFGPackage * pkg, int new_prio ) {
  */
 
 bool lcfgpackage_eval_priority( LCFGPackage * pkg,
-                                const LCFGContextList * ctxlist ) {
+                                const LCFGContextList * ctxlist,
+				char ** msg ) {
   assert( pkg != NULL );
 
   bool ok = true;
@@ -1461,12 +1458,10 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkg,
     /* Calculate the priority using the context expression for this
        package spec. */
 
-    char * msg = NULL;
     ok = lcfgctxlist_eval_expression( ctxlist,
                                       pkg->context,
                                       &priority, &msg );
 
-    free(msg); /* TODO: feed this back to caller */
   }
 
   if (ok)
@@ -1585,15 +1580,21 @@ char * lcfgpackage_id( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
   char * id = NULL;
-  if ( lcfgpackage_has_arch(pkg) ) {
-    id = lcfgutils_join_strings( ".", pkg->name, pkg->arch );
+  if ( lcfgpackage_has_name(pkg) ) {
 
-    if ( id == NULL ) {
-      perror( "Failed to build LCFG package ID string" );
-      exit(EXIT_FAILURE);
+    if ( lcfgpackage_has_arch(pkg) ) {
+      id = lcfgutils_join_strings( ".",
+				   lcfgpackage_get_name(pkg),
+				   lcfgpackage_get_arch(pkg) );
+
+      if ( id == NULL ) {
+	perror( "Failed to build LCFG package ID string" );
+	exit(EXIT_FAILURE);
+      }
+    } else {
+      id = strdup( lcfgpackage_get_name(pkg) );
     }
-  } else if ( lcfgpackage_has_name(pkg) ) {
-    id = strdup( lcfgpackage_get_name(pkg) );
+
   }
 
   return id;
@@ -2252,11 +2253,12 @@ ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
     meta_len += ( pragma_context_len + ctx_len + pragma_end_len );
   }
 
-  if ( meta_len == 0 ) {
-    return spec_len;
-  } else {
-    meta_len += ( meta_start_len + meta_end_len );
-  }
+  /* If there is no metadata (i.e. length is zero) then there is
+     no more work to do. */
+
+  if ( meta_len == 0 ) return spec_len;
+
+  meta_len += ( meta_start_len + meta_end_len );
 
   size_t new_len = spec_len + meta_len;
 

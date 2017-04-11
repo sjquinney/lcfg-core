@@ -150,7 +150,8 @@ bool lcfgpackage_set_priority( LCFGPackage * pkg, int priority )
 bool lcfgpackage_is_active( const LCFGPackage * pkg );
 
 bool lcfgpackage_eval_priority( LCFGPackage * pkg,
-                                const LCFGContextList * ctxlist )
+                                const LCFGContextList * ctxlist,
+				char ** msg )
   __attribute__((warn_unused_result));
 
 void lcfgpackage_set_defaults(LCFGPackage *pkg);
