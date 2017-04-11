@@ -223,6 +223,7 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
  */
 
 typedef enum {
+  LCFG_PKGS_OPT_NONE             = 0, /**< Null Option */
   LCFG_PKGS_OPT_KEEP_ALL         = 1, /**< Keep all packages */
   LCFG_PKGS_OPT_SQUASH_IDENTICAL = 2, /**< Ignore extra identical package */
   LCFG_PKGS_OPT_USE_PRIORITY     = 4, /**< Merge using context priority */
