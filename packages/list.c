@@ -48,7 +48,7 @@ LCFGPackageList * lcfgpkglist_new(void) {
     exit(EXIT_FAILURE);
   }
 
-  pkglist->merge_rules = 0;
+  pkglist->merge_rules = LCFG_PKGS_OPT_NONE;
   pkglist->head        = NULL;
   pkglist->tail        = NULL;
   pkglist->size        = 0;
@@ -124,7 +124,7 @@ void lcfgpkglist_relinquish( LCFGPackageList * pkglist ) {
 }
 
 bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
-				  unsigned int new_rules ) {
+				  LCFGPkgOption new_rules ) {
   assert( pkglist != NULL );
 
   pkglist->merge_rules = new_rules;
@@ -132,7 +132,7 @@ bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
   return true;
 }
 
-unsigned int lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist ) {
+LCFGPkgOption lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist ) {
   assert( pkglist != NULL );
 
   return pkglist->merge_rules;
@@ -271,7 +271,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
   assert( pkglist != NULL );
   assert( new_pkg != NULL );
 
-  unsigned int merge_rules = lcfgpkglist_get_merge_rules(pkglist);
+  LCFGPkgOption merge_rules = lcfgpkglist_get_merge_rules(pkglist);
 
   *msg = NULL;
 
@@ -695,7 +695,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
   pkglist = lcfgpkglist_new();
 
-  unsigned int merge_rules = LCFG_PKGS_OPT_SQUASH_IDENTICAL;
+  LCFGPkgOption merge_rules = LCFG_PKGS_OPT_SQUASH_IDENTICAL;
   if (all_contexts)
     merge_rules = merge_rules | LCFG_PKGS_OPT_KEEP_ALL;
 

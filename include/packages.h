@@ -218,6 +218,17 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
 
 /* Package Lists */
 
+/**
+ * @brief Rules for merging a package into a list
+ */
+
+typedef enum {
+  LCFG_PKGS_OPT_KEEP_ALL         = 1, /**< Keep all packages */
+  LCFG_PKGS_OPT_SQUASH_IDENTICAL = 2, /**< Ignore extra identical package */
+  LCFG_PKGS_OPT_USE_PRIORITY     = 4, /**< Merge using context priority */
+  LCFG_PKGS_OPT_USE_PREFIX       = 8  /**< Merge using package prefix */
+} LCFGPkgOption;
+
 struct LCFGPackageNode {
   LCFGPackage * pkg;
   struct LCFGPackageNode * next;
@@ -232,7 +243,7 @@ void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode);
 struct LCFGPackageList {
   LCFGPackageNode * head;
   LCFGPackageNode * tail;
-  unsigned int merge_rules;
+  LCFGPkgOption merge_rules;
   unsigned int size;
   unsigned int _refcount;
 };
@@ -245,10 +256,10 @@ void lcfgpkglist_destroy(LCFGPackageList * pkglist);
 void lcfgpkglist_acquire( LCFGPackageList * pkglist );
 void lcfgpkglist_relinquish( LCFGPackageList * pkglist );
 
-unsigned int lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist );
+LCFGPkgOption lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist );
 
 bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
-				  unsigned int new_rules )
+				  LCFGPkgOption new_rules )
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
@@ -279,13 +290,6 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
 LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * pkglist,
                                         const char * name,
                                         const char * arch );
-
-/* Rules for merging a package into a list */
-
-#define LCFG_PKGS_OPT_KEEP_ALL         1
-#define LCFG_PKGS_OPT_SQUASH_IDENTICAL 2
-#define LCFG_PKGS_OPT_USE_PRIORITY     4
-#define LCFG_PKGS_OPT_USE_PREFIX       8
 
 LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
                                       LCFGPackage * pkg,
