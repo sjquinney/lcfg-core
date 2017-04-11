@@ -533,7 +533,7 @@ LCFGChange lcfgctxlist_update( LCFGContextList * ctxlist,
 LCFGStatus lcfgctxlist_from_file( const char * filename,
                                   LCFGContextList ** result,
 				  time_t * modtime,
-				  unsigned int options,
+				  LCFGOption options,
                                   char ** msg ) {
 
   *result = NULL;

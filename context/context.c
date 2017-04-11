@@ -630,7 +630,7 @@ LCFGStatus lcfgcontext_from_string( const char * input, int priority,
  */
 
 ssize_t lcfgcontext_to_string( const LCFGContext * ctx,
-                               unsigned int options,
+                               LCFGOption options,
                                char ** result, size_t * size ) {
   assert( ctx != NULL );
 

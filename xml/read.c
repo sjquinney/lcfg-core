@@ -387,7 +387,8 @@ LCFGStatus lcfgprofile_overrides_context( LCFGProfile * main_profile,
 
       size_t buf_size   = 0;
       char * ctx_as_str = NULL;
-      ssize_t ctx_len = lcfgcontext_to_string( ctx, 0, &ctx_as_str, &buf_size );
+      ssize_t ctx_len = lcfgcontext_to_string( ctx, LCFG_OPT_NONE,
+					       &ctx_as_str, &buf_size );
       if ( ctx_len < 0 ) {
 	asprintf( msg, "Failed to convert context to string" );
 	ok = false;

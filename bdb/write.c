@@ -180,7 +180,8 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       key.data = reskey;
       key.size = keylen;
 
-      char * type_as_str = lcfgresource_get_type_as_string( resource, 0 );
+      char * type_as_str =
+	lcfgresource_get_type_as_string( resource, LCFG_OPT_NONE );
       data.data = type_as_str;
       data.size = strlen(type_as_str);
 

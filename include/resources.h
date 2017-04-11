@@ -88,7 +88,7 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 char * lcfgresource_get_type_as_string( const LCFGResource * res,
-                                        unsigned int options )
+                                        LCFGOption options )
   __attribute__((nonnull (1)));
 
 bool lcfgresource_is_string(  const LCFGResource * res )
@@ -287,30 +287,30 @@ bool lcfgresource_eval_priority( LCFGResource * res,
 bool lcfgresource_print( const LCFGResource * res,
                          const char * prefix,
                          const char * style,
-                         unsigned int options,
+                         LCFGOption options,
                          FILE * out )
   __attribute__((nonnull (1,5))) __attribute__((warn_unused_result));
 
 bool lcfgresource_to_env( const LCFGResource * res,
                           const char * prefix,
-                          unsigned int options )
+                          LCFGOption options )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 ssize_t lcfgresource_to_export( const LCFGResource * res,
                                 const char * prefix,
-                                unsigned int options,
+                                LCFGOption options,
                                 char ** result, size_t * size )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 ssize_t lcfgresource_to_string( const LCFGResource * res,
                                 const char * prefix,
-                                unsigned int options,
+                                LCFGOption options,
                                 char ** str, size_t * size )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
 ssize_t lcfgresource_to_status( const LCFGResource * res,
                                 const char * prefix,
-                                unsigned int options,
+                                LCFGOption options,
                                 char ** str, size_t * size )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 

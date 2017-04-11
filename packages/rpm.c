@@ -324,7 +324,7 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
 
 ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
                                      const char * defarch,
-                                     unsigned int options,
+				     LCFGOption options,
                                      char ** result, size_t * size ) {
   assert( pkg != NULL );
 
@@ -893,7 +893,7 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
 
       ssize_t rc = lcfgpackage_to_cpp( pkg,
                                        defarch,
-                                       0,
+                                       LCFG_OPT_NONE,
                                        &buffer, &buf_size );
 
       if ( rc > 0 ) {

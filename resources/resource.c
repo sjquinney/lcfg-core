@@ -669,7 +669,7 @@ bool lcfgresource_is_true( const LCFGResource * res ) {
  */
 
 char * lcfgresource_get_type_as_string( const LCFGResource * res,
-                                        unsigned int options ) {
+                                        LCFGOption options ) {
 
   LCFGResourceType res_type = lcfgresource_get_type(res);
   const char * type_string = lcfgresource_type_names[res_type];
@@ -814,7 +814,7 @@ char * lcfgresource_get_template_as_string( const LCFGResource * res ) {
 
     size_t buf_size = 0;
     ssize_t rc = lcfgtemplate_to_string( lcfgresource_get_template(res),
-                                         NULL, 0,
+                                         NULL, LCFG_OPT_NONE,
                                          &as_str, &buf_size );
 
     if ( rc < 0 ) {
@@ -1763,7 +1763,7 @@ bool lcfgresource_is_active( const LCFGResource * res ) {
 
 bool lcfgresource_to_env( const LCFGResource * res,
                           const char * prefix,
-                          unsigned int options ) {
+                          LCFGOption options ) {
 
   /* Name is required */
 
@@ -1814,7 +1814,7 @@ bool lcfgresource_to_env( const LCFGResource * res,
 
 ssize_t lcfgresource_to_export( const LCFGResource * res,
                                 const char * prefix,
-                                unsigned int options,
+                                LCFGOption options,
                                 char ** result, size_t * size ) {
 
   /* Name is required */
@@ -1922,7 +1922,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
 ssize_t lcfgresource_to_status( const LCFGResource * res,
                                 const char * prefix,
-                                unsigned int options,
+                                LCFGOption options,
                                 char ** result, size_t * size ) {
 
   /* The entry for the value is the standard stringified form. This
@@ -1948,7 +1948,7 @@ ssize_t lcfgresource_to_status( const LCFGResource * res,
   if ( lcfgresource_get_type(res) != LCFG_RESOURCE_TYPE_STRING ||
        lcfgresource_has_comment(res) ) {
 
-    type_as_str = lcfgresource_get_type_as_string( res, 0 );
+    type_as_str = lcfgresource_get_type_as_string( res, LCFG_OPT_NONE );
 
     if ( type_as_str != NULL ) {
       type_len = strlen(type_as_str);
@@ -2047,7 +2047,7 @@ ssize_t lcfgresource_to_status( const LCFGResource * res,
 
 ssize_t lcfgresource_to_string( const LCFGResource * res,
                                 const char * prefix,
-                                unsigned int options,
+                                LCFGOption options,
                                 char ** result, size_t * size ) {
 
   ssize_t key_len =
@@ -2171,7 +2171,7 @@ ssize_t lcfgresource_to_string( const LCFGResource * res,
 bool lcfgresource_print( const LCFGResource * res,
                          const char * prefix,
                          const char * style,
-                         unsigned int options,
+                         LCFGOption options,
                          FILE * out ) {
 
   size_t buf_size = 0;

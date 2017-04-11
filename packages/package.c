@@ -2010,7 +2010,7 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
 ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
                                const char * defarch,
-                               unsigned int options,
+                               LCFGOption options,
                                char ** result, size_t * size ) {
   assert( pkg != NULL );
 
@@ -2211,7 +2211,7 @@ static char const * const pragma_end     = "\"\n";
 
 ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
                             const char * defarch,
-                            unsigned int options,
+                            LCFGOption options,
                             char ** result, size_t * size ) {
   assert( pkg != NULL );
 
@@ -2359,7 +2359,7 @@ ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
 
 ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
                             const char * defarch,
-                            unsigned int options,
+                            LCFGOption options,
                             char ** result, size_t * size ) {
   assert( pkg != NULL );
 
@@ -2835,7 +2835,7 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
 bool lcfgpackage_print( const LCFGPackage * pkg,
                         const char * defarch,
                         LCFGPkgStyle style,
-                        unsigned int options,
+                        LCFGOption options,
                         FILE * out ) {
   assert( pkg != NULL );
 
@@ -2918,7 +2918,7 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
   char * pkg_as_str  = NULL;
   if ( pkg != NULL && lcfgpackage_has_name(pkg) ) {
     size_t buf_size = 0;
-    if ( lcfgpackage_to_string( pkg, NULL, 0,
+    if ( lcfgpackage_to_string( pkg, NULL, LCFG_OPT_NONE,
 				&pkg_as_str, &buf_size ) < 0 ) {
       free(pkg_as_str);
       perror("Failed to build LCFG package message");

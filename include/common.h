@@ -37,15 +37,18 @@ typedef enum {
 
 /* Various options for functions which read in and write out resources */
 
-#define LCFG_OPT_NOCONTEXT      1
-#define LCFG_OPT_NOPREFIX       2
-#define LCFG_OPT_NEWLINE        4
-#define LCFG_OPT_NOVALUE        8
-#define LCFG_OPT_NOTEMPLATES   16
-#define LCFG_OPT_ALLOW_NOEXIST 32
-#define LCFG_OPT_ENCODE        64
-#define LCFG_OPT_ALL_CONTEXTS 128
-#define LCFG_OPT_USE_META     256
+typedef enum {
+  LCFG_OPT_NONE           =   0,
+  LCFG_OPT_NOCONTEXT      =   1,
+  LCFG_OPT_NOPREFIX       =   2,
+  LCFG_OPT_NEWLINE        =   4,
+  LCFG_OPT_NOVALUE        =   8,
+  LCFG_OPT_NOTEMPLATES    =  16,
+  LCFG_OPT_ALLOW_NOEXIST  =  32,
+  LCFG_OPT_ENCODE         =  64,
+  LCFG_OPT_ALL_CONTEXTS   = 128,
+  LCFG_OPT_USE_META       = 256
+} LCFGOption;
 
 typedef enum {
   LCFG_TEST_ISTRUE,

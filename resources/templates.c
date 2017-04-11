@@ -93,7 +93,7 @@ void lcfgtemplate_destroy(LCFGTemplate * head_template) {
 
 ssize_t lcfgtemplate_to_string( const LCFGTemplate * head_template,
                                 const char * prefix,
-                                unsigned int options,
+                                LCFGOption options,
                                 char ** result, size_t * size ) {
 
   LCFGTemplate * cur_template;

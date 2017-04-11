@@ -182,19 +182,19 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
 ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
                                const char * defarch,
-                               unsigned int options,
+                               LCFGOption options,
                                char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
 ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
                             const char * defarch,
-                            unsigned int options,
+                            LCFGOption options,
                             char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
 ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
                             const char * defarch,
-                            unsigned int options,
+                            LCFGOption options,
                             char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
@@ -209,7 +209,7 @@ typedef enum {
 bool lcfgpackage_print( const LCFGPackage * pkg,
                         const char * defarch,
                         LCFGPkgStyle style,
-                        unsigned int options,
+                        LCFGOption options,
                         FILE * out )
   __attribute__((warn_unused_result));
 
@@ -302,14 +302,14 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist );
 bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         const char * defarch,
                         LCFGPkgStyle style,
-                        unsigned int options,
+                        LCFGOption options,
                         FILE * out )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 				 LCFGPackageList ** result,
 				 const char * defarch,
-                                 unsigned int options,
+                                 LCFGOption options,
 				 char ** msg )
   __attribute__((warn_unused_result));
 
@@ -329,7 +329,7 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
 
 ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
                                      const char * defarch,
-                                     unsigned int options,
+                                     LCFGOption options,
                                      char ** result, size_t * size )
   __attribute__((warn_unused_result));
 

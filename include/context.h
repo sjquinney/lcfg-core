@@ -74,7 +74,7 @@ LCFGStatus lcfgcontext_from_string( const char * string, int priority,
   __attribute__((warn_unused_result));
 
 ssize_t lcfgcontext_to_string( const LCFGContext * ctx,
-                               unsigned int options,
+                               LCFGOption options,
                                char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
@@ -291,7 +291,7 @@ bool lcfgctxlist_print( const LCFGContextList * ctxlist,
 LCFGStatus lcfgctxlist_from_file( const char * filename,
                                   LCFGContextList ** result,
 				  time_t * modtime,
-				  unsigned int options,
+				  LCFGOption options,
                                   char ** msg )
   __attribute__((warn_unused_result));
 

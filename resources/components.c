@@ -237,7 +237,7 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
 
       ssize_t rc;
       if ( print_status ) {
-        rc = lcfgresource_to_status( res, comp->name, 0,
+        rc = lcfgresource_to_status( res, comp->name, LCFG_OPT_NONE,
                                      &buffer, &buf_size );
       } else if ( print_export ) {
         rc = lcfgresource_to_export( res, comp->name, LCFG_OPT_NEWLINE,
@@ -570,7 +570,7 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 
     if ( !lcfgresource_is_active(res) ) continue;
 
-    if ( !lcfgresource_to_env( res, res_prefix, 0 ) ) {
+    if ( !lcfgresource_to_env( res, res_prefix, LCFG_OPT_NONE ) ) {
       status = LCFG_STATUS_ERROR;
       asprintf( msg, "Failed to set environment variable" );
       break;
@@ -670,7 +670,7 @@ LCFGStatus lcfgcomponent_to_statusfile( LCFGComponent * comp,
 
     if ( !lcfgresource_is_active(res) ) continue;
 
-    ssize_t rc = lcfgresource_to_status( res, compname, 0,
+    ssize_t rc = lcfgresource_to_status( res, compname, LCFG_OPT_NONE,
 					 &buffer, &buf_size );
 
     if ( rc > 0 ) {

@@ -571,7 +571,7 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
 bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         const char * defarch,
                         LCFGPkgStyle style,
-                        unsigned int options,
+                        LCFGOption options,
                         FILE * out ) {
   assert( pkglist != NULL );
 
@@ -603,7 +603,7 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
 LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 				 LCFGPackageList ** result,
 				 const char * defarch,
-                                 unsigned int options,
+                                 LCFGOption options,
 				 char ** msg ) {
   assert( filename != NULL );
 

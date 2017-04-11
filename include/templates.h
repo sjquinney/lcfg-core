@@ -29,7 +29,7 @@ LCFGStatus lcfgtemplate_from_string( const char * input,
 
 ssize_t lcfgtemplate_to_string( const LCFGTemplate * head_template,
                                 const char * prefix,
-                                unsigned int options,
+                                LCFGOption options,
                                 char ** str, size_t * len )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
