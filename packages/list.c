@@ -575,10 +575,15 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         FILE * out ) {
   assert( pkglist != NULL );
 
+  bool only_active = !(options&LCFG_OPT_ALL_PRIORITIES);
+
   bool ok = true;
 
   if ( style == LCFG_PKG_STYLE_XML )
     ok = ( fputs( "  <packages>\n", out ) >= 0 );
+
+  char * lcfgspec = NULL;
+  size_t buf_size = 0;
 
   LCFGPackageNode * cur_node = NULL;
   for ( cur_node = lcfgpkglist_head(pkglist);
@@ -587,12 +592,24 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
 
     const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
-    if ( !lcfgpackage_is_active(pkg) ) continue;
+    if ( !lcfgpackage_is_active(pkg) && only_active ) continue;
 
-    ok = lcfgpackage_print( pkg, defarch, style, options, out );
+    ssize_t rc = lcfgpackage_to_string( pkg, defarch, style, options,
+					&lcfgspec, &buf_size );
+
+    bool ok = ( rc >= 0 );
+
+    if (ok ) {
+
+      if ( fputs( lcfgspec, out ) < 0 )
+	ok = false;
+
+    }
 
     if (!ok) break;
   }
+
+  free(lcfgspec);
 
   if ( ok && style == LCFG_PKG_STYLE_XML )
     ok = ( fputs( "  </packages>\n", out ) >= 0 );

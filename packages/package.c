@@ -2008,10 +2008,10 @@ LCFGStatus lcfgpackage_from_string( const char * input,
  *
  */
 
-ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
-                               const char * defarch,
-                               LCFGOption options,
-                               char ** result, size_t * size ) {
+ssize_t lcfgpackage_to_spec( const LCFGPackage * pkg,
+			     const char * defarch,
+			     LCFGOption options,
+			     char ** result, size_t * size ) {
   assert( pkg != NULL );
 
   if ( !lcfgpackage_has_name(pkg) ) return -1;
@@ -2220,7 +2220,7 @@ ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
                                 LCFG_OPT_NOPREFIX  |
                                 LCFG_OPT_NEWLINE );
 
-  ssize_t spec_len = lcfgpackage_to_string( pkg, defarch,
+  ssize_t spec_len = lcfgpackage_to_spec( pkg, defarch,
                                             spec_options,
                                             result, size );
 
@@ -2807,6 +2807,40 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
   return equals;
 }
 
+ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
+			       const char * defarch,
+			       LCFGPkgStyle style,
+			       LCFGOption options,
+			       char ** result, size_t * size ) {
+
+  assert( pkg != NULL );
+
+  /* Select the appropriate string function */
+
+  LCFGPkgStrFunc str_func;
+  LCFGOption str_options = options;
+
+  switch(style)
+    {
+    case LCFG_PKG_STYLE_XML:
+      str_func = &lcfgpackage_to_xml;
+      break;
+    case LCFG_PKG_STYLE_CPP:
+      str_func = &lcfgpackage_to_cpp;
+      break;
+    case LCFG_PKG_STYLE_RPM:
+      str_func = &lcfgpackage_to_rpm_filename;
+      str_options |= LCFG_OPT_NEWLINE;
+      break;
+    case LCFG_PKG_STYLE_SPEC:
+    default:
+      str_func = &lcfgpackage_to_spec;
+      str_options |= LCFG_OPT_NEWLINE;
+    }
+
+  return str_func->( pkg, defarch, str_options, result, size );
+}
+
 /**
  * @brief Write formatted package to file stream
  *
@@ -2817,7 +2851,7 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
  *   - @c LCFG_PKG_STYLE_XML - uses @c lcfgpackage_to_xml()
  *   - @c LCFG_PKG_STYLE_CPP - uses @c lcfgpackage_to_cpp()
  *   - @c LCFG_PKG_STYLE_RPM - uses @c lcfgpackage_to_rpm_filename()
- *   - @c LCFG_PKG_STYLE_DEFAULT - uses @c lcfgpackage_to_string()
+ *   - @c LCFG_PKG_STYLE_SPEC - uses @c lcfgpackage_to_spec()
  *
  * See the documentation for each function to see which options are
  * supported.
@@ -2842,28 +2876,8 @@ bool lcfgpackage_print( const LCFGPackage * pkg,
   char * lcfgspec = NULL;
   size_t buf_size = 0;
 
-  ssize_t rc = 0;
-
-  switch(style)
-    {
-    case LCFG_PKG_STYLE_XML:
-      rc = lcfgpackage_to_xml( pkg, defarch, options,
-                               &lcfgspec, &buf_size );
-      break;
-    case LCFG_PKG_STYLE_CPP:
-      rc = lcfgpackage_to_cpp( pkg, defarch, options,
-                               &lcfgspec, &buf_size );
-      break;
-    case LCFG_PKG_STYLE_RPM:
-      rc = lcfgpackage_to_rpm_filename( pkg, defarch, 
-                                        (options | LCFG_OPT_NEWLINE),
-                                        &lcfgspec, &buf_size );
-      break;
-    default:
-      rc = lcfgpackage_to_string( pkg, defarch,
-                                  (options | LCFG_OPT_NEWLINE),
-                                  &lcfgspec, &buf_size );
-    }
+  ssize_t rc = lcfgpackage_to_string( pkg, defarch, style, options,
+				      &lcfgspec, &buf_size );
 
   bool ok = ( rc >= 0 );
 
@@ -2918,7 +2932,7 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
   char * pkg_as_str  = NULL;
   if ( pkg != NULL && lcfgpackage_has_name(pkg) ) {
     size_t buf_size = 0;
-    if ( lcfgpackage_to_string( pkg, NULL, LCFG_OPT_NONE,
+    if ( lcfgpackage_to_spec( pkg, NULL, LCFG_OPT_NONE,
 				&pkg_as_str, &buf_size ) < 0 ) {
       free(pkg_as_str);
       perror("Failed to build LCFG package message");

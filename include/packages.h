@@ -180,10 +180,22 @@ LCFGStatus lcfgpackage_from_string( const char * input,
                                     char ** msg)
   __attribute__((warn_unused_result));
 
-ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
-                               const char * defarch,
-                               LCFGOption options,
-                               char ** result, size_t * size )
+ssize_t lcfgpackage_to_string(const LCFGPackage * pkg,
+			      const char * defarch,
+			      LCFGPkgStyle style,
+			      LCFGOption options,
+			      char ** result, size_t * size )
+  __attribute__((warn_unused_result));
+
+typedef ssize_t (*LCFGPkgStrFunc) ( const LCFGPackage * pkg,
+				    const char * defarch,
+				    LCFGOption options,
+				    char ** result, size_t * size );
+
+ssize_t lcfgpackage_to_spec( const LCFGPackage * pkg,
+			     const char * defarch,
+			     LCFGOption options,
+			     char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
 ssize_t lcfgpackage_to_cpp( const LCFGPackage * pkg,
@@ -199,7 +211,7 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
   __attribute__((warn_unused_result));
 
 typedef enum {
-  LCFG_PKG_STYLE_DEFAULT,
+  LCFG_PKG_STYLE_SPEC,
   LCFG_PKG_STYLE_RPM,
   LCFG_PKG_STYLE_CPP,
   LCFG_PKG_STYLE_XML,

@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     return(1);
   }
 
-  LCFGPkgStyle style = LCFG_PKG_STYLE_DEFAULT;
+  LCFGPkgStyle style = LCFG_PKG_STYLE_SPEC;
 
   bool rpm_name = false;
   bool print_all     = true;

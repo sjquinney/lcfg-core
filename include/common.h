@@ -57,7 +57,8 @@ typedef enum {
   LCFG_OPT_ALLOW_NOEXIST  =  32, /**< Allow object to not exist */
   LCFG_OPT_ENCODE         =  64, /**< Encode data */
   LCFG_OPT_ALL_CONTEXTS   = 128, /**< Include all contexts */
-  LCFG_OPT_USE_META       = 256  /**< Include metadata */
+  LCFG_OPT_ALL_PRIORITIES = 256, /**< Include all priorities */
+  LCFG_OPT_USE_META       = 512  /**< Include metadata */
 } LCFGOption;
 
 #endif /* LCFG_COMMON_H */
