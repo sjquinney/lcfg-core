@@ -180,6 +180,18 @@ LCFGStatus lcfgpackage_from_string( const char * input,
                                     char ** msg)
   __attribute__((warn_unused_result));
 
+/**
+ * @brief Package format styles
+ */
+
+typedef enum {
+  LCFG_PKG_STYLE_SPEC, /**< Standard LCFG package specification */
+  LCFG_PKG_STYLE_RPM,  /**< RPM filename */
+  LCFG_PKG_STYLE_CPP,  /**< LCFG CPP block (as used by updaterpms) */
+  LCFG_PKG_STYLE_XML,  /**< LCFG XML block (as used by client/server) */
+  LCFG_PKG_STYLE_EVAL  /**< Shell variables */
+} LCFGPkgStyle;
+
 ssize_t lcfgpackage_to_string(const LCFGPackage * pkg,
 			      const char * defarch,
 			      LCFGPkgStyle style,
@@ -209,14 +221,6 @@ ssize_t lcfgpackage_to_xml( const LCFGPackage * pkg,
                             LCFGOption options,
                             char ** result, size_t * size )
   __attribute__((warn_unused_result));
-
-typedef enum {
-  LCFG_PKG_STYLE_SPEC,
-  LCFG_PKG_STYLE_RPM,
-  LCFG_PKG_STYLE_CPP,
-  LCFG_PKG_STYLE_XML,
-  LCFG_PKG_STYLE_EVAL
-} LCFGPkgStyle;
 
 bool lcfgpackage_print( const LCFGPackage * pkg,
                         const char * defarch,
