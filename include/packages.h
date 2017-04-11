@@ -199,21 +199,21 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
                                char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
-#define LCFG_PKG_STRFUNC_ARGS \
+#define LCFG_PKG_TOSTR_ARGS \
     const LCFGPackage * pkg,\
     const char * defarch,\
     LCFGOption options,\
     char ** result, size_t * size
 
-typedef ssize_t (*LCFGPkgStrFunc) ( LCFG_PKG_STRFUNC_ARGS );
+typedef ssize_t (*LCFGPkgStrFunc) ( LCFG_PKG_TOSTR_ARGS );
 
-ssize_t lcfgpackage_to_spec( LCFG_PKG_STRFUNC_ARGS )
+ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS )
   __attribute__((warn_unused_result));
 
-ssize_t lcfgpackage_to_cpp( LCFG_PKG_STRFUNC_ARGS )
+ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS )
   __attribute__((warn_unused_result));
 
-ssize_t lcfgpackage_to_xml( LCFG_PKG_STRFUNC_ARGS )
+ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS )
   __attribute__((warn_unused_result));
 
 bool lcfgpackage_print( const LCFGPackage * pkg,
@@ -342,10 +342,7 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
                                           char ** msg)
   __attribute__((warn_unused_result));
 
-ssize_t lcfgpackage_to_rpm_filename( const LCFGPackage * pkg,
-                                     const char * defarch,
-                                     LCFGOption options,
-                                     char ** result, size_t * size )
+ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_TOSTR_ARGS )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,

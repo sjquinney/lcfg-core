@@ -2008,7 +2008,7 @@ LCFGStatus lcfgpackage_from_string( const char * input,
  *
  */
 
-ssize_t lcfgpackage_to_spec( LCFG_PKG_STRFUNC_ARGS ) {
+ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   assert( pkg != NULL );
 
   if ( !lcfgpackage_has_name(pkg) ) return -1;
@@ -2206,7 +2206,7 @@ static char const * const pragma_end     = "\"\n";
  *
  */
 
-ssize_t lcfgpackage_to_cpp( LCFG_PKG_STRFUNC_ARGS ) {
+ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
   assert( pkg != NULL );
 
   unsigned int spec_options = ( options            |
@@ -2351,7 +2351,7 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_STRFUNC_ARGS ) {
  *
  */
 
-ssize_t lcfgpackage_to_xml( LCFG_PKG_STRFUNC_ARGS ) {
+ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
   assert( pkg != NULL );
 
   if ( !lcfgpackage_has_name(pkg) ) return -1;

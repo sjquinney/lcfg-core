@@ -322,7 +322,7 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
  *
  */
 
-ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_STRFUNC_ARGS ) {
+ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_TOSTR_ARGS ) {
   assert( pkg != NULL );
 
   /* Name, version, release and architecture are required */
