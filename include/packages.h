@@ -14,16 +14,23 @@ const char * default_architecture(void);
 #define LCFG_PACKAGE_NOVALUE ""
 #define LCFG_PACKAGE_WILDCARD "*"
 
+/**
+ * @brief A structure to represent an LCFG Package
+ *
+ */
+
 struct LCFGPackage {
-  char * name;
-  char * arch;
-  char * version;
-  char * release;
-  char * flags;
-  char * context;
-  char * derivation;
-  char prefix;
-  int priority;
+  /*@{*/
+  char * name;       /**< Name (required) */
+  char * arch;       /**< Architecture (e.g. x86_64 or i686) */
+  char * version;    /**< Version */
+  char * release;    /**< Release (not used on all platforms) */
+  char * flags;      /**< Flags - controls behaviour of package tool (e.g. updaterpms) */
+  char * context;    /**< Context expression - when this package is applicable */
+  char * derivation; /**< Derivation - where this package was specified */
+  char prefix;       /**< Prefix - primary merge conflict resolution for multiple specifications (single alpha-numeric character) */
+  int priority;      /**< Priority - result of evaluating context expression, secondary merge conflict resolution */
+  /*@}*/
   unsigned int _refcount;
 };
 
@@ -182,6 +189,10 @@ LCFGStatus lcfgpackage_from_string( const char * input,
 
 /**
  * @brief Package format styles
+ *
+ * This can be used to control the format 'style' which is used when a
+ * package is formatted as a string.
+ *
  */
 
 typedef enum {
@@ -240,8 +251,12 @@ typedef enum {
   LCFG_PKG_RULE_USE_PREFIX       = 8  /**< Merge using package prefix */
 } LCFGPkgRule;
 
+/**
+ * @brief A structure to wrap an LCFG package as a single-linked list item
+ */
+
 struct LCFGPackageNode {
-  LCFGPackage * pkg;
+  LCFGPackage * pkg; /**< Pointer to the package structure */
   struct LCFGPackageNode * next;
 };
 
@@ -251,11 +266,17 @@ LCFGPackageNode * lcfgpkgnode_new(LCFGPackage * pkg);
 
 void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode);
 
+/**
+ * @brief A structure for storing LCFG packages as a single-linked list
+ */
+
 struct LCFGPackageList {
-  LCFGPackageNode * head;
-  LCFGPackageNode * tail;
-  LCFGPkgRule merge_rules;
-  unsigned int size;
+  /*@{*/
+  LCFGPackageNode * head;  /**< The first context in the list */
+  LCFGPackageNode * tail;  /**< The last context in the list */
+  LCFGPkgRule merge_rules; /**< Rules which control how packages are merged */
+  unsigned int size;       /**< The length of the list */
+  /*@}*/
   unsigned int _refcount;
 };
 
@@ -283,14 +304,112 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
                                     LCFGPackage    ** pkg )
   __attribute__((warn_unused_result));
 
+/**
+ * @brief Retrieve the first package in the list
+ *
+ * This is a simple macro which can be used to get the first package
+ * node structure in the list. Note that if the list is empty this
+ * will be the @c NULL value. To retrieve the package from this node
+ * use @c lcfgpkglist_package()
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ *
+ * @return Pointer to first @c LCFGPackageNode structure in list
+ *
+ */
+
 #define lcfgpkglist_head(pkglist) ((pkglist)->head)
+
+/**
+ * @brief Retrieve the last package in the list
+ *
+ * This is a simple macro which can be used to get the last package
+ * node structure in the list. Note that if the list is empty this
+ * will be the @c NULL value. To retrieve the package from this node
+ * use @c lcfgpkglist_package()
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ *
+ * @return Pointer to last @c LCFGPackageNode structure in list
+ *
+ */
+
 #define lcfgpkglist_tail(pkglist) ((pkglist)->tail)
+
+/**
+ * @brief Get the number of items in the package list
+ *
+ * This is a simple macro which can be used to get the length of the
+ * single-linked package list.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ *
+ * @return Integer length of the package list
+ *
+ */
+
 #define lcfgpkglist_size(pkglist) ((pkglist)->size)
+
+/**
+ * @brief Test if the package list is empty
+ *
+ * This is a simple macro which can be used to test if the
+ * single-linked package list contains any items.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ *
+ * @return Boolean which indicates whether the list contains any items
+ *
+ */
 
 #define lcfgpkglist_is_empty(pkglist) (pkglist == NULL || (pkglist)->size == 0)
 
+/**
+ * @brief Retrieve the next package node in the list
+ *
+ * This is a simple macro which can be used to fetch the next node in
+ * the single-linked package list for a given node. If the node
+ * specified is the final item in the list this will return a @c NULL
+ * value.
+ *
+ * @param[in] pkgnode Pointer to current @c LCFGPackageNode
+ *
+ * @return Pointer to next @c LCFGPackageNode
+ */
+
 #define lcfgpkglist_next(pkgnode)     ((pkgnode)->next)
+
+/**
+ * @brief Retrieve the package for a list node
+ *
+ * This is a simple macro which can be used to get the package
+ * structure from the specified node. 
+ *
+ * Note that this does @b NOT increment the reference count for the
+ * returned package structure. To retain the package call the
+ * @c lcfgpackage_acquire() function.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageNode
+ *
+ * @return Pointer to @c LCFGPackage structure
+ *
+ */
+
 #define lcfgpkglist_package(pkgnode)  ((pkgnode)->pkg)
+
+/**
+ * @brief Append a package to a list
+ *
+ * This is a simple macro wrapper around the
+ * @c lcfgpkglist_insert_next() function which can be used to append
+ * a package structure on to the end of the specified package list.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ * @param[in] pkg Pointer to @c LCFGPackage
+ * 
+ * @return Integer value indicating type of change
+ *
+ */
 
 #define lcfgpkglist_append(pkglist, pkg) ( lcfgpkglist_insert_next( pkglist, lcfgpkglist_tail(pkglist), pkg ) )
 
@@ -368,12 +487,14 @@ LCFGPackageList * lcfgpkglist_search( const LCFGPackageList * pkglist,
                                       const char * pkgver,
                                       const char * pkgrel );
 
-/* Alternative approach to going through the package node list */
+/**
+ * @brief Simple iterator for package lists
+ */
 
 struct LCFGPackageIterator {
-  LCFGPackageList * pkglist;
-  LCFGPackageNode * current;
-  bool done;
+  LCFGPackageList * pkglist; /**< The package list */
+  LCFGPackageNode * current; /**< Current location in the package list */
+  bool done;                 /**< Indicates if end has been reached */
 };
 typedef struct LCFGPackageIterator LCFGPackageIterator;
 
