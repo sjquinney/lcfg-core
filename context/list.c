@@ -25,10 +25,10 @@
  * lcfgctxlist_append() functions to add @c LCFGContext structures to
  * the list.
  *
- * If the memory allocation for the new struct is not successful the
- * @c exit() function will be called with a non-zero value.
+ * If the memory allocation for the new structure is not successful
+ * the @c exit() function will be called with a non-zero value.
  *
- * To avoid memory leaks, when the new struct is no longer required
+ * To avoid memory leaks, when the new structure is no longer required
  * the @c lcfgctxnode_destroy() function should be called.
  *
  * @param[in] ctx Pointer to @c LCFGContext
@@ -92,10 +92,10 @@ void lcfgctxnode_destroy(LCFGContextNode * ctxnode) {
  * Creates a new @c LCFGContextList which represents an empty
  * context list.
  *
- * If the memory allocation for the new struct is not successful the
- * @c exit() function will be called with a non-zero value.
+ * If the memory allocation for the new structure is not successful
+ * the @c exit() function will be called with a non-zero value.
  *
- * To avoid memory leaks, when the new struct is no longer required
+ * To avoid memory leaks, when the new structure is no longer required
  * the @c lcfgctxlist_destroy() function should be called.
  *
  * @return Pointer to new @c LCFGContextList
@@ -336,15 +336,15 @@ LCFGChange lcfgctxlist_remove_next( LCFGContextList * ctxlist,
 /**
  * @brief Find the context list node for a given context name
  *
- * This can be used to search through an @c LCFGContextList linked
- * list to find the first context node which has a matching name. Note
- * that the matching is done using strcmp(3) which is case-sensitive.
+ * This can be used to search through an @c LCFGContextList to find
+ * the first context node which has a matching name. Note that the
+ * matching is done using strcmp(3) which is case-sensitive.
  * 
  * A @c NULL value is returned if no matching node is found. Also, a
  * @c NULL value is returned if a @c NULL value or an empty list is
  * specified.
  *
- * @param[in] ctxlist
+ * @param[in] ctxlist Pointer to @c LCFGContextList to be searched
  * @param[in] name The name of the required context node
  *
  * @return Pointer to an @c LCFGContextNode (or the @c NULL value).
@@ -382,8 +382,8 @@ LCFGContextNode * lcfgctxlist_find_node( const LCFGContextList * ctxlist,
 /**
  * @brief Find the context for a given name
  *
- * This can be used to search through an @c LCFGContextList linked
- * list to find the first context which has a matching name. Note
+ * This can be used to search through an @c LCFGContextList
+ * to find the first context which has a matching name. Note
  * that the matching is done using strcmp(3) which is case-sensitive.
  * 
  * This uses the @c lcfgctxlist_find_node() to find the relevant node
@@ -395,7 +395,7 @@ LCFGContextNode * lcfgctxlist_find_node( const LCFGContextList * ctxlist,
  * the parent @c LCFGContextList list is destroyed you would need to
  * call the @c lcfgcontext_acquire() function.
  *
- * @param[in] ctxlist
+ * @param[in] ctxlist Pointer to @c LCFGContextList to be searched
  * @param[in] name The name of the required context node
  *
  * @return Pointer to an @c LCFGContext (or the @c NULL value).
@@ -418,15 +418,15 @@ LCFGContext * lcfgctxlist_find_context( const LCFGContextList * ctxlist,
 /**
  * @brief Check if a context list contains a particular context
  *
- * This can be used to search through an @c LCFGContextList linked
- * list to check if it contains a context with a matching name. Note
+ * This can be used to search through an @c LCFGContextList
+ * to check if it contains a context with a matching name. Note
  * that the matching is done using strcmp(3) which is case-sensitive.
  * 
  * This uses the @c lcfgctxlist_find_node() function to find the
  * relevant node. If a @c NULL value is specified for the list or the
  * list is empty then a false value will be returned.
  *
- * @param[in] ctxlist
+ * @param[in] ctxlist Pointer to @c LCFGContextList to be searched
  * @param[in] name The name of the required context node
  *
  * @return Boolean value which indicates presence of context in list
@@ -783,9 +783,9 @@ int lcfgctxlist_max_priority( const LCFGContextList * ctxlist ) {
 /**
  * @brief Sort a context list by priority value
  *
- * This sorts the nodes of the @c LCFGContextList linked-list based on
- * the value of the priority in ascending order (i.e. the head has the
- * lowest priority).
+ * This sorts the nodes of the @c LCFGContextList based on the value
+ * of the priority in ascending order (i.e. the head has the lowest
+ * priority).
  *
  * @param[in] ctxlist Pointer to @c LCFGContextList
  *
