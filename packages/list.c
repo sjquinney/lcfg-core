@@ -1,4 +1,3 @@
-#define _GNU_SOURCE   /* asprintf */
 #define _WITH_GETLINE /* for BSD */
 
 #include <errno.h>
@@ -14,6 +13,30 @@
 #include "packages.h"
 #include "utils.h"
 
+/**
+ * @brief Create and initialise a new package list node
+ *
+ * This creates a simple wrapper @c LCFGPackageNode node which
+ * is used to hold a pointer to an @c LCFGPackage as an item in a
+ * singly-linked @c LCFGPackageList data structure.
+ *
+ * It is typically not necessary to call this function. The usual
+ * approach is to use the @c lcfgpkglist_insert_next() or @c
+ * lcfgpkglist_append() functions to add @c LCFGPackage structures to
+ * the list.
+ *
+ * If the memory allocation for the new structure is not successful
+ * the @c exit() function will be called with a non-zero value.
+ *
+ * To avoid memory leaks, when the new structure is no longer required
+ * the @c lcfgpkgnode_destroy() function should be called.
+ *
+ * @param[in] pkg Pointer to @c LCFGPackage
+ *
+ * @return Pointer to new @c LCFGPackageNode
+ *
+ */
+
 LCFGPackageNode * lcfgpkgnode_new(LCFGPackage * pkg) {
 
   LCFGPackageNode * pkgnode = malloc( sizeof(LCFGPackageNode) );
@@ -28,6 +51,27 @@ LCFGPackageNode * lcfgpkgnode_new(LCFGPackage * pkg) {
   return pkgnode;
 }
 
+/**
+ * @brief Destroy a package list node
+ *
+ * When the specified @c LCFGPackageNode is no longer required this
+ * can be used to free all associated memory. This will call
+ * @c free(3) on each parameter of the struct and then set each value to
+ * be @c NULL.
+ *
+ * It is typically not necessary to call this function. The usual
+ * approach is to use the @c lcfgpkglist_remove_next() function to
+ * remove a @c LCFGPackage from the list.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * package node which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] pkg Pointer to @c LCFGPackageNode to be destroyed.
+ *
+ */
+
 void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode) {
 
   if ( pkgnode == NULL ) return;
@@ -39,6 +83,23 @@ void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode) {
   pkgnode = NULL;
 
 }
+
+/**
+ * @brief Create and initialise a new package list
+ *
+ * Creates a new @c LCFGPackageList which represents an empty
+ * package list.
+ *
+ * If the memory allocation for the new structure is not successful the
+ * @c exit() function will be called with a non-zero value.
+ *
+ * The reference count for the structure is initialised to 1. To avoid
+ * memory leaks, when it is no longer required the
+ * @c lcfgpkglist_relinquish() function should be called.
+ *
+ * @return Pointer to new @c LCFGPackageList
+ *
+ */
 
 LCFGPackageList * lcfgpkglist_new(void) {
 
@@ -56,6 +117,34 @@ LCFGPackageList * lcfgpkglist_new(void) {
 
   return pkglist;
 }
+
+/**
+ * @brief Destroy the package list
+ *
+ * When the specified @c LCFGPackageList is no longer required this
+ * will free all associated memory.
+ *
+ * *Reference Counting:* There is support for very simple reference
+ * counting which allows an @c LCFGPackageList to appear in multiple
+ * situations. This is particular useful for code which needs to use
+ * multiple iterators for a single list. Incrementing and decrementing
+ * that reference counter is the responsibility of the container
+ * code. If the reference count for the specified package list is
+ * greater than zero then calling this function will have no effect.
+ *
+ * This will iterate through the list to remove and destroy each
+ * @c LCFGPackageNode item, it also calls @c lcfgpackage_relinquish()
+ * for each package. Note that if the reference count on the package
+ * reaches zero then the @c LCFGPackage will also be destroyed.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * package list which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] res Pointer to @c LCFGPackageList to be destroyed.
+ *
+ */
 
 void lcfgpkglist_destroy(LCFGPackageList * pkglist) {
 
@@ -123,6 +212,32 @@ void lcfgpkglist_relinquish( LCFGPackageList * pkglist ) {
 
 }
 
+/**
+ * @brief Set the package list merge rules
+ *
+ * A package list may have a set of rules which control how packages
+ * should be 'merged' into the list when using the
+ * @c lcfgpkglist_merge_package() and @c lcfgpkglist_merge_list()
+ * functions. For full details, see the documentation for the
+ * @c lcfgpkglist_merge_package() function. The following rules are
+ * supported: 
+ *
+ *   - LCFG_PKG_RULE_NONE - null rule (the default)
+ *   - LCFG_PKG_RULE_KEEP_ALL - keep all packages
+ *   - LCFG_PKG_RULE_SQUASH_IDENTICAL - ignore additional identical versions of packages
+ *   - LCFG_PKG_RULE_USE_PRIORITY - resolve conflicts using context priority value
+ *   - LCFG_PKG_RULE_USE_PREFIX - resolve conflicts using the package prefix
+ * 
+ * Rules can be used in any combination by using a @c '|' (bitwise
+ * 'or').
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ * @param[in] new_rules Integer merge rules
+ *
+ * @return boolean indicating success
+ *
+ */
+
 bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
 				  LCFGPkgRule new_rules ) {
   assert( pkglist != NULL );
@@ -132,11 +247,47 @@ bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
   return true;
 }
 
+/**
+ * @brief Get the current package list merge rules
+ *
+ * A package list may have a set of rules which control how packages
+ * should be 'merged' into the list when using the
+ * @c lcfgpkglist_merge_package() and @c lcfgpkglist_merge_list()
+ * functions. For full details, see the documentation for the
+ * @c lcfgpkglist_merge_package() function.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ *
+ * @return Integer merge rules
+ *
+ */
 LCFGPkgRule lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist ) {
   assert( pkglist != NULL );
 
   return pkglist->merge_rules;
 }
+
+/**
+ * @brief Insert a new package into a list
+ *
+ * This can be used to insert an @c LCFGPackage into the
+ * specified package list. The package will be wrapped into an
+ * @c LCFGPackageNode using the @c lcfgpkgnode_new() function.
+ *
+ * The package will be inserted into the list immediately after the
+ * specified @c LCFGPackageNode. To insert the package at the
+ * head of the list the @c NULL value should be passed for the node.
+ *
+ * If the package is successfully inserted into the list the
+ * @c LCFG_CHANGE_ADDED value is returned, if an error occurs then
+ * @c LCFG_CHANGE_ERROR is returned.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ * @param[in] pkgnode Pointer to @c LCFGPackageNode
+ * @param[in] pkg Pointer to @c LCFGPackage
+ * 
+ * @return Integer value indicating type of change
+ */
 
 LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
                                     LCFGPackageNode * pkgnode,
@@ -171,12 +322,39 @@ LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
   return LCFG_CHANGE_ADDED;
 }
 
+/**
+ * @brief Remove a package from a list
+ *
+ * This can be used to remove an @c LCFGPackage from the
+ * specified package list.
+ *
+ * The package removed from the list is immediately after the
+ * specified @c LCFGPackageNode. To remove the package from the
+ * head of the list the @c NULL value should be passed for the node.
+ *
+ * If the package is successfully removed from the list the
+ * @c LCFG_CHANGE_REMOVED value is returned, if an error occurs then
+ * @c LCFG_CHANGE_ERROR is returned. If the list is already empty then
+ * the @c LCFG_CHANGE_NONE value is returned.
+ *
+ * Note that, since a pointer to the @c LCFGPackage is returned
+ * to the caller, the reference count will still be at least 1. To
+ * avoid memory leaks, when the struct is no longer required it should
+ * be released by calling @c lcfgpackage_relinquish().
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ * @param[in] pkgnode Pointer to @c LCFGPackageNode
+ * @param[out] pkg Pointer to @c LCFGPackage
+ * 
+ * @return Integer value indicating type of change
+ */
+
 LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
                                     LCFGPackageNode * pkgnode,
                                     LCFGPackage ** pkg ) {
   assert( pkglist != NULL );
 
-  if ( lcfgpkglist_is_empty(pkglist) ) return LCFG_CHANGE_ERROR;
+  if ( lcfgpkglist_is_empty(pkglist) ) return LCFG_CHANGE_NONE;
 
   LCFGPackageNode * old_node;
 
@@ -209,14 +387,39 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
   return LCFG_CHANGE_REMOVED;
 }
 
+/**
+ * @brief Find the package list node with a given name and architecture
+ *
+ * This can be used to search through an @c LCFGPackageList to find
+ * the first package node which has a matching name. Note that the
+ * matching is done using strcmp(3) which is case-sensitive.
+ * 
+ * The value for the architecture can be set to the @c '*' (asterisk)
+ * wildcard character. In which case the first package node which
+ * matches the specified name and any architecture will be
+ * returned. If the architecture is set to @c NULL or the empty string
+ * then only a package @b without a value for the architecture will be
+ * matched.
+ *
+ * A @c NULL value is returned if no matching node is found. Also, a
+ * @c NULL value is returned if a @c NULL value or an empty list is
+ * specified.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList to be searched
+ * @param[in] name The name of the required package node
+ * @param[in] arch The architecture of the required package node
+ *
+ * @return Pointer to an @c LCFGPackageNode (or the @c NULL value).
+ *
+ */
+
 LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
                                          const char * name,
                                          const char * arch ) {
 
   assert( name != NULL );
 
-  if ( pkglist == NULL || lcfgpkglist_is_empty(pkglist) )
-    return NULL;
+  if ( lcfgpkglist_is_empty(pkglist) ) return NULL;
 
   const char * match_arch = arch != NULL ? arch : LCFG_PACKAGE_NOVALUE;
   bool arch_match_iswild = 
@@ -224,7 +427,7 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
 
   LCFGPackageNode * result = NULL;
 
-  LCFGPackageNode * cur_node = NULL;
+  const LCFGPackageNode * cur_node = NULL;
   for ( cur_node = lcfgpkglist_head(pkglist);
         cur_node != NULL;
         cur_node = lcfgpkglist_next(cur_node) ) {
@@ -241,7 +444,7 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
                    lcfgpackage_get_arch(pkg) : LCFG_PACKAGE_NOVALUE;
 
       if ( arch_match_iswild || strcmp( pkg_arch, match_arch ) == 0 ) {
-        result = cur_node;
+        result = (LCFGPackageNode *) cur_node;
         break;
       }
     }
@@ -252,9 +455,33 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
 
 }
 
+/**
+ * @brief Find the package for a given name
+ *
+ * This can be used to search through an @c LCFGPackageList to find
+ * the first package which has a matching name and architecture. Note
+ * that the matching is done using strcmp(3) which is case-sensitive.
+ * 
+ * This uses the @c lcfgpkglist_find_node() to find the relevant node
+ * and it behaves in a similar fashion so a @c NULL value is returned
+ * if no matching node is found. Also, a @c NULL value is returned if
+ * a @c NULL value or an empty list is specified.
+ *
+ * To ensure the returned @c LCFGPackage is not destroyed when
+ * the parent @c LCFGPackageList list is destroyed you would need to
+ * call the @c lcfgpackage_acquire() function.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList to be searched
+ * @param[in] name The name of the required package node
+ *
+ * @return Pointer to an @c LCFGPackage (or the @c NULL value).
+ *
+ */
+
 LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * pkglist,
-                                            const char * name,
-                                            const char * arch ) {
+                                        const char * name,
+                                        const char * arch ) {
+  assert( name != NULL );
 
   LCFGPackage * pkg = NULL;
 
@@ -263,6 +490,33 @@ LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * pkglist,
     pkg = lcfgpkglist_package(pkgnode);
 
   return pkg;
+}
+
+/**
+ * @brief Check if a package list contains a particular package
+ *
+ * This can be used to search through an @c LCFGPackageList to check
+ * if it contains a package with a matching name and
+ * architecture. Note that the matching is done using strcmp(3) which
+ * is case-sensitive.
+ * 
+ * This uses the @c lcfgpkglist_find_node() function to find the
+ * relevant node. If a @c NULL value is specified for the list or the
+ * list is empty then a false value will be returned.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList to be searched
+ * @param[in] name The name of the required package node
+ *
+ * @return Boolean value which indicates presence of package in list
+ *
+ */
+
+bool lcfgpkglist_contains( const LCFGPackageList * pkglist,
+			   const char * name,
+                           const char * arch ) {
+  assert( name != NULL );
+
+  return ( lcfgpkglist_find_node( pkglist, name, arch ) != NULL );
 }
 
 LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
@@ -291,7 +545,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
      previous node can also be selected. That is needed for removals. */
 
   if ( !lcfgpackage_has_name(new_pkg) ) {
-    asprintf( msg, "New package does not have a name" );
+    lcfgutils_build_message( msg, "New package does not have a name" );
     goto apply;
   }
 
@@ -457,7 +711,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
         lcfgpackage_relinquish(old_pkg);
         result = LCFG_CHANGE_REMOVED;
       } else {
-        asprintf( msg, "Failed to remove old package" );
+        lcfgutils_build_message( msg, "Failed to remove old package" );
         result = LCFG_CHANGE_ERROR;
       }
 
@@ -475,7 +729,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
         }
 
       } else {
-        asprintf( msg, "Failed to append new package" );
+        lcfgutils_build_message( msg, "Failed to append new package" );
         result = LCFG_CHANGE_ERROR;
       }
 
@@ -504,7 +758,7 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
-  LCFGPackageNode * cur_node = NULL;
+  const LCFGPackageNode * cur_node = NULL;
   for ( cur_node = lcfgpkglist_head(pkglist2);
         cur_node != NULL;
         cur_node = lcfgpkglist_next(cur_node) ) {
@@ -538,8 +792,17 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
   return change;
 }
 
+/**
+ * @brief Sort a package list
+ *
+ * This sorts the nodes of the @c LCFGPackageList by using the 
+ * @c lcfgpackage_compare() function.
+ *
+ * @param[in] ctxlist Pointer to @c LCFGPackageList
+ *
+ */
+
 void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
-  assert( pkglist != NULL );
 
   if ( lcfgpkglist_size(pkglist) < 2 ) return;
 
@@ -591,7 +854,7 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
   char * lcfgspec = NULL;
   size_t buf_size = 0;
 
-  LCFGPackageNode * cur_node = NULL;
+  const LCFGPackageNode * cur_node = NULL;
   for ( cur_node = lcfgpkglist_head(pkglist);
         ok && cur_node != NULL;
         cur_node = lcfgpkglist_next(cur_node) ) {
@@ -644,7 +907,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
   if ( !lcfgutils_file_readable(filename) ) {
     ok = false;
-    asprintf( msg, "File '%s' does not exist or is not readable",
+    lcfgutils_build_message( msg, "File '%s' does not exist or is not readable",
 	      filename );
     goto cleanup;
   }
@@ -660,7 +923,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
   int tmpfd = mkstemp(tmpfile);
   if ( tmpfd == -1 ) {
     ok = false;
-    asprintf( msg, "Failed to create temporary file '%s'", tmpfile );
+    lcfgutils_build_message( msg, "Failed to create temporary file '%s'", tmpfile );
     goto cleanup;
   }
 
@@ -693,7 +956,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
   waitpid( pid, &status, 0 );
   if ( WIFEXITED(status) && WEXITSTATUS(status) != 0 ) {
     ok = false;
-    asprintf( msg, "Failed to process '%s' using cpp",
+    lcfgutils_build_message( msg, "Failed to process '%s' using cpp",
               filename );
     goto cleanup;
   }
@@ -701,7 +964,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
   fp = fdopen( tmpfd, "r" );
   if ( fp == NULL ) {
     ok = false;
-    asprintf( msg, "Failed to open temporary file '%s'", tmpfile );
+    lcfgutils_build_message( msg, "Failed to open temporary file '%s'", tmpfile );
     goto cleanup;
   }
 
@@ -763,14 +1026,17 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
     ok = ( parse_status != LCFG_STATUS_ERROR );
 
-    if ( ok && !lcfgpackage_has_arch(pkg) && defarch != NULL ) {
+    if ( ok && !lcfgpackage_has_arch(pkg) && !isempty(defarch) ) {
       free(error_msg);
       error_msg = NULL;
 
-      if ( !lcfgpackage_set_arch( pkg, strdup(defarch) ) ) {
+      char * pkg_arch = strdup(defarch);
+      if ( !lcfgpackage_set_arch( pkg, pkg_arch ) ) {
+        free(pkg_arch);
 	ok = false;
-	asprintf( &error_msg, "Failed to set package architecture to '%s'",
-		  defarch );
+	lcfgutils_build_message( &error_msg,
+                                 "Failed to set package architecture to '%s'",
+                                 defarch );
       }
     }
 
@@ -783,7 +1049,8 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
           pkg_deriv = NULL; /* Ensure memory is NOT immediately freed */
         } else {
           ok = false;
-          error_msg = strdup("Invalid derivation");
+          lcfgutils_build_message( &error_msg, "Invalid derivation '%s'",
+                                   pkg_deriv );
         }
       }
 
@@ -792,7 +1059,8 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
           pkg_context = NULL; /* Ensure memory is NOT immediately freed */
         } else {
           ok = false;
-          error_msg = strdup("Invalid context");
+          lcfgutils_build_message( &error_msg, "Invalid context '%s'",
+                                   pkg_context );
         }
       }
 
@@ -805,19 +1073,17 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
       LCFGChange merge_status =
         lcfgpkglist_merge_package( pkglist, pkg, &error_msg );
 
-      if ( merge_status == LCFG_CHANGE_ERROR ) {
+      if ( merge_status == LCFG_CHANGE_ERROR )
         ok = false;
-      }
 
     }
 
     if (!ok) {
 
-      if ( error_msg == NULL ) {
-        asprintf( msg, "Error at line %u", linenum );
-      } else {
-        asprintf( msg, "Error at line %u: %s", linenum, error_msg );
-      }
+      if ( error_msg == NULL )
+        lcfgutils_build_message( msg, "Error at line %u", linenum );
+      else
+        lcfgutils_build_message( msg, "Error at line %u: %s", linenum, error_msg );
 
     }
 
@@ -843,7 +1109,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
   if ( !ok ) {
 
     if ( *msg == NULL )
-      asprintf( msg, "Failed to process package list file" );
+      lcfgutils_build_message( msg, "Failed to process package list file" );
 
     lcfgpkglist_destroy(pkglist);
     pkglist = NULL;
