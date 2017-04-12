@@ -221,7 +221,7 @@ void lcfgctxlist_destroy(LCFGContextList * ctxlist);
  *
  */
 
-#define lcfgctxlist_is_empty(ctxlist) ((ctxlist)->size == 0)
+#define lcfgctxlist_is_empty(ctxlist) ( ctxlist == NULL || (ctxlist)->size == 0)
 
 /**
  * @brief Retrieve the next context node in the list
