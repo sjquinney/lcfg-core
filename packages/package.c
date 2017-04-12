@@ -64,8 +64,9 @@ static const char * permitted_prefixes = "?+-=~";
  * If the memory allocation for the new structure is not successful
  * the @c exit() function will be called with a non-zero value.
  *
- * To avoid memory leaks, when you no longer require access to the
- * package you should call @c lcfgpackage_relinquish()
+ * The reference count for the structure is initialised to 1. To avoid
+ * memory leaks, when it is no longer required the
+ * @c lcfgpackage_relinquish() function should be called.
  *
  * @return Pointer to new @c LCFGPackage
  *
@@ -103,8 +104,8 @@ LCFGPackage * lcfgpackage_new(void) {
  * counting which allows an @c LCFGPackage to appear in multiple
  * lists. Incrementing and decrementing that reference counter is the
  * responsibility of the container code. If the reference count for
- * the specified package is greater than zero this function will have
- * no affect.
+ * the specified package is greater than zero then calling this
+ * function will have no effect.
  *
  * This will call @c free() on each parameter of the structure and
  * then set each value to be @c NULL.
