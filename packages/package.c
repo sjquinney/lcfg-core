@@ -19,7 +19,11 @@
 #include "packages.h"
 #include "utils.h"
 
-/* Permit [A-Za-z0-9_-.+] characters in package names */
+/**
+ * @brief Check character is valid for package name
+ *
+ * This permits @c [A-Za-z0-9_-.+] characters in package names
+ */
 
 #define isnamechr(CHR) ( isword(CHR) || strchr( "-.+", CHR ) != NULL )
 
@@ -3028,6 +3032,10 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
 
   return result;
 }
+
+/**
+ * @brief Maximum length for an architecture name
+ */
 
 #define ARCH_MAXLEN 8
 
