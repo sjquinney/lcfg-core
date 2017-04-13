@@ -69,7 +69,7 @@ LCFGContextNode * lcfgctxnode_new(LCFGContext * ctx) {
  * context node which has already been destroyed (or potentially was
  * never created).
  *
- * @param[in] ctx Pointer to @c LCFGContextNode to be destroyed.
+ * @param[in] ctxnode Pointer to @c LCFGContextNode to be destroyed.
  *
  */
 
@@ -135,7 +135,7 @@ LCFGContextList * lcfgctxlist_new(void) {
  * context list which has already been destroyed (or potentially was
  * never created).
  *
- * @param[in] ctx Pointer to @c LCFGContextList to be destroyed.
+ * @param[in] ctxlist Pointer to @c LCFGContextList to be destroyed.
  *
  */
 
@@ -640,7 +640,7 @@ LCFGStatus lcfgctxlist_from_file( const char * filename,
  *
  * Contexts which do not have a name or value will be ignored.
  *
- * @param[in] ctx Pointer to @c LCFGContextList
+ * @param[in] ctxlist Pointer to @c LCFGContextList
  * @param[in] out Stream to which the context list should be written
  *
  * @return Boolean indicating success
@@ -704,7 +704,7 @@ bool lcfgctxlist_print( const LCFGContextList * ctxlist,
  * created. If required the modification time for the file can be
  * specified, otherwise set the mtime to zero.
  *
- * @param[in] ctx Pointer to @c LCFGContextList
+ * @param[in] ctxlist Pointer to @c LCFGContextList
  * @param[in] filename File to which the context list should be written
  * @param[in] mtime Modification time to set on the file
  * @param[out] msg Pointer to any diagnostic messages.
