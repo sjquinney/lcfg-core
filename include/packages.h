@@ -4,7 +4,6 @@
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @date $LastChangedDate$
  * @version $Revision$
- *
  */
 
 #ifndef LCFG_PACKAGES_H
