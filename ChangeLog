@@ -1,6 +1,239 @@
-2017-04-03  SVN: new release
+2017-04-13  SVN: new release
 
-	* Release: 1.33.0
+	* Release: 1.34.0
+
+2017-04-13 14:26  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/list.c, packages/package.c,
+	  packages/parse_pkgspec.c: Renamed lcfgpackage_from_string to
+	  lcfgpackage_from_spec for consistency with lcfgpackage_to_spec.
+	  Clears way for adding higher level lcfgpackage_from_string at
+	  some point
+
+2017-04-13 14:23  squinney@INF.ED.AC.UK
+
+	* Doxyfile.in, lcfg.yml, packages/ex/mkrpmlist.c,
+	  packages/mkrpmlist.c: Moved mkrpmlist to examples. Configured
+	  doxygen to ignore any examples
+
+2017-04-13 14:23  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Docs for some macros
+
+2017-04-13 14:09  squinney@INF.ED.AC.UK
+
+	* context/ex, context/ex/setctx.c, context/setctx.c: Moved setctx.c
+	  to examples directory
+
+2017-04-13 14:08  squinney@INF.ED.AC.UK
+
+	* packages/ex: Moved mkrpmlist.c to examples directory
+
+2017-04-13 14:08  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/list.c: More docs
+
+2017-04-13 14:07  squinney@INF.ED.AC.UK
+
+	* packages/rpm.c: Fixes to docs
+
+2017-04-13 14:05  squinney@INF.ED.AC.UK
+
+	* include/context.h, include/profile.h, include/resources.h: Added
+	  more docs
+
+2017-04-13 14:02  squinney@INF.ED.AC.UK
+
+	* include/bdb.h, include/common.h, include/components.h,
+	  include/context.h, include/differences.h, include/packages.h,
+	  include/profile.h, include/resources.h, include/tags.h,
+	  include/templates.h, include/xml.h: test
+
+2017-04-13 14:00  squinney@INF.ED.AC.UK
+
+	* include/packages.h: test
+
+2017-04-13 13:58  squinney@INF.ED.AC.UK
+
+	* include/bdb.h, include/common.h, include/components.h,
+	  include/context.h, include/differences.h, include/packages.h,
+	  include/profile.h, include/resources.h, include/tags.h,
+	  include/templates.h, include/xml.h: test
+
+2017-04-13 13:57  squinney@INF.ED.AC.UK
+
+	* include/bdb.h, include/common.h, include/components.h,
+	  include/context.h, include/differences.h, include/packages.h,
+	  include/profile.h, include/resources.h, include/tags.h,
+	  include/templates.h, include/xml.h: test
+
+2017-04-13 13:53  squinney@INF.ED.AC.UK
+
+	* include/context.h, include/packages.h, include/resources.h: Added
+	  top-level docs
+
+2017-04-13 13:52  squinney@INF.ED.AC.UK
+
+	* include/bdb.h, include/common.h, include/components.h,
+	  include/context.h, include/differences.h, include/profile.h,
+	  include/resources.h, include/tags.h, include/templates.h,
+	  include/xml.h: Set date and revision properties
+
+2017-04-13 13:49  squinney@INF.ED.AC.UK
+
+	* include/packages.h: Added top-level docs
+
+2017-04-13 11:41  squinney@INF.ED.AC.UK
+
+	* include/packages.h: updated spec for lcfgpkglist_from_rpmlist
+
+2017-04-13 11:41  squinney@INF.ED.AC.UK
+
+	* context/list.c: Many minor doc fixes
+
+2017-04-13 11:40  squinney@INF.ED.AC.UK
+
+	* packages/rpm.c: Improved from_rpmlist so that it can ignore
+	  non-existent files and also only adds derivations when required
+
+2017-04-13 11:04  squinney@INF.ED.AC.UK
+
+	* packages/list.c, packages/rpm.c: switched to using new
+	  lcfgpackage_is_valid function to check package is ok to be
+	  printed
+
+2017-04-13 10:50  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/package.c: Added new
+	  lcfgpackage_is_valid to make it easier to test validity.
+	  Currently this just requires that the package has a name
+
+2017-04-12 15:23  squinney@INF.ED.AC.UK
+
+	* include/context.h, lcfg.yml: Improved macro docs
+
+2017-04-12 15:22  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/list.c: Added lots more docs (almost
+	  complete). Silenced some warnings
+
+2017-04-12 15:21  squinney@INF.ED.AC.UK
+
+	* include/packages.h: Documented structures, enums and macros
+
+2017-04-12 12:52  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Minor documentation tweaks
+
+2017-04-12 12:51  squinney@INF.ED.AC.UK
+
+	* context/list.c: Minor documentation tweaks
+
+2017-04-12 12:51  squinney@INF.ED.AC.UK
+
+	* include/context.h: lcfgctxlist_is_empty returns true if context
+	  list is NULL
+
+2017-04-11 19:07  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/package.c, packages/rpm.c: updated
+	  spec for lcfgpackage_to_rpm_filename
+
+2017-04-11 19:01  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/list.c, packages/package.c,
+	  packages/rpm.c: Use cpp to manage string format function
+	  arguments to ensure they are always all identical
+
+2017-04-11 14:24  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/list.c, packages/rpm.c,
+	  profile/profile.c, xml/packages.c: For clarity and to avoid
+	  confusion with LCFG_OPT, renamed LCFGPkgOption to LCFGPkgRule and
+	  LCFG_PKG_OPT_ to LCFG_PKG_RULE_
+
+2017-04-11 14:15  squinney@INF.ED.AC.UK
+
+	* packages/list.c, packages/rpm.c: Ensure lookup for default arch
+	  is only done once when printing out rpm lists
+
+2017-04-11 14:11  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Docs for new lcfgpackage_to_string
+
+2017-04-11 13:57  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/package.c: Fixed call to function
+	  pointer in lcfgpackage_to_string
+
+2017-04-11 13:47  squinney@INF.ED.AC.UK
+
+	* packages/package.c: tweaked lcfgpackage_to_string
+
+2017-04-11 13:37  squinney@INF.ED.AC.UK
+
+	* include/packages.h: moved LCFGPkgStyle and added docs
+
+2017-04-11 13:34  squinney@INF.ED.AC.UK
+
+	* include/common.h, include/packages.h, packages/list.c,
+	  packages/package.c, packages/parse_pkgspec.c, profile/profile.c:
+	  Renamed lcfgpackage_to_string as lcfgpackage_to_spec to make it
+	  clear that it stringifies packages in the standard lcfg spec
+	  style. Added a new lcfgpackage_to_string which works at a
+	  slightly higher level and takes a output style parameter which
+	  controls which function is actually used. This makes it easier to
+	  reuse the core functionality of lcfgpackage_print in
+	  lcfgpkglist_print and improve efficiency
+
+2017-04-11 12:55  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/list.c,
+	  packages/package.c, packages/rpm.c, profile/profile.c,
+	  xml/packages.c: Renamed LCFG_PKGS_ macros and enum members to
+	  LCFG_PKG_ for consistency with other things
+
+2017-04-11 12:51  squinney@INF.ED.AC.UK
+
+	* include/packages.h: Added null opt LCFG_PKGS_OPT_NONE
+
+2017-04-11 12:48  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/list.c, profile/profile.c,
+	  xml/packages.c: Converted package list merge rules from macros
+	  into enum to improve code clarity
+
+2017-04-11 12:35  squinney@INF.ED.AC.UK
+
+	* include/common.h, include/context.h: Added docs for enums
+
+2017-04-11 12:18  squinney@INF.ED.AC.UK
+
+	* packages/package.c, resources/resource.c: Fixed calls to
+	  lcfgctxlist_eval_expression now diagnostic message is passed back
+	  to parent caller
+
+2017-04-11 12:10  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, context/context.c, context/list.c, include/common.h,
+	  include/context.h, include/packages.h, include/resources.h,
+	  include/templates.h, packages/list.c, packages/package.c,
+	  packages/rpm.c, profile/profile.c, resources/components.c,
+	  resources/resource.c, resources/templates.c, xml/read.c:
+	  Converted standard options from macros into an enum and modified
+	  various functions to use enum instead of unsigned int for options
+	  parameter. This makes it much clearer what values are acceptable.
+
+2017-04-11 10:28  squinney@INF.ED.AC.UK
+
+	* include/packages.h, include/resources.h, packages/package.c,
+	  resources/resource.c, xml/packages.c, xml/resource.c:
+	  eval_priority functions now return diagnostic message when error
+	  occurs
+
+2017-04-03 14:04  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.33.0
 
 2017-04-03 13:13  squinney@INF.ED.AC.UK
 
