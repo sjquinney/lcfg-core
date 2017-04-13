@@ -191,7 +191,7 @@ int lcfgpackage_compare( const LCFGPackage * pkg1,
 bool lcfgpackage_equals( const LCFGPackage * pkg1,
                          const LCFGPackage * pkg2 );
 
-LCFGStatus lcfgpackage_from_string( const char * input,
+LCFGStatus lcfgpackage_from_spec( const char * input,
                                     LCFGPackage ** result,
                                     char ** msg)
   __attribute__((warn_unused_result));

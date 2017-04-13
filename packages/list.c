@@ -1166,7 +1166,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
     LCFGPackage * pkg = NULL;
     LCFGStatus parse_status
-      = lcfgpackage_from_string( line, &pkg, &error_msg );
+      = lcfgpackage_from_spec( line, &pkg, &error_msg );
 
     ok = ( parse_status != LCFG_STATUS_ERROR );
 

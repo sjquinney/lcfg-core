@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
   if ( rpm_name )
     parse_rc = lcfgpackage_from_rpm_filename( input, &pkg, &msg );
   else
-    parse_rc = lcfgpackage_from_string( input, &pkg, &msg );
+    parse_rc = lcfgpackage_from_spec( input, &pkg, &msg );
 
   if ( parse_rc == LCFG_STATUS_ERROR ) {
     fprintf( stderr, "Error: %s\n",

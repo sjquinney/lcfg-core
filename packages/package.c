@@ -1756,7 +1756,7 @@ static bool walk_backwards_until( const char * input, size_t * len,
  *
  */
 
-LCFGStatus lcfgpackage_from_string( const char * input,
+LCFGStatus lcfgpackage_from_spec( const char * input,
                                     LCFGPackage ** result,
                                     char ** msg ) {
 
@@ -1991,7 +1991,7 @@ LCFGStatus lcfgpackage_from_string( const char * input,
  *
  * Generates a new string representation of the @c LCFGPackage. For
  * details of the format see the documentation for the
- * @c lcfgpackage_from_string() function. Note that this function will
+ * @c lcfgpackage_from_spec() function. Note that this function will
  * never generate strings which contain a secondary architecture
  * field. The package must have a name, if either of the version and
  * release attributes are not specified then a wildcard '*' character
