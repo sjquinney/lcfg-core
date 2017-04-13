@@ -519,6 +519,80 @@ bool lcfgpkglist_contains( const LCFGPackageList * pkglist,
   return ( lcfgpkglist_find_node( pkglist, name, arch ) != NULL );
 }
 
+/**
+ * @brief Merge package into a list
+ *
+ * Merges an @c LCFGPackage into an existing @c LCFGPackageList
+ * according to the particular merge rules specified for the
+ * list. 
+ *
+ * The action of merging a package into a list differs from simply
+ * appending in that a search is done to check if a package with the
+ * same name and architecture is already present in the list. By
+ * default, with no rules specified, merging a package into a list
+ * when it is already present is not permitted. This behaviour can be
+ * modified in various ways, the following rules are supported (in
+ * this order):
+ *
+ *   - LCFG_PKG_RULE_NONE - null rule (the default)
+ *   - LCFG_PKG_RULE_USE_PREFIX - resolve conflicts using the package prefix
+ *   - LCFG_PKG_RULE_SQUASH_IDENTICAL - ignore additional identical versions of packages
+ *   - LCFG_PKG_RULE_KEEP_ALL - keep all packages
+ *   - LCFG_PKG_RULE_USE_PRIORITY - resolve conflicts using context priority val
+ue
+ * 
+ * Rules can be used in any combination by using a @c '|' (bitwise
+ * 'or'), for example @c LCFG_PKG_RULE_SQUASH_IDENTICAL can be
+ * combined with @c LCFG_PKG_RULE_KEEP_ALL to keep all packages which
+ * are not identical. The combination of rules can result in some very
+ * complex scenarios so care should be take to choose the best set of
+ * rules.
+ *
+ * A rule controls whether a change is accepted or rejected. If it is
+ * accepted the change can result in the removal, addition or
+ * replacement of a package. If a rule neither explicitly accepts or
+ * rejects a package then the next rule in the list is applied. If no
+ * rule leads to the acceptance of a change then it is rejected.
+ *
+ * @b Prefix: This rule uses the package prefix (if any) to resolve
+ * the conflict. This can be one of the following:
+ *
+ *   - @c +  Add package to list, replace any existing package of same name/arch
+ *   - @c =  Similar to @c + but "pins" the version so it cannot be overridden
+ *   - @c -  Remove any package from list which matches this name/arch
+ *   - @c ?  Replace any existing package in list which matches this name/arch
+ *   - @c ~  Add package to list if name/arch is not already present
+ *
+ * <b>Squash identical</b>: If the packages are the same, according to the
+ * @c lcfgpackage_equals() function (which compares name,
+ * architecture, version, release, flags and context), then the current
+ * list entry is replaced with the new one (which effectively updates
+ * the derivation information).
+ *
+ * <b>Keep all</b>: Keep all packages (i.e. ignore any conflicts).
+ *
+ * <b>Use priority</b>: Compare the values of the priority which is the
+ * result of evaluating the context expression (if any) for the
+ * package. If the new package has a greater priority then it replaces
+ * the current one. If the current has a greater priority then the new
+ * package is ignored. If the priorities are the same the conflict
+ * is unresolved.
+ *
+ * The process can successfully result in any of the following being returned:
+ *
+ *   - @c LCFG_CHANGE_NONE - the list is unchanged
+ *   - @c LCFG_CHANGE_ADDED - the new package was added
+ *   - @c LCFG_CHANGE_REMOVED - the current package was removed
+ *   - @c LCFG_CHANGE_REPLACED - the current package was replaced with the new one
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ * @param[in] new_pkg Pointer to @c LCFGPackage to be merged into list
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Integer value indicating type of change
+ *
+ */
+
 LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
                                       LCFGPackage * new_pkg,
                                       char ** msg ) {
@@ -526,8 +600,6 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
   assert( new_pkg != NULL );
 
   LCFGPkgRule merge_rules = lcfgpkglist_get_merge_rules(pkglist);
-
-  *msg = NULL;
 
   /* Define these ahead of any jumps to the "apply" label */
 
@@ -848,6 +920,28 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
 
 }
 
+/**
+ * @brief Write list of formatted packages to file stream
+ *
+ * This uses @c lcfgpackage_to_string() to format each package as a
+ * string. See the documentation for that function for full
+ * details. The generated string is written to the specified file
+ * stream which must have already been opened for writing.
+ *
+ * Packages which are invalid will be ignored. Packages which are
+ * inactive (i.e. they have a negative priority) will also be ignored
+ * unless the @c LCFG_OPT_ALL_PRIORITIES option is specified.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] style Integer indicating required style of formatting
+ * @param[in] options Integer that controls formatting
+ * @param[in] out Stream to which the package list should be written
+ *
+ * @return Boolean indicating success
+ *
+ */
+
 bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         const char * defarch,
                         LCFGPkgStyle style,
@@ -903,12 +997,45 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
   return ok;
 }
 
+/**
+ * @brief Read package list from CPP file (as used by updaterpms)
+ *
+ * This processes an LCFG rpmcfg package file (as used by the
+ * updaterpms package manager) and generates a new @c
+ * LCFGPackageList. The file is pre-processed using the C
+ * Pre-processor so the cpp tool must be available.
+ *
+ * An error is returned if the file does not exist or is not
+ * readable. If the file exists but is empty then an empty @c
+ * LCFGPackageList is returned.
+ *
+ * The following options are supported:
+ *   - @c LCFG_OPT_USE_META - include any metadata (contexts and derivations)
+ *   - @c LCFG_OPT_ALL_CONTEXTS - include packages for all contexts
+ *
+ * To avoid memory leaks, when the package list is no longer required
+ * the @c lcfgpkglist_relinquish() function should be called.
+ *
+ * @param[in] filename Path to CPP package file
+ * @param[out] result Reference to pointer for new @c LCFGPackageList
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] options Controls the behaviour of the process.
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 				 LCFGPackageList ** result,
 				 const char * defarch,
                                  LCFGOption options,
 				 char ** msg ) {
-  assert( filename != NULL );
+
+  if ( isempty(filename) ) {
+    lcfgutils_build_message( msg, "Invalid filename" );
+    return LCFG_STATUS_ERROR;
+  }
 
   bool include_meta = options & LCFG_OPT_USE_META;
   bool all_contexts = options & LCFG_OPT_ALL_CONTEXTS;
