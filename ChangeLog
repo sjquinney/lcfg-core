@@ -1,6 +1,22 @@
 2017-04-13  SVN: new release
 
-	* Release: 1.34.0
+	* Release: 1.34.1
+
+2017-04-13 15:58  squinney@INF.ED.AC.UK
+
+	* packages/ex/search.c, packages/search.c: Moved lcfgpkglist_search
+	  code to the examples dir
+
+2017-04-13 15:57  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/CMakeLists.txt,
+	  packages/ex/qxpack.c, packages/match.c: Added a simpler
+	  lcfgpkglist_match which uses fnmatch as a replacement for
+	  lcfgpkglist_search
+
+2017-04-13 14:27  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.34.0
 
 2017-04-13 14:26  squinney@INF.ED.AC.UK
 
