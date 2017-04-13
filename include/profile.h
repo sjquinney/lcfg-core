@@ -1,3 +1,10 @@
+/**
+ * @file context.h
+ * @brief LCFG profile handling library
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date$
+ * $Revision$
+ */
 
 #ifndef LCFG_PROFILE_H
 #define LCFG_PROFILE_H

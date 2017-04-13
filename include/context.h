@@ -2,9 +2,8 @@
  * @file context.h
  * @brief LCFG context handling library
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * @date $LastChangedDate$
- * @version $Revision$
- *
+ * $Date$
+ * $Revision$
  */
 
 #ifndef LCFG_CONTEXT_H
