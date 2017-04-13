@@ -1,3 +1,12 @@
+/**
+ * @file resources.h
+ * @brief LCFG resource and component handling library
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @date $LastChangedDate$
+ * @version $Revision$
+ *
+ */
+
 #ifndef LCFG_RESOURCES_H
 #define LCFG_RESOURCES_H
 

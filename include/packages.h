@@ -7,7 +7,6 @@
  *
  */
 
-
 #ifndef LCFG_PACKAGES_H
 #define LCFG_PACKAGES_H
 
