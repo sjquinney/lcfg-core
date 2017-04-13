@@ -473,6 +473,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
 LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
                                      LCFGPackageList ** result,
+                                     LCFGOption options,
                                      char ** msg )
   __attribute__((warn_unused_result));
 
