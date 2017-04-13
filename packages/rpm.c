@@ -886,7 +886,8 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
 
       const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
-      if ( !lcfgpackage_is_active(pkg) ) continue;
+      if ( !lcfgpackage_is_valid(pkg) || !lcfgpackage_is_active(pkg) )
+        continue;
 
       ssize_t rc = lcfgpackage_to_cpp( pkg,
                                        defarch,
@@ -927,6 +928,8 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
 	  cur_node = lcfgpkglist_next(cur_node) ) {
 
       const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
+
+      if ( !lcfgpackage_is_valid(pkg) ) continue;
 
       ssize_t rc = lcfgpackage_to_cpp( pkg,
                                        defarch,

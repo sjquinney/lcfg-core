@@ -429,24 +429,24 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
 
   const LCFGPackageNode * cur_node = NULL;
   for ( cur_node = lcfgpkglist_head(pkglist);
-        cur_node != NULL;
+        cur_node != NULL && result == NULL;
         cur_node = lcfgpkglist_next(cur_node) ) {
         
     const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
-    if ( !lcfgpackage_has_name(pkg) || !lcfgpackage_is_active(pkg) )
+    if ( !lcfgpackage_is_valid(pkg) || !lcfgpackage_is_active(pkg) )
       continue;
 
     const char * pkg_name = lcfgpackage_get_name(pkg);
 
     if ( strcmp( pkg_name, name ) == 0 ) {
+
       const char * pkg_arch = lcfgpackage_has_arch(pkg) ?
                    lcfgpackage_get_arch(pkg) : LCFG_PACKAGE_NOVALUE;
 
-      if ( arch_match_iswild || strcmp( pkg_arch, match_arch ) == 0 ) {
+      if ( arch_match_iswild || strcmp( pkg_arch, match_arch ) == 0 )
         result = (LCFGPackageNode *) cur_node;
-        break;
-      }
+
     }
 
   }
@@ -560,7 +560,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
     const LCFGPackage * pkg = lcfgpkglist_package(node);
 
-    if ( !lcfgpackage_has_name(pkg) || !lcfgpackage_is_active(pkg) )
+    if ( !lcfgpackage_is_valid(pkg) || !lcfgpackage_is_active(pkg) )
       continue;
 
     const char * name = lcfgpackage_get_name(pkg);
@@ -746,27 +746,46 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
   return result;
 }
 
+/**
+ * @brief Merge two package lists
+ *
+ * Merges the packages from one list into another. The merging is done
+ * according to whatever rules have been specified for the first list
+ * by using the @c lcfgpkglist_merge_package() function for each
+ * package in the second list. See the documentation for that function
+ * for full details.
+ *
+ * If the list is changed then the @c LCFG_CHANGE_MODIFIED value will
+ * be returned, if there is no change the @c LCFG_CHANGE_NONE value
+ * will be returned. If an error occurs then the @c LCFG_CHANGE_ERROR
+ * value will be returned.
+ *
+ * @param[in] Pointer to @c LCFGPackageList into which second list is merged
+ * @param[in] Pointer to @c LCFGPackageList to be merged 
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Integer value indicating type of change
+ *
+ */
+
 LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
                                    const LCFGPackageList * pkglist2,
                                    char ** msg ) {
   assert( pkglist1 != NULL );
 
-  *msg = NULL;
-
-  if ( lcfgpkglist_is_empty(pkglist2) )
-    return LCFG_CHANGE_NONE;
+  if ( lcfgpkglist_is_empty(pkglist2) ) return LCFG_CHANGE_NONE;
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
   const LCFGPackageNode * cur_node = NULL;
   for ( cur_node = lcfgpkglist_head(pkglist2);
-        cur_node != NULL;
+        cur_node != NULL && change != LCFG_CHANGE_ERROR;
         cur_node = lcfgpkglist_next(cur_node) ) {
 
     LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
-    if ( !lcfgpackage_has_name(pkg) || !lcfgpackage_is_active(pkg) )
-      continue;
+    /* Just ignore any invalid packages */
+    if ( !lcfgpackage_is_valid(pkg) ) continue;
 
     char * merge_msg = NULL;
     LCFGChange merge_rc = lcfgpkglist_merge_package( pkglist1,
@@ -780,13 +799,11 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
                                         "Failed to merge package lists: %s",
                                         merge_msg );
 
-      free(merge_msg);
-
-      break;
     } else if ( merge_rc != LCFG_CHANGE_NONE ) {
-      change = LCFG_CHANGE_ADDED;
+      change = LCFG_CHANGE_MODIFIED;
     }
 
+    free(merge_msg);
   }
 
   return change;
@@ -856,26 +873,26 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
 
   const LCFGPackageNode * cur_node = NULL;
   for ( cur_node = lcfgpkglist_head(pkglist);
-        ok && cur_node != NULL;
+        cur_node != NULL && ok;
         cur_node = lcfgpkglist_next(cur_node) ) {
 
     const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
-    if ( !lcfgpackage_is_active(pkg) && only_active ) continue;
+    if ( !lcfgpackage_is_valid(pkg) || 
+         ( !lcfgpackage_is_active(pkg) && only_active ) ) continue;
 
     ssize_t rc = lcfgpackage_to_string( pkg, defarch, style, options,
 					&lcfgspec, &buf_size );
 
-    bool ok = ( rc >= 0 );
-
-    if (ok ) {
+    if ( rc < 0 ) {
+      ok = false;
+    } else {
 
       if ( fputs( lcfgspec, out ) < 0 )
 	ok = false;
 
     }
 
-    if (!ok) break;
   }
 
   free(lcfgspec);
