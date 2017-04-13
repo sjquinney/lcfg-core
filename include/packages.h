@@ -491,11 +491,11 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
                                    char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGPackageList * lcfgpkglist_search( const LCFGPackageList * pkglist,
-                                      const char * pkgname,
-                                      const char * pkgarch,
-                                      const char * pkgver,
-                                      const char * pkgrel );
+LCFGPackageList * lcfgpkglist_match( const LCFGPackageList * pkglist,
+                                     const char * name,
+                                     const char * arch,
+                                     const char * ver,
+                                     const char * rel );
 
 /**
  * @brief Simple iterator for package lists
