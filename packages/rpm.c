@@ -668,11 +668,17 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
  * function. The RPM filenames may have leading directories, they will
  * be ignored.
  *
- * An error will be returned if the file does not exist or is
- * inaccessible.
+ * An error is returned if the file does not exist unless the
+ * @c LCFG_OPT_ALLOW_NOEXIST option is specified. If the file exists
+ * but is empty then an empty @c LCFGPackageList is returned.
+ *
+ * If the @c LCFG_OPT_USE_META option is specified then derivation
+ * information will be set for each package which is based on the
+ * filename and line number.
  *
  * @param[in] rpmdir Path to rpmlist file
  * @param[out] result Pointer to @c LCFGPackageList
+ * @param[in] options Controls the behaviour of the process.
  * @param[out] msg Pointer to any diagnostic messages.
  *
  * @return Status value indicating success of the process
@@ -681,6 +687,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
 LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
                                      LCFGPackageList ** result,
+                                     LCFGOption options,
                                      char ** msg ) {
 
   *result = NULL;
@@ -692,14 +699,20 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 
   FILE * fp;
   if ( (fp = fopen(filename, "r")) == NULL ) {
+    LCFGStatus status = LCFG_STATUS_ERROR;
 
     if (errno == ENOENT) {
-      lcfgutils_build_message( msg, "File does not exist" );
+      if ( options&LCFG_OPT_ALLOW_NOEXIST ) {
+        /* No file so just create an empty list */
+        *result = lcfgpkglist_new();
+      } else {
+        lcfgutils_build_message( msg, "File does not exist" );
+      }
     } else {
       lcfgutils_build_message( msg, "File is not readable" );
     }
 
-    return LCFG_STATUS_ERROR;
+    return status;
   }
 
   /* Setup the getline buffer */
@@ -712,6 +725,8 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
   }
 
   /* Results */
+
+  bool include_meta = options & LCFG_OPT_USE_META;
 
   bool ok = true;
 
@@ -748,22 +763,26 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
       }
 
     } else {
-      /* Simplest to use asprintf here since we have an unsigned int */
-      char * derivation = NULL;
-      int rc = asprintf( &derivation, "%s:%u", filename, linenum );
-      if ( rc < 0 || derivation == NULL ) {
-        perror( "Failed to build LCFG derivation string" );
-        exit(EXIT_FAILURE);
-      }
 
-      /* Ignore any problem with setting the derivation */
-      if ( !lcfgpackage_set_derivation( pkg, derivation ) ) {
-        free(derivation);
+      if ( include_meta ) {
+        /* Simplest to use asprintf here since we have an unsigned int */
+        char * derivation = NULL;
+        int rc = asprintf( &derivation, "%s:%u", filename, linenum );
+        if ( rc < 0 || derivation == NULL ) {
+          perror( "Failed to build LCFG derivation string" );
+          exit(EXIT_FAILURE);
+        }
+
+        /* Ignore any problem with setting the derivation */
+        if ( !lcfgpackage_set_derivation( pkg, derivation ) )
+          free(derivation);
       }
 
       char * merge_msg = NULL;
-      if ( lcfgpkglist_merge_package( *result, pkg, &merge_msg )
-           != LCFG_CHANGE_ADDED ) {
+      LCFGChange merge_rc =
+        lcfgpkglist_merge_package( *result, pkg, &merge_msg );
+
+      if ( merge_rc == LCFG_CHANGE_ERROR ) {
         ok = false;
 	lcfgutils_build_message( msg,
 		  "Error at line %u: Failed to merge package into list: %s",
