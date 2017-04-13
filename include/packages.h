@@ -43,6 +43,8 @@ void lcfgpackage_relinquish( LCFGPackage * pkg );
 
 LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkg );
 
+bool lcfgpackage_is_valid( const LCFGPackage * pkg );
+
 /* Name */
 
 bool lcfgpackage_valid_name( const char * name );
