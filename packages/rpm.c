@@ -558,7 +558,7 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
  * inaccessible.
  *
  * @param[in] rpmdir Path to RPM directory
- * @param[out] result Pointer to @c LCFGPackageList
+ * @param[out] result Reference to pointer for new @c LCFGPackageList
  * @param[out] msg Pointer to any diagnostic messages.
  *
  * @return Status value indicating success of the process
@@ -676,8 +676,11 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
  * information will be set for each package which is based on the
  * filename and line number.
  *
- * @param[in] rpmdir Path to rpmlist file
- * @param[out] result Pointer to @c LCFGPackageList
+ * To avoid memory leaks, when the package list is no longer required
+ * the @c lcfgpkglist_relinquish() function should be called.
+ *
+ * @param[in] filename Path to rpmlist file
+ * @param[out] result Reference to pointer for new @c LCFGPackageList
  * @param[in] options Controls the behaviour of the process.
  * @param[out] msg Pointer to any diagnostic messages.
  *
