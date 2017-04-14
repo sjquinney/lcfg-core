@@ -2046,7 +2046,7 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   size_t pkgnamlen    = strlen(pkgnam);
 
   const char * pkgver = lcfgpackage_has_version(pkg) ?
-                         pkg->version : LCFG_PACKAGE_WILDCARD;
+                          pkg->version : LCFG_PACKAGE_WILDCARD;
   size_t pkgverlen    = strlen(pkgver);
 
   const char * pkgrel = lcfgpackage_has_release(pkg) ?
@@ -2237,8 +2237,8 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
   /* Full version string (combination of version and release) - needs
      to be freed afterwards */
 
-  const char * pkgver = lcfgpackage_full_version(pkg);
-  size_t pkgverlen    = strlen(pkgver);
+  char * pkgver    = lcfgpackage_full_version(pkg);
+  size_t pkgverlen = strlen(pkgver);
 
   new_len += ( pkgverlen + base_len );
 
