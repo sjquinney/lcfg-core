@@ -913,7 +913,7 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
 
       ssize_t rc = lcfgpackage_to_cpp( pkg,
                                        defarch,
-                                       LCFG_OPT_NONE,
+                                       LCFG_OPT_USE_META,
                                        &buffer, &buf_size );
 
       if ( rc > 0 ) {
@@ -955,7 +955,7 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
 
       ssize_t rc = lcfgpackage_to_cpp( pkg,
                                        defarch,
-                                       0,
+                                       LCFG_OPT_USE_META,
                                        &buffer, &buf_size );
 
       if ( rc > 0 ) {

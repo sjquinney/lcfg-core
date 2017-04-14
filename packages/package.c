@@ -2180,6 +2180,164 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   return new_len;
 }
 
+/**
+ * @brief Summarise the package information
+ *
+ * Summarises the @c LCFGPackage as a string in the verbose key-value
+ * style used by the qxpack tool. The output will look something like:
+ *
+\verbatim
+lcfg-client:
+ version=3.3.2-1
+    arch=noarch
+  derive=/var/lcfg/conf/server/releases/develop/core/packages/lcfg/lcfg_el7_lcfg.rpms:13
+\endverbatim
+ *
+ * The following options are supported:
+ *   - @c LCFG_OPT_USE_META - Include any derivation and context information.
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many package strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated. 
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required.
+ *
+ * @param[in] pkg Pointer to @c LCFGPackage
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
+
+ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
+  assert( pkg != NULL );
+
+  if ( !lcfgpackage_is_valid(pkg) ) return -1;
+
+  static const char * format = " %7s=%s\n";
+  size_t base_len = 10; /* 1 for indent + 7 for key + 1 for '=' +1 for newline */
+
+  const char * pkgnam = lcfgpackage_get_name(pkg);
+  size_t pkgnamlen    = strlen(pkgnam);
+
+  size_t new_len = pkgnamlen + 2; /* +1 for ':' +1 for newline */
+
+  /* Full version string (combination of version and release) - needs
+     to be freed afterwards */
+
+  const char * pkgver = lcfgpackage_full_version(pkg);
+  size_t pkgverlen    = strlen(pkgver);
+
+  new_len += ( pkgverlen + base_len );
+
+  const char * pkgarch = lcfgpackage_has_arch(pkg) ?
+                         lcfgpackage_get_arch(pkg) : defarch;
+  size_t pkgarchlen = 0;
+
+  if ( !isempty(pkgarch) ) {
+    pkgarchlen = strlen(pkgarch);
+    new_len += ( pkgarchlen + base_len );
+  }
+
+  /* Optional meta-data */
+
+  char * derivation = NULL;
+  size_t deriv_len = 0;
+
+  char * context = NULL;
+  size_t ctx_len = 0;
+  
+  if ( options&LCFG_OPT_USE_META ) {
+
+    if ( lcfgpackage_has_derivation(pkg) ) {
+      derivation = lcfgpackage_get_derivation(pkg);
+      deriv_len  = strlen(derivation);
+      new_len += ( deriv_len + base_len );
+    }
+
+    if ( lcfgpackage_has_context(pkg) ) {
+      context = lcfgpackage_get_context(pkg);
+      ctx_len = strlen(context);
+      new_len += ( ctx_len + base_len );
+    }
+
+  }
+
+  /* Allocate the required space */
+
+  if ( *result == NULL || *size < ( new_len + 1 ) ) {
+    *size = new_len + 1;
+
+    *result = realloc( *result, ( *size * sizeof(char) ) );
+    if ( *result == NULL ) {
+      perror("Failed to allocate memory for LCFG package string");
+      exit(EXIT_FAILURE);
+    }
+
+  }
+
+  /* Always initialise the characters of the full space to nul */
+  memset( *result, '\0', *size );
+
+  /* Build the new string */
+
+  char * to = *result;
+
+  /* Name */
+
+  to = stpncpy( to, pkgnam, pkgnamlen );
+  to = stpncpy( to, ":\n", 2 );
+
+  int rc;
+
+  /* Version */
+
+  rc = sprintf( to, format, "version", pkgver );
+  to += rc;
+
+  free(pkgver);
+  pkgver = NULL;
+
+  /* Architecture */
+
+  if ( pkgarchlen > 0 ) {
+    rc = sprintf( to, format, "arch", pkgarch );
+    to += rc;
+  }
+
+  /* Derivation */
+
+  if ( deriv_len > 0 ) {
+    rc = sprintf( to, format, "derive", derivation );
+    to += rc;
+  }
+
+  /* Context */
+
+  if ( ctx_len > 0 ) {
+    rc = sprintf( to, format, "context", context );
+    to += rc;
+  }
+
+  *to = '\0';
+
+  assert( ( *result + new_len ) == to ) ;
+
+  return new_len;
+}
+
 static char const * const meta_start     = "#ifdef INCLUDE_META\n";
 static char const * const meta_end       = "#endif\n";
 static char const * const pragma_derive  = "#pragma LCFG derive \"";
@@ -2198,9 +2356,8 @@ static char const * const pragma_end     = "\"\n";
  * be used when it is different from the value (if any) specified for
  * the default architecture.
  *
- * This function does not support any additional formatting options,
- * the input value for that argument will be ignored. The argument is
- * present for API consistency with other output functions.
+ * The following options are supported:
+ *   - @c LCFG_OPT_USE_META - Include any derivation and context information.
  *
  * This function uses a string buffer which may be pre-allocated if
  * nececesary to improve efficiency. This makes it possible to reuse
@@ -2239,8 +2396,7 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
                                             spec_options,
                                             result, size );
 
-  if ( spec_len < 0 )
-    return spec_len;
+  if ( spec_len < 0 ) return spec_len;
 
   /* Meta-Data */
 
@@ -2254,18 +2410,24 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
 
   char * derivation = NULL;
   size_t deriv_len = 0;
-  if ( lcfgpackage_has_derivation(pkg) ) {
-    derivation = lcfgpackage_get_derivation(pkg);
-    deriv_len  = strlen(derivation);
-    meta_len += ( pragma_derive_len + deriv_len + pragma_end_len );
-  }
 
   char * context = NULL;
   size_t ctx_len = 0;
-  if ( lcfgpackage_has_context(pkg) ) {
-    context = lcfgpackage_get_context(pkg);
-    ctx_len = strlen(context);
-    meta_len += ( pragma_context_len + ctx_len + pragma_end_len );
+
+  if ( options&LCFG_OPT_USE_META ) {
+
+    if ( lcfgpackage_has_derivation(pkg) ) {
+      derivation = lcfgpackage_get_derivation(pkg);
+      deriv_len  = strlen(derivation);
+      meta_len += ( pragma_derive_len + deriv_len + pragma_end_len );
+    }
+
+    if ( lcfgpackage_has_context(pkg) ) {
+      context = lcfgpackage_get_context(pkg);
+      ctx_len = strlen(context);
+      meta_len += ( pragma_context_len + ctx_len + pragma_end_len );
+    }
+
   }
 
   /* If there is no metadata (i.e. length is zero) then there is
@@ -2343,9 +2505,8 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
  * be used when it is different from the value (if any) specified for
  * the default architecture.
  *
- * This function does not support any additional formatting options,
- * the input value for that argument will be ignored. The argument is
- * present for API consistency with other output functions.
+ * The following options are supported:
+ *   - @c LCFG_OPT_USE_META - Include any derivation and context information.
  *
  * This function uses a string buffer which may be pre-allocated if
  * nececesary to improve efficiency. This makes it possible to reuse
@@ -2436,22 +2597,28 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
 
   const char * context = lcfgpackage_get_context(pkg);
   size_t ctx_len = 0;
-  if ( context != NULL ) {
-    ctx_len = strlen(context);
-
-    if ( ctx_len > 0 )
-      new_len += ( ctx_len + 15 ); /* ' cfg:context=""' */
-  }
 
   /* Derivation - optional */
 
   const char * derivation = lcfgpackage_get_derivation(pkg);
   size_t deriv_len = 0;
-  if ( derivation != NULL ) {
-    deriv_len = strlen(derivation);
 
-    if ( deriv_len > 0 )
-      new_len += ( deriv_len + 18 ); /* ' cfg:derivation=""' */
+  if ( options&LCFG_OPT_USE_META ) {
+
+    if ( context != NULL ) {
+      ctx_len = strlen(context);
+
+      if ( ctx_len > 0 )
+        new_len += ( ctx_len + 15 ); /* ' cfg:context=""' */
+    }
+
+    if ( derivation != NULL ) {
+      deriv_len = strlen(derivation);
+
+      if ( deriv_len > 0 )
+        new_len += ( deriv_len + 18 ); /* ' cfg:derivation=""' */
+    }
+
   }
 
   /* Allocate the required space */
@@ -2557,7 +2724,7 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
 
 }
 
-static int compare_vstrings( const char * v1, const char * v2 ) {
+int compare_vstrings( const char * v1, const char * v2 ) {
 
   bool v1_isempty = isempty(v1);
   bool v2_isempty = isempty(v2);
@@ -2879,6 +3046,9 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
       break;
     case LCFG_PKG_STYLE_CPP:
       str_func = &lcfgpackage_to_cpp;
+      break;
+    case LCFG_PKG_STYLE_SUMMARY:
+      str_func = &lcfgpackage_to_summary;
       break;
     case LCFG_PKG_STYLE_RPM:
       str_func = &lcfgpackage_to_rpm_filename;

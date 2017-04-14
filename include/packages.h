@@ -209,6 +209,7 @@ typedef enum {
   LCFG_PKG_STYLE_RPM,  /**< RPM filename */
   LCFG_PKG_STYLE_CPP,  /**< LCFG CPP block (as used by updaterpms) */
   LCFG_PKG_STYLE_XML,  /**< LCFG XML block (as used by client/server) */
+  LCFG_PKG_STYLE_SUMMARY, /**< qxpack style summary */
   LCFG_PKG_STYLE_EVAL  /**< Shell variables */
 } LCFGPkgStyle;
 
@@ -231,6 +232,9 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS )
   __attribute__((warn_unused_result));
 
 ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS )
+  __attribute__((warn_unused_result));
+
+ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS )
   __attribute__((warn_unused_result));
 
 ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS )
@@ -429,6 +433,10 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
 LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * pkglist,
                                         const char * name,
                                         const char * arch );
+
+bool lcfgpkglist_contains( const LCFGPackageList * pkglist,
+                           const char * name,
+                           const char * arch );
 
 LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
                                       LCFGPackage * pkg,
