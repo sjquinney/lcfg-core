@@ -1,6 +1,17 @@
-2017-04-13  SVN: new release
+2017-04-14  SVN: new release
 
-	* Release: 1.34.1
+	* Release: 1.35.0
+
+2017-04-14 14:01  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/package.c, packages/rpm.c:
+	  Added lcfgpackage_to_summary which formats a package in the style
+	  used by qxpack. Altered to_cpp and to_xml to only include context
+	  and derivation information when USE_META is specified
+
+2017-04-13 15:59  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.34.1
 
 2017-04-13 15:58  squinney@INF.ED.AC.UK
 
