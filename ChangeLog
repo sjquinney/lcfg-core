@@ -1,6 +1,15 @@
 2017-04-14  SVN: new release
 
-	* Release: 1.35.0
+	* Release: 1.35.1
+
+2017-04-14 14:55  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, specfile: Temporarily dropped some binaries to avoid
+	  conflicts with old lcfg-utils package
+
+2017-04-14 14:47  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.35.0
 
 2017-04-14 14:01  squinney@INF.ED.AC.UK
 
