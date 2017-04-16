@@ -138,7 +138,7 @@ static char * LCFG_LogDir( const char * new_logdir ) {
 }
 
 /*************************************************************************/
-  /*VARARGS*/ char *LCFG_Append( char *first, ... )
+  /*VARARGS*/ char *LCFG_Append( const char *first, ... )
 /*************************************************************************/
 {
   /* Append Strings */
@@ -162,7 +162,7 @@ static char * LCFG_LogDir( const char * new_logdir ) {
 }
 
 /*************************************************************************/
-  char *LCFG_FirstLine( char *s )
+  char *LCFG_FirstLine( const char *s )
 /*************************************************************************/
 {
   /* Copy of First Line of String */
@@ -182,7 +182,7 @@ static char * LCFG_LogDir( const char * new_logdir ) {
 }
 
 /*************************************************************************/
-  char *LCFG_AddNewLine( char *s )
+  char *LCFG_AddNewLine( const char *s )
 /*************************************************************************/
 {
   /* Copy of String with Newline at end */
