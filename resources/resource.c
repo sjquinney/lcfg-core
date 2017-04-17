@@ -169,8 +169,8 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
  * reference count for the specified resource is greater than zero
  * this function will have no affect.
  *
- * This will call @c free() on each parameter of the struct (or @c
- * lcfgtemplate_destroy for the template parameter ) and then set each
+ * This will call @c free() on each parameter of the struct (or
+ * @c lcfgtemplate_destroy() for the template parameter ) and then set each
  * value to be @c NULL.
  *
  * If the value of the pointer passed in is @c NULL then the function
@@ -238,15 +238,13 @@ bool lcfgresource_valid_name( const char * name ) {
      MUST have non-zero length.
      First character MUST be in [A-Za-z] set. */
 
-  bool valid = ( name != NULL && *name != '\0' && isalpha(*name) );
+  bool valid = ( !isempty(name) && isalpha(*name) );
 
   /* All other characters MUST be in [A-Za-z0-9_] set */
 
   char * ptr;
-  for ( ptr = ((char *)name) + 1; valid && *ptr != '\0'; ptr++ ) {
-    if ( !isword(*ptr) )
-      valid = false;
-  }
+  for ( ptr = ((char *)name) + 1; valid && *ptr != '\0'; ptr++ )
+    if ( !isword(*ptr) ) valid = false;
 
   return valid;
 }
@@ -851,11 +849,19 @@ char * lcfgresource_get_template_as_string( const LCFGResource * res ) {
 bool lcfgresource_set_template( LCFGResource * res,
                                 LCFGTemplate * new_tmpl ) {
 
-  free(res->template);
+  /* Allow setting the template to NULL which is basically an "unset" */
 
-  res->template = new_tmpl;
+  bool ok = false;
+  if ( new_tmpl == NULL || lcfgtemplate_is_valid(new_tmpl) ) {
+    lcfgtemplate_destroy(res->template);
 
-  return true;
+    res->template = new_tmpl;
+    ok = true;
+  } else {
+    errno = EINVAL;
+  }
+
+  return ok;
 }
 
 /**
@@ -897,9 +903,8 @@ bool lcfgresource_set_template_as_string(  LCFGResource * res,
     return false;
   }
 
-  if (  *new_tmpl_str == '\0' ) {
+  if (  *new_tmpl_str == '\0' )
     return lcfgresource_set_template( res, NULL );
-  }
 
   LCFGTemplate * new_template = NULL;
   char * parse_msg = NULL;
@@ -2198,96 +2203,6 @@ bool lcfgresource_print( const LCFGResource * res,
   free(lcfgres);
 
   return ok;
-}
-
-char * lcfgresource_build_name( const LCFGTemplate * templates,
-                                const LCFGTagList  * taglist,
-                                const char * field_name,
-                                char ** msg ) {
-
-  /* Replaces each occurrence of the '$' placeholder with the next tag
-     in the list. Work **backwards** from the tail of the list to the head. */
-
-  const LCFGTemplate * res_tmpl = lcfgtemplate_find( templates, field_name );
-  if ( res_tmpl == NULL ) {
-    asprintf( msg, "Failed to find template for field '%s'\n", field_name );
-    return NULL;
-  }
-
-  const char * template  = res_tmpl->tmpl;
-
-  unsigned int pcount = res_tmpl->pcount;
-  if ( lcfgtaglist_size(taglist) < pcount ) {
-    asprintf( msg, "Insufficient tags for template '%s'\n", template );
-    return NULL;
-  }
-
-  /* Find the required length of the resource name */
-
-  size_t new_len = res_tmpl->tmpl_len;
-
-  LCFGTag * cur_tag = lcfgtaglist_tail(taglist);
-
-  unsigned int i;
-  for ( i=0; i<pcount; i++ ) {
-
-    /* -1 for $ placeholder character which is replaced with the tag */
-    new_len += ( lcfgtaglist_name_len(cur_tag) - 1 );
-
-    cur_tag = lcfgtaglist_prev(cur_tag);
-  }
-
-  /* Allocate the necessary memory */
-
-  char * result = calloc( ( new_len + 1 ), sizeof(char) );
-  if ( result == NULL ) {
-    perror( "Failed to allocate memory for LCFG resource name" );
-    exit(EXIT_FAILURE);
-  }
-
-  /* Build the resource name from the template and tags */
-
-  size_t end = res_tmpl->tmpl_len - 1;
-  size_t after;
-  ssize_t after_len;
-  size_t offset = new_len;
-
-  cur_tag = lcfgtaglist_tail(taglist);
-
-  for ( i=0; i<pcount; i++ ) {
-    int place = res_tmpl->places[i];
-    after = place + 1;
-
-    /* Copy any static parts of the template between this tag and             
-       the next (or the end of the string). */
-
-    after_len = end - after;
-    if ( after_len > 0 ) {
-      offset -= after_len;
-
-      memcpy( result + offset, template + after, after_len );
-    }
-
-    end = place;
-
-    /* Copy the required tag name */
-
-    size_t taglen  = lcfgtaglist_name_len(cur_tag);
-
-    offset -= taglen;
-
-    memcpy( result + offset, lcfgtaglist_name(cur_tag), taglen );
-
-    cur_tag = lcfgtaglist_prev(cur_tag);
-  }
-
-  /* Copy the rest which is static */
-
-  memcpy( result, template, offset );
-
-  *( result + new_len ) = '\0';
-
-  return result;
 }
 
 int lcfgresource_compare_values( const LCFGResource * res1,
