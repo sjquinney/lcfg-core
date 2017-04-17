@@ -40,7 +40,6 @@ LCFGTemplate * lcfgtemplate_new(void) {
     exit(EXIT_FAILURE);
   }
 
-  template->name     = NULL;
   template->name_len = 0;
   template->tmpl     = NULL;
   template->tmpl_len = 0;
@@ -66,9 +65,6 @@ void lcfgtemplate_destroy(LCFGTemplate * head_template) {
   while(cur_template != NULL) {
     next_template = cur_template->next;
 
-    free(cur_template->name);
-    cur_template->name = NULL;
-
     free(cur_template->tmpl);
     cur_template->tmpl = NULL;
 
@@ -80,36 +76,7 @@ void lcfgtemplate_destroy(LCFGTemplate * head_template) {
 
 bool lcfgtemplate_is_valid ( const LCFGTemplate * template ) {
   return ( template       != NULL &&
-           template->name != NULL &&
            template->tmpl != NULL );
-}
-
-char * lcfgtemplate_get_name( const LCFGTemplate * template ) {
-  assert( template != NULL );
-  return template->name;
-}
-
-/* Avoid pulling in the entire resources header just for this */
-bool lcfgresource_valid_name( const char * name );
-
-bool lcfgtemplate_set_name( LCFGTemplate * template, char * new_name ) {
-  assert( template != NULL );
-
-  /* Must be a valid 'resource' name */
-
-  bool ok = false;
-  if ( lcfgresource_valid_name(new_name) ) {
-    free(template->name);
-
-    template->name     = new_name;
-    template->name_len = strlen(new_name);
-
-    ok = true;
-  } else {
-    errno = EINVAL;
-  }
-
-  return ok;
 }
 
 bool lcfgresource_valid_template( const char * tmpl ) {
@@ -125,7 +92,7 @@ bool lcfgresource_valid_template( const char * tmpl ) {
 
   /* All other characters MUST be in [A-Za-z0-9_$] set */
 
-  int pcount = 0;
+  unsigned int pcount = 0;
 
   char * ptr;
   for ( ptr = ((char *)tmpl) + 1; *ptr != '\0'; ptr++ ) {
@@ -150,25 +117,30 @@ char * lcfgtemplate_get_tmpl( const LCFGTemplate * template ) {
 
 bool lcfgtemplate_set_tmpl( LCFGTemplate * template, char * new_tmpl ) {
 
-  size_t new_tmpl_len = 0;
-  bool valid = false;
-  if ( lcfgresource_valid_template(new_tmpl) ) {
+  size_t new_name_len = 0;
 
-    /* As well as being a valid template it must begin with the same
-       string as the template 'name' */
+  bool valid = lcfgresource_valid_template(new_tmpl);
+  if ( valid ) {
 
-    new_tmpl_len = strlen(new_tmpl);
+    /* Splitting on the first instance of the '_$' string */
+    const char * split_at = strstr( new_tmpl, "_$" );
 
-    valid = ( new_tmpl_len > template->name_len && 
-              strncmp( new_tmpl, template->name, template->name_len ) == 0 );
+    if ( split_at != NULL )
+      new_name_len = split_at - new_tmpl;
+    else
+      valid = false;
+
   }
 
   bool ok = false;
   if (valid) {
     free(template->tmpl);
 
+    size_t new_tmpl_len = strlen(new_tmpl);
+
     template->tmpl     = new_tmpl;
     template->tmpl_len = new_tmpl_len;
+    template->name_len = new_name_len;
 
     /* Use an array to cache the locations of the placeholders. Avoids
        having to find them multiple times when actually building the
@@ -301,33 +273,12 @@ LCFGStatus lcfgtemplate_from_string( const char * input,
   char * token = strtok_r( remainder, whitespace, &saveptr );
   while ( status == LCFG_STATUS_OK && token ) {
 
-    /* Splitting on the first instance of the '_$' string */
-    const char * split_at = strstr( token, "_$" );
-    if ( split_at == NULL ) {
-      status = invalid_template( msg, "no placeholder in '%s'", token );
-      break;
-    }
-
     LCFGTemplate * new_template = lcfgtemplate_new();
 
-    /* Stub resource name */
-    char * newname = strndup(token, split_at - token);
-
-    if ( !lcfgtemplate_set_name( new_template, newname ) ) {
-      status = invalid_template( msg, "bad resource name '%s'", newname );
-      free(newname);
-    }
-
-    if ( status != LCFG_STATUS_ERROR ) {
-
-      /* Full template */
-      char * newtmpl = strdup(token);
-
-      if ( !lcfgtemplate_set_tmpl( new_template, newtmpl ) ) {
-        status = invalid_template( msg, "bad value '%s'", newtmpl );
-        free(newtmpl);
-
-      }
+    char * newtmpl = strdup(token);
+    if ( !lcfgtemplate_set_tmpl( new_template, newtmpl ) ) {
+      status = invalid_template( msg, "bad value '%s'", newtmpl );
+      free(newtmpl);
     }
 
     if ( status == LCFG_STATUS_ERROR ) {
@@ -377,7 +328,7 @@ LCFGTemplate * lcfgtemplate_find( const LCFGTemplate * head_template,
 
     if ( lcfgtemplate_is_valid(cur_tmpl) &&
          field_len == cur_tmpl->name_len &&
-         strncmp( field_name, cur_tmpl->name, field_len ) == 0 )
+         strncmp( field_name, cur_tmpl->tmpl, field_len ) == 0 )
       result = (LCFGTemplate *) cur_tmpl;
   }
 
