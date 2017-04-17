@@ -3037,7 +3037,6 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
   /* Select the appropriate string function */
 
   LCFGPkgStrFunc str_func;
-  LCFGOption str_options = options;
 
   switch (style)
     {
@@ -3052,15 +3051,13 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
       break;
     case LCFG_PKG_STYLE_RPM:
       str_func = &lcfgpackage_to_rpm_filename;
-      str_options |= LCFG_OPT_NEWLINE;
       break;
     case LCFG_PKG_STYLE_SPEC:
     default:
       str_func = &lcfgpackage_to_spec;
-      str_options |= LCFG_OPT_NEWLINE;
     }
 
-  return (*str_func)( pkg, defarch, str_options, result, size );
+  return (*str_func)( pkg, defarch, options, result, size );
 }
 
 /**
@@ -3097,6 +3094,9 @@ bool lcfgpackage_print( const LCFGPackage * pkg,
 
   char * lcfgspec = NULL;
   size_t buf_size = 0;
+
+  if ( style == LCFG_PKG_STYLE_RPM || style == LCFG_PKG_STYLE_SPEC )
+    options |= LCFG_OPT_NEWLINE;
 
   ssize_t rc = lcfgpackage_to_string( pkg, defarch, style, options,
 				      &lcfgspec, &buf_size );
