@@ -1266,6 +1266,30 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
 #include <fnmatch.h>
 
+/**
+ * @brief Search package list for all matches
+ *
+ * Searches the specified @c LCFGPackageList and returns a new list
+ * that contains all packages which match the specified
+ * parameters. This can be used to match a package on @e name,
+ * @e architecture, @e version and @e release. The matching is done using
+ * the fnmatch(3) function so the @c '?' (question mark) and @c '*'
+ * (asterisk) meta-characters are supported. To avoid matching on a
+ * particular parameter specify the value as @c NULL.
+ *
+ * To avoid memory leaks, when the list of matches is no longer
+ * required the @c lcfgpkglist_relinquish() function should be called.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ * @param[in] name Package name to match (or @c NULL)
+ * @param[in] arch Package architecture to match (or @c NULL)
+ * @param[in] ver Package version to match (or @c NULL)
+ * @param[in] rel Package release to match (or @c NULL)
+ *
+ * @return Pointer to new @c LCFGPackageList of matches
+ *
+ */
+
 LCFGPackageList * lcfgpkglist_match( const LCFGPackageList * pkglist,
                                      const char * name,
                                      const char * arch,
