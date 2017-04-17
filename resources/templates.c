@@ -89,6 +89,9 @@ char * lcfgtemplate_get_name( const LCFGTemplate * template ) {
   return template->name;
 }
 
+/* Avoid pulling in the entire resources header just for this */
+bool lcfgresource_valid_name( const char * name );
+
 bool lcfgtemplate_set_name( LCFGTemplate * template, char * new_name ) {
   assert( template != NULL );
 
@@ -140,7 +143,7 @@ bool lcfgresource_valid_template( const char * tmpl ) {
   return valid;
 }
 
-char * lcfgtemplate_get_tmpl( LCFGTemplate * template ) {
+char * lcfgtemplate_get_tmpl( const LCFGTemplate * template ) {
   assert( template != NULL );
   return template->tmpl;
 }
@@ -391,7 +394,8 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
 
   const LCFGTemplate * res_tmpl = lcfgtemplate_find( templates, field_name );
   if ( res_tmpl == NULL ) {
-    asprintf( msg, "Failed to find template for field '%s'\n", field_name );
+    lcfgutils_build_message( msg, "Failed to find template for field '%s'\n",
+                             field_name );
     return NULL;
   }
 
@@ -399,7 +403,8 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
 
   unsigned int pcount = res_tmpl->pcount;
   if ( lcfgtaglist_size(taglist) < pcount ) {
-    asprintf( msg, "Insufficient tags for template '%s'\n", template );
+   lcfgutils_build_message( msg, "Insufficient tags for template '%s'\n",
+                            template );
     return NULL;
   }
 

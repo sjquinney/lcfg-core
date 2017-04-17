@@ -30,7 +30,7 @@ bool lcfgtemplate_set_name( LCFGTemplate * template, char * new_name )
 
 bool lcfgresource_valid_template( const char * tmpl );
 
-char * lcfgtemplate_get_tmpl( LCFGTemplate * template );
+char * lcfgtemplate_get_tmpl( const LCFGTemplate * template );
 bool lcfgtemplate_set_tmpl( LCFGTemplate * template, char * new_tmpl )
   __attribute__((warn_unused_result));
 
