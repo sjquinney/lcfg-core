@@ -147,24 +147,32 @@ char * lcfgtemplate_get_tmpl( LCFGTemplate * template ) {
 
 bool lcfgtemplate_set_tmpl( LCFGTemplate * template, char * new_tmpl ) {
 
-  /* As well as being a valid template it must begin with the same
-     string as the template 'name' */
+  size_t new_tmpl_len = 0;
+  bool valid = false;
+  if ( lcfgresource_valid_template(new_tmpl) ) {
+
+    /* As well as being a valid template it must begin with the same
+       string as the template 'name' */
+
+    new_tmpl_len = strlen(new_tmpl);
+
+    valid = ( new_tmpl_len > template->name_len && 
+              strncmp( new_tmpl, template->name, template->name_len ) == 0 );
+  }
 
   bool ok = false;
-  bool valid = ( lcfgresource_valid_template(new_tmpl) &&
-                 strncmp( new_tmpl, template->name, template->name_len ) == 0 );
   if (valid) {
     free(template->tmpl);
 
     template->tmpl     = new_tmpl;
-    template->tmpl_len = strlen(new_tmpl);
+    template->tmpl_len = new_tmpl_len;
 
     /* Use an array to cache the locations of the placeholders. Avoids
        having to find them multiple times when actually building the
        resource names. */
 
     int i;
-    for ( i=template->tmpl_len - 1; i >= 0; i-- ) {
+    for ( i=new_tmpl_len - 1; i >= 0; i-- ) {
       if ( new_tmpl[i] == LCFG_TEMPLATE_PLACEHOLDER ) {
         template->pcount++;
         template->places[template->pcount - 1] = i;
@@ -369,6 +377,96 @@ LCFGTemplate * lcfgtemplate_find( const LCFGTemplate * head_template,
          strncmp( field_name, cur_tmpl->name, field_len ) == 0 )
       result = (LCFGTemplate *) cur_tmpl;
   }
+
+  return result;
+}
+
+char * lcfgresource_build_name( const LCFGTemplate * templates,
+                                const LCFGTagList  * taglist,
+                                const char * field_name,
+                                char ** msg ) {
+
+  /* Replaces each occurrence of the '$' placeholder with the next tag
+     in the list. Work **backwards** from the tail of the list to the head. */
+
+  const LCFGTemplate * res_tmpl = lcfgtemplate_find( templates, field_name );
+  if ( res_tmpl == NULL ) {
+    asprintf( msg, "Failed to find template for field '%s'\n", field_name );
+    return NULL;
+  }
+
+  const char * template  = lcfgtemplate_get_tmpl(res_tmpl);
+
+  unsigned int pcount = res_tmpl->pcount;
+  if ( lcfgtaglist_size(taglist) < pcount ) {
+    asprintf( msg, "Insufficient tags for template '%s'\n", template );
+    return NULL;
+  }
+
+  /* Find the required length of the resource name */
+
+  size_t new_len = res_tmpl->tmpl_len;
+
+  LCFGTag * cur_tag = lcfgtaglist_tail(taglist);
+
+  unsigned int i;
+  for ( i=0; i<pcount; i++ ) {
+
+    /* -1 for $ placeholder character which is replaced with the tag */
+    new_len += ( lcfgtaglist_name_len(cur_tag) - 1 );
+
+    cur_tag = lcfgtaglist_prev(cur_tag);
+  }
+
+  /* Allocate the necessary memory */
+
+  char * result = calloc( ( new_len + 1 ), sizeof(char) );
+  if ( result == NULL ) {
+    perror( "Failed to allocate memory for LCFG resource name" );
+    exit(EXIT_FAILURE);
+  }
+
+  /* Build the resource name from the template and tags */
+
+  size_t end = res_tmpl->tmpl_len - 1;
+  size_t after;
+  ssize_t after_len;
+  size_t offset = new_len;
+
+  cur_tag = lcfgtaglist_tail(taglist);
+
+  for ( i=0; i<pcount; i++ ) {
+    int place = res_tmpl->places[i];
+    after = place + 1;
+
+    /* Copy any static parts of the template between this tag and             
+       the next (or the end of the string). */
+
+    after_len = end - after;
+    if ( after_len > 0 ) {
+      offset -= after_len;
+
+      memcpy( result + offset, template + after, after_len );
+    }
+
+    end = place;
+
+    /* Copy the required tag name */
+
+    size_t taglen  = lcfgtaglist_name_len(cur_tag);
+
+    offset -= taglen;
+
+    memcpy( result + offset, lcfgtaglist_name(cur_tag), taglen );
+
+    cur_tag = lcfgtaglist_prev(cur_tag);
+  }
+
+  /* Copy the rest which is static */
+
+  memcpy( result, template, offset );
+
+  *( result + new_len ) = '\0';
 
   return result;
 }

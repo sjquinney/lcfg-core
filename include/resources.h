@@ -76,11 +76,6 @@ bool lcfgresource_set_name( LCFGResource * res,
                             char * new_value )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-char * lcfgresource_build_name( const LCFGTemplate * templates,
-                                const LCFGTagList  * taglist,
-                                const char * field_name,
-                                char ** msg );
-
 /* Resources: Types */
 
 LCFGResourceType lcfgresource_get_type( const LCFGResource * res )

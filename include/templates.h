@@ -48,4 +48,9 @@ ssize_t lcfgtemplate_to_string( const LCFGTemplate * head_template,
 LCFGTemplate * lcfgtemplate_find( const LCFGTemplate * head_template,
                                   const char * field_name );
 
+char * lcfgresource_build_name( const LCFGTemplate * templates,
+                                const LCFGTagList  * taglist,
+                                const char * field_name,
+                                char ** msg );
+
 /* eof */
