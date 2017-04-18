@@ -40,9 +40,9 @@ LCFGTemplate * lcfgtemplate_new(void) {
     exit(EXIT_FAILURE);
   }
 
-  template->name_len = 0;
   template->tmpl     = NULL;
   template->tmpl_len = 0;
+  template->name_len = 0;
 
   int i;
   for ( i=0; i<LCFG_TAGS_MAX_DEPTH; i++ )
@@ -62,21 +62,21 @@ void lcfgtemplate_destroy(LCFGTemplate * head_template) {
   LCFGTemplate * cur_template = head_template;
   LCFGTemplate * next_template;
 
-  while(cur_template != NULL) {
+  while (cur_template != NULL) {
     next_template = cur_template->next;
 
     free(cur_template->tmpl);
     cur_template->tmpl = NULL;
 
     free(cur_template);
+
     cur_template = next_template;
   }
 
 }
 
 bool lcfgtemplate_is_valid ( const LCFGTemplate * template ) {
-  return ( template       != NULL &&
-           template->tmpl != NULL );
+  return ( template != NULL && template->tmpl != NULL );
 }
 
 bool lcfgresource_valid_template( const char * tmpl ) {
@@ -95,7 +95,7 @@ bool lcfgresource_valid_template( const char * tmpl ) {
   unsigned int pcount = 0;
 
   char * ptr;
-  for ( ptr = ((char *)tmpl) + 1; *ptr != '\0'; ptr++ ) {
+  for ( ptr = ((char *)tmpl) + 1; valid && *ptr != '\0'; ptr++ ) {
     if ( *ptr == LCFG_TEMPLATE_PLACEHOLDER ) {
       if ( ++pcount > LCFG_TAGS_MAX_DEPTH ) valid = false;
     } else if ( !isword(*ptr) ) {
@@ -170,6 +170,8 @@ ssize_t lcfgtemplate_to_string( const LCFGTemplate * head_template,
   /* Calculate the required space */
 
   size_t new_len = 0;
+
+  /* Optional prefix (e.g. something like "list: " ) */
 
   size_t prefix_len = 0;
   if ( !isempty(prefix) ) {
@@ -354,8 +356,8 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
 
   unsigned int pcount = res_tmpl->pcount;
   if ( lcfgtaglist_size(taglist) < pcount ) {
-   lcfgutils_build_message( msg, "Insufficient tags for template '%s'\n",
-                            template );
+    lcfgutils_build_message( msg, "Insufficient tags for template '%s'\n",
+                             template );
     return NULL;
   }
 
