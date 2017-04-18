@@ -1,4 +1,13 @@
-/* Templates */
+/**
+ * @file packages.h
+ * @brief LCFG package handling library
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date$
+ * $Revision$
+ */
+
+#ifndef LCFG_CORE_TEMPLATES_H
+#define LCFG_CORE_TEMPLATES_H
 
 #include <string.h>
 
@@ -24,10 +33,6 @@ void lcfgtemplate_destroy(LCFGTemplate * head_template);
 
 bool lcfgtemplate_is_valid ( const LCFGTemplate * template );
 
-char * lcfgtemplate_get_name( const LCFGTemplate * template );
-bool lcfgtemplate_set_name( LCFGTemplate * template, char * new_name )
-  __attribute__((warn_unused_result));
-
 bool lcfgresource_valid_template( const char * tmpl );
 
 char * lcfgtemplate_get_tmpl( const LCFGTemplate * template );
@@ -52,5 +57,7 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
                                 const LCFGTagList  * taglist,
                                 const char * field_name,
                                 char ** msg );
+
+#endif /* LCFG_CORE_TEMPLATES_H */
 
 /* eof */
