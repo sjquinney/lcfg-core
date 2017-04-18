@@ -294,6 +294,8 @@ LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
                                     LCFGPackage * pkg ) {
   assert( pkglist != NULL );
 
+  if ( !lcfgpackage_is_valid(pkg) ) return LCFG_CHANGE_ERROR;
+
   LCFGPackageNode * new_node = lcfgpkgnode_new(pkg);
   if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
 

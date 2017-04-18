@@ -296,6 +296,7 @@ LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkg ) {
  * the package must have a name.
  *
  * @param[in] pkg Pointer to an @c LCFGPackage
+ *
  * @return Boolean which indicates if package is valid
  *
  */
