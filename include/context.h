@@ -6,8 +6,8 @@
  * $Revision$
  */
 
-#ifndef LCFG_CONTEXT_H
-#define LCFG_CONTEXT_H
+#ifndef LCFG_CORE_CONTEXT_H
+#define LCFG_CORE_CONTEXT_H
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -380,6 +380,6 @@ bool setctx_update( const char * contextdir,
                     int count, char * contexts[] )
   __attribute__((warn_unused_result));
 
-#endif /*  LCFG_CONTEXT_H */
+#endif /*  LCFG_CORE_CONTEXT_H */
 
 /* eof */

@@ -1,6 +1,6 @@
 /**
- * @file packages.h
- * @brief LCFG package handling library
+ * @file templates.h
+ * @brief LCFG resource template handling library
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date$
  * $Revision$

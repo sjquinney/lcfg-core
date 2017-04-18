@@ -6,8 +6,8 @@
  * $Revision$
  */
 
-#ifndef LCFG_PACKAGES_H
-#define LCFG_PACKAGES_H
+#ifndef LCFG_CORE_PACKAGES_H
+#define LCFG_CORE_PACKAGES_H
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -526,6 +526,6 @@ bool lcfgpkgiter_has_next( LCFGPackageIterator * iterator );
 
 LCFGPackage * lcfgpkgiter_next(LCFGPackageIterator * iterator);
 
-#endif /* LCFG_PACKAGES_H */
+#endif /* LCFG_CORE_PACKAGES_H */
 
 /* eof */

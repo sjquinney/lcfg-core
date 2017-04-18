@@ -1,7 +1,13 @@
-/* Common definitions */
+/**
+ * @file common.h
+ * @brief LCFG common constants
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date$
+ * $Revision$
+ */
 
-#ifndef LCFG_COMMON_H
-#define LCFG_COMMON_H
+#ifndef LCFG_CORE_COMMON_H
+#define LCFG_CORE_COMMON_H
 
 /**
  * @brief Test if a string (i.e. a char *) is 'empty'
@@ -61,7 +67,7 @@ typedef enum {
   LCFG_OPT_USE_META       = 512  /**< Include metadata */
 } LCFGOption;
 
-#endif /* LCFG_COMMON_H */
+#endif /* LCFG_CORE_COMMON_H */
 
 /* eof */
 
