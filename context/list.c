@@ -236,9 +236,11 @@ LCFGContextList * lcfgctxlist_clone( const LCFGContextList * ctxlist ) {
  */
 
 LCFGChange lcfgctxlist_insert_next( LCFGContextList * ctxlist,
-                                     LCFGContextNode * ctxnode,
-                                     LCFGContext     * ctx ) {
+                                    LCFGContextNode * ctxnode,
+                                    LCFGContext     * ctx ) {
   assert( ctxlist != NULL );
+
+  if ( !lcfgcontext_is_valid(pkg) ) return LCFG_CHANGE_ERROR;
 
   LCFGContextNode * new_node = lcfgctxnode_new(ctx);
   if ( new_node == NULL ) return LCFG_CHANGE_ERROR;

@@ -141,6 +141,23 @@ void lcfgcontext_relinquish( LCFGContext * ctx ) {
 }
 
 /**
+ * @brief Check validity of context
+ *
+ * Checks the specified context to ensure that it is valid. For a
+ * context to be considered valid the pointer must not be @c NULL and
+ * the context must have a name.
+ *
+ * @param[in] ctx Pointer to an @c LCFGContext
+ *
+ * @return Boolean which indicates if context is valid
+ *
+ */
+
+bool lcfgcontext_is_valid( const LCFGContext * ctx ) {
+  return ( ctx != NULL && lcfgcontext_has_name(ctx) );
+}
+
+/**
  * @brief Check if a string is a valid LCFG context name
  *
  * Checks the contents of a specified string against the specification
