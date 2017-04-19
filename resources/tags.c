@@ -1,15 +1,16 @@
-#define _GNU_SOURCE /* for asprintf */
 
 #include <ctype.h>
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
+#include "utils.h"
 #include "tags.h"
 
-LCFGTag * lcfgtag_new(char * name) {
+LCFGTag * lcfgtag_new() {
 
   LCFGTag * tag = malloc( sizeof(LCFGTag) );
   if ( tag == NULL ) {
@@ -19,61 +20,198 @@ LCFGTag * lcfgtag_new(char * name) {
 
   /* Default values */
 
-  tag->name     = name;
-  tag->name_len = name != NULL ? strlen(name) : 0;
-  tag->prev     = NULL;
-  tag->next     = NULL;
+  tag->name      = NULL;
+  tag->name_len  = 0;
+  tag->_refcount = 1;
 
   return tag;
 }
 
-bool lcfgtag_valid_name( const char * value ) {
+void lcfgtag_destroy( LCFGTag * tag ) {
+
+  if ( tag == NULL ) return;
+
+  free(tag->name);
+  tag->name = NULL;
+
+  free(tag);
+  tag = NULL;
+
+}
+
+void lcfgtag_acquire( LCFGTag * tag ) {
+  assert( tag != NULL );
+
+  tag->_refcount += 1;
+}
+
+void lcfgtag_relinquish( LCFGTag * tag ) {
+
+  if ( tag == NULL ) return;
+
+  if ( tag->_refcount > 0 )
+    tag->_refcount -= 1;
+
+  if ( tag->_refcount == 0 )
+    lcfgtag_destroy(tag);
+
+}
+
+bool lcfgtag_is_valid( const LCFGTag * tag ) {
+  return ( tag != NULL && tag->name != NULL );
+}
+
+bool lcfgresource_valid_tag( const char * value ) {
 
   /* MUST NOT be a NULL.
      MUST have non-zero length.
      MUST NOT contain whitespace characters */
 
-  bool valid = ( value != NULL );
+  bool valid = !isempty(value);
 
   char * ptr;
-  for ( ptr = (char *) value; valid && *ptr != '\0'; ptr++ ) {
+  for ( ptr = (char *) value; valid && *ptr != '\0'; ptr++ )
     if ( isspace(*ptr) ) valid = false;
-  }
 
   return valid;
+}
+
+bool lcfgtag_set_name( LCFGTag * tag, char * new_name ) {
+  assert( tag != NULL );
+
+  bool ok = false;
+  if ( lcfgresource_valid_tag(new_name) ) {
+    free(tag->name);
+
+    tag->name     = new_name;
+    tag->name_len = strlen(new_name);
+
+    ok = true;
+  } else {
+    errno = EINVAL;
+  }
+
+  return ok;
+}
+
+char * lcfgtag_get_name( const LCFGTag * tag ) {
+  assert( tag != NULL );
+
+  return tag->name;
+}
+
+size_t lcfgtag_get_length( const LCFGTag * tag ) {
+  assert( tag != NULL );
+
+  return tag->name_len;
+}
+
+LCFGStatus lcfgtag_from_string( const char * input,
+                                LCFGTag ** result,
+                                char ** msg ) {
+
+  if ( isempty(input) ) {
+    lcfgutils_build_message( msg, "Empty tag" );
+    return LCFG_STATUS_ERROR;
+  }
+
+  /* Move past any leading whitespace */
+
+  char * start = (char *) input;
+  while ( *start != '\0' && isspace(*start) ) start++;
+
+  if ( isempty(start) ) {
+    lcfgutils_build_message( msg, "Empty tag" );
+    return LCFG_STATUS_ERROR;
+  }
+
+  LCFGTag * tag = lcfgtag_new();
+
+  char * name = strdup(start);
+  bool ok = lcfgtag_set_name( tag, name );
+
+  if ( !ok ) {
+    lcfgutils_build_message( msg, "Invalid tag name '%s'", name );
+    free(name);
+    lcfgtag_destroy(tag);
+    tag = NULL;
+  }
+
+  *result = tag;
+
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+}
+
+int lcfgtag_compare( const LCFGTag * tag, const LCFGTag * other ) {
+  assert( tag != NULL );
+  assert( other != NULL );
+
+  return strcmp( tag->name, other->name );
+}
+
+bool lcfgtag_matches( const LCFGTag * tag, const char * name ) {
+  assert( tag != NULL );
+  assert( name != NULL );
+
+  size_t required_len = strlen(name);
+
+  return ( required_len == tag->name_len && 
+           strncmp( tag->name, name,  tag->name_len ) == 0 ); 
+}
+
+LCFGTagNode * lcfgtagnode_new(LCFGTag * tag) {
+
+  LCFGTagNode * tagnode = malloc( sizeof(LCFGTagNode) );
+  if ( tagnode == NULL ) {
+    perror( "Failed to allocate memory for LCFG tag node" );
+    exit(EXIT_FAILURE);
+  }
+
+  tagnode->tag  = tag;
+  tagnode->prev = NULL;
+  tagnode->next = NULL;
+
+  return tagnode;
+}
+
+void lcfgtagnode_destroy(LCFGTagNode * tagnode) {
+
+  if ( tagnode == NULL ) return;
+
+  tagnode->tag  = NULL;
+  tagnode->prev = NULL;
+  tagnode->next = NULL;
+
+  free(tagnode);
+  tagnode = NULL;
+
 }
 
 LCFGTagList * lcfgtaglist_new(void) {
 
   LCFGTagList * taglist = malloc( sizeof(LCFGTagList) );
   if ( taglist == NULL ) {
-    perror( "Failed to allocate memory for LCFG resource tag list" );
+    perror( "Failed to allocate memory for LCFG tag list" );
     exit(EXIT_FAILURE);
   }
 
-  /* Default values */
-
-  taglist->size   = 0;
-  taglist->head   = NULL;
-  taglist->tail   = NULL;
-  taglist->manage = true; /* If true, destroy() will free tag strings */
+  taglist->head        = NULL;
+  taglist->tail        = NULL;
+  taglist->size        = 0;
+  taglist->_refcount   = 1;
 
   return taglist;
 }
 
 void lcfgtaglist_destroy(LCFGTagList * taglist) {
 
-  if ( taglist == NULL )
-    return;
+  if ( taglist == NULL ) return;
 
   while ( lcfgtaglist_size(taglist) > 0 ) {
-    char * name = NULL;
-    if ( lcfgtaglist_remove( taglist, lcfgtaglist_tail(taglist),
-                             &name ) == LCFG_CHANGE_REMOVED ) {
-
-      if ( taglist->manage )
-        free(name);
-
+    LCFGTag * tag = NULL;
+    if ( lcfgtaglist_remove_tag( taglist, lcfgtaglist_tail(taglist), &tag )
+         == LCFG_CHANGE_REMOVED ) {
+      lcfgtag_relinquish(tag);
     }
   }
 
@@ -82,37 +220,63 @@ void lcfgtaglist_destroy(LCFGTagList * taglist) {
 
 }
 
+void lcfgtaglist_acquire( LCFGTagList * taglist ) {
+  assert( taglist != NULL );
+
+  taglist->_refcount += 1;
+}
+
+void lcfgtaglist_relinquish( LCFGTagList * taglist ) {
+
+  if ( taglist == NULL ) return;
+
+  if ( taglist->_refcount > 0 )
+    taglist->_refcount -= 1;
+
+  if ( taglist->_refcount == 0 )
+    lcfgtaglist_destroy(taglist);
+
+}
+
 LCFGChange lcfgtaglist_insert_next( LCFGTagList * taglist,
-                                    LCFGTag * tag,
-                                    char * name ) {
+                                    LCFGTagNode * tagnode,
+                                    LCFGTag * tag ) {
+  assert( taglist != NULL );
 
-  /* Forbid the addition of bad tag names */
-  if ( !lcfgtag_valid_name(name) )
-    return LCFG_CHANGE_ERROR;
+  /* Forbid the addition of bad tags */
+  if ( !lcfgtag_is_valid(tag) ) return LCFG_CHANGE_ERROR;
 
-  if ( tag == NULL && lcfgtaglist_size(taglist) != 0 )
-    return LCFG_CHANGE_ERROR;
+  LCFGTagNode * new_node = lcfgtagnode_new(tag);
+  if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
 
-  LCFGTag * new_tag = lcfgtag_new(name);
-  if ( lcfgtaglist_is_empty(taglist) ) {
+  lcfgtag_acquire(tag);
 
-    taglist->head = new_tag;
-    taglist->head->prev = NULL;
-    taglist->head->next = NULL;
-    taglist->tail = new_tag;
+  if ( tagnode == NULL ) { /* HEAD */
+
+    LCFGTagNode * cur_head = lcfgtaglist_head(taglist);
+
+    new_node->prev = NULL;
+    new_node->next = cur_head;
+
+    if ( cur_head != NULL )
+      cur_head->prev = new_node;
+
+    taglist->head = new_node;
+
+    if ( lcfgtaglist_is_empty(taglist) )
+      taglist->tail = new_node;
 
   } else {
 
-    new_tag->next = tag->next;
-    new_tag->prev = tag;
+    new_node->prev = tagnode;
+    new_node->next = tagnode->next;
 
-    if ( tag->next == NULL ) {
-      taglist->tail = new_tag;
-    } else {
-      tag->next->prev = new_tag;
-    }
+    if ( new_node->next == NULL )
+      taglist->tail = new_node;
+    else
+      tagnode->next->prev = new_node;
 
-    tag->next = new_tag;
+    tagnode->next = new_node;
   }
 
   taglist->size++;
@@ -120,106 +284,125 @@ LCFGChange lcfgtaglist_insert_next( LCFGTagList * taglist,
   return LCFG_CHANGE_ADDED;
 }
 
+LCFGChange lcfgtaglist_remove_tag( LCFGTagList * taglist,
+                                   LCFGTagNode * tagnode,
+                                   LCFGTag ** tag ) {
+  assert( taglist != NULL );
 
-LCFGChange lcfgtaglist_remove( LCFGTagList * taglist,
-                               LCFGTag * tag,
-                               char ** name ) {
+  if ( lcfgtaglist_is_empty(taglist) ) return LCFG_CHANGE_NONE;
 
-  if ( lcfgtaglist_is_empty(taglist) )
-    return LCFG_CHANGE_NONE;
+  LCFGTagNode * cur_head = lcfgtaglist_head(taglist);
+  if ( tagnode == NULL )
+    tagnode = cur_head;
 
-  *name = tag->name;
+  if ( tagnode == cur_head ) {
 
-  if ( tag == taglist->head ) {
-    taglist->head = tag->next;
+    taglist->head = tagnode->next;
 
-    if ( taglist->head == NULL ) {
+    if ( taglist->head == NULL )
       taglist->tail = NULL;
-    } else {
-      tag->next->prev = NULL;
-    }
-
-    taglist->size = 0;
+    else
+      taglist->head->prev = NULL;
 
   } else {
 
-    tag->prev->next = tag->next;
+    tagnode->prev->next = tagnode->next;
 
-    if ( tag->next == NULL ) {
-      taglist->tail = tag->prev;
-    } else {
-      tag->next->prev = tag->prev;
-    }
-
-    taglist->size--;
+    if ( tagnode->next == NULL )
+      taglist->tail = tagnode->prev;
+    else
+      tagnode->next->prev = tagnode->prev;
 
   }
 
-  free(tag);
+  taglist->size--;
+
+  *tag = lcfgtaglist_tag(tagnode);
+
+  lcfgtagnode_destroy(tagnode);
 
   return LCFG_CHANGE_REMOVED;
 }
 
-LCFGTag * lcfgtaglist_find_tag( const LCFGTagList * taglist,
-                                const char * name ) {
+LCFGChange lcfgtaglist_append_string( LCFGTagList * taglist,
+                                      const char * tagname,
+                                      char ** msg ) {
+  LCFGChange change;
 
-  if ( lcfgtaglist_is_empty(taglist) )
-    return NULL;
+  LCFGTag * tag = NULL;
 
-  size_t required_len = strlen(name);
+  LCFGStatus rc = lcfgtag_from_string( tagname, &tag, msg );
+  if ( rc == LCFG_STATUS_ERROR )
+    change = LCFG_CHANGE_ERROR;
+  else
+    change = lcfgtaglist_append_tag( taglist, tag );
 
-  LCFGTag * match = NULL;
+  lcfgtag_relinquish(tag);
 
-  /* The search is made more efficient by first comparing the stashed
-     lengths and only doing the string comparison when necessary. */
+  return change;
+}
 
-  LCFGTag * cur_tag = lcfgtaglist_head(taglist);
-  while ( cur_tag != NULL ) {
-    size_t tag_len = lcfgtaglist_name_len(cur_tag);
+LCFGTagNode * lcfgtaglist_find_node( const LCFGTagList * taglist,
+                                     const char * name ) {
+  assert( name != NULL );
 
-    if ( required_len == tag_len &&
-         strncmp( name, lcfgtaglist_name(cur_tag), tag_len ) == 0 ) {
-      match = cur_tag;
-      break;
-    }
+  if ( lcfgtaglist_is_empty(taglist) ) return NULL;
 
-    cur_tag = lcfgtaglist_next(cur_tag);
+  LCFGTagNode * result = NULL;
+
+  const LCFGTagNode * cur_node = NULL;
+  for ( cur_node = lcfgtaglist_head(taglist);
+        cur_node != NULL && result == NULL;
+        cur_node = lcfgtaglist_next(cur_node) ) {
+
+    const LCFGTag * tag = lcfgtaglist_tag(cur_node);
+    if ( lcfgtag_matches( tag, name ) ) 
+      result = (LCFGTagNode *) cur_node;
   }
 
-  return match;
+  return result;
+}
+
+LCFGTag * lcfgtaglist_find_tag( const LCFGTagList * taglist,
+                                const char * name ) {
+  assert( name != NULL );
+
+  LCFGTag * tag = NULL;
+
+  const LCFGTagNode * tagnode = lcfgtaglist_find_node( taglist, name );
+  if ( tagnode != NULL )
+    tag = lcfgtaglist_tag(tagnode);
+
+  return tag;
 }
 
 bool lcfgtaglist_contains( const LCFGTagList * taglist,
                            const char * name ) {
-  return ( lcfgtaglist_find_tag( taglist, name ) != NULL );
+  assert( name != NULL );
+
+  return ( lcfgtaglist_find_node( taglist, name ) != NULL );
 }
 
 LCFGTagList * lcfgtaglist_clone(const LCFGTagList * taglist) {
+  assert( taglist != NULL );
 
   bool ok = true;
 
   LCFGTagList * new_taglist = lcfgtaglist_new();
 
-  LCFGTag * cur_tag = lcfgtaglist_head(taglist);
-  while ( cur_tag != NULL ) {
-    size_t taglen  = lcfgtaglist_name_len(cur_tag);
-    const char * cur_tagname = lcfgtaglist_name(cur_tag);
+  const LCFGTagNode * cur_node = lcfgtaglist_head(taglist);
+  for ( cur_node = lcfgtaglist_head(taglist);
+        cur_node != NULL && ok;
+        cur_node = lcfgtaglist_next(cur_node) ) {
 
-    /* Ignore any empty tags */
-    if ( cur_tagname == NULL || taglen == 0 ) continue;
+    LCFGTag * cur_tag = lcfgtaglist_tag(cur_node);
 
-    char * tagname = strndup( cur_tagname, taglen );
-
-    if ( lcfgtaglist_append( new_taglist, tagname )
-         != LCFG_CHANGE_ADDED ) {
-      ok = false;
-
-      free(tagname);
-
-      break;
+    if ( lcfgtag_is_valid(cur_tag) ) {
+      LCFGChange change = lcfgtaglist_append_tag( new_taglist, cur_tag );
+      if ( change == LCFG_CHANGE_ERROR )
+        ok = false;
     }
 
-    cur_tag = lcfgtaglist_next(cur_tag);
   }
 
   if ( !ok ) {
@@ -237,10 +420,9 @@ LCFGStatus lcfgtaglist_from_string( const char * input,
                                     char ** msg ) {
 
   *result = NULL;
-  *msg = NULL;
 
-  if ( input == NULL ) {
-    asprintf( msg, "Invalid taglist" );
+  if ( isempty(input) ) {
+    lcfgutils_build_message( msg, "Invalid taglist" );
     return LCFG_STATUS_ERROR;
   }
 
@@ -252,30 +434,17 @@ LCFGStatus lcfgtaglist_from_string( const char * input,
     exit(EXIT_FAILURE);
   }
 
-  char * saveptr;
+  char * saveptr = NULL;
 
   bool ok = true;
 
   char * token = strtok_r( remainder, tag_seps, &saveptr );
   while (token) {
-    char * tagname = strdup(token);
 
-    if ( !lcfgtag_valid_name(tagname) ) {
-      asprintf( msg, "Invalid tag '%s'", tagname );
-      ok = false;
-    } else {
-
-      if ( lcfgtaglist_append( new_taglist, tagname )
-           != LCFG_CHANGE_ADDED ) {
-        asprintf( msg, "Failed to store tag '%s'", tagname );
+    LCFGChange change = lcfgtaglist_append_string( new_taglist, token, msg );
+    if ( change == LCFG_CHANGE_ERROR ) {
         ok = false;
-      }
-
-    }
-
-    if ( !ok ) {
-      free(tagname);
-      break;
+        break;
     }
 
     token = strtok_r( NULL, tag_seps, &saveptr );
@@ -299,20 +468,27 @@ ssize_t lcfgtaglist_to_string( const LCFGTagList * taglist,
 
   /* Calculate the required space */
 
-  LCFGTag * cur_tag = NULL;
+  
   size_t new_len = 0;
 
+  const LCFGTagNode * head_node = lcfgtaglist_head(taglist);
+
+  const LCFGTagNode * cur_node = NULL;
+  const LCFGTag * cur_tag      = NULL;
+
   if ( lcfgtaglist_size(taglist) > 0 ) {
-    cur_tag = lcfgtaglist_head(taglist);
-    new_len = lcfgtaglist_name_len(cur_tag);
 
-    cur_tag = lcfgtaglist_next(cur_tag);
-  }
+    cur_tag = lcfgtaglist_tag(head_node);
+    new_len += lcfgtag_get_length(cur_tag);
 
-  while( cur_tag != NULL ) {
-    new_len += ( lcfgtaglist_name_len(cur_tag) + 1 ); /* +1 for single space */
+    for ( cur_node = lcfgtaglist_next(head_node);
+          cur_node != NULL;
+          cur_node = lcfgtaglist_next(cur_node) ) {
 
-    cur_tag = lcfgtaglist_next(cur_tag);
+      cur_tag = lcfgtaglist_tag(cur_node);
+      new_len += ( lcfgtag_get_length(cur_tag) + 1 ); /* +1 for single space */
+    }
+
   }
 
   /* Optional newline at end of string */
@@ -340,31 +516,28 @@ ssize_t lcfgtaglist_to_string( const LCFGTagList * taglist,
   char * to = *result;
 
   if ( lcfgtaglist_size(taglist) > 0 ) {
-    cur_tag = lcfgtaglist_head(taglist);
 
-    const char * name = lcfgtaglist_name(cur_tag);
-    if ( name != NULL )
-      to = stpcpy( to, name );
+    cur_tag = lcfgtaglist_tag(head_node);
+    const char * name = lcfgtag_get_name(cur_tag);
+    size_t name_len   = lcfgtag_get_length(cur_tag);
 
-    cur_tag = lcfgtaglist_next(cur_tag);
-  } else {
-    to = stpcpy( to, "" );
+    to = stpncpy( to, name, name_len );
 
-    cur_tag = NULL;
-  }
+    for ( cur_node = lcfgtaglist_next(head_node);
+          cur_node != NULL;
+          cur_node = lcfgtaglist_next(cur_node) ) {
 
-  while ( cur_tag != NULL ) {
+      cur_tag = lcfgtaglist_tag(cur_node);
 
-    /* +1 for single space */
+      name     = lcfgtag_get_name(cur_tag);
+      name_len = lcfgtag_get_length(cur_tag);
 
-    *to = ' ';
-    to++;
+      *to = ' ';
+      to++;
 
-    const char * name = lcfgtaglist_name(cur_tag);
-    if ( name != NULL )
-      to = stpcpy( to, name );
+      to = stpncpy( to, name, name_len );
+    }
 
-    cur_tag = lcfgtaglist_next(cur_tag);
   }
 
   /* Optional newline at end of string */
@@ -404,44 +577,52 @@ bool lcfgtaglist_print( const LCFGTagList * taglist, FILE * out ) {
 
 void lcfgtaglist_sort( LCFGTagList * taglist ) {
 
-  if ( lcfgtaglist_is_empty(taglist) )
-    return;
+  if ( lcfgtaglist_size(taglist) < 2 ) return;
 
   /* Oo. Oo. bubble sort .oO .oO */
 
-  bool done = false;
+  bool swapped=true;
 
-  while (!done) {
+  while (swapped) {
+    swapped=false;
 
-    LCFGTag * cur_tag  = lcfgtaglist_head(taglist);
-    LCFGTag * next_tag = lcfgtaglist_next(cur_tag);
+    LCFGTagNode * cur_node = lcfgtaglist_head(taglist);
+    for ( cur_node = lcfgtaglist_head(taglist);
+          cur_node != NULL && cur_node->next != NULL;
+          cur_node = lcfgtaglist_next(cur_node) ) {
 
-    done = true;
+      LCFGTag * cur_tag  = lcfgtaglist_tag(cur_node);
+      LCFGTag * next_tag = lcfgtaglist_tag(cur_node->next);
 
-    while ( next_tag != NULL ) {
-
-      const char * cur_name  = lcfgtaglist_name(cur_tag);
-      const char * next_name = lcfgtaglist_name(next_tag);
-
-      if ( strcmp( cur_name, next_name ) > 0 ) {
-        size_t cur_len  = cur_tag->name_len;
-        size_t next_len = next_tag->name_len;
-
-        /* Must swap the lengths as well as the pointers to the name strings */
-        cur_tag->name      = (char *) next_name;
-        cur_tag->name_len  = next_len;
-
-        next_tag->name     = (char *) cur_name;
-        next_tag->name_len = cur_len;
-
-        done = false;
+      if ( lcfgtag_compare( cur_tag, next_tag ) > 0 ) {
+        cur_node->tag       = next_tag;
+        cur_node->next->tag = cur_tag;
+        swapped = true;
       }
 
-      cur_tag  = next_tag;
-      next_tag = lcfgtaglist_next(next_tag);
     }
   }
 
 }
 
+LCFGChange lcfgtaglist_mutate_add( LCFGTagList * taglist, const char * name,
+                                   char ** msg ) {
+
+  LCFGChange change;
+  if ( lcfgtaglist_contains( taglist, name ) ) {
+    change = LCFG_CHANGE_NONE;
+  } else {
+    change = lcfgtaglist_append_string( taglist, name, msg );
+  }
+
+  return change;
+}
+
+LCFGChange lcfgtaglist_mutate_extra( LCFGTagList * taglist, const char * name,
+                                     char ** msg ) {
+
+  return lcfgtaglist_append_string( taglist, name, msg );
+}
+
 /* eof */
+
