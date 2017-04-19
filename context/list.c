@@ -240,7 +240,7 @@ LCFGChange lcfgctxlist_insert_next( LCFGContextList * ctxlist,
                                     LCFGContext     * ctx ) {
   assert( ctxlist != NULL );
 
-  if ( !lcfgcontext_is_valid(pkg) ) return LCFG_CHANGE_ERROR;
+  if ( !lcfgcontext_is_valid(ctx) ) return LCFG_CHANGE_ERROR;
 
   LCFGContextNode * new_node = lcfgctxnode_new(ctx);
   if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
