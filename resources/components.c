@@ -24,25 +24,12 @@ LCFGResourceNode * lcfgresourcenode_new(LCFGResource * res) {
   resnode->resource = res;
   resnode->next     = NULL;
 
-  /* Increment the reference count on the resource so that it can be
-     shared between multiple resource lists without fear of the memory
-     being freed elsewhere. */
-
-  lcfgresource_inc_ref(res);
-
   return resnode;
 }
 
 void lcfgresourcenode_destroy(LCFGResourceNode * resnode) {
 
-  if ( resnode == NULL )
-    return;
-
-  /* Decrement the reference count on the resource so that the memory
-     can be freed if it is not in any other lists. */
-
-  if ( resnode->resource != NULL )
-    lcfgresource_dec_ref(resnode->resource);
+  if ( resnode == NULL ) return;
 
   resnode->resource = NULL;
   resnode->next     = NULL;
@@ -54,36 +41,32 @@ void lcfgresourcenode_destroy(LCFGResourceNode * resnode) {
 
 LCFGComponent * lcfgcomponent_new(void) {
 
-  LCFGComponent * lcfgcomp = malloc( sizeof(LCFGComponent) );
-  if ( lcfgcomp == NULL ) {
+  LCFGComponent * comp = malloc( sizeof(LCFGComponent) );
+  if ( comp == NULL ) {
     perror( "Failed to allocate memory for LCFG component" );
     exit(EXIT_FAILURE);
   }
 
   /* Set default values */
 
-  lcfgcomp->name = NULL;
-  lcfgcomp->size = 0;
-  lcfgcomp->head = NULL;
-  lcfgcomp->tail = NULL;
-  lcfgcomp->_refcount = 0;
+  comp->name = NULL;
+  comp->size = 0;
+  comp->head = NULL;
+  comp->tail = NULL;
+  comp->_refcount = 1;
 
-  return lcfgcomp;
+  return comp;
 }
 
 void lcfgcomponent_destroy(LCFGComponent * comp) {
 
-  if ( comp == NULL )
-    return;
-
-  if ( comp->_refcount > 0 )
-    return;
+  if ( comp == NULL ) return;
 
   while ( lcfgcomponent_size(comp) > 0 ) {
     LCFGResource * resource = NULL;
     if ( lcfgcomponent_remove_next( comp, NULL, &resource )
          == LCFG_CHANGE_REMOVED ) {
-      lcfgresource_destroy(resource);
+      lcfgresource_relinquish(resource);
     }
   }
 
@@ -92,6 +75,24 @@ void lcfgcomponent_destroy(LCFGComponent * comp) {
 
   free(comp);
   comp = NULL;
+
+}
+
+void lcfgcomponent_acquire(LCFGComponent * comp) {
+  assert( comp != NULL );
+
+  comp->_refcount += 1;
+}
+
+void lcfgcomponent_relinquish(LCFGComponent * comp) {
+
+  if ( comp == NULL ) return;
+
+  if ( comp->_refcount > 0 )
+    comp->_refcount -= 1;
+
+  if ( comp->_refcount == 0 )
+    lcfgcomponent_destroy(comp);
 
 }
 
@@ -125,13 +126,12 @@ bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name ) {
 LCFGChange lcfgcomponent_insert_next( LCFGComponent    * comp,
                                       LCFGResourceNode * resnode,
                                       LCFGResource     * res ) {
-
-  if ( comp == NULL )
-    return LCFG_CHANGE_ERROR;
+  assert( comp != NULL );
 
   LCFGResourceNode * new_node = lcfgresourcenode_new(res);
-  if ( new_node == NULL )
-    return LCFG_CHANGE_ERROR;
+  if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
+
+  lcfgresource_acquire(res);
 
   if ( resnode == NULL ) { /* HEAD */
 
@@ -159,14 +159,11 @@ LCFGChange lcfgcomponent_insert_next( LCFGComponent    * comp,
 LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
                                       LCFGResourceNode * resnode,
                                       LCFGResource    ** res ) {
+  assert( comp != NULL );
+
+  if ( lcfgcomponent_is_empty(comp) ) return LCFG_CHANGE_NONE;
 
   LCFGResourceNode * old_node;
-
-  if ( comp == NULL )
-    return LCFG_CHANGE_ERROR;
-
-  if ( lcfgcomponent_is_empty(comp) )
-    return LCFG_CHANGE_NONE;
 
   if ( resnode == NULL ) { /* HEAD */
 
@@ -767,30 +764,29 @@ LCFGResource * lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
 
   LCFGResource * result = lcfgcomponent_find_resource( comp, name );
 
+  if ( result != NULL ) return result;
+
   /* If not found then create new resource and add it to the component */
-  if ( result == NULL ) {
-    result = lcfgresource_new();
+  result = lcfgresource_new();
 
-    /* Setting name can fail if it is invalid */
+  /* Setting name can fail if it is invalid */
 
-    char * new_name = strdup(name);
-    bool ok = lcfgresource_set_name( result, new_name );
+  char * new_name = strdup(name);
+  bool ok = lcfgresource_set_name( result, new_name );
 
-    if ( !ok ) {
-      free(new_name);
-    } else {
+  if ( !ok ) {
+    free(new_name);
+  } else {
 
-      if ( lcfgcomponent_append( comp, result ) != LCFG_CHANGE_ADDED )
-        ok = false;
-
-    }
-
-    if ( !ok ) {
-      lcfgresource_destroy(result);
-      result = NULL;
-    }
+    if ( lcfgcomponent_append( comp, result ) == LCFG_CHANGE_ERROR )
+      ok = false;
 
   }
+
+  lcfgresource_relinquish(result);
+
+  if (!ok)
+    result = NULL;
 
   return result;
 }
@@ -833,11 +829,10 @@ LCFGChange lcfgcomponent_insert_or_merge_resource(
 
       /* replace current version of resource with new one */
 
-      lcfgresource_inc_ref(new_res);
+      lcfgresource_acquire(new_res);
       cur_node->resource = new_res;
 
-      lcfgresource_dec_ref(cur_res);
-      lcfgresource_destroy(cur_res);
+      lcfgresource_relinquish(cur_res);
 
       result = LCFG_CHANGE_REPLACED;
 
@@ -872,11 +867,10 @@ LCFGChange lcfgcomponent_insert_or_replace_resource(
 
     /* replace current version of resource with new one */
 
-    lcfgresource_inc_ref(new_res);
+    lcfgresource_acquire(new_res);
     cur_node->resource = new_res;
 
-    lcfgresource_dec_ref(cur_res);
-    lcfgresource_destroy(cur_res);
+    lcfgresource_relinquish(cur_res);
 
     result = LCFG_CHANGE_REPLACED;
   }
