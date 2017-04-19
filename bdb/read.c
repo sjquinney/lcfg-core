@@ -141,18 +141,17 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
 
   } else {
 
-    /* Create a new tag list containing the component name. Need to
-       ensure that when the tag list is destroyed the compname is not
-       freed. */
+    /* Create a new tag list containing the component name. */
   
     LCFGTagList * collect_comps = lcfgtaglist_new();
-    collect_comps->manage = false;
-    if ( lcfgtaglist_append( collect_comps, (char *) compname )
-	 != LCFG_CHANGE_ADDED ) {
 
+    char * tagmsg = NULL;
+    if ( lcfgtaglist_mutate_add( collect_comps, compname, &tagmsg ) 
+         == LCFG_CHANGE_ERROR ) {
       status = LCFG_STATUS_ERROR;
-      asprintf( msg, "Invalid component name '%s'", compname );
+      asprintf( msg, "Invalid component name '%s': %s", compname, tagmsg );
     }
+    free(tagmsg);
 
     LCFGComponentList * components = NULL;
 
@@ -164,7 +163,7 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
 					   msg );
     }
 
-    lcfgtaglist_destroy(collect_comps);
+    lcfgtaglist_relinquish(collect_comps);
 
     if ( status != LCFG_STATUS_ERROR ) {
       component = lcfgcomplist_find_component( components, compname );

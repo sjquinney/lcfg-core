@@ -918,12 +918,14 @@ char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp) {
     return strdup("");
 
   LCFGTagList * reslist = lcfgtaglist_new();
-  reslist->manage = false;
 
   bool ok = true;
 
-  LCFGResourceNode * cur_node = lcfgcomponent_head(comp);
-  while ( cur_node != NULL ) {
+  const LCFGResourceNode * cur_node = NULL;
+  for ( cur_node = lcfgcomponent_head(comp);
+        cur_node != NULL && ok;
+        cur_node = lcfgcomponent_next(cur_node) ) {
+
     const LCFGResource * res = lcfgcomponent_resource(cur_node);
 
     if ( !lcfgresource_is_active(res) || !lcfgresource_has_name(res) )
@@ -931,16 +933,12 @@ char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp) {
 
     const char * res_name = lcfgresource_get_name(res);
 
-    if ( lcfgtaglist_contains( reslist, res_name ) ) continue;
-
-    if ( lcfgtaglist_append( reslist, (char *) res_name )
-         != LCFG_CHANGE_ADDED ) {
-
+    char * msg = NULL;
+    LCFGChange change = lcfgtaglist_mutate_add( reslist, res_name, &msg );
+    if ( change == LCFG_CHANGE_ERROR )
       ok = false;
-      break;
-    }
 
-    cur_node = lcfgcomponent_next(cur_node);
+    free(msg); /* Just ignoring any message */
   }
 
   size_t buf_len = 0;
@@ -955,7 +953,7 @@ char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp) {
     }
   }
 
-  lcfgtaglist_destroy(reslist);
+  lcfgtaglist_relinquish(reslist);
 
   if ( !ok ) {
     free(res_as_str);

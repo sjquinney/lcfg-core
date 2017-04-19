@@ -296,30 +296,53 @@ LCFGStatus lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
 
     if ( lcfgutils_endswith( entry->d_name, ".xml" ) ) {
 
-      char * fullpath  = lcfgutils_catfile( override_dir, entry->d_name );
+      char * comp_name = lcfgutils_basename( entry->d_name, ".xml" );
+      if ( !lcfgcomponent_valid_name(comp_name) ) {
+        lcfgxml_set_error_message( msg, 
+             "Ignoring override profile '%s' for invalid component name '%s'.",
+                                   entry->d_name, comp_name );
+        free(comp_name);
+        comp_name = NULL;
+
+        continue;
+      }
+
+      char * fullpath = lcfgutils_catfile( override_dir, entry->d_name );
 
       if ( stat( fullpath, &sb ) == 0 && S_ISREG(sb.st_mode) ) {
-        char * comp_name = lcfgutils_basename( entry->d_name, ".xml" );
 
         printf("Processing profile '%s' for component '%s'\n",
                fullpath, comp_name );
 
+        bool ok = true;
+
 	/* only store this comp */
 	LCFGTagList * comps_wanted = lcfgtaglist_new();
-	comps_wanted->manage = false;
-	lcfgtaglist_append( comps_wanted, comp_name );
+        char * tagmsg = NULL;
+	if ( lcfgtaglist_mutate_add( comps_wanted, comp_name, &tagmsg ) 
+             == LCFG_CHANGE_ERROR ) {
+          ok = false;
+          lcfgxml_set_error_message( msg, 
+                               "Failed to create list of required components: ",
+                                     tagmsg );
+        }
+        free(tagmsg);
 
         LCFGProfile * override_profile = NULL;
-        LCFGStatus rc =
-          lcfgprofile_from_xml( fullpath, &override_profile,
-				NULL,      /* base context */
-				fullpath,  /* base derivation */
-				ctxlist,   /* current contexts */
-				comps_wanted,
-				false,     /* no packages */
-				msg );
+        if (ok) {
+          LCFGStatus rc =
+            lcfgprofile_from_xml( fullpath, &override_profile,
+                                  NULL,      /* base context */
+                                  fullpath,  /* base derivation */
+                                  ctxlist,   /* current contexts */
+                                  comps_wanted,
+                                  false,     /* no packages */
+                                  msg );
 
-        bool ok = ( rc == LCFG_STATUS_OK );
+          if ( rc == LCFG_STATUS_ERROR )
+            ok = false;
+
+        }
 
         if (ok) {
           ok = lcfgprofile_transplant_components( main_profile,
@@ -337,10 +360,10 @@ LCFGStatus lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
 	free(*msg);
 	*msg = NULL;
 
-	lcfgtaglist_destroy(comps_wanted);
-	free(comp_name);
+	lcfgtaglist_relinquish(comps_wanted);
       }
 
+      free(comp_name);
       free(fullpath);
 
     }

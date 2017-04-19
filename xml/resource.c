@@ -230,18 +230,21 @@ LCFGStatus lcfgxml_process_record( xmlTextReaderPtr reader,
 
   char * tagname = get_lcfgtagname(reader);
   if ( tagname != NULL ) {
+    *thistag = tagname; /* Will be freed by the caller */
 
     if ( current_tags == NULL )
       current_tags = lcfgtaglist_new();
 
-    if ( lcfgtaglist_append( current_tags, tagname )
-         != LCFG_CHANGE_ADDED ) {
+    char * tagmsg = NULL;
+    if ( lcfgtaglist_mutate_extra( current_tags, tagname, &tagmsg )
+         == LCFG_CHANGE_ERROR ) {
       status = LCFG_STATUS_ERROR;
-      lcfgxml_set_error_message( errmsg, "Failed to append tag '%s' to list of current tags", tagname );
-      goto cleanup;
+      lcfgxml_set_error_message( errmsg, "Failed to append tag '%s' to list of current tags: %s", tagname, tagmsg );
     }
+    free(tagmsg);
 
-    *thistag = strdup(tagname);
+    if ( status == LCFG_STATUS_ERROR ) goto cleanup;
+
   } else {
 
     status = LCFG_STATUS_ERROR;
@@ -318,7 +321,7 @@ LCFGStatus lcfgxml_process_record( xmlTextReaderPtr reader,
   xmlFree(record_name);
   record_name = NULL;
 
-  lcfgtaglist_destroy(current_tags);
+  lcfgtaglist_relinquish(current_tags);
 
   if ( status != LCFG_STATUS_OK ) {
     if ( *errmsg == NULL )
@@ -372,13 +375,17 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
     if ( current_tags == NULL )
       current_tags = lcfgtaglist_new();
 
-    if ( lcfgtaglist_append( current_tags, tagname )
-         != LCFG_CHANGE_ADDED ) {
+    char * tagmsg = NULL;
+    if ( lcfgtaglist_mutate_extra( current_tags, tagname, &tagmsg )
+         == LCFG_CHANGE_ERROR ) {
       status = LCFG_STATUS_ERROR;
-      lcfgxml_set_error_message( errmsg, "Failed to append tag '%s' to list of current tags", tagname );
-      goto cleanup;
+      lcfgxml_set_error_message( errmsg, "Failed to append tag '%s' to list of current tags: %s", tagname, tagmsg );
     }
+    free(tagmsg);
 
+    free(tagname);
+
+    if ( status == LCFG_STATUS_ERROR ) goto cleanup;
   }
 
   resource = lcfgresource_new();
@@ -543,14 +550,18 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
             if ( child_tags == NULL )
               child_tags = lcfgtaglist_new();
 
-            if ( lcfgtaglist_append( child_tags, child_tagname )
-                 != LCFG_CHANGE_ADDED ) {
+            char * tagmsg = NULL;
+            if ( lcfgtaglist_mutate_extra( child_tags, child_tagname, &tagmsg )
+                 == LCFG_CHANGE_ERROR ) {
 
               status = LCFG_STATUS_ERROR;
-              lcfgxml_set_error_message( errmsg, "Failed to append tag '%s' to list of child tags", child_tagname );
+              lcfgxml_set_error_message( errmsg, "Failed to append tag '%s' to list of child tags: %s", child_tagname, tagmsg );
 
             }
+            free(tagmsg);
 
+            free(child_tagname);
+            child_tagname = NULL;
           }
 
         }
@@ -611,7 +622,7 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
 
   if ( status == LCFG_STATUS_OK ) {
 
-    if ( child_tags != NULL && lcfgtaglist_size(child_tags) > 0 ) {
+    if ( !lcfgtaglist_is_empty(child_tags) ) {
       size_t buf_len = 0;
       char * taglist = NULL;
       ssize_t rc = lcfgtaglist_to_string( child_tags, 0,
@@ -684,8 +695,8 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
 
  cleanup:
 
-  lcfgtaglist_destroy(current_tags);
-  lcfgtaglist_destroy(child_tags);
+  lcfgtaglist_relinquish(current_tags);
+  lcfgtaglist_relinquish(child_tags);
 
   if ( status != LCFG_STATUS_OK ) {
 

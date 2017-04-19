@@ -130,9 +130,9 @@ int main(int argc, char* argv[]) {
 
   }
 
-  lcfgtaglist_destroy(changed_comps);
-  lcfgtaglist_destroy(added_comps);
-  lcfgtaglist_destroy(removed_comps);
+  lcfgtaglist_relinquish(changed_comps);
+  lcfgtaglist_relinquish(added_comps);
+  lcfgtaglist_relinquish(removed_comps);
 
  cleanup:
 

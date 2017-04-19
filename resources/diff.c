@@ -885,12 +885,12 @@ LCFGChange lcfgcomplist_quickdiff( const LCFGComponentList * list1,
         if ( *taglist == NULL )
           *taglist = lcfgtaglist_new();
 
-        char * tag_name = strdup(comp1_name);
-        if ( lcfgtaglist_append( *taglist, tag_name )
-             != LCFG_CHANGE_ADDED ) {
+        char * tagmsg = NULL;
+        if ( lcfgtaglist_mutate_add( *taglist, comp1_name, &tagmsg )
+             == LCFG_CHANGE_ERROR ) {
           status = LCFG_CHANGE_ERROR;
-          free(tag_name);
         }
+        free(tagmsg);
 
       }
 
@@ -915,12 +915,12 @@ LCFGChange lcfgcomplist_quickdiff( const LCFGComponentList * list1,
       if ( *added == NULL )
         *added = lcfgtaglist_new();
 
-      char * tag_name = strdup(comp2_name);
-      if ( lcfgtaglist_append( *added, tag_name )
-           != LCFG_CHANGE_ADDED ) {
+      char * tagmsg = NULL;
+      if ( lcfgtaglist_mutate_add( *added, comp2_name, &tagmsg )
+           == LCFG_CHANGE_ERROR ) {
         status = LCFG_CHANGE_ERROR;
-        free(tag_name);
       }
+      free(tagmsg);
 
     }
 
@@ -933,11 +933,11 @@ LCFGChange lcfgcomplist_quickdiff( const LCFGComponentList * list1,
  cleanup:
 
   if ( status == LCFG_CHANGE_ERROR || status == LCFG_CHANGE_NONE ) {
-    lcfgtaglist_destroy(*modified);
+    lcfgtaglist_relinquish(*modified);
     *modified = NULL;
-    lcfgtaglist_destroy(*added);
+    lcfgtaglist_relinquish(*added);
     *added    = NULL;
-    lcfgtaglist_destroy(*removed);
+    lcfgtaglist_relinquish(*removed);
     *removed  = NULL;
   }
 
