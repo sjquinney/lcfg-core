@@ -91,7 +91,7 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
 
   bool ok = true;
 
-  if ( res->name != NULL ) {
+  if ( !isempty(res->name) ) {
     char * new_name = strdup(res->name);
     ok = lcfgresource_set_name( clone, new_name );
     if ( !ok )
@@ -100,7 +100,7 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
 
   clone->type = res->type;
 
-  if ( ok && res->value != NULL ) {
+  if ( ok && !isempty(res->value) ) {
     char * new_value = strdup(res->value);
     ok = lcfgresource_set_value( clone, new_value );
     if ( !ok )
@@ -112,7 +112,7 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
      into a string and then recreate a new struct using that as the
      source string. */
 
-  if ( ok && res->template != NULL ) {
+  if ( ok && !isempty(res->template) ) {
     char * tmpl_as_str = lcfgresource_get_template_as_string(res);
     char * tmpl_msg = NULL;
     ok = lcfgresource_set_template_as_string( clone, tmpl_as_str, &tmpl_msg );
@@ -127,21 +127,21 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
 
   clone->priority = res->priority;
 
-  if ( ok && res->comment != NULL ) {
+  if ( ok && !isempty(res->comment) ) {
     char * new_comment = strdup(res->comment);
     ok = lcfgresource_set_comment( clone, new_comment );
     if ( !ok )
       free(new_comment);
   }
 
-  if ( ok && res->context != NULL ) {
+  if ( ok && !isempty(res->context) ) {
     char * new_context = strdup(res->context);
     ok = lcfgresource_set_context( clone, new_context );
     if ( !ok )
       free(new_context);
   }
 
-  if ( ok && res->derivation != NULL ) {
+  if ( ok && !isempty(res->derivation) ) {
     char * new_deriv = strdup(res->derivation);
     ok = lcfgresource_set_derivation( clone, new_deriv );
     if ( !ok )
@@ -487,10 +487,10 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
   char * type_str = (char *) new_type_str;
 
   /* Spin past any leading whitespace */
-  if ( type_str != NULL )
+  if ( !isempty(type_str) )
     while ( *type_str != '\0' && isspace(*type_str) ) type_str++;
 
-  if ( type_str != NULL && *type_str != '\0' ) {
+  if ( !isempty(type_str) ) {
 
     /* If the type string begins with the type symbol character '%'
        (percent) then step past it and start the subsequent comparisons
@@ -973,28 +973,10 @@ bool lcfgresource_set_template_as_string(  LCFGResource * res,
 /* Values */
 
 /**
- * @brief Check if a value is considered to be empty
- *
- * Checks if a value string is "empty", this is similar to the concept
- * of a value being "defined" in Perl. A value is "empty" if the
- * pointer passed in has a @c NULL value or the string has zero
- * length.
- *
- * @param[in] value A string to be checked
- *
- * @return A boolean which indicates if the string is an empty value
- */
-
-static bool lcfgresource_string_is_empty( const char * value ) {
-  return ( value == NULL || *value == '\0' );
-}
-
-/**
  * @brief Check if the resource has a value
  *
  * Checks to see if the @e value parameter for the @c LCFGResource
- * struct is considered to be a non-empty value. See the @c
- * lcfgresource_string_is_empty() function for further details.
+ * struct is considered to be a non-empty value.
  *
  * @param[in] res Pointer to an LCFGResource struct
  *
@@ -1004,7 +986,7 @@ static bool lcfgresource_string_is_empty( const char * value ) {
 bool lcfgresource_has_value( const LCFGResource * res ) {
   assert( res != NULL );
 
-  return !lcfgresource_string_is_empty(res->value);
+  return !isempty(res->value);
 }
 
 /**
@@ -1128,10 +1110,9 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
  * Checks whether the string contains a valid LCFG boolean
  * value. There are various acceptable forms for a value for a boolean
  * LCFG resource (see @c lcfgresource_canon_boolean() for details) but
- * only the empty string (see @c lcfgresource_string_is_empty() for
- * details) and "yes" are considered to be @e valid boolean
- * values. Anything else must be canonicalised from an accepted form
- * into the equivalent valid value.
+ * only the empty string and "yes" are considered to be @e valid
+ * boolean values. Anything else must be canonicalised from an
+ * accepted form into the equivalent valid value.
  *
  * @param[in] value A string to be checked
  *
