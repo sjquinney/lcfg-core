@@ -56,7 +56,7 @@ LCFGResource * lcfgresource_new(void) {
   res->derivation = NULL;
   res->comment    = NULL;
   res->priority   = 0;
-  res->_refcount  = 0;
+  res->_refcount  = 1;
 
   return res;
 }
@@ -80,6 +80,7 @@ LCFGResource * lcfgresource_new(void) {
  */
 
 LCFGResource * lcfgresource_clone(const LCFGResource * res) {
+  assert( res != NULL );
 
   LCFGResource * clone = lcfgresource_new();
   if ( clone == NULL )
@@ -156,6 +157,24 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
   return clone;
 }
 
+void lcfgresource_acquire( LCFGResource * res ) {
+  assert( res != NULL );
+
+  res->_refcount += 1;
+}
+
+void lcfgresource_relinquish( LCFGResource * res ) {
+
+  if ( res == NULL ) return;
+
+  if ( res->_refcount > 0 )
+    res->_refcount -= 1;
+
+  if ( res->_refcount == 0 )
+    lcfgresource_destroy(res);
+
+}
+
 /**
  * @brief Destroy the resource
  *
@@ -184,11 +203,7 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
 
 void lcfgresource_destroy(LCFGResource * res) {
 
-  if ( res == NULL )
-    return;
-
-  if ( res->_refcount > 0 )
-    return;
+  if ( res == NULL ) return;
 
   free(res->name);
   res->name = NULL;
@@ -264,6 +279,8 @@ bool lcfgresource_valid_name( const char * name ) {
  */
 
 bool lcfgresource_has_name( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return ( res->name != NULL );
 }
 
@@ -284,6 +301,8 @@ bool lcfgresource_has_name( const LCFGResource * res ) {
  */
 
 char * lcfgresource_get_name( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return res->name;
 }
 
@@ -310,6 +329,7 @@ char * lcfgresource_get_name( const LCFGResource * res ) {
  */
 
 bool lcfgresource_set_name( LCFGResource * res, char * new_name ) {
+  assert( res != NULL );
 
   bool ok = false;
   if ( lcfgresource_valid_name(new_name) ) {
@@ -345,6 +365,8 @@ bool lcfgresource_set_name( LCFGResource * res, char * new_name ) {
  */
 
 LCFGResourceType lcfgresource_get_type( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return res->type;
 }
 
@@ -375,6 +397,7 @@ LCFGResourceType lcfgresource_get_type( const LCFGResource * res ) {
  */
 
 bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
+  assert( res != NULL );
 
   if ( res->type == new_type ) /* no-op */
     return true;
@@ -450,6 +473,7 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
 bool lcfgresource_set_type_as_string( LCFGResource * res,
                                       const char * new_type_str,
                                       char ** msg ) {
+  assert( res != NULL );
 
   *msg = NULL;
 
@@ -564,6 +588,8 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
  */
 
 bool lcfgresource_is_string( const LCFGResource * res ) {
+  assert( res != NULL );
+
   LCFGResourceType res_type = lcfgresource_get_type(res);
   return ( res_type == LCFG_RESOURCE_TYPE_STRING    ||
            res_type == LCFG_RESOURCE_TYPE_SUBSCRIBE ||
@@ -582,6 +608,8 @@ bool lcfgresource_is_string( const LCFGResource * res ) {
  */
 
 bool lcfgresource_is_integer( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return ( lcfgresource_get_type(res) == LCFG_RESOURCE_TYPE_INTEGER );
 }
 
@@ -597,6 +625,8 @@ bool lcfgresource_is_integer( const LCFGResource * res ) {
  */
 
 bool lcfgresource_is_boolean( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return ( lcfgresource_get_type(res) == LCFG_RESOURCE_TYPE_BOOLEAN );
 }
 
@@ -612,6 +642,8 @@ bool lcfgresource_is_boolean( const LCFGResource * res ) {
  */
 
 bool lcfgresource_is_list( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return ( lcfgresource_get_type(res) == LCFG_RESOURCE_TYPE_LIST );
 }
 
@@ -631,6 +663,7 @@ bool lcfgresource_is_list( const LCFGResource * res ) {
  */
 
 bool lcfgresource_is_true( const LCFGResource * res ) {
+  assert( res != NULL );
 
   bool is_true = false;
 
@@ -668,6 +701,7 @@ bool lcfgresource_is_true( const LCFGResource * res ) {
 
 char * lcfgresource_get_type_as_string( const LCFGResource * res,
                                         LCFGOption options ) {
+  assert( res != NULL );
 
   LCFGResourceType res_type = lcfgresource_get_type(res);
   const char * type_string = lcfgresource_type_names[res_type];
@@ -765,6 +799,8 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
  */
 
 bool lcfgresource_has_template( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return ( res->template != NULL );
 }
 
@@ -785,6 +821,8 @@ bool lcfgresource_has_template( const LCFGResource * res ) {
  */
 
 LCFGTemplate * lcfgresource_get_template( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return res->template;
 }
 
@@ -805,6 +843,7 @@ LCFGTemplate * lcfgresource_get_template( const LCFGResource * res ) {
  */
 
 char * lcfgresource_get_template_as_string( const LCFGResource * res ) {
+  assert( res != NULL );
 
   char * as_str = NULL;
 
@@ -848,6 +887,7 @@ char * lcfgresource_get_template_as_string( const LCFGResource * res ) {
 
 bool lcfgresource_set_template( LCFGResource * res,
                                 LCFGTemplate * new_tmpl ) {
+  assert( res != NULL );
 
   /* Allow setting the template to NULL which is basically an "unset" */
 
@@ -895,6 +935,7 @@ bool lcfgresource_set_template( LCFGResource * res,
 bool lcfgresource_set_template_as_string(  LCFGResource * res,
                                            const char * new_tmpl_str,
                                            char ** msg ) {
+  assert( res != NULL );
 
   *msg = NULL;
 
@@ -961,6 +1002,8 @@ static bool lcfgresource_string_is_empty( const char * value ) {
  */
 
 bool lcfgresource_has_value( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return !lcfgresource_string_is_empty(res->value);
 }
 
@@ -981,6 +1024,8 @@ bool lcfgresource_has_value( const LCFGResource * res ) {
  */
 
 char * lcfgresource_get_value( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return res->value;
 }
 
@@ -1007,6 +1052,7 @@ char * lcfgresource_get_value( const LCFGResource * res ) {
 
 
 char * lcfgresource_enc_value( const LCFGResource * res ) {
+  assert( res != NULL );
 
   const char * value = lcfgresource_get_value(res);
 
@@ -1328,6 +1374,7 @@ bool lcfgresource_valid_value_for_type( LCFGResourceType type,
 
 bool lcfgresource_valid_value( const LCFGResource * res,
                                const char * value ) {
+  assert( res != NULL );
 
   return lcfgresource_valid_value_for_type( lcfgresource_get_type(res),
                                             value );
@@ -1356,6 +1403,7 @@ bool lcfgresource_valid_value( const LCFGResource * res,
  */
 
 bool lcfgresource_set_value( LCFGResource * res, char * new_value ) {
+  assert( res != NULL );
 
   bool ok = false;
   if ( lcfgresource_valid_value( res, new_value ) ) {
@@ -1388,6 +1436,7 @@ bool lcfgresource_set_value( LCFGResource * res, char * new_value ) {
  */
 
 bool lcfgresource_unset_value( LCFGResource * res ) {
+  assert( res != NULL );
 
   free(res->value);
   res->value = NULL;
@@ -1413,6 +1462,8 @@ bool lcfgresource_unset_value( LCFGResource * res ) {
  */
 
 bool lcfgresource_has_derivation( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return ( res->derivation != NULL && *( res->derivation ) != '\0' );
 }
 
@@ -1434,6 +1485,8 @@ bool lcfgresource_has_derivation( const LCFGResource * res ) {
  */
 
 char * lcfgresource_get_derivation( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return res->derivation;
 }
 
@@ -1455,6 +1508,7 @@ char * lcfgresource_get_derivation( const LCFGResource * res ) {
  */
 
 bool lcfgresource_set_derivation( LCFGResource * res, char * new_deriv ) {
+  assert( res != NULL );
 
   /* Currently no validation of the derivation */
 
@@ -1485,19 +1539,19 @@ bool lcfgresource_set_derivation( LCFGResource * res, char * new_deriv ) {
  *
  */
 
-bool lcfgresource_add_derivation( LCFGResource * resource,
+bool lcfgresource_add_derivation( LCFGResource * res,
                                   const char * extra_deriv ) {
+  assert( res != NULL );
 
-  if ( extra_deriv == NULL || *extra_deriv == '\0' )
-    return true;
+  if ( isempty(extra_deriv) ) return true;
 
   char * new_deriv = NULL;
-  if ( !lcfgresource_has_derivation(resource) ) {
+  if ( !lcfgresource_has_derivation(res) ) {
     new_deriv = strdup(extra_deriv);
-  } else if ( strstr( resource->derivation, extra_deriv ) == NULL ) {
+  } else if ( strstr( res->derivation, extra_deriv ) == NULL ) {
 
     new_deriv =
-      lcfgutils_join_strings( " ", resource->derivation, extra_deriv );
+      lcfgutils_join_strings( " ", res->derivation, extra_deriv );
     if ( new_deriv == NULL ) {
       perror( "Failed to build LCFG derivation string" );
       exit(EXIT_FAILURE);
@@ -1510,7 +1564,7 @@ bool lcfgresource_add_derivation( LCFGResource * resource,
 
   bool ok = true;
   if ( new_deriv != NULL ) {
-    ok = lcfgresource_set_derivation( resource, new_deriv );
+    ok = lcfgresource_set_derivation( res, new_deriv );
 
     if ( !ok )
       free(new_deriv);
@@ -1541,6 +1595,8 @@ bool lcfgresource_valid_context( const char * ctx ) {
  */
 
 bool lcfgresource_has_context( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return ( res->context != NULL && *( res->context ) != '\0' );
 }
 
@@ -1562,6 +1618,8 @@ bool lcfgresource_has_context( const LCFGResource * res ) {
  */
 
 char * lcfgresource_get_context( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return res->context;
 }
 
@@ -1589,6 +1647,7 @@ char * lcfgresource_get_context( const LCFGResource * res ) {
  */
 
 bool lcfgresource_set_context( LCFGResource * res, char * new_ctx ) {
+  assert( res != NULL );
 
   bool ok = false;
   if ( lcfgresource_valid_context(new_ctx) ) {
@@ -1626,6 +1685,7 @@ bool lcfgresource_set_context( LCFGResource * res, char * new_ctx ) {
 
 bool lcfgresource_add_context( LCFGResource * res,
                                const char * extra_context ) {
+  assert( res != NULL );
 
   if ( extra_context == NULL || *extra_context == '\0' )
     return true;
@@ -1665,6 +1725,8 @@ bool lcfgresource_add_context( LCFGResource * res,
  */
 
 bool lcfgresource_has_comment( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return ( res->comment != NULL && *( res->comment ) != '\0' );
 }
 
@@ -1686,6 +1748,8 @@ bool lcfgresource_has_comment( const LCFGResource * res ) {
  */
 
 char * lcfgresource_get_comment( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return res->comment;
 }
 
@@ -1707,6 +1771,7 @@ char * lcfgresource_get_comment( const LCFGResource * res ) {
  */
 
 bool lcfgresource_set_comment( LCFGResource * res, char * new_comment ) {
+  assert( res != NULL );
 
   free(res->comment);
 
@@ -1718,10 +1783,13 @@ bool lcfgresource_set_comment( LCFGResource * res, char * new_comment ) {
 /* Priority */
 
 int lcfgresource_get_priority( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return res->priority;
 }
 
 char * lcfgresource_get_priority_as_string( const LCFGResource * res ) {
+  assert( res != NULL );
 
   char * as_str = NULL;
   if ( asprintf( &as_str, "%d", lcfgresource_get_priority(res) ) == -1 ) {
@@ -1732,6 +1800,8 @@ char * lcfgresource_get_priority_as_string( const LCFGResource * res ) {
 }
 
 bool lcfgresource_set_priority( LCFGResource * res, int priority ) {
+  assert( res != NULL );
+
   res->priority = priority;
   return true;
 }
@@ -1739,6 +1809,7 @@ bool lcfgresource_set_priority( LCFGResource * res, int priority ) {
 bool lcfgresource_eval_priority( LCFGResource * res,
                                  const LCFGContextList * ctxlist,
 				 char ** msg ) {
+  assert( res != NULL );
 
   bool ok = true;
 
@@ -1761,6 +1832,8 @@ bool lcfgresource_eval_priority( LCFGResource * res,
 }
 
 bool lcfgresource_is_active( const LCFGResource * res ) {
+  assert( res != NULL );
+
   return ( lcfgresource_get_priority(res) >= 0 );
 }
 
@@ -1769,6 +1842,7 @@ bool lcfgresource_is_active( const LCFGResource * res ) {
 bool lcfgresource_to_env( const LCFGResource * res,
                           const char * prefix,
                           LCFGOption options ) {
+  assert( res != NULL );
 
   /* Name is required */
 
@@ -1821,6 +1895,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
                                 const char * prefix,
                                 LCFGOption options,
                                 char ** result, size_t * size ) {
+  assert( res != NULL );
 
   /* Name is required */
 
@@ -1929,6 +2004,7 @@ ssize_t lcfgresource_to_status( const LCFGResource * res,
                                 const char * prefix,
                                 LCFGOption options,
                                 char ** result, size_t * size ) {
+  assert( res != NULL );
 
   /* The entry for the value is the standard stringified form. This
      writes directly into the result buffer, often this is all that
@@ -2054,6 +2130,7 @@ ssize_t lcfgresource_to_string( const LCFGResource * res,
                                 const char * prefix,
                                 LCFGOption options,
                                 char ** result, size_t * size ) {
+  assert( res != NULL );
 
   ssize_t key_len =
     lcfgresource_compute_key_length( res, prefix, NULL, 
@@ -2178,6 +2255,7 @@ bool lcfgresource_print( const LCFGResource * res,
                          const char * style,
                          LCFGOption options,
                          FILE * out ) {
+  assert( res != NULL );
 
   size_t buf_size = 0;
   char * lcfgres = NULL;
@@ -2207,6 +2285,8 @@ bool lcfgresource_print( const LCFGResource * res,
 
 int lcfgresource_compare_values( const LCFGResource * res1,
                                  const LCFGResource * res2 ) {
+  assert( res1 != NULL );
+  assert( res2 != NULL );
 
   const char * value1_str = lcfgresource_has_value(res1) ? lcfgresource_get_value(res1) : LCFG_RESOURCE_NOVALUE;
   const char * value2_str = lcfgresource_has_value(res2) ? lcfgresource_get_value(res2) : LCFG_RESOURCE_NOVALUE;
@@ -2579,6 +2659,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
                                  char type_symbol,
                                  char * value,
                                  char ** msg ) {
+  assert( res != NULL );
 
   *msg = NULL;
   bool ok = false;
