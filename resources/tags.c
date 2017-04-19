@@ -65,7 +65,8 @@ bool lcfgresource_valid_tag( const char * value ) {
 
   /* MUST NOT be a NULL.
      MUST have non-zero length.
-     MUST NOT contain whitespace characters */
+     MUST NOT contain whitespace characters.
+     TODO : decide if checking for !isword would be better */
 
   bool valid = !isempty(value);
 
