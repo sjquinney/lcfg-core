@@ -2328,6 +2328,8 @@ int lcfgresource_compare_values( const LCFGResource * res1,
 
 int lcfgresource_compare( const LCFGResource * res1,
                           const LCFGResource * res2 ) {
+  assert( res1 != NULL );
+  assert( res2 != NULL );
 
   /* Name */
 
@@ -2363,18 +2365,24 @@ int lcfgresource_compare( const LCFGResource * res1,
 
 bool lcfgresource_same_value( const LCFGResource * res1,
                               const LCFGResource * res2 ) {
+  assert( res1 != NULL );
+  assert( res2 != NULL );
 
   return ( lcfgresource_compare_values( res1, res2 ) == 0 );
 }
 
 bool lcfgresource_same_type( const LCFGResource * res1,
                              const LCFGResource * res2 ) {
+  assert( res1 != NULL );
+  assert( res2 != NULL );
 
   return ( lcfgresource_get_type(res1) == lcfgresource_get_type(res2) );
 }
 
 bool lcfgresource_equals( const LCFGResource * res1,
                           const LCFGResource * res2 ) {
+  assert( res1 != NULL );
+  assert( res2 != NULL );
 
   return ( lcfgresource_compare( res1, res2 ) == 0 );
 }
