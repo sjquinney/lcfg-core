@@ -245,9 +245,14 @@ bool lcfgresource_print( const LCFGResource * res,
                          FILE * out )
   __attribute__((warn_unused_result));
 
-bool lcfgresource_to_env( const LCFGResource * res,
-                          const char * prefix,
-                          LCFGOption options )
+LCFGStatus lcfgresource_from_env( const char * resname,
+				  const char * val_pfx, const char * type_pfx,
+				  LCFGResource ** result, char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgresource_to_env( const LCFGResource * res,
+				const char * val_pfx, const char * type_pfx,
+				LCFGOption options )
   __attribute__((warn_unused_result));
 
 ssize_t lcfgresource_to_export( const LCFGResource * res,

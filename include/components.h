@@ -53,14 +53,15 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
                                           char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
-                                 const char * use_prefix,
-                                 char ** msg )
-  __attribute__((warn_unused_result));
-
 LCFGStatus lcfgcomponent_to_statusfile( const LCFGComponent * comp,
                                         const char * filename,
                                         char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
+				 const char * val_pfx, const char * type_pfx,
+				 LCFGOption options,
+                                 char ** msg )
   __attribute__((warn_unused_result));
 
 char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp);
