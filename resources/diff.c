@@ -50,13 +50,10 @@ bool lcfgdiffresource_set_old( LCFGDiffResource * resdiff,
                                LCFGResource * res ) {
 
   LCFGResource * current = resdiff->old;
-  if ( current != NULL ) {
-    lcfgresource_dec_ref(current);
-    lcfgresource_destroy(current);
-  }
+  lcfgresource_relinquish(current);
 
   if ( res != NULL )
-    lcfgresource_inc_ref(res);
+    lcfgresource_acquire(res);
 
   resdiff->old = res;
 
@@ -75,13 +72,10 @@ bool lcfgdiffresource_set_new( LCFGDiffResource * resdiff,
                                LCFGResource * res ) {
 
   LCFGResource * current = resdiff->new;
-  if ( current != NULL ) {
-    lcfgresource_dec_ref(current);
-    lcfgresource_destroy(current);
-  }
+  lcfgrelinquish_destroy(current);
 
   if ( res != NULL )
-    lcfgresource_inc_ref(res);
+    lcfgresource_acquire(res);
 
   resdiff->new = res;
 
