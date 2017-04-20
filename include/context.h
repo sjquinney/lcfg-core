@@ -78,6 +78,8 @@ bool lcfgcontext_is_false( const LCFGContext * ctx );
 
 bool lcfgcontext_is_true(  const LCFGContext * ctx );
 
+bool lcfgcontext_is_valid( const LCFGContext * ctx );
+
 /* Priority */
 
 int lcfgcontext_get_priority( const LCFGContext * ctx );
