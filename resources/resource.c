@@ -1317,8 +1317,7 @@ bool lcfgresource_valid_value_for_type( LCFGResourceType type,
   /* Check if the specified value is valid for the current type of the
      resource. */
 
-  if ( value == NULL )
-    return false;
+  if ( value == NULL ) return false;
 
   bool valid = true;
   switch(type)
@@ -1331,6 +1330,11 @@ bool lcfgresource_valid_value_for_type( LCFGResourceType type,
       break;
     case LCFG_RESOURCE_TYPE_LIST:
       valid = lcfgresource_valid_list(value);
+      break;
+    case LCFG_RESOURCE_TYPE_STRING:
+    case LCFG_RESOURCE_TYPE_PUBLISH:
+    case LCFG_RESOURCE_TYPE_SUBSCRIBE:
+      valid = true;
       break;
     }
 
@@ -2404,8 +2408,14 @@ char * lcfgresource_build_message( const LCFGResource * res,
     if ( lcfgresource_has_name(res) ) {
       size_t buf_size = 0;
       ssize_t str_rc = lcfgresource_to_spec( res, component,
-                                               LCFG_OPT_NOVALUE,
-                                               &res_as_str, &buf_size );
+					     LCFG_OPT_NOVALUE,
+					     &res_as_str, &buf_size );
+
+      if ( str_rc < 0 ) {
+	perror("Failed to build LCFG resource message");
+	exit(EXIT_FAILURE);
+      }
+
     }
   }
 
