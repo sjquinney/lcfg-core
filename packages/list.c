@@ -358,7 +358,7 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
 
   if ( lcfgpkglist_is_empty(pkglist) ) return LCFG_CHANGE_NONE;
 
-  LCFGPackageNode * old_node;
+  LCFGPackageNode * old_node = NULL;
 
   if ( pkgnode == NULL ) { /* HEAD */
 
@@ -382,7 +382,7 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
 
   pkglist->size--;
 
-  *pkg = old_node->pkg;
+  *pkg = lcfgpkglist_package(old_node);
 
   lcfgpkgnode_destroy(old_node);
 
