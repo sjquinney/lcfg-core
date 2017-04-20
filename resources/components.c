@@ -1,3 +1,4 @@
+#define _GNU_SOURCE /* for asprintf */
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -508,12 +509,14 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
-static const char * default_env_prefix = "LCFG_%s_";
+static const char * default_val_pfx = "LCFG_%s_";
+static const char * default_type_pfx = "LCFGTYPE_%s_";
 static const char * env_placeholder = "%s";
 static const char * reslist_keyname = "_RESOURCES";
 
 LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
-                                 const char * use_prefix,
+				 const char * val_pfx, const char * type_pfx,
+				 LCFGOption options,
                                  char ** msg ) {
   assert( comp != NULL );
 
@@ -526,50 +529,35 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
   const char * comp_name = lcfgcomponent_get_name(comp);
   size_t name_len = strlen(comp_name);
 
-  const char * prefix = use_prefix != NULL ? use_prefix : default_env_prefix;
+  if ( val_pfx == NULL )
+    val_pfx = default_val_pfx;
 
-  char * res_prefix;
-  size_t res_prefix_len = 0;
+  if ( type_pfx == NULL )
+    type_pfx = default_type_pfx;
 
-  char * place = strstr( prefix, env_placeholder );
-  if ( place == NULL ) {
-    res_prefix_len = strlen(prefix);
-    res_prefix     = strndup(prefix,res_prefix_len);
-  } else {
+  /* For security avoid using the user-specified prefix as a format string. */
 
-    /* For security avoid using the user-specified prefix as a
-       format string. Note that this only replaces the first
-       instance of "%s" with the component name. */
+  char * val_pfx2 = NULL;
+  if ( strstr( val_pfx, env_placeholder ) != NULL ) {
+    val_pfx2 = lcfgutils_replace_string( val_pfx,
+					 env_placeholder, comp_name );
+    val_pfx = val_pfx2;
+  }
 
-    size_t placeholder_len = strlen(env_placeholder);
-    res_prefix_len  = strlen(prefix) +
-                      ( name_len - placeholder_len );
+  char * type_pfx2 = NULL;
 
-    res_prefix = calloc( ( res_prefix_len + 1 ), sizeof(char) );
-    if ( res_prefix == NULL ) {
-      perror("Failed to allocate memory for LCFG resource variable name");
-      exit(EXIT_FAILURE);
+  /* No point doing this if the type data isn't required */
+  if ( options&LCFG_OPT_USE_META ) {
+    if ( strstr( type_pfx, env_placeholder ) != NULL ) {
+      type_pfx2 = lcfgutils_replace_string( type_pfx,
+					    env_placeholder, comp_name );
+      type_pfx = type_pfx2;
     }
-
-    /* Build the new string */
-
-    char * to = res_prefix;
-
-    to = stpncpy( to, prefix, place - prefix );
-
-    to = stpncpy( to, comp_name, name_len );
-
-    to = stpcpy( to, place + placeholder_len );
-
-    *to = '\0';
-
-    assert( ( res_prefix + res_prefix_len ) == to );
-
   }
 
   const LCFGResourceNode * cur_node = NULL;
   for ( cur_node = lcfgcomponent_head(comp);
-	cur_node != NULL;
+	cur_node != NULL && status != LCFG_STATUS_ERROR;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
     const LCFGResource * res = lcfgcomponent_resource(cur_node);
@@ -578,12 +566,12 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 
     if ( !lcfgresource_is_active(res) ) continue;
 
-    if ( !lcfgresource_to_env( res, res_prefix, LCFG_OPT_NONE ) ) {
-      status = LCFG_STATUS_ERROR;
-      lcfgutils_build_message( msg, "Failed to set environment variable" );
-      break;
-    }
+    status = lcfgresource_to_env( res, val_pfx, type_pfx, options );
 
+    if ( status = LCFG_STATUS_ERROR ) {
+      *msg = lcfgresource_build_message( res, comp_name,
+		   "Failed to set environment variable for resource" );
+    }
   }
 
   if ( status != LCFG_STATUS_ERROR ) {
@@ -591,25 +579,12 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
     /* Also create an environment variable which holds list of
        resource names for this component. */
 
-    size_t keyname_len     = strlen(reslist_keyname);
-    size_t reslist_key_len = res_prefix_len + keyname_len;
-
-    char * reslist_key = calloc( ( reslist_key_len + 1 ), sizeof(char) );
-    if ( reslist_key == NULL ) {
-      perror("Failed to allocate memory for LCFG resource variable name");
+    char * reslist_key = NULL;
+    int rc = asprintf( &reslist_key, "%s%s", val_pfx, reslist_keyname );
+    if ( rc < 0 ) {
+      perror("Failed to build component environment variable name");
       exit(EXIT_FAILURE);
     }
-
-    char * to = reslist_key;
-
-    if ( res_prefix_len > 0 )
-      to = stpncpy( to, res_prefix, res_prefix_len );
-
-    to = stpncpy( to, reslist_keyname, keyname_len );
-
-    *to = '\0';
-
-    assert( ( reslist_key + reslist_key_len ) == to );
 
     char * reslist_value = lcfgcomponent_get_resources_as_string(comp);
 
@@ -621,7 +596,8 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 
   }
 
-  free(res_prefix);
+  free(val_pfx2);
+  free(type_pfx2);
 
   return status;
 }
