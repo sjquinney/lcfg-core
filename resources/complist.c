@@ -440,6 +440,8 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
       break;
   }
 
+  closedir(dh);
+
   if ( status != LCFG_STATUS_OK ) {
     lcfgcomplist_destroy(complist);
     complist = NULL;
