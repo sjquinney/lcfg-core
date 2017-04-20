@@ -29,29 +29,23 @@ struct LCFGComponent {
 
 typedef struct LCFGComponent LCFGComponent;
 
-#define lcfgcomponent_inc_ref(comp) (((comp)->_refcount)++)
-#define lcfgcomponent_dec_ref(comp) (((comp)->_refcount)--)
-
 LCFGComponent * lcfgcomponent_new(void);
 
 void lcfgcomponent_destroy(LCFGComponent * comp);
+void lcfgcomponent_acquire(LCFGComponent * comp);
+void lcfgcomponent_relinquish(LCFGComponent * comp);
 
-bool lcfgcomponent_has_name(const LCFGComponent * comp)
-  __attribute__((nonnull (1)));
-
+bool lcfgcomponent_has_name(const LCFGComponent * comp);
 bool lcfgcomponent_valid_name(const char * name );
-
-char * lcfgcomponent_get_name(const LCFGComponent * comp)
-  __attribute__((nonnull (1)));
-
+char * lcfgcomponent_get_name(const LCFGComponent * comp);
 bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name )
-  __attribute__((nonnull (1)))  __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 bool lcfgcomponent_print( const LCFGComponent * comp,
-                          const char * style,
+                          LCFGResourceStyle style,
                           bool print_all,
                           FILE * out )
-  __attribute__((nonnull (1,4))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
                                           LCFGComponent ** result,
@@ -62,15 +56,14 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
 LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
                                  const char * use_prefix,
                                  char ** msg )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomponent_to_statusfile( LCFGComponent * comp,
+LCFGStatus lcfgcomponent_to_statusfile( const LCFGComponent * comp,
                                         const char * filename,
                                         char ** msg )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
-char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp)
-  __attribute__((nonnull (1)));
+char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp);
 
 LCFGChange lcfgcomponent_insert_next( LCFGComponent    * comp,
                                       LCFGResourceNode * resnode,
@@ -86,7 +79,7 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
 #define lcfgcomponent_tail(comp) ((comp)->tail)
 #define lcfgcomponent_size(comp) ((comp)->size)
 
-#define lcfgcomponent_is_empty(comp) ((comp)->size == 0)
+#define lcfgcomponent_is_empty(comp) ( comp == NULL || (comp)->size == 0)
 
 #define lcfgcomponent_next(resnode)     ((resnode)->next)
 #define lcfgcomponent_resource(resnode) ((resnode)->resource)
@@ -94,38 +87,33 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
 #define lcfgcomponent_append(comp, res) ( lcfgcomponent_insert_next( comp, lcfgcomponent_tail(comp), res ) )
 
 LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
-                                            const char * name )
-  __attribute__((nonnull (1,2)));
+                                            const char * name );
 
 LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
-                                            const char * name )
-  __attribute__((nonnull (1,2)));
+                                            const char * name );
 
 bool lcfgcomponent_has_resource(  const LCFGComponent * comp,
-                                  const char * name )
-  __attribute__((nonnull (1,2)));
+                                  const char * name );
 
 LCFGResource * lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
-                                                      const char * name )
-  __attribute__((nonnull (1,2)));
+                                                      const char * name );
 
 LCFGChange lcfgcomponent_insert_or_merge_resource( LCFGComponent * comp,
                                                    LCFGResource  * res,
                                                    char ** msg )
-  __attribute__((nonnull (1,2))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGChange lcfgcomponent_insert_or_replace_resource( LCFGComponent * comp,
                                                      LCFGResource  * res,
                                                      char ** msg )
-  __attribute__((nonnull (1,2))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomponent_apply_overrides( LCFGComponent * comp,
                                           const LCFGComponent * overrides,
                                           char ** msg )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
-void lcfgcomponent_sort( LCFGComponent * comp )
-  __attribute__((nonnull (1)));
+void lcfgcomponent_sort( LCFGComponent * comp );
 
 /* Component list */
 
@@ -136,8 +124,7 @@ struct LCFGComponentNode {
 
 typedef struct LCFGComponentNode LCFGComponentNode;
 
-LCFGComponentNode * lcfgcomponentnode_new(LCFGComponent * comp)
-  __attribute__((nonnull (1)));
+LCFGComponentNode * lcfgcomponentnode_new(LCFGComponent * comp);
 
 void lcfgcomponentnode_destroy(LCFGComponentNode * compnode);
 
@@ -181,7 +168,7 @@ LCFGComponent * lcfgcomplist_find_or_create_component(
   __attribute__((nonnull (1)));
 
 bool lcfgcomplist_print( const LCFGComponentList * complist,
-                         const char * style,
+                         LCFGResourceStyle style,
                          bool print_all_resources,
                          FILE * out )
   __attribute__((nonnull (1,4))) __attribute__((warn_unused_result));
@@ -190,7 +177,7 @@ bool lcfgcomplist_print( const LCFGComponentList * complist,
 #define lcfgcomplist_tail(complist) ((complist)->tail)
 #define lcfgcomplist_size(complist) ((complist)->size)
 
-#define lcfgcomplist_is_empty(complist) ((complist)->size == 0)
+#define lcfgcomplist_is_empty(complist) ( complist == NULL || (complist)->size == 0)
 
 #define lcfgcomplist_next(compnode)     ((compnode)->next)
 #define lcfgcomplist_component(compnode) ((compnode)->component)
@@ -201,17 +188,17 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
                                               LCFGComponentList * complist,
                                               LCFGComponent * new_comp,
                                               char ** msg )
-  __attribute__((nonnull (1,2))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomplist_transplant_components( LCFGComponentList * list1,
                                                const LCFGComponentList * list2,
                                                char ** msg )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomplist_apply_overrides( LCFGComponentList * list1,
                                          const LCFGComponentList * list2,
                                          char ** msg )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
                                          LCFGComponentList ** complist,
@@ -222,7 +209,7 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
 LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
                                        const char * status_dir,
                                        char ** msg )
-  __attribute__((nonnull (1,2))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 /* Resource List iterator */
 
@@ -235,8 +222,7 @@ struct LCFGResourceIterator {
 typedef struct LCFGResourceIterator LCFGResourceIterator;
 
 LCFGResourceIterator * lcfgresiter_new( LCFGComponent * component,
-                                        bool manage )
-  __attribute__((nonnull (1)));
+                                        bool manage );
 
 void lcfgresiter_destroy( LCFGResourceIterator * iterator );
 void lcfgresiter_reset( LCFGResourceIterator * iterator );

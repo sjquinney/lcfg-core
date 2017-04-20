@@ -306,7 +306,7 @@ bool lcfgprofile_print(const LCFGProfile * profile,
                        bool show_comps,
                        bool show_pkgs,
                        const char * defarch,
-                       const char * comp_style,
+                       LCFGResourceStyle comp_style,
                        FILE * out ) {
 
   bool ok = lcfgprofile_print_metadata( profile, out );

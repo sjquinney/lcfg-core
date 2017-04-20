@@ -685,9 +685,6 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
       if (added) {
         if ( tagname != NULL )
           *thistag = strdup(tagname);
-      } else {
-        lcfgresource_destroy(resource);
-        resource = NULL;
       }
 
     }
@@ -698,19 +695,12 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
   lcfgtaglist_relinquish(current_tags);
   lcfgtaglist_relinquish(child_tags);
 
-  if ( status != LCFG_STATUS_OK ) {
-
-    if ( *errmsg == NULL ) {
-      *errmsg = lcfgresource_build_message( resource, compname,
-                    "Something bad happened whilst processing resource");
-    }
-
-    if ( resource != NULL ) {
-      lcfgresource_destroy(resource);
-      resource = NULL;
-    }
-
+  if ( status != LCFG_STATUS_OK && *errmsg == NULL ) {
+    *errmsg = lcfgresource_build_message( resource, compname,
+			"Something bad happened whilst processing resource");
   }
+
+  lcfgresource_relinquish(resource);
 
   return status;
 }

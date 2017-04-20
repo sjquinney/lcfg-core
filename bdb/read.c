@@ -172,7 +172,7 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
 	/* If a component was found then it must not be destroyed when the
 	   complist is destroyed. */
 
-	lcfgcomponent_inc_ref(component);
+	lcfgcomponent_acquire(component);
 
       } else {
 	status = LCFG_STATUS_ERROR;
@@ -182,12 +182,6 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
     }
 
     lcfgcomplist_destroy(components);
-
-    /* Once complist is destroyed we decrement the component reference
-       count so it can be cleaned up later. */
-
-    if ( component != NULL )
-      lcfgcomponent_dec_ref(component);
 
   }
   

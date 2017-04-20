@@ -112,7 +112,7 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
      into a string and then recreate a new struct using that as the
      source string. */
 
-  if ( ok && !isempty(res->template) ) {
+  if ( ok && lcfgresource_has_template(res) ) {
     char * tmpl_as_str = lcfgresource_get_template_as_string(res);
     char * tmpl_msg = NULL;
     ok = lcfgresource_set_template_as_string( clone, tmpl_as_str, &tmpl_msg );
@@ -959,7 +959,7 @@ bool lcfgresource_set_template_as_string(  LCFGResource * res,
 
 
   if (!ok) {
-    asprintf( msg, "Invalid template '%s': %s", new_tmpl_str,
+    lcfgutils_build_message( msg, "Invalid template '%s': %s", new_tmpl_str,
               ( parse_msg != NULL ? parse_msg : "unknown error" ) );
 
     lcfgtemplate_destroy(new_template);
@@ -1992,7 +1992,7 @@ ssize_t lcfgresource_to_status( const LCFGResource * res,
      the to_status function needs to do (if there is no type or
      derivation information). */
 
-  ssize_t value_len = lcfgresource_to_string( res, prefix,
+  ssize_t value_len = lcfgresource_to_spec( res, prefix,
                                               options|LCFG_OPT_NEWLINE|LCFG_OPT_ENCODE,
                                               result, size );
 
@@ -2054,7 +2054,7 @@ ssize_t lcfgresource_to_status( const LCFGResource * res,
   }
 
   /* Build the new string - start at offset from the value line which
-     was put there using lcfgresource_to_string */
+     was put there using lcfgresource_to_spec */
 
   char * to = *result + value_len;
 
@@ -2107,7 +2107,7 @@ ssize_t lcfgresource_to_status( const LCFGResource * res,
   return new_len;
 }
 
-ssize_t lcfgresource_to_string( const LCFGResource * res,
+ssize_t lcfgresource_to_spec( const LCFGResource * res,
                                 const char * prefix,
                                 LCFGOption options,
                                 char ** result, size_t * size ) {
@@ -2246,7 +2246,7 @@ bool lcfgresource_print( const LCFGResource * res,
     rc = lcfgresource_to_status( res, prefix, options,
                                  &lcfgres, &buf_size );
   } else {
-    rc = lcfgresource_to_string( res, prefix, options|LCFG_OPT_NEWLINE,
+    rc = lcfgresource_to_spec( res, prefix, options|LCFG_OPT_NEWLINE,
                                  &lcfgres, &buf_size );
   }
 
@@ -2403,7 +2403,7 @@ char * lcfgresource_build_message( const LCFGResource * res,
 
     if ( lcfgresource_has_name(res) ) {
       size_t buf_size = 0;
-      ssize_t str_rc = lcfgresource_to_string( res, component,
+      ssize_t str_rc = lcfgresource_to_spec( res, component,
                                                LCFG_OPT_NOVALUE,
                                                &res_as_str, &buf_size );
     }
@@ -2663,7 +2663,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
 
       ok = lcfgresource_set_derivation( res, value );
       if ( !ok )
-        asprintf( msg, "Invalid derivation '%s'", value );
+        lcfgutils_build_message( msg, "Invalid derivation '%s'", value );
 
       break;
     case LCFG_RESOURCE_SYMBOL_TYPE:
@@ -2681,7 +2681,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
 
       ok = lcfgresource_set_context( res, value );
       if ( !ok )
-        asprintf( msg, "Invalid context '%s'", value );
+        lcfgutils_build_message( msg, "Invalid context '%s'", value );
 
       break;
     case LCFG_RESOURCE_SYMBOL_PRIORITY:
@@ -2694,7 +2694,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
       }
 
       if ( !ok )
-        asprintf( msg, "Invalid priority '%s'", value );
+        lcfgutils_build_message( msg, "Invalid priority '%s'", value );
 
       break;
     default:        /* value line */
@@ -2702,7 +2702,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
       ok = lcfgresource_set_value( res, value );
 
       if (!ok)
-        asprintf( msg, "Invalid value '%s'", value );
+        lcfgutils_build_message( msg, "Invalid value '%s'", value );
 
       break;
     }

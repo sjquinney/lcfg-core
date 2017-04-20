@@ -39,6 +39,12 @@ typedef enum { /* The various standard LCFG resource types */
   LCFG_RESOURCE_TYPE_SUBSCRIBE
 } LCFGResourceType;
 
+typedef enum {
+  LCFG_RESOURCE_STYLE_SPEC,
+  LCFG_RESOURCE_STYLE_STATUS,
+  LCFG_RESOURCE_STYLE_EXPORT
+} LCFGResourceStyle;
+
 struct LCFGResource {
   char * name;
   char * value;
@@ -250,7 +256,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
                                 char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
-ssize_t lcfgresource_to_string( const LCFGResource * res,
+ssize_t lcfgresource_to_spec( const LCFGResource * res,
                                 const char * prefix,
                                 LCFGOption options,
                                 char ** str, size_t * size )

@@ -8,18 +8,19 @@
 #include "xml.h"
 
 LCFGStatus lcfgxml_process_component( xmlTextReaderPtr reader,
-                                                const char * compname,
-                                                LCFGComponent ** result,
-                                                const char * base_context,
-                                                const char * base_derivation,
-                                                const LCFGContextList * ctxlist,
-                                                char ** errmsg ) {
+				      const char * compname,
+				      LCFGComponent ** result,
+				      const char * base_context,
+				      const char * base_derivation,
+				      const LCFGContextList * ctxlist,
+				      char ** errmsg ) {
 
   *errmsg = NULL;
   *result = NULL; /* guarantee this is NULL if anything fails */
 
-  if (xmlTextReaderIsEmptyElement(reader))
-    return LCFG_STATUS_OK; /* Nothing to do */
+  if (xmlTextReaderIsEmptyElement(reader)) return LCFG_STATUS_OK; /* Nothing to do */
+
+  LCFGStatus status = LCFG_STATUS_OK;
 
   LCFGComponent * lcfgcomp = lcfgcomponent_new();
   char * new_name = strdup(compname);
@@ -27,13 +28,13 @@ LCFGStatus lcfgxml_process_component( xmlTextReaderPtr reader,
     free(new_name);
     lcfgxml_set_error_message( errmsg,
                                "Invalid LCFG component name '%s'", compname );
-    return LCFG_STATUS_ERROR;
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
   }
 
   int topdepth = xmlTextReaderDepth(reader);
 
   bool done  = false;
-  LCFGStatus status = LCFG_STATUS_OK;
 
   int read_status = xmlTextReaderRead(reader);
   while ( !done && read_status == 1 ) {
@@ -112,14 +113,10 @@ LCFGStatus lcfgxml_process_component( xmlTextReaderPtr reader,
     *result = lcfgcomp;
   } else {
 
-    if ( *errmsg == NULL ) {
+    if ( *errmsg == NULL )
       lcfgxml_set_error_message( errmsg, "Something bad happened whilst processing component '%s'.", compname );
-    }
 
-    if ( lcfgcomp != NULL ) {
-      lcfgcomponent_destroy(lcfgcomp);
-      lcfgcomp = NULL;
-    }
+    lcfgcomponent_relinquish(lcfgcomp);
 
     *result = NULL;
   }
@@ -128,12 +125,12 @@ LCFGStatus lcfgxml_process_component( xmlTextReaderPtr reader,
 }
 
 LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
-                                                 LCFGComponentList ** result,
-                                                 const char * base_context,
-                                                 const char * base_derivation,
-                                                 const LCFGContextList * ctxlist,
-                                                 const LCFGTagList * comps_wanted,
-                                                 char ** errmsg ) {
+				       LCFGComponentList ** result,
+				       const char * base_context,
+				       const char * base_derivation,
+				       const LCFGContextList * ctxlist,
+				       const LCFGTagList * comps_wanted,
+				       char ** errmsg ) {
 
   *errmsg = NULL;
   *result = NULL; /* guarantee this is NULL if anything fails */
@@ -145,8 +142,7 @@ LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
     }
   }
 
-  if (xmlTextReaderIsEmptyElement(reader)) /* nothing to do */
-    return LCFG_STATUS_OK;
+  if (xmlTextReaderIsEmptyElement(reader)) return LCFG_STATUS_OK; /* nothing to do */
 
   LCFGComponentList * complist = lcfgcomplist_new();
 
@@ -192,36 +188,28 @@ LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
 
           /* If the component node was empty then NULL will be returned */
 
-          if ( cur_comp != NULL ) {
-
           /* If no list of components is defined stash everything.
              Otherwise only stash components if name is in the list.
              Always keep the 'profile' component as it contains useful
              meta-data. */
 
-            if ( comps_wanted == NULL ||
-                 strcmp( compname, "profile" ) == 0 ||
-                 lcfgtaglist_contains( comps_wanted, compname ) ) {
+	  if ( cur_comp != NULL &&
+	       ( comps_wanted == NULL ||
+		 strcmp( compname, "profile" ) == 0 ||
+		 lcfgtaglist_contains( comps_wanted, compname ) ) ) {
 
-              if ( lcfgcomplist_append( complist, cur_comp )
-                   != LCFG_CHANGE_ADDED ) {
+	    if ( lcfgcomplist_append( complist, cur_comp )
+		 == LCFG_CHANGE_ERROR ) {
 
-                lcfgxml_set_error_message( errmsg, "Failed to append component '%s' to the list of components", lcfgcomponent_get_name(cur_comp) );
-                status = LCFG_STATUS_ERROR;
+	      lcfgxml_set_error_message( errmsg, "Failed to append component '%s' to the list of components", lcfgcomponent_get_name(cur_comp) );
+	      status = LCFG_STATUS_ERROR;
+	    }
 
-                lcfgcomponent_destroy(cur_comp);
-                cur_comp = NULL;
-
-              }
-
-            } else {
-              lcfgcomponent_destroy(cur_comp);
-              cur_comp = NULL;
-            }
-
-          }
+	  }
 
         }
+
+	lcfgcomponent_relinquish(cur_comp);
 
       } else {
 
@@ -269,14 +257,11 @@ LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
   if ( status == LCFG_STATUS_OK ) {
     *result = complist;
   } else {
-    if ( *errmsg == NULL ) {
-      lcfgxml_set_error_message( errmsg, "Something bad happened whilst processing components." );
-    }
 
-    if ( complist != NULL ) {
-      lcfgcomplist_destroy(complist);
-      complist = NULL;
-    }
+    if ( *errmsg == NULL )
+      lcfgxml_set_error_message( errmsg, "Something bad happened whilst processing components." );
+
+    lcfgcomplist_destroy(complist);
 
     *result = NULL;
   }

@@ -72,7 +72,7 @@ bool lcfgdiffresource_set_new( LCFGDiffResource * resdiff,
                                LCFGResource * res ) {
 
   LCFGResource * current = resdiff->new;
-  lcfgrelinquish_destroy(current);
+  lcfgresource_relinquish(current);
 
   if ( res != NULL )
     lcfgresource_acquire(res);
@@ -355,7 +355,7 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
     return new_len;
 
   /* Build the new string - start at offset from the value line which
-     was put there using lcfgresource_to_string */
+     was put there using lcfgresource_to_spec */
 
   char * to = *result;
 

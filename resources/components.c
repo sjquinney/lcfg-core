@@ -1,4 +1,3 @@
-#define _GNU_SOURCE /* for asprintf */
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -12,6 +11,7 @@
 #include "utils.h"
 
 LCFGResourceNode * lcfgresourcenode_new(LCFGResource * res) {
+  assert( res != NULL );
 
   LCFGResourceNode * resnode = malloc( sizeof(LCFGResourceNode) );
   if ( resnode == NULL ) {
@@ -101,14 +101,19 @@ bool lcfgcomponent_valid_name(const char * name) {
 }
 
 bool lcfgcomponent_has_name(const LCFGComponent * comp) {
-  return ( comp->name != NULL && *( comp->name ) != '\0' );
+  assert( comp != NULL );
+
+  return !isempty(comp->name);
 }
 
 char * lcfgcomponent_get_name(const LCFGComponent * comp) {
+  assert( comp != NULL );
+
   return comp->name;
 }
 
 bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name ) {
+  assert( comp != NULL );
 
   bool ok = false;
   if ( lcfgcomponent_valid_name(new_name) ) {
@@ -163,7 +168,7 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
 
   if ( lcfgcomponent_is_empty(comp) ) return LCFG_CHANGE_NONE;
 
-  LCFGResourceNode * old_node;
+  LCFGResourceNode * old_node = NULL;
 
   if ( resnode == NULL ) { /* HEAD */
 
@@ -175,8 +180,7 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
 
   } else {
 
-    if ( resnode->next == NULL )
-      return LCFG_CHANGE_ERROR;
+    if ( resnode->next == NULL ) return LCFG_CHANGE_ERROR;
 
     old_node = resnode->next;
     resnode->next = resnode->next->next;
@@ -188,7 +192,7 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
 
   comp->size--;
 
-  *res = old_node->resource;
+  *res = lcfgcomponent_resource(old_node);
 
   lcfgresourcenode_destroy(old_node);
 
@@ -196,22 +200,29 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
 }
 
 bool lcfgcomponent_print( const LCFGComponent * comp,
-                          const char * style,
+                          LCFGResourceStyle style,
                           bool print_all,
                           FILE * out ) {
+  assert( comp != NULL );
 
-  if ( lcfgcomponent_is_empty(comp) )
-    return true;
+  if ( lcfgcomponent_is_empty(comp) ) return true;
 
   bool print_status = false;
   bool print_export = false;
-  if ( style != NULL ) {
-    if ( strcmp( style, "status" ) == 0 ) {
-      print_status = true;
-    } else if ( strcmp( style, "export" ) == 0 ) {
+
+  switch (style)
+    {
+    case LCFG_RESOURCE_STYLE_STATUS:
       print_export = true;
+      break;
+    case LCFG_RESOURCE_STYLE_EXPORT:
+      print_status = true;
+      break;
+    case LCFG_RESOURCE_STYLE_SPEC:
+    default:
+      /* no op */
+      break;
     }
-  }
 
   bool ok = true;
 
@@ -222,8 +233,11 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
     exit(EXIT_FAILURE);
   }
 
-  LCFGResourceNode * cur_node = lcfgcomponent_head(comp);
-  while ( cur_node != NULL ) {
+  const LCFGResourceNode * cur_node = NULL;
+  for ( cur_node = lcfgcomponent_head(comp);
+	cur_node != NULL;
+	cur_node = lcfgcomponent_next(cur_node) ) {
+
     const LCFGResource * res = lcfgcomponent_resource(cur_node);
 
     /* Not interested in resources for inactive contexts. Only print
@@ -240,7 +254,7 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
         rc = lcfgresource_to_export( res, comp->name, LCFG_OPT_NEWLINE,
                                      &buffer, &buf_size );
       } else {
-        rc = lcfgresource_to_string( res, comp->name, LCFG_OPT_NEWLINE,
+        rc = lcfgresource_to_spec( res, comp->name, LCFG_OPT_NEWLINE,
                                      &buffer, &buf_size );
       }
 
@@ -258,7 +272,6 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
     if (!ok)
       break;
 
-    cur_node = lcfgcomponent_next(cur_node);
   }
 
   free(buffer);
@@ -267,34 +280,30 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
 }
 
 void lcfgcomponent_sort( LCFGComponent * comp ) {
+  assert( comp != NULL );
 
-  if ( lcfgcomponent_is_empty(comp) )
-    return;
+  if ( lcfgcomponent_size(comp) < 2 ) return;
 
   /* Oo. Oo. bubble sort .oO .oO */
 
-  bool done = false;
+  bool swapped=true;
+  while (swapped) {
+    swapped=false;
 
-  while (!done) {
-
-    LCFGResourceNode * cur_node  = lcfgcomponent_head(comp);
-    LCFGResourceNode * next_node = lcfgcomponent_next(cur_node);
-
-    done = true;
-
-    while ( next_node != NULL ) {
+    LCFGResourceNode * cur_node = NULL;
+    for ( cur_node = lcfgcomponent_head(comp);
+          cur_node != NULL && cur_node->next != NULL;
+          cur_node = lcfgcomponent_next(cur_node) ) {
 
       LCFGResource * cur_res  = lcfgcomponent_resource(cur_node);
-      LCFGResource * next_res = lcfgcomponent_resource(next_node);
+      LCFGResource * next_res = lcfgcomponent_resource(cur_node->next);
 
       if ( lcfgresource_compare( cur_res, next_res ) > 0 ) {
-        cur_node->resource  = next_res;
-        next_node->resource = cur_res;
-        done = false;
+        cur_node->resource       = next_res;
+        cur_node->next->resource = cur_res;
+        swapped = true;
       }
 
-      cur_node  = next_node;
-      next_node = lcfgcomponent_next(next_node);
     }
   }
 
@@ -322,7 +331,7 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
       compname = lcfgutils_basename( filename, NULL );
     } else {
       ok = false;
-      asprintf( msg, "Either the component name or status file path MUST be specified" );
+      lcfgutils_build_message( msg, "Either the component name or status file path MUST be specified" );
       goto cleanup;
     }
   }
@@ -332,7 +341,7 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
   comp = lcfgcomponent_new();
   if ( !lcfgcomponent_set_name( comp, compname ) ) {
     ok = false;
-    asprintf( msg, "Invalid name for component '%s'", compname );
+    lcfgutils_build_message( msg, "Invalid name for component '%s'", compname );
 
     free(compname);
 
@@ -346,11 +355,11 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
     ok = false;
 
     if (errno == ENOENT) {
-      asprintf( msg, "Component status file '%s' does not exist",
-                statusfile );
+      lcfgutils_build_message( msg, "Component status file '%s' does not exist",
+			       statusfile );
     } else {
-      asprintf( msg, "Component status file '%s' is not readable",
-                statusfile );
+      lcfgutils_build_message( msg, "Component status file '%s' is not readable",
+			       statusfile );
     }
 
     goto cleanup;
@@ -381,7 +390,7 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
 
     char * sep = strchr( statusline, '=' );
     if ( sep == NULL ) {
-      asprintf( msg, "Failed to parse line %d (missing '=' character)",
+      lcfgutils_build_message( msg, "Failed to parse line %d (missing '=' character)",
                 linenum );
       ok = false;
       break;
@@ -406,7 +415,7 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
 
     if ( !lcfgresource_parse_key( statusline, &this_hostname, &this_compname,
                                   &this_resname, &this_type ) ) {
-      asprintf( msg, "Failed to parse line %d (invalid key '%s')",
+      lcfgutils_build_message( msg, "Failed to parse line %d (invalid key '%s')",
                 linenum, statusline );
       ok = false;
       break;
@@ -415,7 +424,7 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
     /* Check for valid resource name */
 
     if ( !lcfgresource_valid_name(this_resname) ) {
-      asprintf( msg, "Failed to parse line %d (invalid resource name '%s')",
+      lcfgutils_build_message( msg, "Failed to parse line %d (invalid resource name '%s')",
                 linenum, this_resname );
       ok = false;
       break;
@@ -424,7 +433,7 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
     /* Insist on the component names matching */
 
     if ( this_compname != NULL && strcmp( this_compname, compname ) != 0 ) {
-      asprintf( msg, "Failed to parse line %d (invalid component name '%s')",
+      lcfgutils_build_message( msg, "Failed to parse line %d (invalid component name '%s')",
                 linenum, this_compname );
       ok = false;
       break;
@@ -436,7 +445,7 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
       lcfgcomponent_find_or_create_resource( comp, this_resname );
 
     if ( res == NULL ) {
-      asprintf( msg, "Failed to parse line %d of status file '%s'",
+      lcfgutils_build_message( msg, "Failed to parse line %d of status file '%s'",
 		linenum, statusfile );
       ok = false;
       break;
@@ -462,12 +471,12 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
     if ( !set_ok ) {
 
       if ( set_msg != NULL ) {
-        asprintf( msg, "Failed to process line %d (%s)",
+        lcfgutils_build_message( msg, "Failed to process line %d (%s)",
                   linenum, set_msg );
 
         free(set_msg);
       } else {
-        asprintf( msg, 
+        lcfgutils_build_message( msg, 
                   "Failed to process line %d (bad value '%s' for type '%c')",
                   linenum, this_value, this_type );
       }
@@ -506,12 +515,11 @@ static const char * reslist_keyname = "_RESOURCES";
 LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
                                  const char * use_prefix,
                                  char ** msg ) {
+  assert( comp != NULL );
 
-  if ( lcfgcomponent_is_empty(comp) )
-    return LCFG_STATUS_OK;
+  if ( lcfgcomponent_is_empty(comp) ) return LCFG_STATUS_OK;
 
-  if ( !lcfgcomponent_has_name(comp) )
-    return LCFG_STATUS_ERROR;
+  if ( !lcfgcomponent_has_name(comp) ) return LCFG_STATUS_ERROR;
 
   LCFGStatus status = LCFG_STATUS_OK;
 
@@ -559,8 +567,11 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 
   }
 
-  LCFGResourceNode * cur_node = lcfgcomponent_head(comp);
-  while ( cur_node != NULL ) {
+  const LCFGResourceNode * cur_node = NULL;
+  for ( cur_node = lcfgcomponent_head(comp);
+	cur_node != NULL;
+	cur_node = lcfgcomponent_next(cur_node) ) {
+
     const LCFGResource * res = lcfgcomponent_resource(cur_node);
 
     /* Not interested in resources for inactive contexts */
@@ -569,11 +580,10 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 
     if ( !lcfgresource_to_env( res, res_prefix, LCFG_OPT_NONE ) ) {
       status = LCFG_STATUS_ERROR;
-      asprintf( msg, "Failed to set environment variable" );
+      lcfgutils_build_message( msg, "Failed to set environment variable" );
       break;
     }
 
-    cur_node = lcfgcomponent_next(cur_node);
   }
 
   if ( status != LCFG_STATUS_ERROR ) {
@@ -616,14 +626,15 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
   return status;
 }
 
-LCFGStatus lcfgcomponent_to_statusfile( LCFGComponent * comp,
+LCFGStatus lcfgcomponent_to_statusfile( const LCFGComponent * comp,
                                         const char * filename,
                                         char ** msg ) {
+  assert( comp != NULL );
 
   const char * compname = lcfgcomponent_get_name(comp);
 
   if ( filename == NULL && compname == NULL ) {
-    asprintf( msg, "Either the target file name or component name is required" );
+    lcfgutils_build_message( msg, "Either the target file name or component name is required" );
     return LCFG_STATUS_ERROR;
   }
 
@@ -636,16 +647,11 @@ LCFGStatus lcfgcomponent_to_statusfile( LCFGComponent * comp,
   int fd = mkstemp(tmpfile);
   FILE * out = fdopen( fd, "w" );
   if ( out == NULL ) {
-    asprintf( msg, "Failed to open temporary status file '%s'",
+    lcfgutils_build_message( msg, "Failed to open temporary status file '%s'",
               tmpfile );
     ok = false;
     goto cleanup;
   }
-
-  /* Sort the list of resources so that the statusfile is always
-     produced in the same order - makes comparisons simpler. */
-
-  lcfgcomponent_sort(comp);
 
   /* For efficiency a buffer is pre-allocated. The initial size was
      chosen by looking at typical resource usage for Informatics. The
@@ -659,8 +665,11 @@ LCFGStatus lcfgcomponent_to_statusfile( LCFGComponent * comp,
     exit(EXIT_FAILURE);
   }
 
-  LCFGResourceNode * cur_node = lcfgcomponent_head(comp);
-  while ( cur_node != NULL ) {
+  const LCFGResourceNode * cur_node = NULL;
+  for ( cur_node = lcfgcomponent_head(comp);
+	cur_node != NULL;
+	cur_node = lcfgcomponent_next(cur_node) ) {
+
     const LCFGResource * res = lcfgcomponent_resource(cur_node);
 
     /* Not interested in resources for inactive contexts */
@@ -680,23 +689,22 @@ LCFGStatus lcfgcomponent_to_statusfile( LCFGComponent * comp,
     }
 
     if (!ok) {
-      asprintf( msg, "Failed to write to status file" );
+      lcfgutils_build_message( msg, "Failed to write to status file" );
       break;
     }
 
-    cur_node = lcfgcomponent_next(cur_node);
   }
 
   free(buffer);
 
   if ( fclose(out) != 0 ) {
-    asprintf( msg, "Failed to close status file" );
+    lcfgutils_build_message( msg, "Failed to close status file" );
     ok = false;
   }
 
   if (ok) {
     if ( rename( tmpfile, statusfile ) != 0 ) {
-      asprintf( msg, "Failed to rename temporary status file to '%s'",
+      lcfgutils_build_message( msg, "Failed to rename temporary status file to '%s'",
                 statusfile );
       ok = false;
     }
@@ -714,26 +722,26 @@ LCFGStatus lcfgcomponent_to_statusfile( LCFGComponent * comp,
 
 LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
                                             const char * name ) {
+  assert( comp != NULL );
 
-  if ( lcfgcomponent_is_empty(comp) )
-    return NULL;
+  if ( lcfgcomponent_is_empty(comp) ) return NULL;
 
   LCFGResourceNode * result = NULL;
 
-  LCFGResourceNode * cur_node = lcfgcomponent_head(comp);
-  while ( cur_node != NULL ) {
+  const LCFGResourceNode * cur_node = NULL;
+  for ( cur_node = lcfgcomponent_head(comp);
+	cur_node != NULL && result == NULL;
+	cur_node = lcfgcomponent_next(cur_node) ) {
+
     const LCFGResource * res = lcfgcomponent_resource(cur_node); 
 
     if ( !lcfgresource_is_active(res) ) continue;
 
     const char * res_name = lcfgresource_get_name(res);
 
-    if ( res_name != NULL && strcmp( res_name, name ) == 0 ) {
-      result = cur_node;
-      break;
-    }
+    if ( res_name != NULL && strcmp( res_name, name ) == 0 )
+      result = (LCFGResourceNode *) cur_node;
 
-    cur_node = lcfgcomponent_next(cur_node);
   }
 
   return result;
@@ -741,6 +749,7 @@ LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
 
 LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
                                             const char * name ) {
+  assert( comp != NULL );
 
   LCFGResource * res = NULL;
 
@@ -753,12 +762,14 @@ LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
 
 bool lcfgcomponent_has_resource( const LCFGComponent * comp,
                                  const char * name ) {
+  assert( comp != NULL );
 
   return ( lcfgcomponent_find_node( comp, name ) != NULL );
 }
 
 LCFGResource * lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
                                                       const char * name ) {
+  assert( comp != NULL );
 
   /* Only searches 'active' resources */
 
@@ -794,14 +805,13 @@ LCFGResource * lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
 LCFGChange lcfgcomponent_insert_or_merge_resource(
                                             LCFGComponent * comp,
                                             LCFGResource * new_res,
-                                            char ** errmsg ) {
+                                            char ** msg ) {
+  assert( comp != NULL );
 
-  *errmsg = NULL;
   LCFGChange result = LCFG_CHANGE_ERROR;
 
   /* Name for resource is required */
-  if ( !lcfgresource_has_name(new_res) )
-    return LCFG_CHANGE_ERROR;
+  if ( !lcfgresource_has_name(new_res) ) return LCFG_CHANGE_ERROR;
 
   LCFGResourceNode * cur_node =
     lcfgcomponent_find_node( comp, lcfgresource_get_name(new_res) );
@@ -837,7 +847,7 @@ LCFGChange lcfgcomponent_insert_or_merge_resource(
       result = LCFG_CHANGE_REPLACED;
 
     } else {
-      asprintf( errmsg, "Resource conflict" );
+      lcfgutils_build_message( msg, "Resource conflict" );
     }
 
   }
@@ -848,14 +858,13 @@ LCFGChange lcfgcomponent_insert_or_merge_resource(
 LCFGChange lcfgcomponent_insert_or_replace_resource(
                                               LCFGComponent * comp,
                                               LCFGResource * new_res,
-                                              char ** errmsg ) {
+                                              char ** msg ) {
+  assert( comp != NULL );
 
-  *errmsg = NULL;
   LCFGChange result = LCFG_CHANGE_ERROR;
 
   /* Name for resource is required */
-  if ( !lcfgresource_has_name(new_res) )
-    return LCFG_CHANGE_ERROR;
+  if ( !lcfgresource_has_name(new_res) ) return LCFG_CHANGE_ERROR;
 
   LCFGResourceNode * cur_node =
     lcfgcomponent_find_node( comp, lcfgresource_get_name(new_res) );
@@ -881,35 +890,34 @@ LCFGChange lcfgcomponent_insert_or_replace_resource(
 LCFGStatus lcfgcomponent_apply_overrides( LCFGComponent * comp,
 					  const LCFGComponent * overrides,
 					  char ** msg ) {
-  *msg = NULL;
+  assert( comp != NULL );
 
-  if ( overrides == NULL || lcfgcomponent_is_empty(overrides) )
-    return LCFG_STATUS_OK;
+  if ( lcfgcomponent_is_empty(overrides) ) return LCFG_STATUS_OK;
 
   LCFGStatus status = LCFG_STATUS_OK;
 
-  LCFGResourceNode * cur_node = lcfgcomponent_head(overrides);
-  while ( cur_node != NULL ) {
+  const LCFGResourceNode * cur_node = NULL;
+  for ( cur_node = lcfgcomponent_head(overrides);
+	cur_node != NULL && status != LCFG_STATUS_ERROR;
+	cur_node = lcfgcomponent_next(cur_node) ) {
+
     LCFGResource * override_res = lcfgcomponent_resource(cur_node);
 
     LCFGChange rc =
       lcfgcomponent_insert_or_replace_resource( comp, override_res, msg );
 
-    if ( rc == LCFG_CHANGE_ERROR ) {
+    if ( rc == LCFG_CHANGE_ERROR )
       status = LCFG_STATUS_ERROR;
-      break;
-    }
 
-    cur_node = lcfgcomponent_next(cur_node);
   }
 
   return status;
 }
 
 char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp) {
+  assert( comp != NULL );
 
-  if ( lcfgcomponent_is_empty(comp) )
-    return strdup("");
+  if ( lcfgcomponent_is_empty(comp) ) return strdup("");
 
   LCFGTagList * reslist = lcfgtaglist_new();
 
