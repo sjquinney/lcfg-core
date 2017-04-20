@@ -5,8 +5,7 @@
 
 #include "components.h"
 
-LCFGResourceIterator * lcfgresiter_new( LCFGComponent * component,
-                                        bool manage ) {
+LCFGResourceIterator * lcfgresiter_new( LCFGComponent * component ) {
 
   LCFGResourceIterator * iterator = malloc( sizeof(LCFGResourceIterator) );
   if ( iterator == NULL ) {
@@ -14,22 +13,20 @@ LCFGResourceIterator * lcfgresiter_new( LCFGComponent * component,
     exit(EXIT_FAILURE);
   }
 
+  lcfgcomponent_acquire(component);
+
   iterator->component = component;
   iterator->current   = NULL;
   iterator->done      = false;
-  iterator->manage    = manage;
 
   return iterator;
 }
 
 void lcfgresiter_destroy( LCFGResourceIterator * iterator ) {
 
-  if ( iterator == NULL )
-    return;
+  if ( iterator == NULL ) return;
 
-  if ( iterator->manage && iterator->component != NULL ) {
-    lcfgcomponent_destroy(iterator->component);
-  }
+  lcfgcomponent_relinquish(iterator->component);
 
   iterator->component = NULL;
   iterator->current = NULL;
@@ -70,9 +67,7 @@ bool lcfgresiter_has_next( LCFGResourceIterator * iterator ) {
 
 LCFGResource * lcfgresiter_next(LCFGResourceIterator * iterator) {
 
-  if ( iterator->done ) {
-    return NULL;
-  }
+  if ( iterator->done ) return NULL;
 
   if ( !lcfgresiter_has_next(iterator) ) {
     iterator->done = true;
@@ -86,9 +81,8 @@ LCFGResource * lcfgresiter_next(LCFGResourceIterator * iterator) {
   }
 
   LCFGResource * res = NULL;
-  if ( iterator->current != NULL ) {
+  if ( iterator->current != NULL )
     res = lcfgcomponent_resource(iterator->current);
-  }
 
   return res;
 }

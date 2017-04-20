@@ -217,12 +217,10 @@ struct LCFGResourceIterator {
   LCFGComponent * component;
   LCFGResourceNode * current;
   bool done;
-  bool manage;
 };
 typedef struct LCFGResourceIterator LCFGResourceIterator;
 
-LCFGResourceIterator * lcfgresiter_new( LCFGComponent * component,
-                                        bool manage );
+LCFGResourceIterator * lcfgresiter_new( LCFGComponent * component );
 
 void lcfgresiter_destroy( LCFGResourceIterator * iterator );
 void lcfgresiter_reset( LCFGResourceIterator * iterator );
