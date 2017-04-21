@@ -442,4 +442,51 @@ void lcfgutils_build_message( char ** strp, const char *fmt, ... ) {
   }
 }
 
+char * lcfgutils_replace_string( const char * input,
+				 const char * match,
+				 const char * replace ) {
+  assert( input != NULL );
+  assert( match != NULL );
+
+  size_t input_len   = strlen(input);
+  size_t match_len   = strlen(match);
+  size_t replace_len = replace != NULL ? strlen(replace) : 0;
+
+  ssize_t len_diff = replace_len - match_len;
+
+  size_t new_len = input_len;
+
+  char * p = (char *) input;
+  while ( ( p = strstr( p, match ) ) != NULL ) {
+      p += match_len;
+      new_len += len_diff;
+  }
+
+  char * result = calloc( ( new_len + 1 ), sizeof(char) );
+  if ( result == NULL ) {
+    perror("Failed to allocate memory for LCFG resource type string");
+    exit(EXIT_FAILURE);
+  }
+
+  char * to = result;
+
+  char * start = input;
+  bool done = false;
+  while ( !done ) {
+    p = strstr( start, match );
+    if ( p == NULL ) {
+      to = stpcpy( to, start );
+      done = true;
+    } else {
+      to = stpncpy( to, start, p - start );
+      start = p + match_len;
+
+      if ( replace_len > 0 )
+	to = stpncpy( to, replace, replace_len );
+    }
+  }
+
+  return result;
+}
+
 /* eof */
