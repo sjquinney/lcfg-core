@@ -11,6 +11,13 @@
 #include "components.h"
 #include "utils.h"
 
+/* Used when creating environment variables from resources */
+
+static const char * default_val_pfx  = "LCFG_%s_";
+static const char * default_type_pfx = "LCFGTYPE_%s_";
+static const char * env_placeholder  = "%s";
+static const char * reslist_keyname  = "_RESOURCES";
+
 LCFGResourceNode * lcfgresourcenode_new(LCFGResource * res) {
   assert( res != NULL );
 
@@ -208,16 +215,25 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
 
   if ( lcfgcomponent_is_empty(comp) ) return true;
 
+  const char * comp_name = lcfgcomponent_get_name(comp);
+
   bool print_status = false;
   bool print_export = false;
+
+  char * val_pfx  = NULL;
+  char * type_pfx = NULL;
 
   switch (style)
     {
     case LCFG_RESOURCE_STYLE_STATUS:
-      print_export = true;
+      print_status = true;
       break;
     case LCFG_RESOURCE_STYLE_EXPORT:
-      print_status = true;
+      print_export = true;
+      val_pfx  = lcfgutils_string_replace( default_val_pfx,
+                                           env_placeholder, comp_name );
+      type_pfx = lcfgutils_string_replace( default_type_pfx,
+                                           env_placeholder, comp_name );
       break;
     case LCFG_RESOURCE_STYLE_SPEC:
     default:
@@ -249,13 +265,13 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
 
       ssize_t rc;
       if ( print_status ) {
-        rc = lcfgresource_to_status( res, comp->name, LCFG_OPT_NONE,
+        rc = lcfgresource_to_status( res, comp_name, LCFG_OPT_NONE,
                                      &buffer, &buf_size );
       } else if ( print_export ) {
-        rc = lcfgresource_to_export( res, comp->name, LCFG_OPT_NEWLINE,
+        rc = lcfgresource_to_export( res, val_pfx, type_pfx, LCFG_OPT_USE_META,
                                      &buffer, &buf_size );
       } else {
-        rc = lcfgresource_to_spec( res, comp->name, LCFG_OPT_NEWLINE,
+        rc = lcfgresource_to_spec( res, comp_name, LCFG_OPT_NEWLINE,
                                      &buffer, &buf_size );
       }
 
@@ -276,6 +292,9 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
   }
 
   free(buffer);
+
+  free(val_pfx);
+  free(type_pfx);
 
   return ok;
 }
@@ -509,11 +528,6 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
-static const char * default_val_pfx = "LCFG_%s_";
-static const char * default_type_pfx = "LCFGTYPE_%s_";
-static const char * env_placeholder = "%s";
-static const char * reslist_keyname = "_RESOURCES";
-
 LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 				 const char * val_pfx, const char * type_pfx,
 				 LCFGOption options,
@@ -539,7 +553,7 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 
   char * val_pfx2 = NULL;
   if ( strstr( val_pfx, env_placeholder ) != NULL ) {
-    val_pfx2 = lcfgutils_replace_string( val_pfx,
+    val_pfx2 = lcfgutils_string_replace( val_pfx,
 					 env_placeholder, comp_name );
     val_pfx = val_pfx2;
   }
@@ -549,7 +563,7 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
   /* No point doing this if the type data isn't required */
   if ( options&LCFG_OPT_USE_META ) {
     if ( strstr( type_pfx, env_placeholder ) != NULL ) {
-      type_pfx2 = lcfgutils_replace_string( type_pfx,
+      type_pfx2 = lcfgutils_string_replace( type_pfx,
 					    env_placeholder, comp_name );
       type_pfx = type_pfx2;
     }

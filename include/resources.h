@@ -256,15 +256,15 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
   __attribute__((warn_unused_result));
 
 ssize_t lcfgresource_to_export( const LCFGResource * res,
-                                const char * prefix,
+                                const char * val_pfx, const char * type_pfx,
                                 LCFGOption options,
                                 char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
 ssize_t lcfgresource_to_spec( const LCFGResource * res,
-                                const char * prefix,
-                                LCFGOption options,
-                                char ** str, size_t * size )
+                              const char * prefix,
+                              LCFGOption options,
+                              char ** str, size_t * size )
   __attribute__((warn_unused_result));
 
 ssize_t lcfgresource_to_status( const LCFGResource * res,
