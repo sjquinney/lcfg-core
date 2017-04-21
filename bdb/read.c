@@ -47,7 +47,7 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
                                  LCFGProfile ** result,
                                  const LCFGTagList * comps_wanted,
                                  const char * namespace,
-				 unsigned int options,
+				 LCFGOption options,
                                  char ** msg ) {
 
   *msg = NULL;
@@ -118,7 +118,7 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
                                    LCFGComponent ** result,
                                    const char * compname,
                                    const char * namespace,
-				   unsigned int options,
+				   LCFGOption options,
                                    char ** msg ) {
 
   *msg = NULL;
