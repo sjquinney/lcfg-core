@@ -2134,6 +2134,130 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   return new_len;
 }
 
+ssize_t lcfgresource_to_summary( const LCFGResource * res,
+                                 const char * prefix,
+                                 LCFGOption options,
+                                 char ** result, size_t * size ) {
+  assert( res != NULL );
+
+  static const char * format = " %7s=%s\n";
+  size_t base_len = 10; /* 1 for indent + 7 for key + 1 for '=' +1 for newline */
+
+  ssize_t key_len = lcfgresource_to_spec( res, prefix,
+                                          LCFG_OPT_NOVALUE|LCFG_OPT_NOCONTEXT,
+                                          result, size );
+
+  if ( key_len < 0 ) return key_len;
+
+  size_t new_len = key_len + 2; /* for ':' (colon) and newline */
+
+  /* Value */
+
+  size_t value_len = 0;
+  const char * value = "";
+  if ( lcfgresource_has_value(res) ) {
+    value = lcfgresource_get_value(res);
+    value_len = strlen(value);
+  }
+  new_len += ( base_len + value_len );
+
+  /* Type */
+
+  size_t type_len = 0;
+  const char * type = "default";
+  char * type_as_str = NULL;
+  if ( lcfgresource_get_type(res) != LCFG_RESOURCE_TYPE_STRING ||
+       lcfgresource_has_comment(res) ) {
+
+    type_as_str = lcfgresource_get_type_as_string( res, LCFG_OPT_NONE );
+
+    if ( type_as_str != NULL )
+      type = type_as_str;
+  }
+  type_len = strlen(type);
+  new_len += ( base_len + type_len );
+
+  /* Optional meta-data */
+
+  char * derivation = NULL;
+  size_t deriv_len = 0;
+
+  char * context = NULL;
+  size_t ctx_len = 0;
+  
+  if ( options&LCFG_OPT_USE_META ) {
+
+    if ( lcfgresource_has_derivation(res) ) {
+      derivation = lcfgresource_get_derivation(res);
+      deriv_len  = strlen(derivation);
+      if ( deriv_len > 0 )
+        new_len += ( base_len + deriv_len);
+    }
+
+    if ( lcfgresource_has_context(res) ) {
+      context = lcfgresource_get_context(res);
+      ctx_len = strlen(context);
+      if ( ctx_len > 0 )
+        new_len += ( base_len + ctx_len );
+    }
+
+  }
+
+  /* Allocate the required space */
+
+  if ( *result == NULL || *size < ( new_len + 1 ) ) {
+    *size = new_len + 1;
+
+    *result = realloc( *result, ( *size * sizeof(char) ) );
+    if ( *result == NULL ) {
+      perror("Failed to allocate memory for LCFG resource string");
+      exit(EXIT_FAILURE);
+    }
+
+  }
+
+  /* Build the new string - start at offset from the value line which
+     was put there using lcfgresource_to_spec */
+
+  char * to = *result + key_len;
+
+  to = stpncpy( to, ":\n", 2 );
+
+  int rc;
+
+  /* Value */
+
+  rc = sprintf( to, format, "value", value );
+  to += rc;
+
+  /* Type */
+
+  rc = sprintf( to, format, "type", type );
+  to += rc;
+
+  /* Derivation */
+
+  if ( deriv_len > 0 ) {
+    rc = sprintf( to, format, "derive", derivation );
+    to += rc;
+  }
+
+  /* Context */
+
+  if ( ctx_len > 0 ) {
+    rc = sprintf( to, format, "context", context );
+    to += rc;
+  }
+
+  *to = '\0';
+
+  free(type_as_str);
+
+  assert( (*result + new_len ) == to );
+
+  return new_len;
+}
+
 ssize_t lcfgresource_to_status( const LCFGResource * res,
                                 const char * prefix,
                                 LCFGOption options,
@@ -2146,8 +2270,8 @@ ssize_t lcfgresource_to_status( const LCFGResource * res,
      derivation information). */
 
   ssize_t value_len = lcfgresource_to_spec( res, prefix,
-                                              options|LCFG_OPT_NEWLINE|LCFG_OPT_ENCODE,
-                                              result, size );
+                                            options|LCFG_OPT_NEWLINE|LCFG_OPT_ENCODE,
+                                            result, size );
 
   if ( value_len < 0 )
     return value_len;
