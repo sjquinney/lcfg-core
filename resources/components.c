@@ -277,6 +277,19 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
     }
   }
 
+  /* Export style also needs a list of resource names for the component */
+
+  if ( ok && print_export ) {
+
+    char * reslist = lcfgcomponent_get_resources_as_string(comp);
+
+    int rc = fprintf( out, "%s%s=%s\n", val_pfx, reslist_keyname, reslist );
+    if ( rc < 0 )
+      ok = false;
+
+    free(reslist);
+  }
+
   free(buffer);
 
   free(val_pfx);
