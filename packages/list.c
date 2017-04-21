@@ -951,7 +951,7 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         FILE * out ) {
   assert( pkglist != NULL );
 
-  bool only_active = !(options&LCFG_OPT_ALL_PRIORITIES);
+  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
 
   /* For RPMs the default architecture is often required. For
      efficiency, look up the default architecture only once */
@@ -964,8 +964,12 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
   if ( style == LCFG_PKG_STYLE_XML )
     ok = ( fputs( "  <packages>\n", out ) >= 0 );
 
-  char * lcfgspec = NULL;
-  size_t buf_size = 0;
+  size_t buf_size = 256;
+  char * buffer = calloc( buf_size, sizeof(char) );
+  if ( buffer == NULL ) {
+    perror( "Failed to allocate memory for LCFG resource buffer" );
+    exit(EXIT_FAILURE);
+  }
 
   const LCFGPackageNode * cur_node = NULL;
   for ( cur_node = lcfgpkglist_head(pkglist);
@@ -974,24 +978,25 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
 
     const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
 
-    if ( !lcfgpackage_is_valid(pkg) || 
-         ( !lcfgpackage_is_active(pkg) && only_active ) ) continue;
+    if ( lcfgpackage_is_valid(pkg) &&
+         ( all_priorities || lcfgpackage_is_active(pkg) ) ) {
 
-    ssize_t rc = lcfgpackage_to_string( pkg, defarch, style, options,
-					&lcfgspec, &buf_size );
+      ssize_t rc = lcfgpackage_to_string( pkg, defarch, style, options,
+                                          &buffer, &buf_size );
 
-    if ( rc < 0 ) {
-      ok = false;
-    } else {
+      if ( rc < 0 ) {
+        ok = false;
+      } else {
 
-      if ( fputs( lcfgspec, out ) < 0 )
-	ok = false;
+        if ( fputs( buffer, out ) < 0 )
+          ok = false;
+
+      }
 
     }
-
   }
 
-  free(lcfgspec);
+  free(buffer);
 
   if ( ok && style == LCFG_PKG_STYLE_XML )
     ok = ( fputs( "  </packages>\n", out ) >= 0 );
