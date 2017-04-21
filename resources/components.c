@@ -560,8 +560,10 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
   assert( comp != NULL );
 
   if ( lcfgcomponent_is_empty(comp) ) return LCFG_STATUS_OK;
-
   if ( !lcfgcomponent_has_name(comp) ) return LCFG_STATUS_ERROR;
+
+  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
+  bool all_values     = (options&LCFG_OPT_ALL_VALUES);
 
   LCFGStatus status = LCFG_STATUS_OK;
 
@@ -594,6 +596,8 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
     }
   }
 
+  LCFGTagList * export_res = lcfgtaglist_new();
+
   const LCFGResourceNode * cur_node = NULL;
   for ( cur_node = lcfgcomponent_head(comp);
 	cur_node != NULL && status != LCFG_STATUS_ERROR;
@@ -601,16 +605,27 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 
     const LCFGResource * res = lcfgcomponent_resource(cur_node);
 
-    /* Not interested in resources for inactive contexts */
+    if ( ( all_values     || lcfgresource_has_value(res) ) &&
+         ( all_priorities || lcfgresource_is_active(res) ) ) {
 
-    if ( !lcfgresource_is_active(res) ) continue;
+      status = lcfgresource_to_env( res, val_pfx, type_pfx, options );
 
-    status = lcfgresource_to_env( res, val_pfx, type_pfx, options );
+      if ( status == LCFG_STATUS_ERROR ) {
+        *msg = lcfgresource_build_message( res, comp_name,
+                           "Failed to set environment variable for resource" );
+      } else {
+        const char * res_name = lcfgresource_get_name(res);
 
-    if ( status == LCFG_STATUS_ERROR ) {
-      *msg = lcfgresource_build_message( res, comp_name,
-		   "Failed to set environment variable for resource" );
+        char * add_msg = NULL;
+        LCFGChange add_rc = lcfgtaglist_mutate_add( export_res, res_name,
+                                                    &add_msg );
+        if ( add_rc == LCFG_CHANGE_ERROR )
+          status = LCFG_STATUS_ERROR;
+
+        free(add_msg);
+      }
     }
+
   }
 
   if ( status != LCFG_STATUS_ERROR ) {
@@ -625,16 +640,25 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
       exit(EXIT_FAILURE);
     }
 
-    char * reslist_value = lcfgcomponent_get_resources_as_string(comp);
+    lcfgtaglist_sort(export_res);
 
-    if ( setenv( reslist_key, reslist_value, 1 ) != 0 )
+    char * reslist_value = NULL;
+    char * bufsize = 0;
+    ssize_t len = lcfgtaglist_to_string( export_res, LCFG_OPT_NONE,
+                                         &reslist_value, &bufsize );
+    if ( len < 0 ) {
       status = LCFG_STATUS_ERROR;
+    } else {
+      if ( setenv( reslist_key, reslist_value, 1 ) != 0 )
+        status = LCFG_STATUS_ERROR;
+    }
 
     free(reslist_key);
     free(reslist_value);
 
   }
 
+  lcfgtaglist_relinquish(export_res);
   free(val_pfx2);
   free(type_pfx2);
 
