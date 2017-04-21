@@ -442,7 +442,7 @@ void lcfgutils_build_message( char ** strp, const char *fmt, ... ) {
   }
 }
 
-char * lcfgutils_replace_string( const char * input,
+char * lcfgutils_string_replace( const char * input,
 				 const char * match,
 				 const char * replace ) {
   assert( input != NULL );

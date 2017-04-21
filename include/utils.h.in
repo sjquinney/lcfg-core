@@ -68,7 +68,7 @@ size_t lcfgutils_decode_html_entities_utf8(char *dest, const char *src);
 
 void lcfgutils_build_message( char ** strp, const char *fmt, ... );
 
-char * lcfgutils_replace_string( const char * input,
+char * lcfgutils_string_replace( const char * input,
 				 const char * old,
 				 const char * new );
 
