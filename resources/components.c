@@ -226,12 +226,15 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
   char * type_pfx = NULL;
   bool print_export = false;
 
+  LCFGTagList * export_res = NULL;
   if ( style == LCFG_RESOURCE_STYLE_EXPORT ) {
     print_export = true;
     val_pfx  = lcfgutils_string_replace( default_val_pfx,
                                          env_placeholder, comp_name );
     type_pfx = lcfgutils_string_replace( default_type_pfx,
                                          env_placeholder, comp_name );
+
+    export_res = lcfgtaglist_new();
   }
 
   bool ok = true;
@@ -260,18 +263,32 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
       if ( print_export ) {
         rc = lcfgresource_to_export( res, val_pfx, type_pfx, options,
                                      &buffer, &buf_size );
+
+        /* Stash the resource name so we can create an env variable
+           which holds the list of names. */
+
+        if ( rc > 0 ) {
+          const char * name = lcfgresource_get_name(res);
+          char * add_msg = NULL;
+          LCFGChange change = 
+            lcfgtaglist_mutate_add( export_res, name, add_msg );
+          if ( change == LCFG_CHANGE_ERROR )
+            ok = false;
+
+          free(add_msg);
+        }
+
       } else {
         rc = lcfgresource_to_string( res, comp_name, style, options,
                                      &buffer, &buf_size );
       }
 
-      if ( rc < 0 ) {
+      if ( rc < 0 )
         ok = false;
-      } else {
 
+      if (ok) {
         if ( fputs( buffer, out ) < 0 )
           ok = false;
-
       }
 
     }
@@ -281,17 +298,26 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
 
   if ( ok && print_export ) {
 
-    char * reslist = lcfgcomponent_get_resources_as_string(comp);
+    lcfgtaglist_sort(export_res);
 
-    int rc = fprintf( out, "%s%s=%s\n", val_pfx, reslist_keyname, reslist );
-    if ( rc < 0 )
+    char * reslist = NULL;
+    size_t bufsize = 0;
+    ssize_t len = lcfgtaglist_to_string( export_res, LCFG_OPT_NONE,
+                                         &reslist, &bufsize );
+    if ( len < 0 ) {
       ok = false;
+    } else {
+      int rc = fprintf( out, "export %s%s='%s'\n", val_pfx, reslist_keyname, reslist );
+      if ( rc < 0 )
+        ok = false;
+    }
 
     free(reslist);
   }
 
   free(buffer);
 
+  lcfgtaglist_relinquish(export_res);
   free(val_pfx);
   free(type_pfx);
 
