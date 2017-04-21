@@ -2265,13 +2265,15 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
     if ( lcfgpackage_has_derivation(pkg) ) {
       derivation = lcfgpackage_get_derivation(pkg);
       deriv_len  = strlen(derivation);
-      new_len += ( deriv_len + base_len );
+      if ( deriv_len > 0 )
+        new_len += ( deriv_len + base_len );
     }
 
     if ( lcfgpackage_has_context(pkg) ) {
       context = lcfgpackage_get_context(pkg);
       ctx_len = strlen(context);
-      new_len += ( ctx_len + base_len );
+      if ( ctx_len > 0 )
+        new_len += ( ctx_len + base_len );
     }
 
   }
