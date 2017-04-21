@@ -220,7 +220,7 @@ LCFGComponent * lcfgcomplist_find_or_create_component(
 
 bool lcfgcomplist_print( const LCFGComponentList * complist,
                          LCFGResourceStyle style,
-                         bool print_all_resources,
+                         LCFGOption options,
                          FILE * out ) {
   assert( complist != NULL );
 
@@ -247,7 +247,7 @@ bool lcfgcomplist_print( const LCFGComponentList * complist,
 
       ok = lcfgcomponent_to_statusfile( cur_comp, NULL, &msg );
     } else {
-      ok = lcfgcomponent_print( cur_comp, style, print_all_resources, out );
+      ok = lcfgcomponent_print( cur_comp, style, options, out );
     }
 
     if ( msg != NULL ) {

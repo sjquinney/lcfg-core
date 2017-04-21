@@ -1906,6 +1906,33 @@ LCFGStatus lcfgresource_from_env( const char * name,
 
 /* Output */
 
+LCFGStatus lcfgresource_to_string( const LCFGResource * res,
+                                   const char * prefix,
+                                   LCFGResourceStyle style,
+                                   LCFGOption options,
+                                   char ** result, size_t * size ) {
+  assert( res != NULL );
+
+  /* Select the appropriate string function */
+
+  LCFGResStrFunc str_func;
+
+  switch (style)
+    {
+    case LCFG_RESOURCE_STYLE_SUMMARY:
+      str_func = &lcfgresource_to_summary;
+      break;
+    case LCFG_RESOURCE_STYLE_STATUS:
+      str_func = &lcfgresource_to_status;
+      break;
+    case LCFG_RESOURCE_STYLE_SPEC:
+    default:
+      str_func = &lcfgresource_to_spec;
+    }
+
+  return (*str_func)( res, prefix, options, result, size );
+}
+
 LCFGStatus lcfgresource_to_env( const LCFGResource * res,
 				const char * val_pfx, const char * type_pfx,
 				LCFGOption options ) {
@@ -2134,10 +2161,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   return new_len;
 }
 
-ssize_t lcfgresource_to_summary( const LCFGResource * res,
-                                 const char * prefix,
-                                 LCFGOption options,
-                                 char ** result, size_t * size ) {
+ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS ) {
   assert( res != NULL );
 
   static const char * format = " %7s=%s\n";
@@ -2258,10 +2282,7 @@ ssize_t lcfgresource_to_summary( const LCFGResource * res,
   return new_len;
 }
 
-ssize_t lcfgresource_to_status( const LCFGResource * res,
-                                const char * prefix,
-                                LCFGOption options,
-                                char ** result, size_t * size ) {
+ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
   assert( res != NULL );
 
   /* The entry for the value is the standard stringified form. This
@@ -2384,10 +2405,7 @@ ssize_t lcfgresource_to_status( const LCFGResource * res,
   return new_len;
 }
 
-ssize_t lcfgresource_to_spec( const LCFGResource * res,
-                                const char * prefix,
-                                LCFGOption options,
-                                char ** result, size_t * size ) {
+ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
   assert( res != NULL );
 
   ssize_t key_len =
@@ -2510,22 +2528,18 @@ ssize_t lcfgresource_to_spec( const LCFGResource * res,
 
 bool lcfgresource_print( const LCFGResource * res,
                          const char * prefix,
-                         const char * style,
+                         LCFGResourceStyle style,
                          LCFGOption options,
                          FILE * out ) {
   assert( res != NULL );
 
-  size_t buf_size = 0;
   char * lcfgres = NULL;
-  ssize_t rc = 0;
+  size_t buf_size = 0;
 
-  if ( style != NULL && strcmp( style, "status" ) == 0 ) {
-    rc = lcfgresource_to_status( res, prefix, options,
-                                 &lcfgres, &buf_size );
-  } else {
-    rc = lcfgresource_to_spec( res, prefix, options|LCFG_OPT_NEWLINE,
-                                 &lcfgres, &buf_size );
-  }
+  options |= LCFG_OPT_NEWLINE;
+
+  ssize_t rc = lcfgresource_to_string( res, prefix, style, options,
+                                       &lcfgres, &buf_size );
 
   bool ok = ( rc > 0 );
 

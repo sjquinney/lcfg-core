@@ -209,41 +209,34 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
 
 bool lcfgcomponent_print( const LCFGComponent * comp,
                           LCFGResourceStyle style,
-                          bool print_all,
+                          LCFGOption options,
                           FILE * out ) {
   assert( comp != NULL );
 
   if ( lcfgcomponent_is_empty(comp) ) return true;
 
-  const char * comp_name = lcfgcomponent_get_name(comp);
+  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
+  bool all_values     = (options&LCFG_OPT_ALL_VALUES);
 
-  bool print_status = false;
-  bool print_export = false;
+  options |= LCFG_OPT_NEWLINE;
+
+  const char * comp_name = lcfgcomponent_get_name(comp);
 
   char * val_pfx  = NULL;
   char * type_pfx = NULL;
+  bool print_export = false;
 
-  switch (style)
-    {
-    case LCFG_RESOURCE_STYLE_STATUS:
-      print_status = true;
-      break;
-    case LCFG_RESOURCE_STYLE_EXPORT:
-      print_export = true;
-      val_pfx  = lcfgutils_string_replace( default_val_pfx,
-                                           env_placeholder, comp_name );
-      type_pfx = lcfgutils_string_replace( default_type_pfx,
-                                           env_placeholder, comp_name );
-      break;
-    case LCFG_RESOURCE_STYLE_SPEC:
-    default:
-      /* no op */
-      break;
-    }
+  if ( style == LCFG_RESOURCE_STYLE_EXPORT ) {
+    print_export = true;
+    val_pfx  = lcfgutils_string_replace( default_val_pfx,
+                                         env_placeholder, comp_name );
+    type_pfx = lcfgutils_string_replace( default_type_pfx,
+                                         env_placeholder, comp_name );
+  }
 
   bool ok = true;
 
-  size_t buf_size = 128;
+  size_t buf_size = 256;
   char * buffer = calloc( buf_size, sizeof(char) );
   if ( buffer == NULL ) {
     perror( "Failed to allocate memory for LCFG resource buffer" );
@@ -252,7 +245,7 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
 
   const LCFGResourceNode * cur_node = NULL;
   for ( cur_node = lcfgcomponent_head(comp);
-	cur_node != NULL;
+	cur_node != NULL && ok;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
     const LCFGResource * res = lcfgcomponent_resource(cur_node);
@@ -260,35 +253,28 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
     /* Not interested in resources for inactive contexts. Only print
        resources without values if the print_all option is specified */
 
-    if ( lcfgresource_is_active(res) &&
-         ( print_all || lcfgresource_has_value(res) ) ) {
+    if ( ( all_values     || lcfgresource_has_value(res) ) &&
+         ( all_priorities || lcfgresource_is_active(res) ) ) {
 
       ssize_t rc;
-      if ( print_status ) {
-        rc = lcfgresource_to_status( res, comp_name, LCFG_OPT_NONE,
-                                     &buffer, &buf_size );
-      } else if ( print_export ) {
-        rc = lcfgresource_to_export( res, val_pfx, type_pfx, LCFG_OPT_USE_META,
+      if ( print_export ) {
+        rc = lcfgresource_to_export( res, val_pfx, type_pfx, options,
                                      &buffer, &buf_size );
       } else {
-        rc = lcfgresource_to_spec( res, comp_name, LCFG_OPT_NEWLINE,
+        rc = lcfgresource_to_string( res, comp_name, style, options,
                                      &buffer, &buf_size );
       }
 
-      if ( rc > 0 ) {
+      if ( rc < 0 ) {
+        ok = false;
+      } else {
 
         if ( fputs( buffer, out ) < 0 )
           ok = false;
 
-      } else {
-        ok = false;
       }
 
     }
-
-    if (!ok)
-      break;
-
   }
 
   free(buffer);
@@ -582,7 +568,7 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 
     status = lcfgresource_to_env( res, val_pfx, type_pfx, options );
 
-    if ( status = LCFG_STATUS_ERROR ) {
+    if ( status == LCFG_STATUS_ERROR ) {
       *msg = lcfgresource_build_message( res, comp_name,
 		   "Failed to set environment variable for resource" );
     }

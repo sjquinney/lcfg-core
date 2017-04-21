@@ -241,7 +241,7 @@ bool lcfgresource_eval_priority( LCFGResource * res,
 
 bool lcfgresource_print( const LCFGResource * res,
                          const char * prefix,
-                         const char * style,
+                         LCFGResourceStyle style,
                          LCFGOption options,
                          FILE * out )
   __attribute__((warn_unused_result));
@@ -256,28 +256,34 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
 				LCFGOption options )
   __attribute__((warn_unused_result));
 
+#define LCFG_RES_TOSTR_ARGS \
+    const LCFGResource * res,\
+    const char * prefix,\
+    LCFGOption options,\
+    char ** result, size_t * size 
+
+typedef ssize_t (*LCFGResStrFunc) ( LCFG_RES_TOSTR_ARGS );
+
+LCFGStatus lcfgresource_to_string( const LCFGResource * res,
+                                   const char * prefix,
+                                   LCFGResourceStyle style,
+                                   LCFGOption options,
+                                   char ** result, size_t * size )
+ __attribute__((warn_unused_result));
+
+ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS )
+  __attribute__((warn_unused_result));
+
+ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS )
+  __attribute__((warn_unused_result));
+
+ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS )
+  __attribute__((warn_unused_result));
+
 ssize_t lcfgresource_to_export( const LCFGResource * res,
                                 const char * val_pfx, const char * type_pfx,
                                 LCFGOption options,
                                 char ** result, size_t * size )
-  __attribute__((warn_unused_result));
-
-ssize_t lcfgresource_to_spec( const LCFGResource * res,
-                              const char * prefix,
-                              LCFGOption options,
-                              char ** str, size_t * size )
-  __attribute__((warn_unused_result));
-
-ssize_t lcfgresource_to_status( const LCFGResource * res,
-                                const char * prefix,
-                                LCFGOption options,
-                                char ** str, size_t * size )
-  __attribute__((warn_unused_result));
-
-ssize_t lcfgresource_to_summary( const LCFGResource * res,
-                                 const char * prefix,
-                                 LCFGOption options,
-                                 char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
 /* Resources: Others */

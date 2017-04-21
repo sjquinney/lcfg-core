@@ -64,7 +64,8 @@ typedef enum {
   LCFG_OPT_ENCODE         =  64, /**< Encode data */
   LCFG_OPT_ALL_CONTEXTS   = 128, /**< Include all contexts */
   LCFG_OPT_ALL_PRIORITIES = 256, /**< Include all priorities */
-  LCFG_OPT_USE_META       = 512  /**< Include metadata */
+  LCFG_OPT_USE_META       = 512, /**< Include metadata */
+  LCFG_OPT_ALL_VALUES     = 1024 /**< Include all values */
 } LCFGOption;
 
 #endif /* LCFG_CORE_COMMON_H */

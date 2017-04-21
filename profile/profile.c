@@ -312,14 +312,13 @@ bool lcfgprofile_print(const LCFGProfile * profile,
   bool ok = lcfgprofile_print_metadata( profile, out );
 
   if ( ok && show_comps && lcfgprofile_has_components(profile) ) {
-    bool print_all_resources = false;
 
     if ( fputs( "\n", out ) < 0 )
       ok = false;
 
     if (ok) {
       ok = lcfgcomplist_print( profile->components, comp_style,
-                               print_all_resources, out );
+                               LCFG_OPT_USE_META, out );
     }
 
   }

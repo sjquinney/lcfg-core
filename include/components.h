@@ -43,7 +43,7 @@ bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name )
 
 bool lcfgcomponent_print( const LCFGComponent * comp,
                           LCFGResourceStyle style,
-                          bool print_all,
+                          LCFGOption options,
                           FILE * out )
   __attribute__((warn_unused_result));
 
@@ -170,7 +170,7 @@ LCFGComponent * lcfgcomplist_find_or_create_component(
 
 bool lcfgcomplist_print( const LCFGComponentList * complist,
                          LCFGResourceStyle style,
-                         bool print_all_resources,
+                         LCFGOption options,
                          FILE * out )
   __attribute__((nonnull (1,4))) __attribute__((warn_unused_result));
 
