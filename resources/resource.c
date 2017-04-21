@@ -1974,36 +1974,33 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
 }
 
 ssize_t lcfgresource_to_export( const LCFGResource * res,
-                                const char * prefix,
+                                const char * val_pfx, const char * type_pfx,
                                 LCFGOption options,
                                 char ** result, size_t * size ) {
   assert( res != NULL );
 
   /* Name is required */
 
-  if ( !lcfgresource_has_name(res) )
-    return false;
+  if ( !lcfgresource_has_name(res) ) return false;
 
   const char * name = lcfgresource_get_name(res);
   size_t name_len = strlen(name);
 
-  char * fn_name = "export";
+  static const char * fn_name = "export";
   size_t fn_len = strlen(fn_name);
 
-  size_t new_len = fn_len + 4 + name_len; /* +1 space, +1 =, +2 '' */
+  size_t new_len = 0;
+
+  /* Value */
 
   /* Optional prefix (usually LCFG_compname_) */
 
-  size_t prefix_len = 0;
-  if ( prefix != NULL ) {
-    prefix_len = strlen(prefix);
-    new_len += prefix_len;
-  }
+  size_t val_pfx_len = ( val_pfx != NULL ) ? strlen(val_pfx) : 0;
 
-  char * escaped = "'\"'\"'";
+  static const char * escaped = "'\"'\"'";
   size_t escaped_len = strlen(escaped);
 
-  char * value = NULL;
+  const char * value = NULL;
   size_t value_len = 0;
   if ( lcfgresource_has_value(res) ) {
     value = lcfgresource_get_value(res);
@@ -2018,10 +2015,38 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
     new_len += value_len;
   }
 
-  /* Optional newline at end of string */
+  /* +1 space, +1 =, +2 '', +1 '\n' == 5 */
+  new_len += ( fn_len + val_pfx_len + name_len + value_len + 5 );
 
-  if ( options&LCFG_OPT_NEWLINE )
-    new_len += 1;
+  /* Type - optional */
+
+  size_t type_pfx_len = 0;
+  size_t type_len = 0;
+  char * type_as_str = NULL;
+
+  if ( options&LCFG_OPT_USE_META ) {
+
+    if ( lcfgresource_get_type(res) != LCFG_RESOURCE_TYPE_STRING ||
+         lcfgresource_has_comment(res) ) {
+
+      type_as_str = lcfgresource_get_type_as_string( res, LCFG_OPT_NONE );
+    }
+
+    if ( !isempty(type_as_str) ) {
+      type_pfx_len = ( type_pfx != NULL ) ? strlen(type_pfx) : 0;
+
+      type_len = strlen(type_as_str);
+
+      char * ptr;
+      for ( ptr = type_as_str; *ptr != '\0'; ptr++ ) {
+        if ( *ptr == '\'' )
+          type_len += ( escaped_len - 1 );
+      }
+
+      /* +1 space, +1 =, +2 '', +1 '\n' == 5 */
+      new_len += ( fn_len + type_pfx_len + name_len + type_len + 5 );
+    }
+  }
 
   /* Allocate the required space */
 
@@ -2043,13 +2068,15 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
   char * to = *result;
 
+  /* Value */
+
   to = stpncpy( to, fn_name, fn_len );
 
   *to = ' ';
   to++;
 
-  if ( prefix != NULL )
-    to = stpncpy( to, prefix, prefix_len );
+  if ( val_pfx_len > 0 )
+    to = stpncpy( to, val_pfx, val_pfx_len );
 
   to = stpncpy( to, name, name_len );
 
@@ -2067,13 +2094,38 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
     }
   }
 
-  *to = '\'';
-  to++;
+  to = stpncpy( to, "'\n", 1 );
 
-  /* Optional newline at the end of the string */
+  /* Type - optional */
 
-  if ( options&LCFG_OPT_NEWLINE )
-    to = stpncpy( to, "\n", 1 );
+  if ( type_len > 0 ) {
+
+    to = stpncpy( to, fn_name, fn_len );
+
+    *to = ' ';
+    to++;
+
+    if ( type_pfx_len > 0 )
+      to = stpncpy( to, type_pfx, type_pfx_len );
+
+    to = stpncpy( to, name, name_len );
+
+    to = stpncpy( to, "='", 2 );
+
+    char * ptr;
+    for ( ptr = type_as_str; *ptr != '\0'; ptr++ ) {
+      if ( *ptr == '\'' ) {
+        to = stpncpy( to, escaped, escaped_len );
+      } else {
+        *to = *ptr;
+        to++;
+      }
+    }
+
+    to = stpncpy( to, "'\n", 1 );
+  }
+
+  free(type_as_str);
 
   *to = '\0';
 
