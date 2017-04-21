@@ -2039,7 +2039,6 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
         value_len += ( escaped_len - 1 );
     }
 
-    new_len += value_len;
   }
 
   /* +1 space, +1 =, +2 '', +1 '\n' == 5 */
@@ -2121,7 +2120,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
     }
   }
 
-  to = stpncpy( to, "'\n", 1 );
+  to = stpncpy( to, "'\n", 2 );
 
   /* Type - optional */
 
@@ -2149,7 +2148,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
       }
     }
 
-    to = stpncpy( to, "'\n", 1 );
+    to = stpncpy( to, "'\n", 2 );
   }
 
   free(type_as_str);
