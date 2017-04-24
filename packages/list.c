@@ -59,6 +59,9 @@ LCFGPackageNode * lcfgpkgnode_new(LCFGPackage * pkg) {
  * @c free(3) on each parameter of the struct and then set each value to
  * be @c NULL.
  *
+ * Note that destroying an @c LCFGPackageNode does not destroy the
+ * associated @c LCFGPackage, that must be done separately.
+ *
  * It is typically not necessary to call this function. The usual
  * approach is to use the @c lcfgpkglist_remove_next() function to
  * remove a @c LCFGPackage from the list.
@@ -68,7 +71,7 @@ LCFGPackageNode * lcfgpkgnode_new(LCFGPackage * pkg) {
  * package node which has already been destroyed (or potentially was
  * never created).
  *
- * @param[in] pkg Pointer to @c LCFGPackageNode to be destroyed.
+ * @param[in] pkgnode Pointer to @c LCFGPackageNode to be destroyed.
  *
  */
 
@@ -85,7 +88,7 @@ void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode) {
 }
 
 /**
- * @brief Create and initialise a new package list
+ * @brief Create and initialise a new empty package list
  *
  * Creates a new @c LCFGPackageList which represents an empty
  * package list.
@@ -129,8 +132,8 @@ LCFGPackageList * lcfgpkglist_new(void) {
  * situations. This is particular useful for code which needs to use
  * multiple iterators for a single list. Incrementing and decrementing
  * that reference counter is the responsibility of the container
- * code. If the reference count for the specified package list is
- * greater than zero then calling this function will have no effect.
+ * code. See @c lcfgpkglist_acquire() and @c lcfgpkglist_relinquish()
+ * for details.
  *
  * This will iterate through the list to remove and destroy each
  * @c LCFGPackageNode item, it also calls @c lcfgpackage_relinquish()
@@ -142,7 +145,7 @@ LCFGPackageList * lcfgpkglist_new(void) {
  * package list which has already been destroyed (or potentially was
  * never created).
  *
- * @param[in] res Pointer to @c LCFGPackageList to be destroyed.
+ * @param[in] pkglist Pointer to @c LCFGPackageList to be destroyed.
  *
  */
 
@@ -173,7 +176,7 @@ void lcfgpkglist_destroy(LCFGPackageList * pkglist) {
  * longer required the @c lcfgpkglist_release() function should be
  * called.
  *
- * @param[in] pkg Pointer to @c LCFGPackageList
+ * @param[in] pkglist Pointer to @c LCFGPackageList
  *
  */
 
@@ -196,7 +199,7 @@ void lcfgpkglist_acquire( LCFGPackageList * pkglist ) {
  * package list which has already been destroyed (or potentially was
  * never created).
  *
- * @param[in] pkg Pointer to @c LCFGPackageList
+ * @param[in] pkglist Pointer to @c LCFGPackageList
  *
  */
 
@@ -268,7 +271,7 @@ LCFGPkgRule lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist ) {
 }
 
 /**
- * @brief Insert a new package into a list
+ * @brief Insert a package into the list
  *
  * This can be used to insert an @c LCFGPackage into the
  * specified package list. The package will be wrapped into an
@@ -287,6 +290,7 @@ LCFGPkgRule lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist ) {
  * @param[in] pkg Pointer to @c LCFGPackage
  * 
  * @return Integer value indicating type of change
+ *
  */
 
 LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
@@ -325,10 +329,10 @@ LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
 }
 
 /**
- * @brief Remove a package from a list
+ * @brief Remove a package from the list
  *
- * This can be used to remove an @c LCFGPackage from the
- * specified package list.
+ * This can be used to remove an @c LCFGPackage from the specified
+ * package list.
  *
  * The package removed from the list is immediately after the
  * specified @c LCFGPackageNode. To remove the package from the
@@ -349,6 +353,7 @@ LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
  * @param[out] pkg Pointer to @c LCFGPackage
  * 
  * @return Integer value indicating type of change
+ *
  */
 
 LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
@@ -458,7 +463,7 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
 }
 
 /**
- * @brief Find the package for a given name
+ * @brief Find the package for a given name and architecture
  *
  * This can be used to search through an @c LCFGPackageList to find
  * the first package which has a matching name and architecture. Note
@@ -474,7 +479,8 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
  * call the @c lcfgpackage_acquire() function.
  *
  * @param[in] pkglist Pointer to @c LCFGPackageList to be searched
- * @param[in] name The name of the required package node
+ * @param[in] name The name of the required package
+ * @param[in] arch The architecture of the required package node
  *
  * @return Pointer to an @c LCFGPackage (or the @c NULL value).
  *
@@ -507,7 +513,8 @@ LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * pkglist,
  * list is empty then a false value will be returned.
  *
  * @param[in] pkglist Pointer to @c LCFGPackageList to be searched
- * @param[in] name The name of the required package node
+ * @param[in] name The name of the required package
+ * @param[in] arch The architecture of the required package node
  *
  * @return Boolean value which indicates presence of package in list
  *
@@ -884,7 +891,7 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
 }
 
 /**
- * @brief Sort a package list
+ * @brief Sort a list of packages
  *
  * This sorts the nodes of the @c LCFGPackageList by using the 
  * @c lcfgpackage_compare() function.

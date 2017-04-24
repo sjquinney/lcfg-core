@@ -1139,10 +1139,11 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
 /* Context Expression */
 
 /**
- * @brief Check if a string is a valid LCFG context
+ * @brief Check if a string is a valid LCFG context expression
  *
  * Checks the contents of a specified string against the specification
- * for an LCFG context. See @c lcfgcontext_valid_expression for details.
+ * for an LCFG context expression. See @c lcfgcontext_valid_expression
+ * for details.
  *
  * @param[in] ctx String to be tested
  *
