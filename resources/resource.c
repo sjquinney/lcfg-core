@@ -326,13 +326,13 @@ bool lcfgresource_has_name( const LCFGResource * res ) {
  * @c LCFGResource. If the resource does not currently have a @e
  * name then the pointer returned will be @c NULL.
  *
- * It is important to note that this is NOT a copy of the string,
+ * It is important to note that this is @b NOT a copy of the string,
  * changing the returned string will modify the @e name of the
  * resource.
  *
  * @param[in] res Pointer to an @c LCFGResource
  *
- * @return The @e name for the resource (possibly NULL).
+ * @return The @e name for the resource (possibly @c NULL).
  */
 
 char * lcfgresource_get_name( const LCFGResource * res ) {
@@ -346,7 +346,7 @@ char * lcfgresource_get_name( const LCFGResource * res ) {
  *
  * Sets the value of the @e name parameter for the @c LCFGResource
  * to that specified. It is important to note that this does
- * NOT take a copy of the string. Furthermore, once the value is set
+ * @b NOT take a copy of the string. Furthermore, once the value is set
  * the resource assumes "ownership", the memory will be freed if the
  * name is further modified or the resource is destroyed.
  *
