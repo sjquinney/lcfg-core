@@ -523,7 +523,7 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
       } else {
         lcfgutils_build_message( msg, 
                   "Failed to process line %d (bad value '%s' for type '%c')",
-                  linenum, this_value, this_type );
+                  linenum, status_value, this_type );
       }
 
       free(this_value);
