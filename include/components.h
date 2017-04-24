@@ -56,6 +56,7 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
 
 LCFGStatus lcfgcomponent_to_statusfile( const LCFGComponent * comp,
                                         const char * filename,
+					LCFGOption options,
                                         char ** msg )
   __attribute__((warn_unused_result));
 
