@@ -227,49 +227,49 @@ LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkg ) {
   if ( clone == NULL ) return NULL;
 
   bool ok = true;
-  if ( pkg->name != NULL ) {
+  if ( !isempty(pkg->name) ) {
     char * new_name = strdup(pkg->name);
     ok = lcfgpackage_set_name( clone, new_name );
     if (!ok)
       free(new_name);
   }
 
-  if ( ok && pkg->arch != NULL ) {
+  if ( ok && !isempty(pkg->arch) ) {
     char * new_arch = strdup(pkg->arch);
     ok = lcfgpackage_set_arch( clone, new_arch );
     if (!ok)
       free(new_arch);
   }
 
-  if ( ok && pkg->version != NULL ) {
+  if ( ok && !isempty(pkg->version) ) {
     char * new_version = strdup(pkg->version);
     ok = lcfgpackage_set_version( clone, new_version );
     if (!ok)
       free(new_version);
   }
 
-  if ( ok && pkg->release != NULL ) {
+  if ( ok && !isempty(pkg->release) ) {
     char * new_release = strdup(pkg->release);
     ok = lcfgpackage_set_release( clone, new_release );
     if (!ok)
       free(new_release);
   }
 
-  if ( ok && pkg->flags != NULL ) {
+  if ( ok && !isempty(pkg->flags) ) {
     char * new_flags = strdup(pkg->flags);
     ok = lcfgpackage_set_flags( clone, new_flags );
     if (!ok)
       free(new_flags);
   }
 
-  if ( ok && pkg->context != NULL ) {
+  if ( ok && !isempty(pkg->context) ) {
     char * new_context = strdup(pkg->context);
     ok = lcfgpackage_set_context( clone, new_context );
     if (!ok)
       free(new_context);
   }
 
-  if ( ok && pkg->derivation != NULL ) {
+  if ( ok && !isempty(pkg->derivation) ) {
     char * new_deriv = strdup(pkg->derivation);
     ok = lcfgpackage_set_derivation( clone, new_deriv );
     if (!ok)
@@ -1410,9 +1410,9 @@ bool lcfgpackage_add_derivation( LCFGPackage * pkg,
  * @brief Get the priority for the package
  *
  * This returns the value of the integer @e priority parameter for the
- * @c LCFGPackage. The priority is calculated using the
- * context for the package (if any) along with the current active set
- * of contexts for the system.
+ * @c LCFGPackage. The priority is calculated using the context
+ * expression for the package (if any) along with the current active
+ * set of contexts for the system.
  *
  * @param[in] pkg Pointer to an @c LCFGPackage
  *
@@ -1449,8 +1449,8 @@ bool lcfgpackage_set_priority( LCFGPackage * pkg, int new_prio ) {
 /**
  * @brief Evaluate the priority for the package for a list of contexts
  *
- * This will evaluate and update the value of the @c priority
- * attribute for the LCFG package using the value set for the @c
+ * This will evaluate and update the value of the @e priority
+ * attribute for the LCFG package using the value set for the @e
  * context attribute (if any) and the list of LCFG contexts passed in
  * as an argument. The priority is evaluated using @c
  * lcfgctxlist_eval_expression().
@@ -1495,10 +1495,10 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkg,
 /**
  * @brief Check if the package is considered to be active
  *
- * Checks if the current value for the @c priority attribute in the @c
+ * Checks if the current value for the @e priority attribute in the
  * @c LCFGPackage is greater than or equal to zero.
  *
- * The priority is calculated using the value for the @c context
+ * The priority is calculated using the value for the @e context
  * attribute and the list of currently active contexts, see
  * @c lcfgpackage_eval_priority() for details.
  *
@@ -2608,14 +2608,14 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
 
   if ( options&LCFG_OPT_USE_META ) {
 
-    if ( context != NULL ) {
+    if ( !isempty(context) ) {
       ctx_len = strlen(context);
 
       if ( ctx_len > 0 )
         new_len += ( ctx_len + 15 ); /* ' cfg:context=""' */
     }
 
-    if ( derivation != NULL ) {
+    if ( !isempty(derivation) ) {
       deriv_len = strlen(derivation);
 
       if ( deriv_len > 0 )
@@ -2888,8 +2888,7 @@ int lcfgpackage_compare_archs( const LCFGPackage * pkg1,
  * @param[in] pkg2 Pointer to @c LCFGPackage
  * 
  * @return Integer (-1,0,+1) indicating lesser,equal,greater
-
- * @return
+ *
  */
 
 int lcfgpackage_compare( const LCFGPackage * pkg1,
@@ -2999,10 +2998,11 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
  *   - @c LCFG_PKG_STYLE_CPP - uses @c lcfgpackage_to_cpp()
  *   - @c LCFG_PKG_STYLE_RPM - uses @c lcfgpackage_to_rpm_filename()
  *   - @c LCFG_PKG_STYLE_SPEC - uses @c lcfgpackage_to_spec()
+ *   - @c LCFG_PKG_STYLE_SUMMARY - uses @c lcfgpackage_to_summary()
  *
  * See the documentation for each function to see which options are
  * supported.
-
+ *
  * These functions use a string buffer which may be pre-allocated if
  * nececesary to improve efficiency. This makes it possible to reuse
  * the same buffer for generating many package strings, this can be a
@@ -3082,7 +3082,7 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
  * @param[in] defarch Default architecture string (may be @c NULL)
  * @param[in] style Integer indicating required style of formatting
  * @param[in] options Integer for any additional options
- * @param[in] out Stream to which the context string should be written
+ * @param[in] out Stream to which the package string should be written
  *
  * @return boolean indicating success
  *
