@@ -1586,6 +1586,19 @@ bool lcfgresource_add_derivation( LCFGResource * res,
 
 /* Context Expression */
 
+/**
+ * @brief Check if a string is a valid LCFG context expression
+ *
+ * Checks the contents of a specified string against the specification
+ * for an LCFG context expression. See @c lcfgcontext_valid_expression
+ * for details.
+ *
+ * @param[in] ctx String to be tested
+ *
+ * @return boolean which indicates if string is a valid context
+ *
+ */
+
 bool lcfgresource_valid_context( const char * ctx ) {
   char * msg = NULL;
   bool valid = lcfgcontext_valid_expression( ctx, &msg );
@@ -1969,6 +1982,8 @@ LCFGStatus lcfgresource_from_env( const char * name,
     goto cleanup;
   }
 
+  int rc;
+
   /* Type - optional, do it first to ensure validation of value */
 
   if ( type_pfx != NULL ) {
@@ -2005,7 +2020,7 @@ LCFGStatus lcfgresource_from_env( const char * name,
     val_pfx = "";
   
   char * val_key = NULL;
-  int rc = asprintf( &val_key, "%s%s", val_pfx, resname );
+  rc = asprintf( &val_key, "%s%s", val_pfx, resname );
   if ( rc < 0 ) {
     perror("Failed to build resource environment variable name");
     exit(EXIT_FAILURE);
@@ -2064,7 +2079,7 @@ LCFGStatus lcfgresource_from_env( const char * name,
  * If the string is successfully generated then the length of the new
  * string is returned, note that this is distinct from the buffer
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
- * longer required.
+ * longer required. If an error occurs this function will return -1.
  *
  * @param[in] res Pointer to @c LCFGResource
  * @param[in] prefix Prefix, usually the component name (may be @c NULL)
@@ -2193,6 +2208,52 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
   return status;
 }
 
+/**
+ * @brief Format resource information for shell evaluation
+ *
+ * This generates a new string representation of the @e value and
+ * @e type information for the @c LCFGResource as environment variables
+ * which can be evaluated in the bash shell. The variable names are a
+ * combination of the resource name and any prefix specified.
+ *
+ The output will look something like:
+ *
+\verbatim
+export LCFG_client_ack='yes'
+export LCFGTYPE_client_ack='boolean'
+\endverbatim
+ *
+ * The value prefix will typically be like @c LCFG_comp_ and the type
+ * prefix will typically be like @c LCFGTYPE_comp_ where @c comp is
+ * the name of the component. Often only the value variable is
+ * required so, for efficiency, the type variable will only be set
+ * when the @c LCFG_OPT_USE_META option is specified.
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many resource strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated.
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required. If an error occurs this function will return -1.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] val_pfx The prefix for the value variable name
+ * @param[in] type_pfx The prefix for the type variable name
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
 
 ssize_t lcfgresource_to_export( const LCFGResource * res,
                                 const char * val_pfx, const char * type_pfx,
@@ -2228,7 +2289,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
     value_len = strlen(value);
 
     char * ptr;
-    for ( ptr = value; *ptr != '\0'; ptr++ ) {
+    for ( ptr = (char *) value; *ptr != '\0'; ptr++ ) {
       if ( *ptr == '\'' )
         value_len += ( escaped_len - 1 );
     }
@@ -2304,7 +2365,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
   if ( value != NULL ) {
     char * ptr;
-    for ( ptr = value; *ptr != '\0'; ptr++ ) {
+    for ( ptr = (char *) value; *ptr != '\0'; ptr++ ) {
       if ( *ptr == '\'' ) {
         to = stpncpy( to, escaped, escaped_len );
       } else {
@@ -2357,7 +2418,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 /**
  * @brief Summarise the resource information
  *
- * Summarises the @c LCFGPackage as a string in the verbose key-value
+ * Summarises the @c LCFGResource as a string in the verbose key-value
  * style used by the qxprof tool. The output will look something like:
  *
 \verbatim
@@ -2383,7 +2444,7 @@ client.ack:
  * If the string is successfully generated then the length of the new
  * string is returned, note that this is distinct from the buffer
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
- * longer required.
+ * longer required. If an error occurs this function will return -1.
  *
  * @param[in] res Pointer to @c LCFGResource
  * @param[in] prefix Prefix, usually the component name (may be @c NULL)
@@ -2552,7 +2613,7 @@ client.ack=yes
  * If the string is successfully generated then the length of the new
  * string is returned, note that this is distinct from the buffer
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
- * longer required.
+ * longer required. If an error occurs this function will return -1.
  *
  * @param[in] res Pointer to @c LCFGResource
  * @param[in] prefix Prefix, usually the component name (may be @c NULL)
@@ -2606,7 +2667,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
 
   char * derivation = NULL;
   size_t deriv_len = 0;
-  if (   if ( options&LCFG_OPT_USE_META && lcfgresource_has_derivation(res) ) {
+  if ( options&LCFG_OPT_USE_META && lcfgresource_has_derivation(res) ) {
     derivation = lcfgresource_get_derivation(res);
     deriv_len = strlen(derivation);
 
@@ -2711,7 +2772,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
  * If the string is successfully generated then the length of the new
  * string is returned, note that this is distinct from the buffer
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
- * longer required.
+ * longer required. If an error occurs this function will return -1.
  *
  * @param[in] res Pointer to @c LCFGResource
  * @param[in] prefix Prefix, usually the component name (may be @c NULL)
@@ -2857,7 +2918,7 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
  * See the documentation for each function to see which options are
  * supported.
  *
- * @param[in] ctx Pointer to @c LCFGResource
+ * @param[in] res Pointer to @c LCFGResource
  * @param[in] prefix Prefix, usually the component name (may be @c NULL)
  * @param[in] style Integer indicating required style of formatting
  * @param[in] options Integer for any additional options
@@ -3082,6 +3143,19 @@ bool lcfgresource_equals( const LCFGResource * res1,
   return ( lcfgresource_compare( res1, res2 ) == 0 );
 }
 
+/**
+ * @brief Assemble a resource-specific message
+ *
+ * This can be used to assemble resource-specific message, typically
+ * this is used for generating diagnostic error messages.
+ *
+ * @param[in] Pointer to @c LCFGResource
+ * @param[in] Format string for message (and any additional arguments)
+ *
+ * @return Pointer to message string (call @c free(3) when no longer required)
+ *
+ */
+
 char * lcfgresource_build_message( const LCFGResource * res,
                                    const char * component,
                                    const char *fmt, ... ) {
@@ -3193,6 +3267,31 @@ char * lcfgresource_build_message( const LCFGResource * res,
   return result;
 }
 
+/**
+ * @brief Calculate the required size for a resource key
+ *
+ * This calculates the size requirements for a resource key including
+ * the optional component and namespace.
+ *
+ * The key is generated by combining the part using a @c '.' (period)
+ * character so will be something like @c namespace.component.resname
+ * with an optional single-character type symbol prefix (e.g. @c '%',
+ * @c '#' or @c '^'). This is used by the @c lcfgresource_build_key()
+ * function.
+ *
+ * Clearly care must be taken to ensure no strings are altered after
+ * the key size has been calculated prior to allocating the space for
+ * the key.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] component Optional name of component
+ * @param[in] namespace Optional namespace (typically a hostname)
+ * @param[in] type_symbol The symbol for the particular key type
+ *
+ * @return Size of required key
+ *
+ */
+ 
 ssize_t lcfgresource_compute_key_length( const LCFGResource * res,
                                          const char * component,
                                          const char * namespace,
@@ -3215,6 +3314,31 @@ ssize_t lcfgresource_compute_key_length( const LCFGResource * res,
 
   return length;
 }
+
+/**
+ * @brief Insert resource key into a string
+ *
+ * This inserts the resource key into a pre-allocated string which
+ * must be sufficiently large (use the 
+ * @c lcfgresource_compute_key_length() function). 
+ *
+ * The key is generated by combining the part using a @c '.' (period)
+ * character so will be something like @c namespace.component.resname
+ * with an optional single-character type symbol prefix (e.g. @c '%',
+ * @c '#' or @c '^'). This is used by the @c lcfgresource_build_key()
+ * function.
+ *
+ * If an error occurs this function will return -1.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] component Optional name of component
+ * @param[in] namespace Optional namespace (typically a hostname)
+ * @param[in] type_symbol The symbol for the particular key type
+ * @param[out] result The string into which the key should be written
+ *
+ * @return Size of required key (or -1 for error)
+ *
+ */
 
 ssize_t lcfgresource_insert_key( const LCFGResource * res,
                                  const char * component,
@@ -3249,6 +3373,44 @@ ssize_t lcfgresource_insert_key( const LCFGResource * res,
 
   return ( to - result );
 }
+
+/**
+ * @brief Build a resource key
+ *
+ * Generates a new key for the @c LCFGResource. This key is used by
+ * the client to generate unique keys for storing current resource
+ * data into the DB.
+ *
+ * The key is generated by combining the part using a @c '.' (period)
+ * character so will be something like @c namespace.component.resname
+ * with an optional single-character type symbol prefix (e.g. @c '%',
+ * @c '#' or @c '^'). 
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many resource strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated. 
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required. If an error occurs this function will return -1.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] component Optional name of component
+ * @param[in] namespace Optional namespace (typically a hostname)
+ * @param[in] type_symbol The symbol for the particular key type
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return Size of required key (or -1 for an error)
+ *
+ */
 
 ssize_t lcfgresource_build_key( const LCFGResource * res,
                                 const char * component,
@@ -3289,6 +3451,24 @@ ssize_t lcfgresource_build_key( const LCFGResource * res,
   return ( write_len == need_len ? write_len : -1 );
 }
 
+/**
+ * @brief Parse a resource key
+ *
+ * This parses the given resource key into the constituent (hostname,
+ * component name and resource name) parts. Note that this function
+ * modifies the given string in-place and returns pointers to the
+ * various chunks of interest.
+ *
+ * @param[in] key Pointer to the resource key (will be modified in place)
+ * @param[out] hostname Reference to a pointer to the hostname part of the key (optional)
+ * @param[out] compname Reference to a pointer to the component name part of the key (optional)
+ * @param[out] resname Reference to a pointer to the resource name
+ * @param[out] type The key type symbol
+ *
+ * @return boolean indicating success
+ *
+ */
+ 
 bool lcfgresource_parse_key( char  * key,
                              char ** hostname,
                              char ** compname,
@@ -3304,6 +3484,7 @@ bool lcfgresource_parse_key( char  * key,
 
   char * start = key;
 
+  /* Ignore any leading whitespace */
   while ( *start != '\0' && isspace(*start) ) start++;
 
   if ( *start == '\0' ) return false;
@@ -3358,6 +3539,33 @@ bool lcfgresource_parse_key( char  * key,
 
   return true;
 }
+
+
+/**
+ * @brief Set a value for the required attribute
+ *
+ * This sets a value for the relevant resource attribute for a given
+ * type symbol:
+ *
+ *   - type - @c '%'
+ *   - context - @c '='
+ *   - derivation - @c '#'
+ *   - priority - @c '^'
+ *   - value - nul
+ *
+ * It is important to note that this does @b NOT take a copy of the
+ * value string. Furthermore, once the value is set the resource
+ * assumes "ownership", the memory will be freed when it is no longer
+ * required
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] type_symbol The symbol for the required attribute type
+ * @param[in] value The new value for the attribute
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgresource_set_attribute( LCFGResource * res,
                                  char type_symbol,
