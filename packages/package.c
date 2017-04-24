@@ -2018,7 +2018,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
  * If the string is successfully generated then the length of the new
  * string is returned, note that this is distinct from the buffer
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
- * longer required.
+ * longer required. If an error occurs this function will return -1.
  *
  * @param[in] pkg Pointer to @c LCFGPackage
  * @param[in] defarch Default architecture string (may be @c NULL)
@@ -2210,7 +2210,7 @@ lcfg-client:
  * If the string is successfully generated then the length of the new
  * string is returned, note that this is distinct from the buffer
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
- * longer required.
+ * longer required. If an error occurs this function will return -1.
  *
  * @param[in] pkg Pointer to @c LCFGPackage
  * @param[in] defarch Default architecture string (may be @c NULL)
@@ -2375,7 +2375,7 @@ static char const * const pragma_end     = "\"\n";
  * If the string is successfully generated then the length of the new
  * string is returned, note that this is distinct from the buffer
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
- * longer required.
+ * longer required. If an error occurs this function will return -1.
  *
  * @param[in] pkg Pointer to @c LCFGPackage
  * @param[in] defarch Default architecture string (may be @c NULL)
@@ -2524,7 +2524,7 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
  * If the string is successfully generated then the length of the new
  * string is returned, note that this is distinct from the buffer
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
- * longer required.
+ * longer required. If an error occurs this function will return -1.
  *
  * @param[in] pkg Pointer to @c LCFGPackage
  * @param[in] defarch Default architecture string (may be @c NULL)
@@ -3016,7 +3016,7 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
  * If the string is successfully generated then the length of the new
  * string is returned, note that this is distinct from the buffer
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
- * longer required.
+ * longer required. If an error occurs this function will return -1.
  *
  * @param[in] pkg Pointer to @c LCFGPackage
  * @param[in] defarch Default architecture string (may be @c NULL)
