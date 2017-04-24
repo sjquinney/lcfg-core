@@ -316,7 +316,7 @@ bool lcfgresource_valid_name( const char * name ) {
 bool lcfgresource_has_name( const LCFGResource * res ) {
   assert( res != NULL );
 
-  return ( res->name != NULL );
+  return !isempty(res->name);
 }
 
 /**
@@ -434,8 +434,7 @@ LCFGResourceType lcfgresource_get_type( const LCFGResource * res ) {
 bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
   assert( res != NULL );
 
-  if ( res->type == new_type ) /* no-op */
-    return true;
+  if ( res->type == new_type ) return true; /* no-op */
 
   /* If the type is to be changed then there either must not be an
      existing value or that value must be compatible with the new
@@ -509,8 +508,6 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
                                       const char * new_type_str,
                                       char ** msg ) {
   assert( res != NULL );
-
-  *msg = NULL;
 
   bool ok = true;
 
@@ -973,8 +970,6 @@ bool lcfgresource_set_template_as_string(  LCFGResource * res,
                                            char ** msg ) {
   assert( res != NULL );
 
-  *msg = NULL;
-
   if ( new_tmpl_str == NULL ) {
     errno = EINVAL;
     return false;
@@ -1003,6 +998,8 @@ bool lcfgresource_set_template_as_string(  LCFGResource * res,
     errno = EINVAL;
   }
 
+  free(parse_msg);
+
   return ok;
 }
 
@@ -1022,7 +1019,7 @@ bool lcfgresource_set_template_as_string(  LCFGResource * res,
 bool lcfgresource_has_value( const LCFGResource * res ) {
   assert( res != NULL );
 
-  return !isempty(res->value);
+  return ( res->value != NULL );
 }
 
 /**
@@ -1074,8 +1071,7 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
 
   const char * value = lcfgresource_get_value(res);
 
-  if ( value == NULL )
-    return NULL;
+  if ( value == NULL ) return NULL;
 
   size_t value_len = strlen(value);
 
@@ -1101,8 +1097,7 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
       }
   }
 
-  if ( extend == 0 )
-    return strdup(value);
+  if ( extend == 0 ) return strdup(value);
 
   /* Some characters need encoding */
 
@@ -1273,8 +1268,7 @@ bool lcfgresource_valid_integer( const char * value ) {
 
   /* MUST NOT be a NULL. */
 
-  if ( value == NULL )
-    return false;
+  if ( value == NULL ) return false;
 
   /* First character may be a negative-sign, if so walk past */
 
@@ -1288,10 +1282,8 @@ bool lcfgresource_valid_integer( const char * value ) {
 
   /* All other characters MUST be digits */
 
-  for ( ; valid && *ptr != '\0'; ptr++ ) {
-    if ( !isdigit(*ptr) )
-      valid = false;
-  }
+  for ( ; valid && *ptr != '\0'; ptr++ )
+    if ( !isdigit(*ptr) ) valid = false;
 
   return valid;
 }
@@ -1322,10 +1314,8 @@ bool lcfgresource_valid_list( const char * value ) {
      Separators MUST be spaces */
 
   char * ptr;
-  for ( ptr = (char *) value; valid && *ptr != '\0'; ptr++ ) {
-    if ( !isword(*ptr) && *ptr != ' ' )
-      valid = false;
-  }
+  for ( ptr = (char *) value; valid && *ptr != '\0'; ptr++ )
+    if ( !isword(*ptr) && *ptr != ' ' ) valid = false;
 
   return valid;
 }
@@ -1485,7 +1475,7 @@ bool lcfgresource_unset_value( LCFGResource * res ) {
 bool lcfgresource_has_derivation( const LCFGResource * res ) {
   assert( res != NULL );
 
-  return ( res->derivation != NULL && *( res->derivation ) != '\0' );
+  return !isempty(res->derivation);
 }
 
 /**
@@ -1618,7 +1608,7 @@ bool lcfgresource_valid_context( const char * ctx ) {
 bool lcfgresource_has_context( const LCFGResource * res ) {
   assert( res != NULL );
 
-  return ( res->context != NULL && *( res->context ) != '\0' );
+  return !isempty(res->context);
 }
 
 /**
@@ -1708,8 +1698,7 @@ bool lcfgresource_add_context( LCFGResource * res,
                                const char * extra_context ) {
   assert( res != NULL );
 
-  if ( extra_context == NULL || *extra_context == '\0' )
-    return true;
+  if ( isempty(extra_context) ) return true;
 
   char * new_context;
   if ( !lcfgresource_has_context(res) ) {
@@ -1747,7 +1736,7 @@ bool lcfgresource_add_context( LCFGResource * res,
 bool lcfgresource_has_comment( const LCFGResource * res ) {
   assert( res != NULL );
 
-  return ( res->comment != NULL && *( res->comment ) != '\0' );
+  return !isempty(res->comment);
 }
 
 /**
@@ -2043,7 +2032,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
   /* Name is required */
 
-  if ( !lcfgresource_has_name(res) ) return false;
+  if ( !lcfgresource_has_name(res) ) return -1;
 
   const char * name = lcfgresource_get_name(res);
   size_t name_len = strlen(name);
@@ -2328,8 +2317,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
                                             options|LCFG_OPT_NEWLINE|LCFG_OPT_ENCODE,
                                             result, size );
 
-  if ( value_len < 0 )
-    return value_len;
+  if ( value_len < 0 ) return value_len;
 
   size_t new_len = value_len;
 
@@ -2446,8 +2434,7 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
     lcfgresource_compute_key_length( res, prefix, NULL, 
                                      LCFG_RESOURCE_SYMBOL_VALUE );
 
-  if ( key_len < 0 )
-    return key_len;
+  if ( key_len < 0 ) return key_len;
 
   size_t new_len = key_len;
 
@@ -2594,24 +2581,26 @@ int lcfgresource_compare_values( const LCFGResource * res1,
   assert( res1 != NULL );
   assert( res2 != NULL );
 
-  const char * value1_str = lcfgresource_has_value(res1) ? lcfgresource_get_value(res1) : LCFG_RESOURCE_NOVALUE;
-  const char * value2_str = lcfgresource_has_value(res2) ? lcfgresource_get_value(res2) : LCFG_RESOURCE_NOVALUE;
+  const char * value1_str = lcfgresource_has_value(res1) ?
+                          lcfgresource_get_value(res1) : LCFG_RESOURCE_NOVALUE;
+  const char * value2_str = lcfgresource_has_value(res2) ?
+                          lcfgresource_get_value(res2) : LCFG_RESOURCE_NOVALUE;
 
   int result = 0;
 
   if ( lcfgresource_is_boolean(res1) &&
        lcfgresource_same_type( res1, res2 ) ) {
 
-    bool value1 = strcmp( value1_str, "yes" ) ? true : false;
-    bool value2 = strcmp( value2_str, "yes" ) ? true : false;
+    bool value1_istrue = ( strcmp( value1_str, "yes" ) == 0 );
+    bool value2_istrue = ( strcmp( value2_str, "yes" ) == 0 );
 
     /* true is greater than false */
 
-    if ( value1 ) {
-      if ( !value2 )
+    if ( value1_istrue ) {
+      if ( !value2_istrue )
         result = 1;
     } else {
-      if ( value2 )
+      if ( value2_istrue )
         result = -1;
     }
 
@@ -2639,8 +2628,10 @@ int lcfgresource_compare( const LCFGResource * res1,
 
   /* Name */
 
-  const char * name1 = lcfgresource_has_name(res1) ? lcfgresource_get_name(res1) : LCFG_RESOURCE_NOVALUE;
-  const char * name2 = lcfgresource_has_name(res2) ? lcfgresource_get_name(res2) : LCFG_RESOURCE_NOVALUE;
+  const char * name1 = lcfgresource_has_name(res1) ?
+                       lcfgresource_get_name(res1) : LCFG_RESOURCE_NOVALUE;
+  const char * name2 = lcfgresource_has_name(res2) ?
+                       lcfgresource_get_name(res2) : LCFG_RESOURCE_NOVALUE;
 
   int result = strcmp( name1, name2 );
 
@@ -2648,8 +2639,10 @@ int lcfgresource_compare( const LCFGResource * res1,
 
   if ( result == 0 ) {
 
-    const char * value1 = lcfgresource_has_value(res1) ? lcfgresource_get_value(res1) : LCFG_RESOURCE_NOVALUE;
-    const char * value2 = lcfgresource_has_value(res2) ? lcfgresource_get_value(res2) : LCFG_RESOURCE_NOVALUE;
+    const char * value1 = lcfgresource_has_value(res1) ?
+                          lcfgresource_get_value(res1) : LCFG_RESOURCE_NOVALUE;
+    const char * value2 = lcfgresource_has_value(res2) ?
+                          lcfgresource_get_value(res2) : LCFG_RESOURCE_NOVALUE;
 
     result = strcmp( value1, value2 );
   }
@@ -2658,8 +2651,10 @@ int lcfgresource_compare( const LCFGResource * res1,
 
   if ( result == 0 ) {
 
-    const char * context1 = lcfgresource_has_context(res1) ? lcfgresource_get_context(res1) : LCFG_RESOURCE_NOVALUE;
-    const char * context2 = lcfgresource_has_context(res2) ? lcfgresource_get_context(res2) : LCFG_RESOURCE_NOVALUE;
+    const char * context1 = lcfgresource_has_context(res1) ?
+                         lcfgresource_get_context(res1) : LCFG_RESOURCE_NOVALUE;
+    const char * context2 = lcfgresource_has_context(res2) ?
+                         lcfgresource_get_context(res2) : LCFG_RESOURCE_NOVALUE;
 
     result = strcmp( context1, context2 );
   }
@@ -2834,8 +2829,7 @@ ssize_t lcfgresource_insert_key( const LCFGResource * res,
                                  char type_symbol,
                                  char * result ) {
 
-  if ( !lcfgresource_has_name(res) )
-    return -1;
+  if ( !lcfgresource_has_name(res) ) return -1;
 
   char * to = result;
 
@@ -2844,14 +2838,14 @@ ssize_t lcfgresource_insert_key( const LCFGResource * res,
     to++;
   }
 
-  if ( namespace != NULL && *namespace != '\0' ) {
+  if ( !isempty(namespace) ) {
     to = stpcpy( to, namespace );
 
     *to = '.';
     to++;
   }
 
-  if ( component != NULL && *component != '\0' ) {
+  if ( !isempty(component) ) {
     to = stpcpy( to, component );
 
     *to = '.';
@@ -2875,8 +2869,7 @@ ssize_t lcfgresource_build_key( const LCFGResource * res,
                                                       namespace,
                                                       type_symbol );
 
-  if ( need_len < 0 )
-    return need_len;
+  if ( need_len < 0 ) return need_len;
 
   /* Allocate the required space */
 
@@ -2914,15 +2907,13 @@ bool lcfgresource_parse_key( char  * key,
   *resname  = NULL;
   *type     = LCFG_RESOURCE_SYMBOL_VALUE;
 
-  if ( key == NULL || *key == '\0' )
-    return false;
+  if ( isempty(key) ) return false;
 
   char * start = key;
 
   while ( *start != '\0' && isspace(*start) ) start++;
 
-  if ( *start == '\0' )
-    return false;
+  if ( *start == '\0' ) return false;
 
   if ( *start == LCFG_RESOURCE_SYMBOL_DERIVATION ||
        *start == LCFG_RESOURCE_SYMBOL_TYPE       ||
@@ -2981,8 +2972,8 @@ bool lcfgresource_set_attribute( LCFGResource * res,
                                  char ** msg ) {
   assert( res != NULL );
 
-  *msg = NULL;
   bool ok = false;
+  bool dispose = false;
 
   /* Apply the action which matches with the symbol at the start of
      the status line or assume this is a simple specification of the
@@ -2998,14 +2989,10 @@ bool lcfgresource_set_attribute( LCFGResource * res,
 
       break;
     case LCFG_RESOURCE_SYMBOL_TYPE:
-      ok = lcfgresource_set_type_as_string( res, value, msg );
 
-      /* The original value is no longer required here so it must be
-         disposed of correctly. */
-      if (ok) {
-	free(value);
-	value = NULL;
-      }
+      ok = lcfgresource_set_type_as_string( res, value, msg );
+      if (ok)
+	dispose = true;
 
       break;
     case LCFG_RESOURCE_SYMBOL_CONTEXT:
@@ -3024,7 +3011,9 @@ bool lcfgresource_set_attribute( LCFGResource * res,
         ok = lcfgresource_set_priority( res, priority );
       }
 
-      if ( !ok )
+      if ( ok )
+	dispose = true;
+      else
         lcfgutils_build_message( msg, "Invalid priority '%s'", value );
 
       break;
@@ -3037,6 +3026,15 @@ bool lcfgresource_set_attribute( LCFGResource * res,
 
       break;
     }
+
+  if (dispose) {
+
+  /* The original value is no longer required so it must be disposed
+     of correctly. */
+
+    free(value);
+    value = NULL;
+  }
 
   return ok;
 }
