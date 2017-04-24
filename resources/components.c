@@ -18,6 +18,30 @@ static const char * default_type_pfx = "LCFGTYPE_%s_";
 static const char * env_placeholder  = "%s";
 static const char * reslist_keyname  = "_RESOURCES";
 
+/**
+ * @brief Create and initialise a new resource node
+ *
+ * This creates a simple wrapper @c LCFGResourceNode node which
+ * is used to hold a pointer to an @c LCFGResource as an item in a
+ * @c LCFGComponent data structure.
+ *
+ * It is typically not necessary to call this function. The usual
+ * approach is to use the @c lcfgcomponent_insert_next() or
+ * @c lcfgcomponent_append() functions to add @c LCFGResource structures
+ * to the list.
+ *
+ * If the memory allocation for the new structure is not successful
+ * the @c exit() function will be called with a non-zero value.
+ *
+ * To avoid memory leaks, when the new structure is no longer required
+ * the @c lcfgresourcenode_destroy() function should be called.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ *
+ * @return Pointer to new @c LCFGResourceNode
+ *
+ */
+
 LCFGResourceNode * lcfgresourcenode_new(LCFGResource * res) {
   assert( res != NULL );
 
@@ -35,6 +59,30 @@ LCFGResourceNode * lcfgresourcenode_new(LCFGResource * res) {
   return resnode;
 }
 
+/**
+ * @brief Destroy a resource node
+ *
+ * When the specified @c LCFGResourceNode is no longer required this
+ * can be used to free all associated memory. This will call
+ * @c free(3) on each parameter of the struct and then set each value to
+ * be @c NULL.
+ *
+ * Note that destroying an @c LCFGResourceNode does not destroy the
+ * associated @c LCFGResource, that must be done separately.
+ *
+ * It is typically not necessary to call this function. The usual
+ * approach is to use the @c lcfgcomponent_remove_next() function to
+ * remove a @c LCFGResource from the list.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * resource node which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] resnode Pointer to @c LCFGResourceNode to be destroyed.
+ *
+ */
+
 void lcfgresourcenode_destroy(LCFGResourceNode * resnode) {
 
   if ( resnode == NULL ) return;
@@ -46,6 +94,22 @@ void lcfgresourcenode_destroy(LCFGResourceNode * resnode) {
   resnode = NULL;
 
 }
+
+/**
+ * @brief Create and initialise a new empty component
+ *
+ * Creates a new @c LCFGComponent which represents an empty component.
+ *
+ * If the memory allocation for the new structure is not successful the
+ * @c exit() function will be called with a non-zero value.
+ *
+ * The reference count for the structure is initialised to 1. To avoid
+ * memory leaks, when it is no longer required the
+ * @c lcfgcomponent_relinquish() function should be called.
+ *
+ * @return Pointer to new @c LCFGComponent
+ *
+ */
 
 LCFGComponent * lcfgcomponent_new(void) {
 
@@ -65,6 +129,35 @@ LCFGComponent * lcfgcomponent_new(void) {
 
   return comp;
 }
+
+/**
+ * @brief Destroy the component
+ *
+ * When the specified @c LCFGComponent is no longer required this
+ * will free all associated memory.
+ *
+ * *Reference Counting:* There is support for very simple reference
+ * counting which allows an @c LCFGComponent to appear in multiple
+ * situations. This is particular useful for code which needs to use
+ * multiple iterators for a single component. Incrementing and
+ * decrementing that reference counter is the responsibility of the
+ * container code. See @c lcfgcomponent_acquire() and
+ * @c lcfgcomponent_relinquish() for details.
+ *
+ * This will iterate through the list of resources to remove and
+ * destroy each @c LCFGResourceNode item, it also calls @c
+ * lcfgresource_relinquish() for each resource. Note that if the
+ * reference count on a resource reaches zero then the @c LCFGResource
+ * will also be destroyed.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * component which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] comp Pointer to @c LCFGComponent to be destroyed.
+ *
+ */
 
 void lcfgcomponent_destroy(LCFGComponent * comp) {
 
@@ -86,11 +179,42 @@ void lcfgcomponent_destroy(LCFGComponent * comp) {
 
 }
 
+/**
+ * @brief Acquire reference to component
+ *
+ * This is used to record a reference to the @c LCFGComponent, it
+ * does this by simply incrementing the reference count.
+ *
+ * To avoid memory leaks, once the reference to the structure is no
+ * longer required the @c lcfgcomponent_release() function should be
+ * called.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ *
+ */
+
 void lcfgcomponent_acquire(LCFGComponent * comp) {
   assert( comp != NULL );
 
   comp->_refcount += 1;
 }
+
+/**
+ * @brief Release reference to component
+ *
+ * This is used to release a reference to the @c LCFGComponent
+ * it does this by simply decrementing the reference count. If the
+ * reference count reaches zero the @c lcfgcomponent_destroy() function
+ * will be called to clean up the memory associated with the structure.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * component which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ *
+ */
 
 void lcfgcomponent_relinquish(LCFGComponent * comp) {
 
@@ -104,9 +228,40 @@ void lcfgcomponent_relinquish(LCFGComponent * comp) {
 
 }
 
+/**
+ * @brief Check if a string is a valid LCFG component name
+ *
+ * Checks the contents of a specified string against the specification
+ * for an LCFG component name.
+ *
+ * An LCFG component name MUST be at least one character in length. The
+ * first character MUST be in the class @c [A-Za-z] and all other
+ * characters MUST be in the class @c [A-Za-z0-9_]. This means they
+ * are safe to use as variable names for languages such as bash.
+ *
+ * @param[in] name String to be tested
+ *
+ * @return boolean which indicates if string is a valid component name
+ *
+ */
+
 bool lcfgcomponent_valid_name(const char * name) {
   return lcfgresource_valid_name(name);
 }
+
+/**
+ * @brief Check if the component has a name
+ *
+ * Checks if the specified @c LCFGComponent currently has a value set
+ * for the name attribute. Although a name is required for an LCFG
+ * component to be valid it is possible for the value of the name to be
+ * set to @c NULL when the structure is first created.
+ *
+ * @param[in] res Pointer to an @c LCFGComponent
+ *
+ * @return boolean which indicates if a component has a name
+ *
+ */
 
 bool lcfgcomponent_has_name(const LCFGComponent * comp) {
   assert( comp != NULL );
@@ -114,11 +269,49 @@ bool lcfgcomponent_has_name(const LCFGComponent * comp) {
   return !isempty(comp->name);
 }
 
+/**
+ * @brief Get the name for the component
+ *
+ * This returns the value of the @E name parameter for the
+ * @c LCFGComponent. If the component does not currently have a @e
+ * name then the pointer returned will be @c NULL.
+ *
+ * It is important to note that this is @b NOT a copy of the string,
+ * changing the returned string will modify the @e name of the
+ * component.
+ *
+ * @param[in] res Pointer to an @c LCFGComponent
+ *
+ * @return The @e name for the component (possibly @c NULL).
+ */
+
 char * lcfgcomponent_get_name(const LCFGComponent * comp) {
   assert( comp != NULL );
 
   return comp->name;
 }
+
+/**
+ * @brief Set the name for the component
+ *
+ * Sets the value of the @e name parameter for the @c LCFGComponent
+ * to that specified. It is important to note that this does
+ * @b NOT take a copy of the string. Furthermore, once the value is set
+ * the component assumes "ownership", the memory will be freed if the
+ * name is further modified or the component is destroyed.
+ *
+ * Before changing the value of the @e name to be the new string it
+ * will be validated using the @c lcfgcomponent_valid_name()
+ * function. If the new string is not valid then no change will occur,
+ * the @c errno will be set to @c EINVAL and the function will return
+ * a @c false value.
+ *
+ * @param[in] res Pointer to an @c LCFGComponent
+ * @param[in] new_name String which is the new name
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name ) {
   assert( comp != NULL );
@@ -135,6 +328,29 @@ bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name ) {
 
   return ok;
 }
+
+/**
+ * @brief Insert a resource into the list
+ *
+ * This can be used to insert an @c LCFGResource into the
+ * specified component. The resource will be wrapped into an
+ * @c LCFGResourceNode using the @c lcfgresourcenode_new() function.
+ *
+ * The resource will be inserted into the component immediately after
+ * the specified @c LCFGResourceNode. To insert the resource at the
+ * head of the list the @c NULL value should be passed for the node.
+ *
+ * If the resource is successfully inserted the @c LCFG_CHANGE_ADDED
+ * value is returned, if an error occurs then @c LCFG_CHANGE_ERROR is
+ * returned.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] resnode Pointer to @c LCFGResourceNode
+ * @param[in] res Pointer to @c LCFGResource
+ * 
+ * @return Integer value indicating type of change
+ *
+ */
 
 LCFGChange lcfgcomponent_insert_next( LCFGComponent    * comp,
                                       LCFGResourceNode * resnode,
@@ -168,6 +384,34 @@ LCFGChange lcfgcomponent_insert_next( LCFGComponent    * comp,
 
   return LCFG_CHANGE_ADDED;
 }
+
+/**
+ * @brief Remove a resource from the component
+ *
+ * This can be used to remove an @c LCFGResource from the specified
+ * component.
+ *
+ * The resource removed from the component is immediately after the
+ * specified @c LCFGResourceNode. To remove the resource from the head
+ * of the list the @c NULL value should be passed for the node.
+ *
+ * If the resource is successfully removed the @c LCFG_CHANGE_REMOVED
+ * value is returned, if an error occurs then @c LCFG_CHANGE_ERROR is
+ * returned. If the list is already empty then the @c LCFG_CHANGE_NONE
+ * value is returned.
+ *
+ * Note that, since a pointer to the @c LCFGResource is returned
+ * to the caller, the reference count will still be at least 1. To
+ * avoid memory leaks, when the struct is no longer required it should
+ * be released by calling @c lcfgresource_relinquish().
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] resnode Pointer to @c LCFGResourceNode
+ * @param[out] res Pointer to @c LCFGResource
+ * 
+ * @return Integer value indicating type of change
+ *
+ */
 
 LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
                                       LCFGResourceNode * resnode,
@@ -207,6 +451,34 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
   return LCFG_CHANGE_REMOVED;
 }
 
+/**
+ * @brief Write list of formatted resources to file stream
+ *
+ * This uses @c lcfgresource_to_string() or @c
+ * lcfgresource_to_export() to format each resource as a
+ * string. See the documentation for those functions for full
+ * details. The generated string is written to the specified file
+ * stream which must have already been opened for writing.
+ *
+ * If the style is @c LCFG_RESOURCE_STYLE_EXPORT this will also
+ * generate an export variable for the list of exported resource
+ * names.
+ *
+ * Resources which are invalid will be ignored. Resources which do not
+ * have values will only be printed if the @c LCFG_OPT_ALL_VALUES
+ * option is specified. Resources which are inactive (i.e. they have a
+ * negative priority) will also be ignored unless the
+ * @c LCFG_OPT_ALL_PRIORITIES option is specified.
+ *
+ * @param[in] pkglist Pointer to @c LCFGComponent
+ * @param[in] style Integer indicating required style of formatting
+ * @param[in] options Integer that controls formatting
+ * @param[in] out Stream to which the list of resources should be written
+ *
+ * @return Boolean indicating success
+ *
+ */
+
 bool lcfgcomponent_print( const LCFGComponent * comp,
                           LCFGResourceStyle style,
                           LCFGOption options,
@@ -222,13 +494,13 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
 
   const char * comp_name = lcfgcomponent_get_name(comp);
 
+  bool print_export = ( style == LCFG_RESOURCE_STYLE_EXPORT );
+
   char * val_pfx  = NULL;
   char * type_pfx = NULL;
-  bool print_export = false;
 
   LCFGTagList * export_res = NULL;
-  if ( style == LCFG_RESOURCE_STYLE_EXPORT ) {
-    print_export = true;
+  if ( print_export ) {
     val_pfx  = lcfgutils_string_replace( default_val_pfx,
                                          env_placeholder, comp_name );
     type_pfx = lcfgutils_string_replace( default_type_pfx,
@@ -237,14 +509,14 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
     export_res = lcfgtaglist_new();
   }
 
-  bool ok = true;
-
   size_t buf_size = 256;
   char * buffer = calloc( buf_size, sizeof(char) );
   if ( buffer == NULL ) {
     perror( "Failed to allocate memory for LCFG resource buffer" );
     exit(EXIT_FAILURE);
   }
+
+  bool ok = true;
 
   const LCFGResourceNode * cur_node = NULL;
   for ( cur_node = lcfgcomponent_head(comp);
@@ -271,7 +543,7 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
           const char * name = lcfgresource_get_name(res);
           char * add_msg = NULL;
           LCFGChange change = 
-            lcfgtaglist_mutate_add( export_res, name, add_msg );
+            lcfgtaglist_mutate_add( export_res, name, &add_msg );
           if ( change == LCFG_CHANGE_ERROR )
             ok = false;
 
@@ -324,6 +596,16 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
   return ok;
 }
 
+/**
+ * @brief Sort a list of resources for a component
+ *
+ * This sorts the nodes of the list of resources for an @c
+ * LCFGComponent by using the @c lcfgresource_compare() function.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ *
+ */
+
 void lcfgcomponent_sort( LCFGComponent * comp ) {
   assert( comp != NULL );
 
@@ -354,13 +636,38 @@ void lcfgcomponent_sort( LCFGComponent * comp ) {
 
 }
 
+/**
+ * @brief Read list of resources from status file
+ *
+ * This reads the contents of an LCFG status file and generates a new
+ * @c LCFGComponent. A status file is used by an LCFG component to
+ * store the current state of the resources.
+ *
+ * If the component name is not specified then the basename of the
+ * file will be used. 
+ *
+ * An error is returned if the file does not exist unless the
+ * @c LCFG_OPT_ALLOW_NOEXIST option is specified. If the file exists
+ * but is empty then an empty @c LCFGComponent is returned.
+ *
+ * @param[in] filename Path to status file
+ * @param[out] result Reference to pointer for new @c LCFGComponent
+ * @param[in] compname_in Component name (optional)
+ * @param[in] options Controls the behaviour of the process
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
                                           LCFGComponent ** result,
                                           const char * compname_in,
+					  LCFGOption options,
                                           char ** msg ) {
+  assert( filename != NULL );
 
   *result = NULL;
-  *msg = NULL;
 
   LCFGComponent * comp = NULL;
   bool ok = true;
@@ -397,13 +704,19 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
 
   FILE *fp;
   if ( (fp = fopen(statusfile, "r")) == NULL ) {
-    ok = false;
 
     if (errno == ENOENT) {
-      lcfgutils_build_message( msg, "Component status file '%s' does not exist",
-			       statusfile );
+
+      if ( !(options&LCFG_OPT_ALLOW_NOEXIST) ) {
+	ok = false;
+	lcfgutils_build_message( msg,
+				 "Component status file '%s' does not exist",
+				 statusfile );
+      }
     } else {
-      lcfgutils_build_message( msg, "Component status file '%s' is not readable",
+      ok = false;
+      lcfgutils_build_message( msg,
+			       "Component status file '%s' is not readable",
 			       statusfile );
     }
 
@@ -421,6 +734,8 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
 
   int linenum = 1;
   while( getline( &line, &line_len, fp ) != -1 ) {
+
+    /* Need a copy of the string as it will be mangled by the parser */
 
     free(statusline);
     statusline = strdup(line);
@@ -553,6 +868,41 @@ LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
+/**
+ * @brief Export resources to the environment
+ *
+ * This exports value and type information for all the @c LCFGResource
+ * for the @c LCFGComponent as environment variables. The variable
+ * names are a combination of the resource name and any prefix
+ * specified.
+ *
+ * This will also export a variable like @c LCFG_%s__RESOURCES which
+ * holds a list of exported resource names.
+ *
+ * The value prefix will typically be like @c LCFG_%s_ and the type
+ * prefix will typically be like @c LCFGTYPE_%s_ where @c '%s' is
+ * replaced with the name of the component. If the prefixes are not
+ * specified (i.e. @c NULL values are given) the default prefixes are
+ * used. 
+ *
+ * Often only the value variable is required so, for efficiency, the
+ * type variable will only be set when the @c LCFG_OPT_USE_META option
+ * is specified.
+ *
+ * Resources without values will not be exported unless the @c
+ * LCFG_OPT_ALL_VALUES option is specified. Inactive resources will
+ * not be exported unless the @c LCFG_OPT_ALL_PRIORITIES option is
+ * specified.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] val_pfx The prefix for the value variable name
+ * @param[in] type_pfx The prefix for the type variable name
+ * @param[in] options Integer which controls behaviour
+
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 				 const char * val_pfx, const char * type_pfx,
 				 LCFGOption options,
@@ -643,7 +993,7 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
     lcfgtaglist_sort(export_res);
 
     char * reslist_value = NULL;
-    char * bufsize = 0;
+    size_t bufsize = 0;
     ssize_t len = lcfgtaglist_to_string( export_res, LCFG_OPT_NONE,
                                          &reslist_value, &bufsize );
     if ( len < 0 ) {
@@ -665,10 +1015,32 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
   return status;
 }
 
+/**
+ * @brief Write list of resources to status file
+ *
+ * This can be used to create an LCFG status file which stores the
+ * state for the resources of the component. The resources are
+ * serialised using the @c lcfgresource_to_status() function.
+ *
+ * If the filename is not specified a file will be created with the
+ * component name.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] filename Path of status file to be created (optional)
+ * @param[in] options Controls the behaviour of the process
+ * @param[out] msg msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgcomponent_to_statusfile( const LCFGComponent * comp,
                                         const char * filename,
+					LCFGOption options,
                                         char ** msg ) {
   assert( comp != NULL );
+
+  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
 
   const char * compname = lcfgcomponent_get_name(comp);
 
@@ -713,7 +1085,7 @@ LCFGStatus lcfgcomponent_to_statusfile( const LCFGComponent * comp,
 
     /* Not interested in resources for inactive contexts */
 
-    if ( !lcfgresource_is_active(res) ) continue;
+    if ( !lcfgresource_is_active(res) && !all_priorities ) continue;
 
     ssize_t rc = lcfgresource_to_status( res, compname, LCFG_OPT_NONE,
 					 &buffer, &buf_size );
@@ -759,6 +1131,24 @@ LCFGStatus lcfgcomponent_to_statusfile( const LCFGComponent * comp,
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
+/**
+ * @brief Find the resource node with a given name
+ *
+ * This can be used to search through an @c LCFGComponent to find
+ * the first resource node which has a matching name. Note that the
+ * matching is done using strcmp(3) which is case-sensitive.
+ *
+ * A @c NULL value is returned if no matching node is found. Also, a
+ * @c NULL value is returned if a @c NULL value or an empty component
+ * is specified.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent to be searched
+ * @param[in] name The name of the required resource node
+ *
+ * @return Pointer to an @c LCFGResourceNode (or the @c NULL value).
+ *
+ */
+
 LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
                                             const char * name ) {
   assert( comp != NULL );
@@ -786,6 +1176,24 @@ LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
   return result;
 }
 
+/**
+ * @brief Find the resource for a given name
+ *
+ * This can be used to search through an @c LCFGComponent to find
+ * the first resource which has a matching name. Note
+ * that the matching is done using strcmp(3) which is case-sensitive.
+ *
+ * To ensure the returned @c LCFGResource is not destroyed when
+ * the parent @c LCFGComponent is destroyed you would need to
+ * call the @c lcfgresource_acquire() function.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent to be searched
+ * @param[in] name The name of the required resource
+ *
+ * @return Pointer to an @c LCFGResource (or the @c NULL value).
+ *
+ */
+
 LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
                                             const char * name ) {
   assert( comp != NULL );
@@ -799,12 +1207,47 @@ LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
   return res;
 }
 
+/**
+ * @brief Check if a component contains a particular resource
+ *
+ * This can be used to search through an @c LCFGComponent to check if
+ * it contains a resource with a matching name. Note that the matching
+ * is done using strcmp(3) which is case-sensitive.
+ * 
+ * This uses the @c lcfgcomponent_find_node() function to find the
+ * relevant node. If a @c NULL value is specified for the list or the
+ * list is empty then a false value will be returned.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent to be searched
+ * @param[in] name The name of the required resource
+ *
+ * @return Boolean value which indicates presence of resource in component
+ *
+ */
+
 bool lcfgcomponent_has_resource( const LCFGComponent * comp,
                                  const char * name ) {
   assert( comp != NULL );
 
   return ( lcfgcomponent_find_node( comp, name ) != NULL );
 }
+
+/**
+ * @brief Find or create a new resource
+ *
+ * Searches the @c LCFGComponent for an @c LCFGResource with the
+ * required name. If none is found then a new @c LCFGResource is
+ * created and added to the @c LCFGComponent.
+ *
+ * If an error occurs during the creation of a new resource a @c NULL
+ * value will be returned.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] name The name of the required resource
+ *
+ * @return The required @c LCFGResource (or @c NULL)
+ *
+ */
 
 LCFGResource * lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
                                                       const char * name ) {
@@ -840,6 +1283,28 @@ LCFGResource * lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
 
   return result;
 }
+
+/**
+ * @brief Insert or merge a resource
+ *
+ * Searches the @c LCFGComponent for a matching @c LCFGResource with
+ * the same name. If none is found the resource is simply added and @c
+ * LCFG_CHANGE_ADDED is returned. If there is a match then the new
+ * resource will be @e merged using to the priority (which comes from
+ * the evaluation of the context expressions) of the two
+ * resources. Whichever has the greatest priority will be retained. If
+ * the new resource replaces the current then @c LCFG_CHANGE_REPLACED
+ * is returned otherwise @c LCFG_CHANGE_NONE will be returned. If both
+ * resources have the same priority then an unresolvable conflict
+ * occurs and @c LCFG_CHANGE_ERROR is returned.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] new_res Pointer to @c LCFGResource
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Integer value indicating type of change
+ *
+ */
 
 LCFGChange lcfgcomponent_insert_or_merge_resource(
                                             LCFGComponent * comp,
@@ -894,6 +1359,23 @@ LCFGChange lcfgcomponent_insert_or_merge_resource(
   return result;
 }
 
+/**
+ * @brief Insert or replace a resource
+ *
+ * Searches the @c LCFGComponent for a matching @c LCFGResource with
+ * the same name. If none is found the resource is simply added and @c
+ * LCFG_CHANGE_ADDED is returned. If there is a match then the new
+ * resource will replace the current and @c LCFG_CHANGE_REPLACED
+ * is returned.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] new_res Pointer to @c LCFGResource
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Integer value indicating type of change
+ *
+ */
+
 LCFGChange lcfgcomponent_insert_or_replace_resource(
                                               LCFGComponent * comp,
                                               LCFGResource * new_res,
@@ -926,6 +1408,21 @@ LCFGChange lcfgcomponent_insert_or_replace_resource(
   return result;
 }
 
+/**
+ * @brief Apply overrides from one component to another
+ *
+ * Iterates through the list of resources in the overrides @c
+ * LCFGComponent and applies them to the target component by calling
+ * @c lcfgcomponent_insert_or_replace_resource().
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] overrides Pointer to override @c LCFGComponent
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgcomponent_apply_overrides( LCFGComponent * comp,
 					  const LCFGComponent * overrides,
 					  char ** msg ) {
@@ -952,6 +1449,19 @@ LCFGStatus lcfgcomponent_apply_overrides( LCFGComponent * comp,
 
   return status;
 }
+
+/**
+ * @brief Get the list of resource names as a string
+ *
+ * This generates a new string which contains a space-separated sorted
+ * list of resource names for the @c LCFGComponent. If the component
+ * is empty then an empty string will be returned.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ *
+ * @return Pointer to a new string (call @c free(3) when no longer required)
+ *
+ */
 
 char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp) {
   assert( comp != NULL );
