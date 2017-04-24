@@ -245,7 +245,7 @@ bool lcfgcomplist_print( const LCFGComponentList * complist,
 
       lcfgcomponent_sort(cur_comp);
 
-      ok = lcfgcomponent_to_statusfile( cur_comp, NULL, &msg );
+      ok = lcfgcomponent_to_statusfile( cur_comp, NULL, LCFG_OPT_NONE, &msg );
     } else {
       ok = lcfgcomponent_print( cur_comp, style, options, out );
     }
@@ -503,7 +503,8 @@ LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
     lcfgcomponent_sort(cur_comp);
 
     char * comp_msg = NULL;
-    rc = lcfgcomponent_to_statusfile( cur_comp, statfile, &comp_msg );
+    rc = lcfgcomponent_to_statusfile( cur_comp, statfile,
+				      LCFG_OPT_NONE, &comp_msg );
 
     if ( rc == LCFG_STATUS_ERROR ) {
       lcfgutils_build_message( msg, "Failed to write status file for '%s' component: %s",
