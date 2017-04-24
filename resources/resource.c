@@ -171,7 +171,7 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
  * longer required the @c lcfgresource_relinquish() function should be
  * called.
  *
- * @param[in] pkg Pointer to @c LCFGResource
+ * @param[in] res Pointer to @c LCFGResource
  *
  */
 
@@ -194,7 +194,7 @@ void lcfgresource_acquire( LCFGResource * res ) {
  * resource which has already been destroyed (or potentially was never
  * created).
  *
- * @param[in] pkg Pointer to @c LCFGResource
+ * @param[in] res Pointer to @c LCFGResource
  *
  */
 
@@ -559,7 +559,7 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
 
   char * posn = type_str;
 
-  if ( ok && type_str != NULL ) {
+  if ( ok && !isempty(type_str) ) {
 
     char * comment_start = strchr( type_str, '(' );
     if ( comment_start != NULL ) {
@@ -1791,11 +1791,39 @@ bool lcfgresource_set_comment( LCFGResource * res, char * new_comment ) {
 
 /* Priority */
 
+/**
+ * @brief Get the priority for the resource
+ *
+ * This returns the value of the integer @e priority parameter for the
+ * @c LCFGResource. The priority is calculated using the context
+ * expression for the resource (if any) along with the current active
+ * set of contexts for the system.
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ *
+ * @return The priority for the resource as an integer
+ *
+ */
+
 int lcfgresource_get_priority( const LCFGResource * res ) {
   assert( res != NULL );
 
   return res->priority;
 }
+
+/**
+ * @brief Get the priority for the resource as a string
+ *
+ * This returns the stringified value of the integer @e priority
+ * parameter for the @c LCFGResource. The priority is calculated using
+ * the context expression for the resource (if any) along with the
+ * current active set of contexts for the system.
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ *
+ * @return The priority for the resource as a string
+ *
+ */
 
 char * lcfgresource_get_priority_as_string( const LCFGResource * res ) {
   assert( res != NULL );
@@ -1808,12 +1836,46 @@ char * lcfgresource_get_priority_as_string( const LCFGResource * res ) {
   return as_str;
 }
 
-bool lcfgresource_set_priority( LCFGResource * res, int priority ) {
+/**
+ * @brief Set the priority for the resource
+ *
+ * Sets the value of the @e priority parameter for the @c LCFGResource
+ * to that specified. 
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ * @param[in] new_prio Integer which is the new priority
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgresource_set_priority( LCFGResource * res, int new_prio ) {
   assert( res != NULL );
 
-  res->priority = priority;
+  res->priority = new_prio;
   return true;
 }
+
+/**
+ * @brief Evaluate the priority for the resource for a list of contexts
+ *
+ * This will evaluate and update the value of the @e priority
+ * attribute for the LCFG resource using the value set for the
+ * @e context attribute (if any) and the list of LCFG contexts passed in
+ * as an argument. The priority is evaluated using
+ * @c lcfgctxlist_eval_expression().
+ *
+ * The default value for the priority is zero, if the resource is
+ * applicable for the specified list of contexts the priority will be
+ * positive otherwise it will be negative.
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ * @param[in] ctxlist List of LCFG contexts
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgresource_eval_priority( LCFGResource * res,
                                  const LCFGContextList * ctxlist,
@@ -1840,11 +1902,57 @@ bool lcfgresource_eval_priority( LCFGResource * res,
   return ok;
 }
 
+/**
+ * @brief Check if the resource is considered to be active
+ *
+ * Checks if the current value for the @e priority attribute in the
+ * @c LCFGResource is greater than or equal to zero.
+ *
+ * The priority is calculated using the value for the @e context
+ * attribute and the list of currently active contexts, see
+ * @c lcfgresource_eval_priority() for details.
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ *
+ * @return boolean indicating if the resource is active
+ *
+ */
+
 bool lcfgresource_is_active( const LCFGResource * res ) {
   assert( res != NULL );
 
   return ( lcfgresource_get_priority(res) >= 0 );
 }
+
+/**
+ * @brief Import a resource from the environment
+ *
+ * This checks the environment for variables which hold resource value
+ * and type information for the given name and creates a new
+ * @c LCFGResource. The variable names are a combination of the resource
+ * name and any prefix specified.
+ *
+ * The value prefix will typically be like @c LCFG_comp_ and the type
+ * prefix will typically be like @c LCFGTYPE_comp_ where @c comp is
+ * the name of the component. If the type prefix is @c NULL then no
+ * attempt will be made to load type information from the environment.
+ *
+ * This will return a new (empty) @c LCFGResource even when no
+ * information is found for either of the value or type variables.
+ *
+ * To avoid memory leaks, when the newly created resource structure is
+ * no longer required you should call the @c lcfgresource_relinquish()
+ * function.
+ *
+ * @param[in] name The name of the resource
+ * @param[in] val_pfx The prefix for the value variable name
+ * @param[in] type_pfx The prefix for the type variable name
+ * @param[out] Reference to the pointer for the @c LCFGResource
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success of the process
+ *
+ */
 
 LCFGStatus lcfgresource_from_env( const char * name,
 				  const char * val_pfx, const char * type_pfx,
@@ -1859,6 +1967,36 @@ LCFGStatus lcfgresource_from_env( const char * name,
     lcfgutils_build_message( msg, "Invalid resource name '%s'", resname );
     free(resname);
     goto cleanup;
+  }
+
+  /* Type - optional, do it first to ensure validation of value */
+
+  if ( type_pfx != NULL ) {
+
+    char * type_key = NULL;
+    rc = asprintf( &type_key, "%s%s", type_pfx, resname );
+    if ( rc < 0 ) {
+      perror("Failed to build resource environment variable name");
+      exit(EXIT_FAILURE);
+    }
+
+    const char * type = getenv(type_key);
+    if ( type != NULL ) {
+      char * res_type = strdup(type);
+      char * type_msg = NULL;
+      if ( !lcfgresource_set_type_as_string( res, res_type, &type_msg ) ) {
+	status = LCFG_STATUS_ERROR;
+	lcfgutils_build_message( msg, "Invalid resource type '%s': %s",
+				 res_type, type_msg );
+	free(res_type);
+	free(type_msg);
+	goto cleanup;
+      }
+
+      free(type_msg);
+    }
+
+    free(type_key);
   }
 
   /* Value */
@@ -1886,36 +2024,6 @@ LCFGStatus lcfgresource_from_env( const char * name,
 
   free(val_key);
 
-  /* Type */
-
-  if ( type_pfx == NULL )
-    type_pfx = "";
-
-  char * type_key = NULL;
-  rc = asprintf( &type_key, "%s%s", type_pfx, resname );
-  if ( rc < 0 ) {
-    perror("Failed to build resource environment variable name");
-    exit(EXIT_FAILURE);
-  }
-
-  const char * type = getenv(type_key);
-  if ( type != NULL ) {
-    char * res_type = strdup(type);
-    char * type_msg = NULL;
-    if ( !lcfgresource_set_type_as_string( res, res_type, &type_msg ) ) {
-      status = LCFG_STATUS_ERROR;
-      lcfgutils_build_message( msg, "Invalid resource type '%s': %s",
-			       res_type, type_msg );
-      free(res_type);
-      free(type_msg);
-      goto cleanup;
-    }
-
-    free(type_msg);
-  }
-
-  free(type_key);
-
  cleanup:
 
   if ( status == LCFG_STATUS_ERROR ) {
@@ -1929,6 +2037,45 @@ LCFGStatus lcfgresource_from_env( const char * name,
 }
 
 /* Output */
+
+/**
+ * @brief Format the resource as a string
+ *
+ * Generates a new string representation of the @c LCFGResource in
+ * various styles. The following styles are supported:
+ *
+ *   - @c LCFG_RESOURCE_STYLE_SUMMARY - uses @c lcfgresource_to_summary()
+ *   - @c LCFG_RESOURCE_STYLE_STATUS - uses @c lcfgresource_to_status()
+ *   - @c LCFG_RESOURCE_STYLE_SPEC - uses @c lcfgresource_to_spec()
+ *
+ * See the documentation for each function to see which options are
+ * supported.
+ *
+ * These functions use a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many resource strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated. 
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] prefix Prefix, usually the component name (may be @c NULL)
+ * @param[in] style Integer indicating required style of formatting
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
 
 LCFGStatus lcfgresource_to_string( const LCFGResource * res,
                                    const char * prefix,
@@ -1956,6 +2103,28 @@ LCFGStatus lcfgresource_to_string( const LCFGResource * res,
 
   return (*str_func)( res, prefix, options, result, size );
 }
+
+/**
+ * @brief Export a resource to the environment
+ *
+ * This exports value and type information for the @c LCFGResource as
+ * environment variables. The variable names are a combination of the
+ * resource name and any prefix specified.
+ *
+ * The value prefix will typically be like @c LCFG_comp_ and the type
+ * prefix will typically be like @c LCFGTYPE_comp_ where @c comp is
+ * the name of the component. Often only the value variable is
+ * required so, for efficiency, the type variable will only be set
+ * when the @c LCFG_OPT_USE_META option is specified.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] val_pfx The prefix for the value variable name
+ * @param[in] type_pfx The prefix for the type variable name
+ * @param[in] options Integer which controls behaviour
+
+ * @return Status value indicating success of the process
+ *
+ */
 
 LCFGStatus lcfgresource_to_env( const LCFGResource * res,
 				const char * val_pfx, const char * type_pfx,
@@ -2023,6 +2192,7 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
 
   return status;
 }
+
 
 ssize_t lcfgresource_to_export( const LCFGResource * res,
                                 const char * val_pfx, const char * type_pfx,
@@ -2184,6 +2354,47 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   return new_len;
 }
 
+/**
+ * @brief Summarise the resource information
+ *
+ * Summarises the @c LCFGPackage as a string in the verbose key-value
+ * style used by the qxprof tool. The output will look something like:
+ *
+\verbatim
+client.ack:
+   value=yes
+    type=boolean
+  derive=/var/lcfg/conf/server/defaults/client-4.def:47
+\endverbatim
+ *
+ * The following options are supported:
+ *   - @c LCFG_OPT_USE_META - Include any derivation and context information.
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many resource strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated.
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] prefix Prefix, usually the component name (may be @c NULL)
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
+
 ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS ) {
   assert( res != NULL );
 
@@ -2305,6 +2516,54 @@ ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS ) {
   return new_len;
 }
 
+/**
+ * @brief Format the resource as @e status
+ *
+ * Generates an LCFG @e status representation of the @c LCFGResource.
+ * This is used by the LCFG components when the current state of the
+ * resources is stored in a file. For safety, the resource value will
+ * have any newline and ampersand characters HTML-encoded. The various
+ * information is keyed using the standard prefix characters:
+ *
+ *   - type - @c '%'
+ *   - derivation - @c '#'
+ *   - value - no prefix
+ *
+ * The output will look something like:
+ *
+\verbatim
+client.ack=yes
+%client.ack=boolean
+\endverbatim
+ *
+ * The following options are supported:
+ *   - @c LCFG_OPT_USE_META - Include any derivation information.
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many resource strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated.
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] prefix Prefix, usually the component name (may be @c NULL)
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
+
 ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
   assert( res != NULL );
 
@@ -2347,7 +2606,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
 
   char * derivation = NULL;
   size_t deriv_len = 0;
-  if ( lcfgresource_has_derivation(res) ) {
+  if (   if ( options&LCFG_OPT_USE_META && lcfgresource_has_derivation(res) ) {
     derivation = lcfgresource_get_derivation(res);
     deriv_len = strlen(derivation);
 
@@ -2426,6 +2685,43 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
 
   return new_len;
 }
+
+  /**
+ * @brief Format the resource as an LCFG specification
+ *
+ * Generates a new string representation for the @c LCFGResource. This
+ * is the standard @c key=value style used by tools such as qxprof.
+ *
+ * The following options are supported:
+ *   - @c LCFG_OPT_NOCONTEXT - do not include any context information
+ *   - @c LCFG_OPT_NOVALUE - do not include any value
+ *   - @c LCFG_OPT_ENCODE - encode any newline characters in the value
+ *   - @c LCFG_OPT_NEWLINE - append a final newline character
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many resource strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated.
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] prefix Prefix, usually the component name (may be @c NULL)
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
 
 ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
   assert( res != NULL );
@@ -2547,6 +2843,30 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
   return new_len;
 }
 
+/**
+ * @brief Write formatted resource to file stream
+ *
+ * This can be used to write out the resource in various formats to the
+ * specified file stream which must have already been opened for
+ * writing. The following styles are supported:
+ * 
+ *   - @c LCFG_RESOURCE_STYLE_SUMMARY - uses @c lcfgresource_to_summary()
+ *   - @c LCFG_RESOURCE_STYLE_STATUS - uses @c lcfgresource_to_status()
+ *   - @c LCFG_RESOURCE_STYLE_SPEC - uses @c lcfgresource_to_spec()
+ *
+ * See the documentation for each function to see which options are
+ * supported.
+ *
+ * @param[in] ctx Pointer to @c LCFGResource
+ * @param[in] prefix Prefix, usually the component name (may be @c NULL)
+ * @param[in] style Integer indicating required style of formatting
+ * @param[in] options Integer for any additional options
+ * @param[in] out Stream to which the resource string should be written
+ *
+ * @return boolean indicating success
+ *
+ */
+
 bool lcfgresource_print( const LCFGResource * res,
                          const char * prefix,
                          LCFGResourceStyle style,
@@ -2575,6 +2895,26 @@ bool lcfgresource_print( const LCFGResource * res,
 
   return ok;
 }
+
+/**
+ * @brief Compare the resource values
+ *
+ * This compares the values for two resources, this is mostly useful
+ * for sorting lists of resources. An integer value is returned which
+ * indicates lesser than, equal to or greater than in the same way as
+ * @c strcmp(3).
+ *
+ * Comparison rules are:
+ *   - True is greater than false if both are booleans
+ *   - Integers are compared numerically
+ *   - Fall back to simple @c strcmp(3)
+ *
+ * @param[in] res1 Pointer to @c LCFGResource
+ * @param[in] res2 Pointer to @c LCFGResource
+ * 
+ * @return Integer (-1,0,+1) indicating lesser,equal,greater
+ *
+ */
 
 int lcfgresource_compare_values( const LCFGResource * res1,
                                  const LCFGResource * res2 ) {
@@ -2621,6 +2961,20 @@ int lcfgresource_compare_values( const LCFGResource * res1,
   return result;
 }
 
+/**
+ * @brief Compare resources
+ *
+ * This compares two resources using the @e name, @e value and @e
+ * context. This is mostly useful for sorting lists of resources. All
+ * comparisons are done simply using strcmp().
+ *
+ * @param[in] res1 Pointer to @c LCFGResource
+ * @param[in] res2 Pointer to @c LCFGResource
+ * 
+ * @return Integer (-1,0,+1) indicating lesser,equal,greater
+ *
+ */
+
 int lcfgresource_compare( const LCFGResource * res1,
                           const LCFGResource * res2 ) {
   assert( res1 != NULL );
@@ -2664,6 +3018,19 @@ int lcfgresource_compare( const LCFGResource * res1,
   return result;
 }
 
+/**
+ * @brief Test if resources have same value
+ *
+ * Compares the @e value for the two resources using the 
+ * @c lcfgresource_compare_values() function.
+ *
+ * @param[in] res1 Pointer to @c LCFGResource
+ * @param[in] res2 Pointer to @c LCFGResource
+ *
+ * @return boolean indicating equality of values
+ *
+ */
+
 bool lcfgresource_same_value( const LCFGResource * res1,
                               const LCFGResource * res2 ) {
   assert( res1 != NULL );
@@ -2672,6 +3039,20 @@ bool lcfgresource_same_value( const LCFGResource * res1,
   return ( lcfgresource_compare_values( res1, res2 ) == 0 );
 }
 
+/**
+ * @brief Test if resources have same type
+ *
+ * Compares the @e type for the two resources. Note that this will
+ * return true for two list resources which have the same type but
+ * different sets of templates.
+ *
+ * @param[in] res1 Pointer to @c LCFGResource
+ * @param[in] res2 Pointer to @c LCFGResource
+ *
+ * @return boolean indicating equality of types
+ *
+ */
+
 bool lcfgresource_same_type( const LCFGResource * res1,
                              const LCFGResource * res2 ) {
   assert( res1 != NULL );
@@ -2679,6 +3060,19 @@ bool lcfgresource_same_type( const LCFGResource * res1,
 
   return ( lcfgresource_get_type(res1) == lcfgresource_get_type(res2) );
 }
+
+/**
+ * @brief Test if resources are considered equal
+ *
+ * Compares the two resources using the @c lcfgresource_compare()
+ * function.
+ *
+ * @param[in] res1 Pointer to @c LCFGResource
+ * @param[in] res2 Pointer to @c LCFGResource
+ *
+ * @return boolean indicating equality of resources
+ *
+ */
 
 bool lcfgresource_equals( const LCFGResource * res1,
                           const LCFGResource * res2 ) {
@@ -2804,18 +3198,17 @@ ssize_t lcfgresource_compute_key_length( const LCFGResource * res,
                                          const char * namespace,
                                          char type_symbol ) {
 
-  if ( !lcfgresource_has_name(res) )
-    return -1;
+  if ( !lcfgresource_has_name(res) ) return -1;
 
   size_t length = 0;
 
   if ( type_symbol != '\0' )
     length++;
 
-  if ( namespace != NULL && *namespace != '\0' )
+  if ( !isempty(namespace) )
     length += ( strlen(namespace) + 1 ); /* +1 for '.' (period) separator */
 
-  if ( component != NULL && *component != '\0' )
+  if ( !isempty(component) )
     length += ( strlen(component) + 1 ); /* +1 for '.' (period) separator */
 
   length += strlen( lcfgresource_get_name(res) );
