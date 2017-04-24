@@ -11,7 +11,8 @@ int main(int argc, char * argv[] ) {
   LCFGComponent * comp = NULL;
   char * msg = NULL;
 
-  LCFGStatus rc = lcfgcomponent_from_statusfile( filename, &comp, NULL, &msg );
+  LCFGStatus rc = lcfgcomponent_from_statusfile( filename, &comp, NULL,
+						 LCFG_OPT_NONE, &msg );
 
   bool ok = true;
   if ( rc == LCFG_STATUS_ERROR ) {

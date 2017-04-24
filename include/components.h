@@ -50,6 +50,7 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
 LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
                                           LCFGComponent ** result,
                                           const char * compname,
+					  LCFGOption options,
                                           char ** msg )
   __attribute__((warn_unused_result));
 

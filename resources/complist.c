@@ -403,6 +403,7 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
       status = lcfgcomponent_from_statusfile( status_file,
                                               &component,
                                               comp_name,
+					      LCFG_OPT_NONE,
                                               &read_msg );
 
       if ( status == LCFG_STATUS_ERROR ) {
