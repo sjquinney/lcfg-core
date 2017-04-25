@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.6)
 
 # Generate the resourcelib shared library.
 
-set(MY_SOURCES component.c complist.c resource.c tags.c templates.c iterator.c mutate.c diff.c)
+set(MY_SOURCES component.c complist.c resource.c tags.c taglist.c templates.c iterator.c mutate.c diff.c)
 
 add_library(lcfg_resources SHARED ${MY_SOURCES})
 
