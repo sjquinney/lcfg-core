@@ -373,17 +373,15 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
 
   size_t new_len = res_tmpl->tmpl_len;
 
-  const LCFGTagNode * cur_node = lcfgtaglist_tail(taglist);
+  LCFGTagIterator * tagiter = lcfgtagiter_new(taglist);
 
   unsigned int i;
   for ( i=0; i<pcount; i++ ) {
 
-    const LCFGTag * cur_tag = lcfgtaglist_tag(cur_node);
+    const LCFGTag * cur_tag = lcfgtagiter_prev(tagiter);
 
     /* -1 for $ placeholder character which is replaced with the tag */
     new_len += ( lcfgtag_get_length(cur_tag) - 1 );
-
-    cur_node = lcfgtaglist_prev(cur_node);
   }
 
   /* Allocate the necessary memory */
@@ -401,7 +399,7 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
   ssize_t after_len;
   size_t offset = new_len;
 
-  cur_node = lcfgtaglist_tail(taglist);
+  lcfgtagiter_reset(tagiter);
 
   for ( i=0; i<pcount; i++ ) {
     int place = res_tmpl->places[i];
@@ -421,7 +419,7 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
 
     /* Copy the required tag name */
 
-    const LCFGTag * cur_tag = lcfgtaglist_tag(cur_node);
+    const LCFGTag * cur_tag = lcfgtagiter_prev(tagiter);
 
     size_t taglen  = lcfgtag_get_length(cur_tag);
     const char * tagname = lcfgtag_get_name(cur_tag);
@@ -430,8 +428,9 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
 
     memcpy( result + offset, tagname, taglen );
 
-    cur_node = lcfgtaglist_prev(cur_node);
   }
+
+  lcfgtagiter_destroy(tagiter);
 
   /* Copy the rest which is static */
 
