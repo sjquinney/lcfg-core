@@ -92,9 +92,9 @@ char * lcfgutils_safe_tmpfile( const char * path ) {
  *
  */
 
-char * lcfgutils_join_strings( const char * sep,
-                               const char * str1,
-                               const char * str2 ) {
+char * lcfgutils_string_join( const char * sep,
+                              const char * str1,
+                              const char * str2 ) {
 
   size_t str1_len = str1 != NULL ? strlen(str1) : 0;
   size_t str2_len = str2 != NULL ? strlen(str2) : 0;

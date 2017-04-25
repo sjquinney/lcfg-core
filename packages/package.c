@@ -1382,7 +1382,7 @@ bool lcfgpackage_add_derivation( LCFGPackage * pkg,
        current value. This avoids unnecessary duplication. */
 
     new_deriv =
-      lcfgutils_join_strings( " ", pkg->derivation, extra_deriv );
+      lcfgutils_string_join( " ", pkg->derivation, extra_deriv );
     if ( new_deriv == NULL ) {
       perror( "Failed to build LCFG derivation" );
       exit(EXIT_FAILURE);
@@ -1573,7 +1573,7 @@ char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
   const char * r = lcfgpackage_has_release(pkg) ?
                    lcfgpackage_get_release(pkg) : LCFG_PACKAGE_WILDCARD;
 
-  char * full_version = lcfgutils_join_strings( "-", v, r );
+  char * full_version = lcfgutils_string_join( "-", v, r );
 
   if ( full_version == NULL ) {
     perror( "Failed to build LCFG package full-version string" );
@@ -1606,7 +1606,7 @@ char * lcfgpackage_id( const LCFGPackage * pkg ) {
   if ( lcfgpackage_has_name(pkg) ) {
 
     if ( lcfgpackage_has_arch(pkg) ) {
-      id = lcfgutils_join_strings( ".",
+      id = lcfgutils_string_join( ".",
 				   lcfgpackage_get_name(pkg),
 				   lcfgpackage_get_arch(pkg) );
 

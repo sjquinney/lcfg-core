@@ -1,4 +1,3 @@
-#define _GNU_SOURCE /* for asprintf */
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -983,12 +982,7 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
     /* Also create an environment variable which holds list of
        resource names for this component. */
 
-    char * reslist_key = NULL;
-    int rc = asprintf( &reslist_key, "%s%s", val_pfx, reslist_keyname );
-    if ( rc < 0 ) {
-      perror("Failed to build component environment variable name");
-      exit(EXIT_FAILURE);
-    }
+    char * reslist_key = lcfgutils_string_join( "", val_pfx, reslist_keyname );
 
     lcfgtaglist_sort(export_res);
 

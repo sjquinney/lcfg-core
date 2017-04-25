@@ -1562,7 +1562,7 @@ bool lcfgresource_add_derivation( LCFGResource * res,
   } else if ( strstr( res->derivation, extra_deriv ) == NULL ) {
 
     new_deriv =
-      lcfgutils_join_strings( " ", res->derivation, extra_deriv );
+      lcfgutils_string_join( " ", res->derivation, extra_deriv );
     if ( new_deriv == NULL ) {
       perror( "Failed to build LCFG derivation string" );
       exit(EXIT_FAILURE);
@@ -1988,14 +1988,12 @@ LCFGStatus lcfgresource_from_env( const char * name,
 
   if ( type_pfx != NULL ) {
 
-    char * type_key = NULL;
-    rc = asprintf( &type_key, "%s%s", type_pfx, resname );
-    if ( rc < 0 ) {
-      perror("Failed to build resource environment variable name");
-      exit(EXIT_FAILURE);
-    }
+    char * type_key = lcfgutils_string_join( "", type_pfx, resname );
 
     const char * type = getenv(type_key);
+
+    free(type_key);
+
     if ( type != NULL ) {
       char * res_type = strdup(type);
       char * type_msg = NULL;
@@ -2011,7 +2009,6 @@ LCFGStatus lcfgresource_from_env( const char * name,
       free(type_msg);
     }
 
-    free(type_key);
   }
 
   /* Value */
@@ -2019,14 +2016,12 @@ LCFGStatus lcfgresource_from_env( const char * name,
   if ( val_pfx == NULL )
     val_pfx = "";
   
-  char * val_key = NULL;
-  rc = asprintf( &val_key, "%s%s", val_pfx, resname );
-  if ( rc < 0 ) {
-    perror("Failed to build resource environment variable name");
-    exit(EXIT_FAILURE);
-  }
+  char * val_key = lcfgutils_string_join( "", val_pfx, resname );
 
   const char * value = getenv(val_key);
+
+  free(val_key);
+
   if ( value != NULL ) {
     char * res_value = strdup(value);
     if ( !lcfgresource_set_value( res, res_value ) ) {
@@ -2036,8 +2031,6 @@ LCFGStatus lcfgresource_from_env( const char * name,
       goto cleanup;
     }
   }
-
-  free(val_key);
 
  cleanup:
 
@@ -2159,11 +2152,7 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
   if ( val_pfx == NULL )
     val_pfx = "";
 
-  char * val_key = NULL;
-  if ( asprintf( &val_key, "%s%s", val_pfx, name ) < 0 ) {
-    perror("Failed to build resource environment variable name");
-    exit(EXIT_FAILURE);
-  }
+  char * val_key = lcfgutils_string_join( "", val_pfx, name );
 
   const char * value = lcfgresource_has_value(res) ?
                        lcfgresource_get_value(res) : "";
@@ -2189,11 +2178,7 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
       if ( type_pfx == NULL )
 	type_pfx = "";
 
-      char * type_key = NULL;
-      if ( asprintf( &type_key, "%s%s", type_pfx, name ) < 0 ) {
-	perror("Failed to build resource environment variable name");
-	exit(EXIT_FAILURE);
-      }
+      char * type_key = lcfgutils_string_join( "", type_pfx, name );
 
       if ( setenv( type_key, type_as_str, 1 ) != 0 )
 	status = LCFG_STATUS_ERROR;
