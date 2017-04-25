@@ -1,5 +1,5 @@
 /**
- * @file templates.h
+ * @file templates.c
  * @brief Functions for working with LCFG resource templates
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date: 2017-04-21 14:26:07 +0100 (Fri, 21 Apr 2017) $

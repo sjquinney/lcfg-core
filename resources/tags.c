@@ -1,5 +1,5 @@
 /**
- * @file tags.h
+ * @file tags.c
  * @brief Functions for working with LCFG resource tags
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date: 2017-04-21 14:26:07 +0100 (Fri, 21 Apr 2017) $
@@ -594,7 +594,7 @@ void lcfgtaglist_sort( LCFGTagList * taglist ) {
   while (swapped) {
     swapped=false;
 
-    LCFGTagNode * cur_node = lcfgtaglist_head(taglist);
+    LCFGTagNode * cur_node = NULL;
     for ( cur_node = lcfgtaglist_head(taglist);
           cur_node != NULL && cur_node->next != NULL;
           cur_node = lcfgtaglist_next(cur_node) ) {
