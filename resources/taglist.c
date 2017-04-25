@@ -273,10 +273,11 @@ static const char * tag_seps = " \t\r\n";
 LCFGStatus lcfgtaglist_from_string( const char * input,
                                     LCFGTagList ** result,
                                     char ** msg ) {
+  assert( input != NULL );
 
   *result = NULL;
 
-  if ( isempty(input) ) {
+  if ( input == NULL ) {
     lcfgutils_build_message( msg, "Invalid taglist" );
     return LCFG_STATUS_ERROR;
   }
