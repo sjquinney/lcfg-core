@@ -1,6 +1,6 @@
 /**
  * @file resources.h
- * @brief LCFG resource and component handling library
+ * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date$
  * $Revision$
@@ -30,31 +30,54 @@
 #define LCFG_RESOURCE_SYMBOL_PRIORITY   '^'
 #define LCFG_RESOURCE_SYMBOL_VALUE      '\0'
 
-typedef enum { /* The various standard LCFG resource types */
-  LCFG_RESOURCE_TYPE_STRING,
-  LCFG_RESOURCE_TYPE_INTEGER,
-  LCFG_RESOURCE_TYPE_BOOLEAN,
-  LCFG_RESOURCE_TYPE_LIST,
-  LCFG_RESOURCE_TYPE_PUBLISH,
-  LCFG_RESOURCE_TYPE_SUBSCRIBE
-} LCFGResourceType;
+/*
+ * @brief The standard LCFG resource types
+ */
 
 typedef enum {
-  LCFG_RESOURCE_STYLE_SPEC,
-  LCFG_RESOURCE_STYLE_STATUS,
-  LCFG_RESOURCE_STYLE_SUMMARY,
-  LCFG_RESOURCE_STYLE_EXPORT
+  LCFG_RESOURCE_TYPE_STRING,      /**< String, can hold any value */
+  LCFG_RESOURCE_TYPE_INTEGER,     /**< Integer */
+  LCFG_RESOURCE_TYPE_BOOLEAN,     /**< Boolean */
+  LCFG_RESOURCE_TYPE_LIST,        /**< List of tag names */
+  LCFG_RESOURCE_TYPE_PUBLISH,     /**< Published to spanning map, like String */
+  LCFG_RESOURCE_TYPE_SUBSCRIBE    /**< Subscribed from spanning map, like String*/
+} LCFGResourceType;
+
+/**
+ * @brief Resource format styles
+ *
+ * This can be used to specify the format 'style' which is used when a
+ * resource is serialised as a string.
+ *
+ */
+
+typedef enum {
+  LCFG_RESOURCE_STYLE_SPEC,       /**< Standard LCFG resource specification */
+  LCFG_RESOURCE_STYLE_STATUS,     /**< LCFG status block (as used by components) */
+  LCFG_RESOURCE_STYLE_SUMMARY,    /**< qxprof style summary */
+  LCFG_RESOURCE_STYLE_EXPORT      /**< Environment variables for shell evaluation */
 } LCFGResourceStyle;
 
+/**
+ * @brief A structure to represent an LCFG resource
+ *
+ * This structure supports reference counting so a resource may appear in
+ * multiple components. See @c lcfgresource_acquire() and 
+ * @c lcfgresource_relinquish() for details.
+ *
+ */
+
 struct LCFGResource {
-  char * name;
-  char * value;
-  LCFGTemplate * template;
-  char * context;
-  char * derivation;
-  char * comment;
-  LCFGResourceType type;
-  int priority;
+  /*@{*/
+  char * name;                    /**< Name (required) */
+  char * value;                   /**< Value - validated according to type */
+  LCFGTemplate * template;        /**< Templates - used when list type */
+  char * context;                 /**< Context expression - when the resource is applicable */
+  char * derivation;              /**< Derivation - where the resource was specified */
+  char * comment;                 /**< Any comments associated with the type information */
+  LCFGResourceType type;          /**< Type - see LCFGResourceType for list of supported types */
+  int priority;                   /**< Priority - result of evaluating context expression, used for merge conflict resolution */
+  /*@}*/
   unsigned int _refcount;
 };
 

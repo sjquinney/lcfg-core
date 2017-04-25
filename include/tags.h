@@ -1,5 +1,14 @@
-/* Doubly linked-list structure for ordered lists of LCFG "tags". Also
-   intended to be reasonably efficient for set-like operations. */
+/**
+ * @file tags.h
+ * @brief Functions for working with LCFG resource tags
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date$
+ * $Revision$
+ *
+ * Doubly linked-list structure for ordered lists of LCFG "tags". Also
+ * intended to be reasonably efficient for set-like operations.
+ *
+ */
 
 #ifndef LCFG_CORE_TAGS_H
 #define LCFG_CORE_TAGS_H
@@ -10,14 +19,31 @@
 
 #include "common.h"
 
-/* The maximum supported tag depth */
+/**
+ * @brief The maximum supported tag depth
+ */
+
 #define LCFG_TAGS_MAX_DEPTH 5
 
 /* Tag */
 
+/**
+ * @brief A structure to represent a single LCFG resource tag
+ *
+ * This holds the tag name and, for efficiency, the length of the name
+ * as it is frequently required.
+ *
+ * This structure supports reference counting so a tag may appear in
+ * multiple lists. See @c lcfgtag_acquire() and 
+ * @c lcfgtag_relinquish() for details.
+ *
+ */
+
 struct LCFGTag {
-  char * name;
-  size_t name_len;
+  /*@{*/
+  char * name;     /**< The tag name */
+  size_t name_len; /**< The length of the tag name */
+  /*@}*/
   unsigned int _refcount;
 };
 
@@ -48,22 +74,138 @@ bool lcfgtag_matches( const LCFGTag * tag, const char * name );
 
 /* List of Tags */
 
+/**
+ * @brief Retrieve the first tag in the list
+ *
+ * This is a simple macro which can be used to get the first tag
+ * node structure in the list. Note that if the list is empty this
+ * will be the @c NULL value. To retrieve the tag from this node
+ * use @c lcfgtaglist_tag()
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ *
+ * @return Pointer to first @c LCFGTagNode structure in list
+ *
+ */
+
 #define lcfgtaglist_head(taglist) ((taglist)->head)
+
+/**
+ * @brief Retrieve the last tag in the list
+ *
+ * This is a simple macro which can be used to get the last tag
+ * node structure in the list. Note that if the list is empty this
+ * will be the @c NULL value. To retrieve the tag from this node
+ * use @c lcfgtaglist_tag()
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ *
+ * @return Pointer to last @c LCFGTagNode structure in list
+ *
+ */
+
 #define lcfgtaglist_tail(taglist) ((taglist)->tail)
+
+/**
+ * @brief Get the number of items in the tag list
+ *
+ * This is a simple macro which can be used to get the length of the
+ * doubly-linked tag list.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ *
+ * @return Integer length of the tag list
+ *
+ */
+
 #define lcfgtaglist_size(taglist) ((taglist)->size)
+
+/**
+ * @brief Test if the tag list is empty
+ *
+ * This is a simple macro which can be used to test if the
+ * doubly-linked tag list contains any items.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ *
+ * @return Boolean which indicates whether the list contains any items
+ *
+ */
 
 #define lcfgtaglist_is_empty(taglist) ( taglist == NULL || (taglist)->size == 0)
 
+/**
+ * @brief Retrieve the next tag node in the list
+ *
+ * This is a simple macro which can be used to fetch the next node in
+ * the doubly-linked tag list for a given node. If the node
+ * specified is the final item in the list this will return a @c NULL
+ * value.
+ *
+ * @param[in] tagnode Pointer to current @c LCFGTagNode
+ *
+ * @return Pointer to next @c LCFGTagNode
+ */
+
 #define lcfgtaglist_next(tagnode) ((tagnode)->next)
+
+/**
+ * @brief Retrieve the previous tag node in the list
+ *
+ * This is a simple macro which can be used to fetch the previous node
+ * in the doubly-linked tag list for a given node. If the node
+ * specified is the first item in the list this will return a @c NULL
+ * value.
+ *
+ * @param[in] tagnode Pointer to current @c LCFGTagNode
+ *
+ * @return Pointer to previous @c LCFGTagNode
+ */
+
 #define lcfgtaglist_prev(tagnode) ((tagnode)->prev)
+
+/**
+ * @brief Retrieve the tag from a list node
+ *
+ * This is a simple macro which can be used to get the tag
+ * structure from the specified node. 
+ *
+ * Note that this does @b NOT increment the reference count for the
+ * returned tag structure. To retain the tag call the
+ * @c lcfgtag_acquire() function.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagNode
+ *
+ * @return Pointer to @c LCFGTag structure
+ *
+ */
+
 #define lcfgtaglist_tag(tagnode)  ((tagnode)->tag)
+
+/**
+ * @brief Append a tag to a list
+ *
+ * This is a simple macro wrapper around the
+ * @c lcfgtaglist_insert_next() function which can be used to append
+ * a tag structure on to the end of the specified tag list.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ * @param[in] tag Pointer to @c LCFGTag
+ * 
+ * @return Integer value indicating type of change
+ *
+ */
 
 #define lcfgtaglist_append_tag(taglist, tag) ( lcfgtaglist_insert_next( taglist, lcfgtaglist_tail(taglist), tag ) )
 
+/**
+ * @brief A structure to wrap an LCFG tag as a doubly-linked list item
+ */
+
 struct LCFGTagNode {
-  LCFGTag * tag;
-  struct LCFGTagNode * prev;
-  struct LCFGTagNode * next;
+  LCFGTag * tag;             /**< Pointer to the tag structure */
+  struct LCFGTagNode * prev; /**< Previous item in the tag list */
+  struct LCFGTagNode * next; /**< Next item in the tag list */
 };
 
 typedef struct LCFGTagNode LCFGTagNode;
@@ -71,10 +213,16 @@ typedef struct LCFGTagNode LCFGTagNode;
 LCFGTagNode * lcfgtagnode_new(LCFGTag * tag);
 void lcfgtagnode_destroy(LCFGTagNode * tagnode);
 
+/**
+ * @brief A structure for storing LCFG tags as a doubly-linked list
+ */
+
 struct LCFGTagList {
-  LCFGTagNode * head;
-  LCFGTagNode * tail;
-  unsigned int size;
+  /*@{*/
+  LCFGTagNode * head; /**< The first tag in the list */
+  LCFGTagNode * tail; /**< The last tag in the list */
+  unsigned int size;  /**< The length of the list */
+  /*@}*/
   unsigned int _refcount;
 };
 typedef struct LCFGTagList LCFGTagList;

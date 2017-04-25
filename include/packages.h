@@ -285,8 +285,8 @@ void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode);
 
 struct LCFGPackageList {
   /*@{*/
-  LCFGPackageNode * head;  /**< The first context in the list */
-  LCFGPackageNode * tail;  /**< The last context in the list */
+  LCFGPackageNode * head;  /**< The first package node in the list */
+  LCFGPackageNode * tail;  /**< The last package node in the list */
   LCFGPkgRule merge_rules; /**< Rules which control how packages are merged */
   unsigned int size;       /**< The length of the list */
   /*@}*/
@@ -318,7 +318,7 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
   __attribute__((warn_unused_result));
 
 /**
- * @brief Retrieve the first package in the list
+ * @brief Retrieve the first package node in the list
  *
  * This is a simple macro which can be used to get the first package
  * node structure in the list. Note that if the list is empty this
@@ -334,7 +334,7 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
 #define lcfgpkglist_head(pkglist) ((pkglist)->head)
 
 /**
- * @brief Retrieve the last package in the list
+ * @brief Retrieve the last package node in the list
  *
  * This is a simple macro which can be used to get the last package
  * node structure in the list. Note that if the list is empty this
@@ -350,7 +350,7 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
 #define lcfgpkglist_tail(pkglist) ((pkglist)->tail)
 
 /**
- * @brief Get the number of items in the package list
+ * @brief Get the number of nodes in the package list
  *
  * This is a simple macro which can be used to get the length of the
  * single-linked package list.

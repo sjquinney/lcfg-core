@@ -9,20 +9,28 @@
 #ifndef LCFG_CORE_TEMPLATES_H
 #define LCFG_CORE_TEMPLATES_H
 
+#include <stdbool.h>
 #include <string.h>
 
 #include "tags.h"
 
+/**
+ * @brief The placeholder character used in LCFG resource templates
+ */
+
 #define LCFG_TEMPLATE_PLACEHOLDER '$'
 
+/**
+ * @brief A structure to represent an LCFG resource template
+ */
+
 struct LCFGTemplate {
-  char * name;
-  char * tmpl;
-  int places[LCFG_TAGS_MAX_DEPTH];
-  struct LCFGTemplate * next;
-  size_t name_len;
-  size_t tmpl_len;
-  unsigned int pcount;
+  char * tmpl;                     /**< The template string */
+  int places[LCFG_TAGS_MAX_DEPTH]; /**< Array of locations in the string where placeholders are found */
+  struct LCFGTemplate * next;      /**< The next template in the single-linked list of templates (or @c NULL if last) */
+  size_t name_len;                 /**< The size of the base name part of the template */
+  size_t tmpl_len;                 /**< The size of the whole template */
+  unsigned int pcount;             /**< The number of placeholders found */
 };
 
 typedef struct LCFGTemplate LCFGTemplate;
