@@ -1629,12 +1629,12 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
   /* Nothing more to do if the list of resources to be imported is empty */
   if ( lcfgtaglist_is_empty(import_res) ) goto cleanup;
 
-  const LCFGTagNode * cur_node = NULL;
-  for ( cur_node = lcfgtaglist_head(import_res);
-        cur_node != NULL && status != LCFG_STATUS_ERROR;
-        cur_node = lcfgtaglist_next(cur_node) ) {
+  LCFGTagIterator * tagiter = lcfgtagiter_new(import_res);
+  const LCFGTag * restag = NULL;
 
-    const LCFGTag * restag = lcfgtaglist_tag(cur_node);
+  while ( status != LCFG_STATUS_ERROR &&
+	  ( restag = lcfgtagiter_next(tagiter) ) != NULL ) {
+
     const char * resname = lcfgtag_get_name(restag);
 
     if ( !lcfgresource_valid_name(resname) ) {
@@ -1660,6 +1660,8 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
 
     lcfgresource_relinquish(res);
   }
+
+  lcfgtagiter_destroy(tagiter);
 
  cleanup:
 
