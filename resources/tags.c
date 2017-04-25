@@ -1,3 +1,10 @@
+/**
+ * @file tags.h
+ * @brief Functions for working with LCFG resource tags
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date: 2017-04-21 14:26:07 +0100 (Fri, 21 Apr 2017) $
+ * $Revision: 32431 $
+ */
 
 #include <ctype.h>
 #include <errno.h>
