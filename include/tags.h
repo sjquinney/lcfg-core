@@ -303,6 +303,10 @@ bool lcfgtagiter_has_next( LCFGTagIterator * iterator );
 
 LCFGTag * lcfgtagiter_next(LCFGTagIterator * iterator);
 
+bool lcfgtagiter_has_prev( LCFGTagIterator * iterator );
+
+LCFGTag * lcfgtagiter_prev(LCFGTagIterator * iterator);
+
 #endif /* LCFG_CORE_TAGS_H */
 
 /* eof */

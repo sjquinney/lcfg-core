@@ -136,4 +136,55 @@ LCFGTag * lcfgtagiter_next(LCFGTagIterator * iterator) {
   return tag;
 }
 
+/**
+ * @brief Test if tag list iterator has a previous item
+ *
+ * This can be used to check if there are any previous items available
+ * in the tag list.
+ *
+ * @param[in] iterator Pointer to @c LCFGTagIterator
+ *
+ * @return boolean indicating if any previous items available
+ *
+ */
+
+bool lcfgtagiter_has_prev( LCFGTagIterator * iterator ) {
+
+  bool has_prev = false;
+  if ( iterator->current == NULL )
+    has_prev = !lcfgtaglist_is_empty(iterator->taglist);
+  else
+    has_prev = ( lcfgtaglist_prev(iterator->current) != NULL );
+
+  return has_prev;
+}
+
+/**
+ * @brief Get previous item from tag list iterator
+ *
+ * This can be used to fetch the previous item in the tag list. If no
+ * further tags are available the @c NULL value will be returned.
+ *
+ * @param[in] iterator Pointer to @c LCFGTagIterator (or @c NULL)
+ *
+ * @return Pointer to previous @c LCFGTag
+ *
+ */
+
+LCFGTag * lcfgtagiter_prev(LCFGTagIterator * iterator) {
+
+  if ( !lcfgtagiter_has_prev(iterator) ) return NULL;
+
+  if ( iterator->current == NULL )
+    iterator->current = lcfgtaglist_tail(iterator->taglist);
+  else
+    iterator->current = lcfgtaglist_prev(iterator->current);
+
+  LCFGTag * tag = NULL;
+  if ( iterator->current != NULL )
+    tag = lcfgtaglist_tag(iterator->current);
+
+  return tag;
+}
+
 /* eof */
