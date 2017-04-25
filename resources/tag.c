@@ -1,5 +1,5 @@
 /**
- * @file tags.c
+ * @file tag.c
  * @brief Functions for working with LCFG resource tags
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date$
