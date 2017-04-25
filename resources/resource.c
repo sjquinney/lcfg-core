@@ -1985,7 +1985,8 @@ LCFGStatus lcfgresource_from_env( const char * name,
   char * resname = strdup(name);
   if ( !lcfgresource_set_name( res, resname ) ) {
     status = LCFG_STATUS_ERROR;
-    lcfgutils_build_message( msg, "Invalid resource name '%s'", resname );
+    *msg = lcfgresource_build_message( res, NULL, "Invalid name '%s'",
+                                       resname );
     free(resname);
     goto cleanup;
   }
@@ -2005,8 +2006,8 @@ LCFGStatus lcfgresource_from_env( const char * name,
       char * type_msg = NULL;
       if ( !lcfgresource_set_type_as_string( res, type, &type_msg ) ) {
 	status = LCFG_STATUS_ERROR;
-	lcfgutils_build_message( msg, "Invalid resource type '%s': %s",
-				 type, type_msg );
+        *msg = lcfgresource_build_message( res, NULL, "Invalid type '%s': %s",
+                                           type, type_msg );
 	free(type_msg);
 	goto cleanup;
       }
@@ -2031,7 +2032,8 @@ LCFGStatus lcfgresource_from_env( const char * name,
     char * res_value = strdup(value);
     if ( !lcfgresource_set_value( res, res_value ) ) {
       status = LCFG_STATUS_ERROR;
-      lcfgutils_build_message( msg, "Invalid resource value '%s'", res_value );
+      *msg = lcfgresource_build_message( res, NULL, "Invalid value '%s'",
+                                         res_value );
       free(res_value);
       goto cleanup;
     }
