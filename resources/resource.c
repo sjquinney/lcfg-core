@@ -1949,9 +1949,9 @@ bool lcfgresource_is_active( const LCFGResource * res ) {
  * @brief Import a resource from the environment
  *
  * This checks the environment for variables which hold resource value
- * and type information for the given name and creates a new
- * @c LCFGResource. The variable names are a combination of the resource
- * name and any prefix specified.
+ * and type information for the given name and creates a new @c
+ * LCFGResource. The variable names are a simple concatenation of the
+ * resource name and any prefix specified.
  *
  * The value prefix will typically be like @c LCFG_comp_ and the type
  * prefix will typically be like @c LCFGTYPE_comp_ where @c comp is
