@@ -60,6 +60,13 @@ LCFGStatus lcfgcomponent_to_statusfile( const LCFGComponent * comp,
                                         char ** msg )
   __attribute__((warn_unused_result));
 
+LCFGStatus lcfgcomponent_from_env( const char * compname,
+                                   const char * val_pfx, const char * type_pfx,
+                                   LCFGComponent ** comp,
+                                   LCFGOption options,
+                                   char ** msg )
+  __attribute__((warn_unused_result));
+
 LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 				 const char * val_pfx, const char * type_pfx,
 				 LCFGOption options,

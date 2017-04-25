@@ -1,5 +1,5 @@
 /**
- * @file component.h
+ * @file component.c
  * @brief Functions for working with LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date: 2017-04-21 14:26:07 +0100 (Fri, 21 Apr 2017) $
@@ -1513,6 +1513,165 @@ char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp) {
   }
 
   return res_as_str;
+}
+/**
+ * @brief Import a component from the environment
+ *
+ * This can be used to import the values and type information for the
+ * resources in a component from the current environment variables.
+ *
+ * The value prefix will typically be like @c LCFG_%s_ and the type
+ * prefix will typically be like @c LCFGTYPE_%s_ where @c '%s' is
+ * replaced with the name of the component. If the prefixes are not
+ * specified (i.e. @c NULL values are given) the default prefixes are
+ * used. 
+ *
+ * This gets the list of resource names from the value of an
+ * environment variable like @c LCFG_%s__RESOURCES (e.g. it uses the
+ * value prefix), if that variable is not found nothing will be loaded
+ * and @c LCFG_STATUS_ERROR will be returned unless the 
+ * @c LCFG_OPT_ALLOW_NOEXIST option is specified.
+ *
+ * The value and type information for each resource in the list is
+ * imported using the @c lcfgresource_from_env() function.
+ *
+ * To avoid memory leaks, when the newly created component structure
+ * is no longer required you should call the @c lcfgcomponent_relinquish() 
+ * function.
+ *
+ * @param[in] compname_in The name of the component
+ * @param[in] val_pfx The prefix for the value variable name
+ * @param[in] type_pfx The prefix for the type variable name
+ * @param[out] Reference to the pointer for the new @c LCFGComponent
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgcomponent_from_env( const char * compname_in,
+                                   const char * val_pfx, const char * type_pfx,
+                                   LCFGComponent ** result,
+                                   LCFGOption options,
+                                   char ** msg ) {
+  assert( compname_in != NULL );
+
+  if ( !lcfgcomponent_valid_name(compname_in) ) {
+    lcfgutils_build_message( msg, "Invalid component name '%s'", compname_in );
+    return LCFG_STATUS_ERROR;
+  }
+
+  if ( val_pfx == NULL )
+    val_pfx = default_val_pfx;
+
+  if ( type_pfx == NULL )
+    type_pfx = default_type_pfx;
+
+  /* For security avoid using the user-specified prefix as a format string. */
+
+  char * val_pfx2 = NULL;
+  if ( strstr( val_pfx, env_placeholder ) != NULL ) {
+    val_pfx2 = lcfgutils_string_replace( val_pfx,
+                                         env_placeholder, compname_in );
+    val_pfx = val_pfx2;
+  }
+
+  char * type_pfx2 = NULL;
+
+  if ( strstr( type_pfx, env_placeholder ) != NULL ) {
+    type_pfx2 = lcfgutils_string_replace( type_pfx,
+                                          env_placeholder, compname_in );
+    type_pfx = type_pfx2;
+  }
+
+  /* Declare variables here which need to be defined before a jump to
+     the cleanup stage */
+
+  LCFGStatus status = LCFG_STATUS_OK;
+  LCFGComponent * comp = NULL;
+  LCFGTagList * import_res = NULL;
+
+  /* Find the list of resource names for the component */
+
+  char * reslist_key = lcfgutils_string_join( "", val_pfx, reslist_keyname );
+
+  const char * reslist_value = getenv(reslist_key);
+
+  free(reslist_key);
+
+  if ( !isempty(reslist_value) ) {
+
+    status = lcfgtaglist_from_string( reslist_value, &import_res, msg );
+    if ( status ==  LCFG_STATUS_ERROR )
+      goto cleanup;
+
+  } else if ( !(options&LCFG_OPT_ALLOW_NOEXIST) ) {
+    lcfgutils_build_message( msg, 
+                         "No resources found in environment for '%s' component",
+                             compname_in );
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
+  }
+
+  /* Create an empty component with the required name */
+
+  comp = lcfgcomponent_new();
+  char * compname = strdup(compname_in);
+  if ( !lcfgcomponent_set_name( comp, compname ) ) {
+    lcfgutils_build_message( msg, "Invalid component name '%s'", compname );
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
+  }
+
+  /* Nothing more to do if the list of resources to be imported is empty */
+  if ( lcfgtaglist_is_empty(import_res) ) goto cleanup;
+
+  const LCFGTagNode * cur_node = NULL;
+  for ( cur_node = lcfgtaglist_head(import_res);
+        cur_node != NULL && status != LCFG_STATUS_ERROR;
+        cur_node = lcfgtaglist_next(cur_node) ) {
+
+    const LCFGTag * restag = lcfgtaglist_tag(cur_node);
+    const char * resname = lcfgtag_get_name(restag);
+
+    if ( !lcfgresource_valid_name(resname) ) {
+      lcfgutils_build_message( msg, "Invalid resource name '%s'", resname );
+      status = LCFG_STATUS_ERROR;
+      break;
+    }
+
+    LCFGResource * res = NULL;
+    status = lcfgresource_from_env( resname, val_pfx, type_pfx, 
+                                    &res, msg );
+
+    if ( status != LCFG_STATUS_ERROR ) {
+
+      LCFGChange change = lcfgcomponent_append( comp, res );
+      if ( change == LCFG_CHANGE_ERROR ) {
+        lcfgutils_build_message( msg, "Failed to import resource '%s'",
+                                 resname );
+        status = LCFG_STATUS_ERROR;
+      }
+
+    }
+
+    lcfgresource_relinquish(res);
+  }
+
+ cleanup:
+
+  free(val_pfx2);
+  free(type_pfx2);
+  lcfgtaglist_relinquish(import_res);
+
+  if ( status ==  LCFG_STATUS_ERROR ) {
+    lcfgcomponent_relinquish(comp);
+    comp = NULL;
+  }
+
+  *result = comp;
+
+  return status;
 }
 
 /* eof */
