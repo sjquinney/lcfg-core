@@ -290,22 +290,22 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
   return result;
 }
 
-LCFGStatus lcfgcomplist_apply_overrides( LCFGComponentList * list1,
+LCFGChange lcfgcomplist_apply_overrides( LCFGComponentList * list1,
                                          const LCFGComponentList * list2,
                                          char ** msg ) {
   assert( list1 != NULL );
 
   /* Only overriding existing components so nothing to do if list is empty */
-  if ( lcfgcomplist_is_empty(list1) ) return LCFG_STATUS_OK;
+  if ( lcfgcomplist_is_empty(list1) ) return LCFG_CHANGE_NONE;
 
   /* No overrides to apply if second list is empty */
-  if ( lcfgcomplist_is_empty(list2) ) return LCFG_STATUS_OK;
+  if ( lcfgcomplist_is_empty(list2) ) return LCFG_CHANGE_NONE;
 
-  LCFGStatus status = LCFG_STATUS_OK;
+  LCFGChange change = LCFG_CHANGE_NONE;
 
   const LCFGComponentNode * cur_node = NULL;
   for ( cur_node = lcfgcomplist_head(list2);
-	cur_node != NULL && status != LCFG_STATUS_ERROR;
+	cur_node != NULL && change != LCFG_CHANGE_ERROR;
 	cur_node = lcfgcomplist_next(cur_node) ) {
 
     LCFGComponent * override_comp = lcfgcomplist_component(cur_node);
@@ -314,12 +314,20 @@ LCFGStatus lcfgcomplist_apply_overrides( LCFGComponentList * list1,
     LCFGComponent * target_comp =
       lcfgcomplist_find_component( list1, comp_name );
 
-    if ( target_comp != NULL )
-      status = lcfgcomponent_apply_overrides( target_comp, override_comp, msg );
+    if ( target_comp != NULL ) {
+      LCFGChange rc = lcfgcomponent_merge( target_comp, override_comp, msg );
+
+      if ( rc == LCFG_CHANGE_ERROR ) {
+        change = LCFG_CHANGE_ERROR;
+      } else if ( rc != LCFG_CHANGE_NONE ) {
+        change = LCFG_CHANGE_MODIFIED;
+      }
+
+    }
 
   }
 
-  return status;
+  return change;
 }
 
 LCFGStatus lcfgcomplist_transplant_components( LCFGComponentList * list1,

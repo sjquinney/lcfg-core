@@ -238,9 +238,9 @@ LCFGChange lcfgcomponent_insert_or_replace_resource( LCFGComponent * comp,
                                                      char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomponent_apply_overrides( LCFGComponent * comp,
-                                          const LCFGComponent * overrides,
-                                          char ** msg )
+LCFGChange lcfgcomponent_merge( LCFGComponent * comp,
+                                const LCFGComponent * overrides,
+                                char ** msg )
   __attribute__((warn_unused_result));
 
 void lcfgcomponent_sort( LCFGComponent * comp );
@@ -321,7 +321,7 @@ LCFGStatus lcfgcomplist_transplant_components( LCFGComponentList * list1,
                                                char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomplist_apply_overrides( LCFGComponentList * list1,
+LCFGChange lcfgcomplist_apply_overrides( LCFGComponentList * list1,
                                          const LCFGComponentList * list2,
                                          char ** msg )
   __attribute__((warn_unused_result));

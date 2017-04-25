@@ -208,9 +208,12 @@ LCFGStatus lcfgprofile_apply_overrides( LCFGProfile * profile1,
   LCFGStatus status = LCFG_STATUS_OK;
   if ( lcfgprofile_has_components(profile1) &&
        lcfgprofile_has_components(profile2) ) {
-    status = lcfgcomplist_apply_overrides( profile1->components,
-					   profile2->components,
-					   msg );
+    LCFGChange change = lcfgcomplist_apply_overrides( profile1->components,
+                                                      profile2->components,
+                                                      msg );
+
+    if ( change == LCFG_CHANGE_ERROR )
+      status = LCFG_STATUS_ERROR;
   }
 
   /* default rules, only used when creating new empty lists */

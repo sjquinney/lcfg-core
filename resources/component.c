@@ -1410,32 +1410,32 @@ LCFGChange lcfgcomponent_insert_or_replace_resource(
 }
 
 /**
- * @brief Apply overrides from one component to another
+ * @brief Merge overrides from one component to another
  *
  * Iterates through the list of resources in the overrides @c
- * LCFGComponent and applies them to the target component by calling
+ * LCFGComponent and merges them to the target component by calling
  * @c lcfgcomponent_insert_or_replace_resource().
  *
  * @param[in] comp Pointer to @c LCFGComponent
  * @param[in] overrides Pointer to override @c LCFGComponent
  * @param[out] msg Pointer to any diagnostic messages
  *
- * @return Status value indicating success of the process
+ * @return Integer value indicating type of change
  *
  */
 
-LCFGStatus lcfgcomponent_apply_overrides( LCFGComponent * comp,
-					  const LCFGComponent * overrides,
-					  char ** msg ) {
+LCFGChange lcfgcomponent_merge( LCFGComponent * comp,
+                                const LCFGComponent * overrides,
+                                char ** msg ) {
   assert( comp != NULL );
 
-  if ( lcfgcomponent_is_empty(overrides) ) return LCFG_STATUS_OK;
+  if ( lcfgcomponent_is_empty(overrides) ) return LCFG_CHANGE_NONE;
 
-  LCFGStatus status = LCFG_STATUS_OK;
+  LCFGChange change = LCFG_CHANGE_NONE;
 
   const LCFGResourceNode * cur_node = NULL;
   for ( cur_node = lcfgcomponent_head(overrides);
-	cur_node != NULL && status != LCFG_STATUS_ERROR;
+	cur_node != NULL && change != LCFG_CHANGE_ERROR;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
     LCFGResource * override_res = lcfgcomponent_resource(cur_node);
@@ -1443,12 +1443,15 @@ LCFGStatus lcfgcomponent_apply_overrides( LCFGComponent * comp,
     LCFGChange rc =
       lcfgcomponent_insert_or_replace_resource( comp, override_res, msg );
 
-    if ( rc == LCFG_CHANGE_ERROR )
-      status = LCFG_STATUS_ERROR;
+    if ( rc == LCFG_CHANGE_ERROR ) {
+      change = LCFG_CHANGE_ERROR;
+    } else if ( rc != LCFG_CHANGE_NONE ) {
+      change = LCFG_CHANGE_MODIFIED;
+    }
 
   }
 
-  return status;
+  return change;
 }
 
 /**
