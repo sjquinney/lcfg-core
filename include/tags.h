@@ -283,6 +283,26 @@ LCFGChange lcfgtaglist_mutate_extra( LCFGTagList * taglist, const char * name,
                                      char ** msg )
   __attribute__((warn_unused_result));
 
+/**
+ * @brief Simple iterator for tag lists
+ */
+
+struct LCFGTagIterator {
+  LCFGTagList * taglist;     /**< The tag list */
+  LCFGTagNode * current;     /**< Current location in the tag list */
+};
+typedef struct LCFGTagIterator LCFGTagIterator;
+
+LCFGTagIterator * lcfgtagiter_new( LCFGTagList * taglist );
+
+void lcfgtagiter_destroy( LCFGTagIterator * iterator );
+
+void lcfgtagiter_reset( LCFGTagIterator * iterator );
+
+bool lcfgtagiter_has_next( LCFGTagIterator * iterator );
+
+LCFGTag * lcfgtagiter_next(LCFGTagIterator * iterator);
+
 #endif /* LCFG_CORE_TAGS_H */
 
 /* eof */
