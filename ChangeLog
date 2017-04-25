@@ -1,6 +1,355 @@
-2017-04-14  SVN: new release
+2017-04-25  SVN: new release
 
-	* Release: 1.35.1
+	* Release: 1.36.0
+
+2017-04-25 12:32  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/iterator.c, packages/list.c,
+	  packages/package.c, packages/parse_pkgspec.c, packages/rpm.c,
+	  resources/complist.c, resources/component.c, resources/diff.c,
+	  resources/iterator.c, resources/mutate.c, resources/resource.c,
+	  resources/tags.c, resources/templates.c: Set keywords
+
+2017-04-25 12:26  squinney@INF.ED.AC.UK
+
+	* include/components.h, include/packages.h, include/resources.h,
+	  include/tags.h, include/templates.h, lcfg.yml: Documented structs
+	  and macros
+
+2017-04-25 11:06  squinney@INF.ED.AC.UK
+
+	* include/components.h, lcfg.yml, resources/component.c: Added
+	  lcfgcomponent_from_env
+
+2017-04-25 11:06  squinney@INF.ED.AC.UK
+
+	* resources/tags.c, resources/templates.c: fixed docs
+
+2017-04-25 11:06  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: fixed memory leak of type string in
+	  lcfgresource_from_env
+
+2017-04-25 09:33  squinney@INF.ED.AC.UK
+
+	* resources/CMakeLists.txt, resources/component.c,
+	  resources/components.c, resources/resource.c, resources/tags.c,
+	  resources/templates.c: Added documentation header
+
+2017-04-25 09:28  squinney@INF.ED.AC.UK
+
+	* context/context.c, include/utils.h.in, packages/package.c,
+	  profile/profile.c, resources/components.c, resources/resource.c,
+	  utils/utils.c: renamed lcfgutils_join_strings to
+	  lcfgutils_string_join. Replaced a few calls to asprintf with
+	  lcfgutils_string_join
+
+2017-04-24 16:25  squinney@INF.ED.AC.UK
+
+	* resources/components.c: Documented many more functions
+
+2017-04-24 16:24  squinney@INF.ED.AC.UK
+
+	* resources/complist.c: lcfgcomponent_to_statusfile now takes
+	  options
+
+2017-04-24 16:24  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Minor tweaks to docs
+
+2017-04-24 16:24  squinney@INF.ED.AC.UK
+
+	* packages/list.c, packages/package.c: Minor tweaks to docs
+
+2017-04-24 16:23  squinney@INF.ED.AC.UK
+
+	* include/components.h: lcfgcomponent_to_statusfile now takes
+	  options
+
+2017-04-24 15:24  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/complist.c,
+	  resources/ex/status_file.c: lcfgcomponent_from_statusfile now
+	  takes options to control behaviour
+
+2017-04-24 13:27  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Finished documenting API
+
+2017-04-24 13:09  squinney@INF.ED.AC.UK
+
+	* packages/package.c: tweaked docs for string-generating functions
+
+2017-04-24 11:09  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Added docs for lots more functions
+
+2017-04-24 11:08  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Improved a few docs
+
+2017-04-24 08:43  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: tidied code to improve readability
+
+2017-04-24 08:43  squinney@INF.ED.AC.UK
+
+	* resources/components.c: take more care with value passed to
+	  lcfgresource_set_attribute
+
+2017-04-24 08:07  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Added docs for acquire and release
+	  functions
+
+2017-04-21 14:37  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/components.c: Similarly reworked how to_env
+	  function gathers resource names
+
+2017-04-21 14:20  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/components.c: reworked how print function
+	  gathers resource names when style is 'export'
+
+2017-04-21 14:19  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Fixed to_export
+
+2017-04-21 13:35  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/components.c: Also print env var for resource
+	  list when printing component in 'export' style
+
+2017-04-21 13:26  squinney@INF.ED.AC.UK
+
+	* include/common.h, include/components.h, include/resources.h,
+	  lcfg.yml, profile/profile.c, resources/complist.c,
+	  resources/components.c, resources/resource.c: Added new
+	  lcfgresource_to_string which is a higher-level string function
+	  which can be used by lcfgresource_print and lcfgcomponent_print
+
+2017-04-21 13:25  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Tweaked print to make it similar to
+	  lcfgcomponent_print
+
+2017-04-21 12:15  squinney@INF.ED.AC.UK
+
+	* include/resources.h, lcfg.yml, resources/resource.c: Added
+	  lcfgresource_to_summary for qxprof
+
+2017-04-21 12:14  squinney@INF.ED.AC.UK
+
+	* packages/package.c: tweaked to_summary so that it doesn't waste
+	  memory
+
+2017-04-21 11:29  squinney@INF.ED.AC.UK
+
+	* bdb/read.c: Use LCFGOption enum type for options
+
+2017-04-21 10:19  squinney@INF.ED.AC.UK
+
+	* include/resources.h, lcfg.yml, resources/components.c: updated
+	  calls to resource_to_export
+
+2017-04-21 10:19  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, utils/utils.c: Tweaked name of replace
+	  function
+
+2017-04-21 10:19  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: to_export now also handles the resource
+	  type
+
+2017-04-21 08:02  squinney@INF.ED.AC.UK
+
+	* utils/utils.c: finished implementing lcfgutils_replace_string
+
+2017-04-20 16:23  squinney@INF.ED.AC.UK
+
+	* resources/components.c: reworked to_env to handle type keys
+
+2017-04-20 16:23  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Added from_env function. Updated to_env to
+	  match
+
+2017-04-20 16:21  squinney@INF.ED.AC.UK
+
+	* include/components.h, include/resources.h, include/utils.h.in:
+	  tweaked spec of to_env and from_env to take prefixes for both
+	  value and type keys
+
+2017-04-20 13:09  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/ex, resources/ex/status_dir.c,
+	  resources/ex/status_file.c: Added examples of how to read a
+	  single status file and a whole status directory
+
+2017-04-20 13:05  squinney@INF.ED.AC.UK
+
+	* resources/complist.c: need to close status directory handle after
+	  reading is finished
+
+2017-04-20 12:26  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/iterator.c: updated resource list
+	  iterator to use ref counting
+
+2017-04-20 11:10  squinney@INF.ED.AC.UK
+
+	* resources/complist.c, resources/resource.c: Silenced a few
+	  warnings
+
+2017-04-20 11:10  squinney@INF.ED.AC.UK
+
+	* include/context.h: Added lcfgcontext_is_valid
+
+2017-04-20 10:55  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, include/components.h, include/profile.h,
+	  include/resources.h, profile/profile.c, resources/complist.c,
+	  resources/components.c, resources/diff.c, resources/resource.c,
+	  xml/components.c, xml/resource.c: Lots of minor updates to
+	  improve consistency with other code.
+
+2017-04-20 10:15  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Tweaked remove_next for consistency
+
+2017-04-20 09:37  squinney@INF.ED.AC.UK
+
+	* resources/diff.c: Updated for new resource ref counting system
+
+2017-04-19 18:24  squinney@INF.ED.AC.UK
+
+	* resources/components.c: Reworked the reference counting
+
+2017-04-19 18:21  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Switched to checking strings using
+	  isempty()
+
+2017-04-19 14:44  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: added a few more assert() calls
+
+2017-04-19 14:42  squinney@INF.ED.AC.UK
+
+	* include/resources.h, resources/resource.c: Altered reference
+	  counting and added acquire/relinquish functions. Switched to
+	  assert() from nonnull attribute
+
+2017-04-19 14:41  squinney@INF.ED.AC.UK
+
+	* resources/tags.c: noted that stricter validation of tag names may
+	  be required
+
+2017-04-19 13:07  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, lcfg.yml, resources/components.c, resources/diff.c,
+	  resources/templates.c, xml/lcfg_xml_reader.c, xml/read.c,
+	  xml/resource.c: Updated to match changes to the tags API
+
+2017-04-19 13:06  squinney@INF.ED.AC.UK
+
+	* context/list.c: fixed variable name
+
+2017-04-19 13:06  squinney@INF.ED.AC.UK
+
+	* include/tags.h, resources/tags.c: Reworked the way tags are
+	  handled to split the tag struct from the list node struct. Also
+	  introduced reference counting so that tags can be shared between
+	  lists. Made a start on list mutation functions - just 'add' and
+	  'extra' for now
+
+2017-04-18 16:12  squinney@INF.ED.AC.UK
+
+	* context/context.c, context/list.c: check basic validity of
+	  context before attempting to insert it into a list
+
+2017-04-18 16:11  squinney@INF.ED.AC.UK
+
+	* packages/list.c, packages/package.c: check basic validity of
+	  package before attempting to insert it into a list
+
+2017-04-18 15:20  squinney@INF.ED.AC.UK
+
+	* include/common.h, include/context.h, include/packages.h,
+	  include/templates.h: Added doxygen headers and standardised
+	  macros which prevent multiple inclusion
+
+2017-04-18 15:17  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/templates.c: Minor tidying
+
+2017-04-18 15:16  squinney@INF.ED.AC.UK
+
+	* include/templates.h: Removed template name functions which are no
+	  longer required
+
+2017-04-17 17:28  squinney@INF.ED.AC.UK
+
+	* resources/templates.c: No need to store template name separately
+	  from the template string itself
+
+2017-04-17 16:04  squinney@INF.ED.AC.UK
+
+	* include/templates.h, lcfg.yml, resources/templates.c: Minor fixes
+	  to silence some warnings
+
+2017-04-17 15:52  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/resource.c: Updates for tweaks to templates
+	  API
+
+2017-04-17 15:52  squinney@INF.ED.AC.UK
+
+	* include/resources.h, include/templates.h, resources/templates.c:
+	  Moved lcfgresource_build_name to more appropriate location in
+	  templates.c
+
+2017-04-17 15:27  squinney@INF.ED.AC.UK
+
+	* include/templates.h, resources/templates.c: Reworked to have an
+	  API which is consistent which the rest of the code base
+
+2017-04-17 10:34  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/package.c: Stringifying package as spec or rpm
+	  only needs a newline when being printed out so shuffle where that
+	  option is set from lcfgpackage_to_string to the lcfgpackage_print
+	  function
+
+2017-04-17 08:44  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Added docs for lcfgpkglist_match
+
+2017-04-16 08:25  squinney@INF.ED.AC.UK
+
+	* utils/libmsg.c: Added const to some function args to silence
+	  warnings
+
+2017-04-14 17:08  squinney@INF.ED.AC.UK
+
+	* TODO: Added basic TODO
+
+2017-04-14 17:00  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/package.c: drop const from string which needs
+	  to be freed
+
+2017-04-14 16:55  squinney@INF.ED.AC.UK
+
+	* packages/CMakeLists.txt, packages/list.c, packages/match.c: Moved
+	  match function into main list file as it's not complicated enough
+	  to be worth keeping separate
+
+2017-04-14 14:56  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.35.1
 
 2017-04-14 14:55  squinney@INF.ED.AC.UK
 
