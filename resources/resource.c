@@ -1,5 +1,5 @@
 /**
- * @file resource.h
+ * @file resource.c
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date: 2017-04-21 14:26:07 +0100 (Fri, 21 Apr 2017) $
@@ -1990,8 +1990,6 @@ LCFGStatus lcfgresource_from_env( const char * name,
     goto cleanup;
   }
 
-  int rc;
-
   /* Type - optional, do it first to ensure validation of value */
 
   if ( type_pfx != NULL ) {
@@ -2003,13 +2001,12 @@ LCFGStatus lcfgresource_from_env( const char * name,
     free(type_key);
 
     if ( type != NULL ) {
-      char * res_type = strdup(type);
+
       char * type_msg = NULL;
-      if ( !lcfgresource_set_type_as_string( res, res_type, &type_msg ) ) {
+      if ( !lcfgresource_set_type_as_string( res, type, &type_msg ) ) {
 	status = LCFG_STATUS_ERROR;
 	lcfgutils_build_message( msg, "Invalid resource type '%s': %s",
-				 res_type, type_msg );
-	free(res_type);
+				 type, type_msg );
 	free(type_msg);
 	goto cleanup;
       }
