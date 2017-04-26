@@ -1,5 +1,5 @@
 /**
- * @file templates.c
+ * @file resources/templates.c
  * @brief Functions for working with LCFG resource templates
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date$

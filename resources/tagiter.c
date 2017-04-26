@@ -1,5 +1,5 @@
 /**
- * @file tagiter.c
+ * @file resources/tagiter.c
  * @brief Functions for iterating back and forth through LCFG resource tag lists
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date$

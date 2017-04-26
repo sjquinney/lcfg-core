@@ -1,5 +1,5 @@
 /**
- * @file component.c
+ * @file resources/component.c
  * @brief Functions for working with LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date$
