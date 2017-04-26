@@ -1155,6 +1155,7 @@ LCFGStatus lcfgcomponent_to_statusfile( const LCFGComponent * comp,
 LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
                                             const char * name ) {
   assert( comp != NULL );
+  assert( name != NULL );
 
   if ( lcfgcomponent_is_empty(comp) ) return NULL;
 
@@ -1200,6 +1201,7 @@ LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
 LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
                                             const char * name ) {
   assert( comp != NULL );
+  assert( name != NULL );
 
   LCFGResource * res = NULL;
 
@@ -1231,6 +1233,7 @@ LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
 bool lcfgcomponent_has_resource( const LCFGComponent * comp,
                                  const char * name ) {
   assert( comp != NULL );
+  assert( name != NULL );
 
   return ( lcfgcomponent_find_node( comp, name ) != NULL );
 }
@@ -1255,6 +1258,7 @@ bool lcfgcomponent_has_resource( const LCFGComponent * comp,
 LCFGResource * lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
                                                       const char * name ) {
   assert( comp != NULL );
+  assert( name != NULL );
 
   /* Only searches 'active' resources */
 
@@ -1314,6 +1318,7 @@ LCFGChange lcfgcomponent_insert_or_merge_resource(
                                             LCFGResource * new_res,
                                             char ** msg ) {
   assert( comp != NULL );
+  assert( new_res != NULL );
 
   LCFGChange result = LCFG_CHANGE_ERROR;
 

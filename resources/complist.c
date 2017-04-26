@@ -228,6 +228,7 @@ LCFGComponentNode * lcfgcomplist_find_node( const LCFGComponentList * complist,
 bool lcfgcomplist_has_component(  const LCFGComponentList * complist,
                                   const char * name ) {
   assert( complist != NULL );
+  assert( name != NULL );
 
   return ( lcfgcomplist_find_node( complist, name ) != NULL );
 }
@@ -235,6 +236,7 @@ bool lcfgcomplist_has_component(  const LCFGComponentList * complist,
 LCFGComponent * lcfgcomplist_find_component( const LCFGComponentList * complist,
                                              const char * want_name ) {
   assert( complist != NULL );
+  assert( want_name != NULL );
 
   LCFGComponent * comp = NULL;
 
@@ -250,6 +252,7 @@ LCFGComponent * lcfgcomplist_find_or_create_component(
                                              LCFGComponentList * complist,
                                              const char * name ) {
   assert( complist != NULL );
+  assert( name != NULL );
 
   LCFGComponent * result = lcfgcomplist_find_component( complist, name );
 
@@ -413,6 +416,7 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
                                          LCFGComponentList ** result,
                                          const LCFGTagList * comps_wanted,
                                          char ** msg ) {
+  assert( status_dir != NULL );
 
   *result = NULL;
 
@@ -517,6 +521,12 @@ LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
 				       const char * status_dir,
 				       char ** msg ) {
   assert( complist != NULL );
+  assert( status_dir != NULL );
+
+  if ( isempty(status_dir) ) {
+    lcfgutils_build_message( msg, "Invalid status directory name" );
+    return LCFG_STATUS_ERROR;
+  }
 
   if ( lcfgcomplist_is_empty(complist) ) return LCFG_STATUS_OK;
 
