@@ -17,6 +17,23 @@
 #include "utils.h"
 #include "tags.h"
 
+/**
+ * @brief Create and initialise a new tag
+ *
+ * Creates a new @c LCFGTag and initialises the parameters to the
+ * default values.
+ *
+ * If the memory allocation for the new structure is not successful
+ * the @c exit() function will be called with a non-zero value.
+ *
+ * The reference count for the structure is initialised to 1. To avoid
+ * memory leaks, when it is no longer required the
+ * @c lcfgtag_relinquish() function should be called.
+ *
+ * @return Pointer to new @c LCFGTag
+ *
+ */
+
 LCFGTag * lcfgtag_new() {
 
   LCFGTag * tag = malloc( sizeof(LCFGTag) );
@@ -34,6 +51,26 @@ LCFGTag * lcfgtag_new() {
   return tag;
 }
 
+/**
+ * @brief Destroy the tag
+ *
+ * When the specified @c LCFGTag is no longer required this will
+ * free all associated memory. There is support for reference counting
+ * so typically the @c lcfgtag_relinquish() function should be used.
+ *
+ * This will call @c free() on each parameter of the structure (or
+ * @c lcfgtemplate_destroy() for the template parameter ) and then set each
+ * value to be @c NULL.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * tag which has already been destroyed (or potentially was never
+ * created).
+ *
+ * @param[in] tag Pointer to @c LCFGTag to be destroyed.
+ *
+ */
+
 void lcfgtag_destroy( LCFGTag * tag ) {
 
   if ( tag == NULL ) return;
@@ -46,11 +83,42 @@ void lcfgtag_destroy( LCFGTag * tag ) {
 
 }
 
+/**
+ * @brief Acquire reference to tag
+ *
+ * This is used to record a reference to the @c LCFGTag, it
+ * does this by simply incrementing the reference count.
+ *
+ * To avoid memory leaks, once the reference to the structure is no
+ * longer required the @c lcfgtag_relinquish() function should be
+ * called.
+ *
+ * @param[in] tag Pointer to @c LCFGTag
+ *
+ */
+
 void lcfgtag_acquire( LCFGTag * tag ) {
   assert( tag != NULL );
 
   tag->_refcount += 1;
 }
+
+/**
+ * @brief Release reference to tag
+ *
+ * This is used to release a reference to the @c LCFGTag,
+ * it does this by simply decrementing the reference count. If the
+ * reference count reaches zero the @c lcfgtag_destroy() function
+ * will be called to clean up the memory associated with the structure.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * tag which has already been destroyed (or potentially was never
+ * created).
+ *
+ * @param[in] tag Pointer to @c LCFGTag
+ *
+ */
 
 void lcfgtag_relinquish( LCFGTag * tag ) {
 
@@ -64,9 +132,37 @@ void lcfgtag_relinquish( LCFGTag * tag ) {
 
 }
 
+/**
+ * @brief Check validity of tag
+ *
+ * Checks the specified @c LCFGTag to ensure that it is valid. For a
+ * tag to be considered valid the pointer must not be @c NULL and
+ * the tag must have a name.
+ *
+ * @param[in] pkg Pointer to an @c LCFGTag
+ *
+ * @return Boolean which indicates if tag is valid
+ *
+ */
+
 bool lcfgtag_is_valid( const LCFGTag * tag ) {
-  return ( tag != NULL && tag->name != NULL );
+  return ( tag != NULL && lcfgtag_has_name(tag) );
 }
+
+/**
+ * @brief Check if a string is a valid LCFG tag name
+ *
+ * Checks the contents of a specified string against the specification
+ * for an LCFG tag name.
+ *
+ * An LCFG tag name MUST be at least one character in length and it
+ * must NOT contain any whitespace characters.
+ *
+ * @param[in] name String to be tested
+ *
+ * @return boolean which indicates if string is a valid tag name
+ *
+ */
 
 bool lcfgresource_valid_tag( const char * value ) {
 
@@ -83,6 +179,48 @@ bool lcfgresource_valid_tag( const char * value ) {
 
   return valid;
 }
+
+/**
+ * @brief Check if the tag has a name
+ *
+ * Checks if the specified @c LCFGTag currently has a value set
+ * for the @e name attribute. Although a name is required for an LCFG
+ * tag to be valid it is possible for the value of the name to be
+ * set to @c NULL when the structure is first created.
+ *
+ * @param[in] tag Pointer to an @c LCFGTag
+ *
+ * @return boolean which indicates if a tag has a name
+ *
+ */
+
+bool lcfgtag_has_name( LCFGTag * tag ) {
+  assert( tag != NULL );
+
+  return !isempty(tag->name);
+}
+
+/**
+ * @brief Set the name for the tag
+ *
+ * Sets the value of the @e name parameter for the @c LCFGTag
+ * to that specified. It is important to note that this does
+ * @b NOT take a copy of the string. Furthermore, once the value is set
+ * the tag assumes "ownership", the memory will be freed if the
+ * name is further modified or the tag is destroyed.
+ *
+ * Before changing the value of the @e name to be the new string it
+ * will be validated using the @c lcfgresource_valid_tag()
+ * function. If the new string is not valid then no change will occur,
+ * the @c errno will be set to @c EINVAL and the function will return
+ * a @c false value.
+ *
+ * @param[in] tag Pointer to an @c LCFGTag
+ * @param[in] new_name String which is the new name
+ *
+ * @return boolean indicating success
+ *
+ */
 
 bool lcfgtag_set_name( LCFGTag * tag, char * new_name ) {
   assert( tag != NULL );
@@ -102,17 +240,67 @@ bool lcfgtag_set_name( LCFGTag * tag, char * new_name ) {
   return ok;
 }
 
+/**
+ * @brief Get the name for the tag
+ *
+ * This returns the value of the @e name parameter for the @c
+ * LCFGTag. If the tag does not currently have a @e name then the
+ * pointer returned will be @c NULL.
+ *
+ * It is important to note that this is @b NOT a copy of the string,
+ * changing the returned string will modify the @e name of the
+ * tag.
+ *
+ * @param[in] tag Pointer to an @c LCFGTag
+ *
+ * @return The @e name for the tag (possibly @c NULL).
+ */
+
 char * lcfgtag_get_name( const LCFGTag * tag ) {
   assert( tag != NULL );
 
   return tag->name;
 }
 
+/**
+ * @brief Get the length of the name for the tag
+ *
+ * Since the length of the @e name for an @c LCFGTag is required quite
+ * frequently, when a name is set for a tag the length of that name is
+ * cached for efficiency.  This returns the value of the @e name_len
+ * parameter for the @c LCFGTag. If the tag does not currently have a
+ * @e name then the length will be zero.
+ *
+ * @param[in] tag Pointer to an @c LCFGTag
+ *
+ * @return The length of the @e name for the tag.
+ *
+ */
+
 size_t lcfgtag_get_length( const LCFGTag * tag ) {
   assert( tag != NULL );
 
   return tag->name_len;
 }
+
+/**
+ * @brief Creating a new tag from a string
+ *
+ * This will create a new @c LCFGTag using the contents of the
+ * specified string as the tag name. Any leading whitespace in the
+ * string will be ignored. Note that this does NOT alter or take
+ * "ownership" of the original input string.
+ *
+ * If the string does not contain a valid tag name the
+ * @c LCFG_STATUS_ERROR value will be returned.
+ *
+ * @param[in] input The input string
+ * @param[out] result Reference to the pointer for the new @c LCFGTag
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
 
 LCFGStatus lcfgtag_from_string( const char * input,
                                 LCFGTag ** result,
@@ -150,12 +338,39 @@ LCFGStatus lcfgtag_from_string( const char * input,
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
+/**
+ * @brief Compare the tag names
+ *
+ * This compares the names for two tags, this is mostly useful
+ * for sorting lists of tags. An integer value is returned which
+ * indicates lesser than, equal to or greater than in the same way as
+ * @c strcmp(3).
+ *
+ * @param[in] tag Pointer to @c LCFGTag
+ * @param[in] other Pointer to @c LCFGTag
+ * 
+ * @return Integer (-1,0,+1) indicating lesser,equal,greater
+ *
+ */
+
 int lcfgtag_compare( const LCFGTag * tag, const LCFGTag * other ) {
   assert( tag != NULL );
   assert( other != NULL );
 
   return strcmp( tag->name, other->name );
 }
+
+/**
+ * @brief Test if tag name matches string
+ *
+ * This compares the name of the @c LCFGTag with the specified string.
+ *
+ * @param[in] tag Pointer to @c LCFGTag
+ * @param[in] name The name to check for a match
+ *
+ * @return boolean indicating equality of values
+ *
+ */
 
 bool lcfgtag_matches( const LCFGTag * tag, const char * name ) {
   assert( tag != NULL );
