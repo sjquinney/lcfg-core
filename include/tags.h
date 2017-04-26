@@ -57,6 +57,8 @@ void lcfgtag_relinquish( LCFGTag * tag );
 bool lcfgtag_is_valid( const LCFGTag * tag );
 bool lcfgresource_valid_tag( const char * value );
 
+bool lcfgtag_has_name( const LCFGTag * tag );
+
 bool lcfgtag_set_name( LCFGTag * tag, char * new_name )
   __attribute__((warn_unused_result));
 
