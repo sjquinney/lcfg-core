@@ -91,7 +91,11 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
                                  char ** msg )
   __attribute__((warn_unused_result));
 
-char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp);
+LCFGTagList * lcfgcomponent_get_resources_as_taglist(const LCFGComponent * comp,
+						     LCFGOption options );
+
+char * lcfgcomponent_get_resources_as_string( const LCFGComponent * comp,
+					      LCFGOption options );
 
 LCFGChange lcfgcomponent_insert_next( LCFGComponent    * comp,
                                       LCFGResourceNode * resnode,

@@ -1,15 +1,7 @@
-Packages
-=======
+Resources
+=========
 
-Document lcfgpkglist_match
-
-Check all C functions are wrapped in Perl
-
-Expose common constants in Perl - macros/functions for checking value?
-
-Check all Perl functions are documented
-
-Add a few more Perl tests
+complist - finish docs, add _from_env, _to_env, sort
 
 Utils
 =======
@@ -18,3 +10,7 @@ Import Perl modules from LCFG-Utils-Perl into LCFG-Core-Perl and
 ensure they compile against lcfg-core. Needs to be possible to safely
 replace perl-LCFG-Utils with perl-LCFG-Core package.
 
+Common
+=======
+
+Expose common constants in Perl - macros/functions for checking value?

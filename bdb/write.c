@@ -101,7 +101,8 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
   key.data = (char *) compname;
   key.size = strlen(compname);
 
-  char * res_as_str = lcfgcomponent_get_resources_as_string(component);
+  char * res_as_str = lcfgcomponent_get_resources_as_string( component,
+							     LCFG_OPT_NONE );
 
   data.data = res_as_str;
   data.size = strlen(res_as_str);
@@ -124,7 +125,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
 
     /* Only want to store active resources (priority >= 0).
        They MUST have a name. */
-    if ( !lcfgresource_is_active(resource) || !lcfgresource_has_name(resource) )
+    if ( !lcfgresource_is_active(resource) || !lcfgresource_is_valid(resource) )
       continue;
 
     /* Derivation */

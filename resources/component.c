@@ -1464,22 +1464,30 @@ LCFGChange lcfgcomponent_merge( LCFGComponent * comp,
 }
 
 /**
- * @brief Get the list of resource names as a string
+ * @brief Get the list of resource names as a taglist
  *
- * This generates a new string which contains a space-separated sorted
- * list of resource names for the @c LCFGComponent. If the component
- * is empty then an empty string will be returned.
+ * This generates a new @c LCFGTagList which contains a list of
+ * resource names for the @c LCFGComponent. If the component is empty
+ * then an empty tag list will be returned. Only those resources which
+ * are considered to be @e active ( a priority value of zero or
+ * greater) will be included unless the @c LCFG_OPT_ALL_PRIORITIES
+ * option is specified.
+ *
+ * To avoid memory leaks, when the list is no longer required the 
+ * @c lcfgtaglist_relinquish() function should be called.
  *
  * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] options Integer which controls behaviour.
  *
- * @return Pointer to a new string (call @c free(3) when no longer required)
+ * @return Pointer to a new @c LCFGTagList of resource names
  *
  */
 
-char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp) {
+LCFGTagList * lcfgcomponent_get_resources_as_taglist(const LCFGComponent * comp,
+						     LCFGOption options ) {
   assert( comp != NULL );
 
-  if ( lcfgcomponent_is_empty(comp) ) return strdup("");
+  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
 
   LCFGTagList * reslist = lcfgtaglist_new();
 
@@ -1492,7 +1500,9 @@ char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp) {
 
     const LCFGResource * res = lcfgcomponent_resource(cur_node);
 
-    if ( !lcfgresource_is_active(res) || !lcfgresource_has_name(res) )
+    /* Ignore any without names. Ignore inactive unless all_priorities */
+    if ( !lcfgresource_is_valid(res) ||
+	 ( !all_priorities && !lcfgresource_is_active(res) ) )
       continue;
 
     const char * res_name = lcfgresource_get_name(res);
@@ -1505,24 +1515,53 @@ char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp) {
     free(msg); /* Just ignoring any message */
   }
 
+  if (!ok) {
+    lcfgtaglist_relinquish(reslist);
+    reslist = NULL;
+  }
+
+  return reslist;
+}
+
+/**
+ * @brief Get the list of resource names as a string
+ *
+ * This generates a new string which contains a space-separated sorted
+ * list of resource names for the @c LCFGComponent. If the component
+ * is empty then an empty string will be returned. Only those
+ * resources which are considered to be @e active ( a priority value
+ * of zero or greater) will be included unless the
+ * @c LCFG_OPT_ALL_PRIORITIES option is specified.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] options Integer which controls behaviour.
+ *
+ * @return Pointer to a new string (call @c free(3) when no longer required)
+ *
+ */
+
+char * lcfgcomponent_get_resources_as_string( const LCFGComponent * comp,
+					      LCFGOption options ) {
+  assert( comp != NULL );
+
+  if ( lcfgcomponent_is_empty(comp) ) return strdup("");
+
+  LCFGTagList * reslist =
+    lcfgcomponent_get_resources_as_taglist( comp, options );
+
+  if ( reslist == NULL ) return NULL;
+
+  lcfgtaglist_sort(reslist);
+
   size_t buf_len = 0;
   char * res_as_str = NULL;
 
-  if (ok) {
-    lcfgtaglist_sort(reslist);
-
-    if ( lcfgtaglist_to_string( reslist, 0,
-                                &res_as_str, &buf_len ) < 0 ) {
-      ok = false;
-    }
-  }
-
-  lcfgtaglist_relinquish(reslist);
-
-  if ( !ok ) {
+  if ( lcfgtaglist_to_string( reslist, 0, &res_as_str, &buf_len ) < 0 ) {
     free(res_as_str);
     res_as_str = NULL;
   }
+
+  lcfgtaglist_relinquish(reslist);
 
   return res_as_str;
 }
