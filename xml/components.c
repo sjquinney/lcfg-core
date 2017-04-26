@@ -261,7 +261,7 @@ LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
     if ( *errmsg == NULL )
       lcfgxml_set_error_message( errmsg, "Something bad happened whilst processing components." );
 
-    lcfgcomplist_destroy(complist);
+    lcfgcomplist_relinquish(complist);
 
     *result = NULL;
   }

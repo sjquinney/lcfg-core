@@ -40,7 +40,7 @@ void lcfgprofile_destroy(LCFGProfile * profile) {
 
   if ( profile == NULL ) return;
 
-  lcfgcomplist_destroy(profile->components);
+  lcfgcomplist_relinquish(profile->components);
   profile->components = NULL;
 
   lcfgpkglist_relinquish(profile->active_packages);

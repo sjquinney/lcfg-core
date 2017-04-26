@@ -262,6 +262,7 @@ struct LCFGComponentList {
   LCFGComponentNode * head;
   LCFGComponentNode * tail;
   unsigned int size;
+  unsigned int _refcount;
 };
 
 typedef struct LCFGComponentList LCFGComponentList;
@@ -269,6 +270,8 @@ typedef struct LCFGComponentList LCFGComponentList;
 LCFGComponentList * lcfgcomplist_new(void);
 
 void lcfgcomplist_destroy(LCFGComponentList * complist);
+void lcfgcomplist_acquire(LCFGComponentList * complist);
+void lcfgcomplist_relinquish(LCFGComponent * complist);
 
 LCFGChange lcfgcomplist_insert_next( LCFGComponentList * complist,
                                      LCFGComponentNode * compnode,

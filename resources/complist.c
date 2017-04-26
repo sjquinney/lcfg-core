@@ -1,3 +1,10 @@
+/**
+ * @file complist.c
+ * @brief Functions for working with lists of LCFG components
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date$
+ * $Revision$
+ */
 
 #include <dirent.h>
 #include <errno.h>
@@ -50,6 +57,7 @@ LCFGComponentList * lcfgcomplist_new(void) {
   complist->size = 0;
   complist->head = NULL;
   complist->tail = NULL;
+  complist->_refcount = 1;
 
   return complist;
 }
@@ -68,6 +76,55 @@ void lcfgcomplist_destroy(LCFGComponentList * complist) {
 
   free(complist);
   complist = NULL;
+}
+
+/**
+ * @brief Acquire reference to component list
+ *
+ * This is used to record a reference to the @c LCFGComponentList, it
+ * does this by simply incrementing the reference count.
+ *
+ * To avoid memory leaks, once the reference to the structure is no
+ * longer required the @c lcfgcomplist_release() function should be
+ * called.
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ *
+ */
+
+void lcfgcomplist_acquire(LCFGComponentList * complist) {
+  assert( complist != NULL );
+
+  complist->_refcount += 1;
+}
+
+/**
+ * @brief Release reference to component list
+ *
+ * This is used to release a reference to the @c LCFGComponentList
+ * it does this by simply decrementing the reference count. If the
+ * reference count reaches zero the @c lcfgcomplist_destroy() function
+ * will be called to clean up the memory associated with the structure.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * component list which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ *
+ */
+
+void lcfgcomplist_relinquish(LCFGComponent * complist) {
+
+  if ( complist == NULL ) return;
+
+  if ( complist->_refcount > 0 )
+    complist->_refcount -= 1;
+
+  if ( complist->_refcount == 0 )
+    lcfgcomplist_destroy(complist);
+
 }
 
 LCFGChange lcfgcomplist_insert_next( LCFGComponentList * complist,

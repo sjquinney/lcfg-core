@@ -78,7 +78,7 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
   lcfgbdb_close_db(dbh);
 
   if ( status != LCFG_STATUS_OK ) {
-    lcfgprofile_destroy(profile);
+    lcfgprofile_relinquish(profile);
     profile = NULL;
   }
 
@@ -181,7 +181,7 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
       }
     }
 
-    lcfgcomplist_destroy(components);
+    lcfgcomplist_relinquish(components);
 
   }
   
@@ -355,7 +355,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
     if ( *msg == NULL )
       asprintf( msg, "Something bad happened whilst processing DB." );
 
-    lcfgcomplist_destroy(complist);
+    lcfgcomplist_relinquish(complist);
     complist = NULL;
   }
 
