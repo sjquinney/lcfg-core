@@ -19,6 +19,30 @@
 #include "components.h"
 #include "utils.h"
 
+/**
+ * @brief Create and initialise a new component node
+ *
+ * This creates a simple wrapper @c LCFGComponentNode node which
+ * is used to hold a pointer to an @c LCFGComponent as an item in a
+ * @c LCFGComponent data structure.
+ *
+ * It is typically not necessary to call this function. The usual
+ * approach is to use the @c lcfgcomplist_insert_next() or
+ * @c lcfgcomplist_append() functions to add @c LCFGComponent structures
+ * to the list.
+ *
+ * If the memory allocation for the new structure is not successful
+ * the @c exit() function will be called with a non-zero value.
+ *
+ * To avoid memory leaks, when the new structure is no longer required
+ * the @c lcfgcomponentnode_destroy() function should be called.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ *
+ * @return Pointer to new @c LCFGComponentNode
+ *
+ */
+
 LCFGComponentNode * lcfgcomponentnode_new(LCFGComponent * comp) {
   assert( comp != NULL );
 
@@ -34,6 +58,30 @@ LCFGComponentNode * lcfgcomponentnode_new(LCFGComponent * comp) {
   return compnode;
 }
 
+/**
+ * @brief Destroy a component node
+ *
+ * When the specified @c LCFGComponentNode is no longer required this
+ * can be used to free all associated memory. This will call
+ * @c free(3) on each parameter of the struct and then set each value to
+ * be @c NULL.
+ *
+ * Note that destroying an @c LCFGComponentNode does not destroy the
+ * associated @c LCFGComponent, that must be done separately.
+ *
+ * It is typically not necessary to call this function. The usual
+ * approach is to use the @c lcfgcomplist_remove_next() function to
+ * remove a @c LCFGComponent from the list.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * component node which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] compnode Pointer to @c LCFGComponentNode to be destroyed.
+ *
+ */
+
 void lcfgcomponentnode_destroy(LCFGComponentNode * compnode) {
 
   if ( compnode == NULL ) return;
@@ -45,6 +93,23 @@ void lcfgcomponentnode_destroy(LCFGComponentNode * compnode) {
   compnode = NULL;
 
 }
+
+/**
+ * @brief Create and initialise a new empty list of components
+ *
+ * Creates a new @c LCFGComponentList which represents an empty list
+ * of components.
+ *
+ * If the memory allocation for the new structure is not successful the
+ * @c exit() function will be called with a non-zero value.
+ *
+ * The reference count for the structure is initialised to 1. To avoid
+ * memory leaks, when it is no longer required the
+ * @c lcfgcomplist_relinquish() function should be called.
+ *
+ * @return Pointer to new @c LCFGComponentList
+ *
+ */
 
 LCFGComponentList * lcfgcomplist_new(void) {
 
@@ -61,6 +126,34 @@ LCFGComponentList * lcfgcomplist_new(void) {
 
   return complist;
 }
+
+/**
+ * @brief Destroy the component list
+ *
+ * When the specified @c LCFGComponentList is no longer required this
+ * will free all associated memory.
+ *
+ * *Reference Counting:* There is support for very simple reference
+ * counting which allows an @c LCFGComponentList to appear in multiple
+ * situations. Incrementing and decrementing that reference counter is
+ * the responsibility of the container code. See @c
+ * lcfgcomplist_acquire() and @c lcfgcomplist_relinquish() for
+ * details.
+ *
+ * This will iterate through the list of components to remove and
+ * destroy each @c LCFGComponentNode item, it also calls @c
+ * lcfgcomponent_relinquish() for each component. Note that if the
+ * reference count on a component reaches zero then the @c LCFGComponent
+ * will also be destroyed.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * component list which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList to be destroyed.
+ *
+ */
 
 void lcfgcomplist_destroy(LCFGComponentList * complist) {
 
@@ -127,6 +220,29 @@ void lcfgcomplist_relinquish(LCFGComponentList * complist) {
 
 }
 
+/**
+ * @brief Insert a component into the list
+ *
+ * This can be used to insert an @c LCFGComponent into the
+ * specified @c LCFGComponentList. The component will be wrapped into an
+ * @c LCFGComponentNode using the @c lcfgcomponentnode_new() function.
+ *
+ * The component will be inserted into the list immediately after
+ * the specified @c LCFGComponentNode. To insert the component at the
+ * head of the list the @c NULL value should be passed for the node.
+ *
+ * If the component is successfully inserted the @c LCFG_CHANGE_ADDED
+ * value is returned, if an error occurs then @c LCFG_CHANGE_ERROR is
+ * returned.
+ *
+ * @param[in] complist Pointer to @c LCFGComponent
+ * @param[in] compnode Pointer to @c LCFGComponentNode
+ * @param[in] comp Pointer to @c LCFGComponent
+ * 
+ * @return Integer value indicating type of change
+ *
+ */
+
 LCFGChange lcfgcomplist_insert_next( LCFGComponentList * complist,
 				     LCFGComponentNode * compnode,
 				     LCFGComponent     * comp ) {
@@ -160,10 +276,39 @@ LCFGChange lcfgcomplist_insert_next( LCFGComponentList * complist,
   return LCFG_CHANGE_ADDED;
 }
 
+/**
+ * @brief Remove a component from the list
+ *
+ * This can be used to remove an @c LCFGComponent from the specified
+ * @c LCFGComponentList.
+ *
+ * The component removed from the list is immediately after the
+ * specified @c LCFGComponentNode. To remove the component from the head
+ * of the list the @c NULL value should be passed for the node.
+ *
+ * If the component is successfully removed the @c LCFG_CHANGE_REMOVED
+ * value is returned, if an error occurs then @c LCFG_CHANGE_ERROR is
+ * returned. If the list is already empty then the @c LCFG_CHANGE_NONE
+ * value is returned.
+ *
+ * Note that, since a pointer to the @c LCFGComponent is returned
+ * to the caller, the reference count will still be at least 1. To
+ * avoid memory leaks, when the struct is no longer required it should
+ * be released by calling @c lcfgcomponent_relinquish().
+ *
+ * @param[in] complist Pointer to @c LCFGComponent
+ * @param[in] compnode Pointer to @c LCFGComponentNode
+ * @param[out] comp Pointer to @c LCFGComponent
+ * 
+ * @return Integer value indicating type of change
+ *
+ */
+
 LCFGChange lcfgcomplist_remove_next( LCFGComponentList * complist,
 				     LCFGComponentNode * compnode,
 				     LCFGComponent    ** comp ) {
   assert( complist != NULL );
+  assert( comp != NULL );
 
   if ( lcfgcomplist_is_empty(complist) ) return LCFG_CHANGE_NONE;
 
@@ -198,9 +343,28 @@ LCFGChange lcfgcomplist_remove_next( LCFGComponentList * complist,
   return LCFG_CHANGE_REMOVED;
 }
 
+/**
+ * @brief Find the component node with a given name
+ *
+ * This can be used to search through an @c LCFGComponentList to find
+ * the first component node which has a matching name. Note that the
+ * matching is done using strcmp(3) which is case-sensitive.
+ *
+ * A @c NULL value is returned if no matching node is found. Also, a
+ * @c NULL value is returned if a @c NULL value or an empty list
+ * is specified.
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList to be searched
+ * @param[in] want_name The name of the required component node
+ *
+ * @return Pointer to an @c LCFGComponentNode (or the @c NULL value).
+ *
+ */
+
 LCFGComponentNode * lcfgcomplist_find_node( const LCFGComponentList * complist,
                                             const char * want_name ) {
   assert( complist != NULL );
+  assert( want_name != NULL );
 
   if ( lcfgcomplist_is_empty(complist) ) return NULL;
 
@@ -225,6 +389,24 @@ LCFGComponentNode * lcfgcomplist_find_node( const LCFGComponentList * complist,
   return result;
 }
 
+/**
+ * @brief Check if a list contains a particular component
+ *
+ * This can be used to search through an @c LCFGComponentList to check if
+ * it contains a component with a matching name. Note that the matching
+ * is done using strcmp(3) which is case-sensitive.
+ * 
+ * This uses the @c lcfgcomplist_find_node() function to find the
+ * relevant node. If a @c NULL value is specified for the list or the
+ * list is empty then a false value will be returned.
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList to be searched
+ * @param[in] name The name of the required component
+ *
+ * @return Boolean value which indicates presence of component in list
+ *
+ */
+
 bool lcfgcomplist_has_component(  const LCFGComponentList * complist,
                                   const char * name ) {
   assert( complist != NULL );
@@ -232,6 +414,24 @@ bool lcfgcomplist_has_component(  const LCFGComponentList * complist,
 
   return ( lcfgcomplist_find_node( complist, name ) != NULL );
 }
+
+/**
+ * @brief Find the component for a given name
+ *
+ * This can be used to search through an @c LCFGComponentList to find
+ * the first component which has a matching name. Note
+ * that the matching is done using strcmp(3) which is case-sensitive.
+ *
+ * To ensure the returned @c LCFGComponent is not destroyed when
+ * the parent @c LCFGComponentList is destroyed you would need to
+ * call the @c lcfgcomponent_acquire() function.
+ *
+ * @param[in] complist Pointer to @c LCFGComponent to be searched
+ * @param[in] want_name The name of the required component
+ *
+ * @return Pointer to an @c LCFGComponent (or the @c NULL value).
+ *
+ */
 
 LCFGComponent * lcfgcomplist_find_component( const LCFGComponentList * complist,
                                              const char * want_name ) {
@@ -247,6 +447,23 @@ LCFGComponent * lcfgcomplist_find_component( const LCFGComponentList * complist,
 
   return comp;
 }
+
+/**
+ * @brief Find or create a new component
+ *
+ * Searches the @c LCFGComponentList for an @c LCFGComponent with the
+ * required name. If none is found then a new @c LCFGComponent is
+ * created and added to the @c LCFGComponent.
+ *
+ * If an error occurs during the creation of a new component a @c NULL
+ * value will be returned.
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ * @param[in] name The name of the required component
+ *
+ * @return The required @c LCFGComponent (or @c NULL)
+ *
+ */
 
 LCFGComponent * lcfgcomplist_find_or_create_component(
                                              LCFGComponentList * complist,
@@ -303,6 +520,23 @@ bool lcfgcomplist_print( const LCFGComponentList * complist,
 
   return ok;
 }
+
+/**
+ * @brief Insert or replace a component
+ *
+ * Searches the @c LCFGComponentList for a matching @c LCFGComponent with
+ * the same name. If none is found the component is simply added and @c
+ * LCFG_CHANGE_ADDED is returned. If there is a match then the new
+ * component will replace the current and @c LCFG_CHANGE_REPLACED
+ * is returned.
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ * @param[in] new_comp Pointer to @c LCFGComponent
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Integer value indicating type of change
+ *
+ */
 
 LCFGChange lcfgcomplist_insert_or_replace_component(
                                               LCFGComponentList * complist,
