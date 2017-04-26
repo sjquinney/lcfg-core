@@ -139,7 +139,7 @@ void lcfgtag_relinquish( LCFGTag * tag ) {
  * tag to be considered valid the pointer must not be @c NULL and
  * the tag must have a name.
  *
- * @param[in] pkg Pointer to an @c LCFGTag
+ * @param[in] tag Pointer to an @c LCFGTag
  *
  * @return Boolean which indicates if tag is valid
  *
@@ -164,17 +164,17 @@ bool lcfgtag_is_valid( const LCFGTag * tag ) {
  *
  */
 
-bool lcfgresource_valid_tag( const char * value ) {
+bool lcfgresource_valid_tag( const char * name ) {
 
   /* MUST NOT be a NULL.
      MUST have non-zero length.
      MUST NOT contain whitespace characters.
      TODO : decide if checking for !isword would be better */
 
-  bool valid = !isempty(value);
+  bool valid = !isempty(name);
 
   char * ptr;
-  for ( ptr = (char *) value; valid && *ptr != '\0'; ptr++ )
+  for ( ptr = (char *) name; valid && *ptr != '\0'; ptr++ )
     if ( isspace(*ptr) ) valid = false;
 
   return valid;
@@ -194,7 +194,7 @@ bool lcfgresource_valid_tag( const char * value ) {
  *
  */
 
-bool lcfgtag_has_name( LCFGTag * tag ) {
+bool lcfgtag_has_name( const LCFGTag * tag ) {
   assert( tag != NULL );
 
   return !isempty(tag->name);

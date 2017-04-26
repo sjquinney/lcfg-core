@@ -263,7 +263,7 @@ bool lcfgcomponent_valid_name(const char * name) {
  * component to be valid it is possible for the value of the name to be
  * set to @c NULL when the structure is first created.
  *
- * @param[in] res Pointer to an @c LCFGComponent
+ * @param[in] comp Pointer to an @c LCFGComponent
  *
  * @return boolean which indicates if a component has a name
  *
@@ -278,7 +278,7 @@ bool lcfgcomponent_has_name(const LCFGComponent * comp) {
 /**
  * @brief Get the name for the component
  *
- * This returns the value of the @E name parameter for the
+ * This returns the value of the @e name parameter for the
  * @c LCFGComponent. If the component does not currently have a @e
  * name then the pointer returned will be @c NULL.
  *
@@ -286,7 +286,7 @@ bool lcfgcomponent_has_name(const LCFGComponent * comp) {
  * changing the returned string will modify the @e name of the
  * component.
  *
- * @param[in] res Pointer to an @c LCFGComponent
+ * @param[in] comp Pointer to an @c LCFGComponent
  *
  * @return The @e name for the component (possibly @c NULL).
  */
@@ -312,7 +312,7 @@ char * lcfgcomponent_get_name(const LCFGComponent * comp) {
  * the @c errno will be set to @c EINVAL and the function will return
  * a @c false value.
  *
- * @param[in] res Pointer to an @c LCFGComponent
+ * @param[in] comp Pointer to an @c LCFGComponent
  * @param[in] new_name String which is the new name
  *
  * @return boolean indicating success
@@ -476,7 +476,7 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
  * negative priority) will also be ignored unless the
  * @c LCFG_OPT_ALL_PRIORITIES option is specified.
  *
- * @param[in] pkglist Pointer to @c LCFGComponent
+ * @param[in] comp Pointer to @c LCFGComponent
  * @param[in] style Integer indicating required style of formatting
  * @param[in] options Integer that controls formatting
  * @param[in] out Stream to which the list of resources should be written
@@ -902,11 +902,12 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
  * not be exported unless the @c LCFG_OPT_ALL_PRIORITIES option is
  * specified.
  *
- * @param[in] res Pointer to @c LCFGResource
+ * @param[in] comp Pointer to @c LCFGComponent
  * @param[in] val_pfx The prefix for the value variable name
  * @param[in] type_pfx The prefix for the type variable name
  * @param[in] options Integer which controls behaviour
-
+ * @param[out] msg Pointer to any diagnostic messages
+ *
  * @return Status value indicating success of the process
  *
  */
@@ -1553,7 +1554,8 @@ char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp) {
  * @param[in] compname_in The name of the component
  * @param[in] val_pfx The prefix for the value variable name
  * @param[in] type_pfx The prefix for the type variable name
- * @param[out] Reference to the pointer for the new @c LCFGComponent
+ * @param[out] result Reference to the pointer for the new @c LCFGComponent
+ * @param[in] options Integer which controls behaviour
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return Status value indicating success of the process

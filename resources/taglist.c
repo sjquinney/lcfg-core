@@ -14,6 +14,30 @@
 #include "utils.h"
 #include "tags.h"
 
+/**
+ * @brief Create and initialise a new tag list node
+ *
+ * This creates a simple wrapper @c LCFGTagNode node which
+ * is used to hold a pointer to an @c LCFGTag as an item in a
+ * doubly-linked @c LCFGTagList data structure.
+ *
+ * It is typically not necessary to call this function. The usual
+ * approach is to use the @c lcfgtaglist_insert_next() or @c
+ * lcfgtaglist_append() functions to add @c LCFGTag structures to
+ * the list.
+ *
+ * If the memory allocation for the new structure is not successful
+ * the @c exit() function will be called with a non-zero value.
+ *
+ * To avoid memory leaks, when the new structure is no longer required
+ * the @c lcfgtagnode_destroy() function should be called.
+ *
+ * @param[in] tag Pointer to @c LCFGTag
+ *
+ * @return Pointer to new @c LCFGTagNode
+ *
+ */
+
 LCFGTagNode * lcfgtagnode_new(LCFGTag * tag) {
 
   LCFGTagNode * tagnode = malloc( sizeof(LCFGTagNode) );
@@ -29,6 +53,30 @@ LCFGTagNode * lcfgtagnode_new(LCFGTag * tag) {
   return tagnode;
 }
 
+/**
+ * @brief Destroy a tag list node
+ *
+ * When the specified @c LCFGTagNode is no longer required this
+ * can be used to free all associated memory. This will call
+ * @c free(3) on each parameter of the struct and then set each value to
+ * be @c NULL.
+ *
+ * Note that destroying an @c LCFGTagNode does not destroy the
+ * associated @c LCFGTag, that must be done separately.
+ *
+ * It is typically not necessary to call this function. The usual
+ * approach is to use the @c lcfgtaglist_remove_tag() function to
+ * remove a @c LCFGTag from the list.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * tag node which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] tagnode Pointer to @c LCFGTagNode to be destroyed.
+ *
+ */
+
 void lcfgtagnode_destroy(LCFGTagNode * tagnode) {
 
   if ( tagnode == NULL ) return;
@@ -41,6 +89,23 @@ void lcfgtagnode_destroy(LCFGTagNode * tagnode) {
   tagnode = NULL;
 
 }
+
+/**
+ * @brief Create and initialise a new empty tag list
+ *
+ * Creates a new @c LCFGTagList which represents an empty
+ * tag list.
+ *
+ * If the memory allocation for the new structure is not successful the
+ * @c exit() function will be called with a non-zero value.
+ *
+ * The reference count for the structure is initialised to 1. To avoid
+ * memory leaks, when it is no longer required the
+ * @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @return Pointer to new @c LCFGTagList
+ *
+ */
 
 LCFGTagList * lcfgtaglist_new(void) {
 
@@ -57,6 +122,34 @@ LCFGTagList * lcfgtaglist_new(void) {
 
   return taglist;
 }
+
+/**
+ * @brief Destroy the tag list
+ *
+ * When the specified @c LCFGTagList is no longer required this
+ * will free all associated memory.
+ *
+ * *Reference Counting:* There is support for very simple reference
+ * counting which allows an @c LCFGTagList to appear in multiple
+ * situations. This is particular useful for code which needs to use
+ * multiple iterators for a single list. Incrementing and decrementing
+ * that reference counter is the responsibility of the container
+ * code. See @c lcfgtaglist_acquire() and @c lcfgtaglist_relinquish()
+ * for details.
+ *
+ * This will iterate through the list to remove and destroy each
+ * @c LCFGTagNode item, it also calls @c lcfgtag_relinquish()
+ * for each tag. Note that if the reference count on the tag
+ * reaches zero then the @c LCFGTag will also be destroyed.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * tag list which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList to be destroyed.
+ *
+ */
 
 void lcfgtaglist_destroy(LCFGTagList * taglist) {
 
@@ -75,11 +168,42 @@ void lcfgtaglist_destroy(LCFGTagList * taglist) {
 
 }
 
+/**
+ * @brief Acquire reference to tag list
+ *
+ * This is used to record a reference to the @c LCFGTagList, it
+ * does this by simply incrementing the reference count.
+ *
+ * To avoid memory leaks, once the reference to the structure is no
+ * longer required the @c lcfgtaglist_release() function should be
+ * called.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ *
+ */
+
 void lcfgtaglist_acquire( LCFGTagList * taglist ) {
   assert( taglist != NULL );
 
   taglist->_refcount += 1;
 }
+
+/**
+ * @brief Release reference to tag list
+ *
+ * This is used to release a reference to the @c LCFGTagList,
+ * it does this by simply decrementing the reference count. If the
+ * reference count reaches zero the @c lcfgtaglist_destroy() function
+ * will be called to clean up the memory associated with the structure.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * tag list which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ *
+ */
 
 void lcfgtaglist_relinquish( LCFGTagList * taglist ) {
 
@@ -92,6 +216,31 @@ void lcfgtaglist_relinquish( LCFGTagList * taglist ) {
     lcfgtaglist_destroy(taglist);
 
 }
+
+/**
+ * @brief Insert a tag into the list
+ *
+ * This can be used to insert an @c LCFGTag into the
+ * specified tag list. The tag will be wrapped into an
+ * @c LCFGTagNode using the @c lcfgtagnode_new() function.
+ *
+ * The tag will be inserted into the list immediately after the
+ * specified @c LCFGTagNode. To insert the tag at the head of the list
+ * the @c NULL value should be passed for the node. For convenience
+ * the @c lcfgtaglist_append() and @c lcfgtaglist_prepend() macros are
+ * provided.
+ *
+ * If the tag is successfully inserted into the list the
+ * @c LCFG_CHANGE_ADDED value is returned, if an error occurs then
+ * @c LCFG_CHANGE_ERROR is returned.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ * @param[in] tagnode Pointer to @c LCFGTagNode
+ * @param[in] tag Pointer to @c LCFGTag
+ * 
+ * @return Integer value indicating type of change
+ *
+ */
 
 LCFGChange lcfgtaglist_insert_next( LCFGTagList * taglist,
                                     LCFGTagNode * tagnode,
@@ -139,6 +288,30 @@ LCFGChange lcfgtaglist_insert_next( LCFGTagList * taglist,
   return LCFG_CHANGE_ADDED;
 }
 
+/**
+ * @brief Remove a tag from the list
+ *
+ * This can be used to remove an @c LCFGTag from the specified
+ * tag list.
+ *
+ * If the tag is successfully removed from the list the
+ * @c LCFG_CHANGE_REMOVED value is returned, if an error occurs then
+ * @c LCFG_CHANGE_ERROR is returned. If the list is already empty then
+ * the @c LCFG_CHANGE_NONE value is returned.
+ *
+ * Note that, since a pointer to the @c LCFGTag is returned
+ * to the caller, the reference count will still be at least 1. To
+ * avoid memory leaks, when the struct is no longer required it should
+ * be released by calling @c lcfgtag_relinquish().
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ * @param[in] tagnode Pointer to @c LCFGTagNode
+ * @param[out] tag Pointer to @c LCFGTag
+ * 
+ * @return Integer value indicating type of change
+ *
+ */
+
 LCFGChange lcfgtaglist_remove_tag( LCFGTagList * taglist,
                                    LCFGTagNode * tagnode,
                                    LCFGTag ** tag ) {
@@ -179,6 +352,24 @@ LCFGChange lcfgtaglist_remove_tag( LCFGTagList * taglist,
   return LCFG_CHANGE_REMOVED;
 }
 
+/**
+ * @brief Find the tag node with a given name
+ *
+ * This can be used to search through an @c LCFGTagList to find
+ * the first tag node which has a matching name. Note that the
+ * matching is done using strcmp(3) which is case-sensitive.
+ *
+ * A @c NULL value is returned if no matching node is found. Also, a
+ * @c NULL value is returned if a @c NULL value or an empty tag list
+ * is specified.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList to be searched
+ * @param[in] name The name of the required tag node
+ *
+ * @return Pointer to an @c LCFGTagNode (or the @c NULL value).
+ *
+ */
+
 LCFGTagNode * lcfgtaglist_find_node( const LCFGTagList * taglist,
                                      const char * name ) {
   assert( name != NULL );
@@ -200,6 +391,24 @@ LCFGTagNode * lcfgtaglist_find_node( const LCFGTagList * taglist,
   return result;
 }
 
+/**
+ * @brief Find the tag for a given name
+ *
+ * This can be used to search through an @c LCFGTagList to find
+ * the first tag which has a matching name. Note
+ * that the matching is done using strcmp(3) which is case-sensitive.
+ *
+ * To ensure the returned @c LCFGTag is not destroyed when
+ * the parent @c LCFGTagList is destroyed you would need to
+ * call the @c lcfgtag_acquire() function.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList to be searched
+ * @param[in] name The name of the required tag
+ *
+ * @return Pointer to an @c LCFGTag (or the @c NULL value).
+ *
+ */
+
 LCFGTag * lcfgtaglist_find_tag( const LCFGTagList * taglist,
                                 const char * name ) {
   assert( name != NULL );
@@ -213,12 +422,44 @@ LCFGTag * lcfgtaglist_find_tag( const LCFGTagList * taglist,
   return tag;
 }
 
+/**
+ * @brief Check if a tag list contains a particular tag name
+ *
+ * This can be used to search through an @c LCFGTagList to check if
+ * it contains a tag with a matching name. Note that the matching
+ * is done using strcmp(3) which is case-sensitive.
+ * 
+ * This uses the @c lcfgtaglist_find_node() function to find the
+ * relevant node. If a @c NULL value is specified for the list or the
+ * list is empty then a false value will be returned.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList to be searched
+ * @param[in] name The name of the required tag
+ *
+ * @return Boolean value which indicates presence of tag in list
+ *
+ */
+
 bool lcfgtaglist_contains( const LCFGTagList * taglist,
                            const char * name ) {
   assert( name != NULL );
 
   return ( lcfgtaglist_find_node( taglist, name ) != NULL );
 }
+
+/**
+ * @brief Clone the tag list
+ *
+ * Creates a new @c LCFGTagList with the same list of tags.
+ *
+ * If the memory allocation for the new structure is not successful
+ * the @c exit() function will be called with a non-zero value.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList to be cloned.
+ *
+ * @return Pointer to new @c LCFGTagList or @c NULL if copy fails.
+ *
+ */
 
 LCFGTagList * lcfgtaglist_clone(const LCFGTagList * taglist) {
   assert( taglist != NULL );
@@ -251,6 +492,25 @@ LCFGTagList * lcfgtaglist_clone(const LCFGTagList * taglist) {
 }
 
 static const char * tag_seps = " \t\r\n";
+
+/**
+ * @brief Create a new tag list from a string
+ *
+ * This splits the specified string on whitespace and creates a new
+ * @c LCFGTag for each token found. The tags are added to the list in the
+ * order in which they appear in the string. If the string is empty an
+ * empty tag list will be returned.
+ *
+ * The tokens must be valid tag names according to the
+ * @c lcfgresource_valid_tag() function.
+ *
+ * @param[in] input The string of tag names
+ * @param[out] result Reference to pointer to the new @c LCFGTagList
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
 
 LCFGStatus lcfgtaglist_from_string( const char * input,
                                     LCFGTagList ** result,
@@ -299,6 +559,38 @@ LCFGStatus lcfgtaglist_from_string( const char * input,
 
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
+
+/**
+ * @brief Serialise the list of tags as a string
+ *
+ * This generates a new string representation of the @c LCFGTagList by
+ * concatenating together all the @c LCFGTag names using a
+ * single-space separator (e.g. @c "foo bar baz quux"). To add a final
+ * newline character specify the @c LCFG_OPT_NEWLINE option.
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many resource strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated.
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required. If an error occurs this function will return -1.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList to be cloned.
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
 
 ssize_t lcfgtaglist_to_string( const LCFGTagList * taglist,
                                unsigned int options,
@@ -389,6 +681,19 @@ ssize_t lcfgtaglist_to_string( const LCFGTagList * taglist,
   return new_len;
 }
 
+/**
+ * Write the list of tags to file stream
+ *
+ * This serialises the list of tags using the
+ * @c lcfgtaglist_to_string() function and then writes out the generated
+ * string to the specified file stream.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList to be searched
+ * @param[in] out Stream to which the list of tags should be written
+ *
+ * @return Boolean indicating success
+ */
+
 bool lcfgtaglist_print( const LCFGTagList * taglist, FILE * out ) {
 
   size_t buf_size = 0;
@@ -412,6 +717,16 @@ bool lcfgtaglist_print( const LCFGTagList * taglist, FILE * out ) {
 
   return ok;
 }
+
+/**
+ * @brief Sort the list of tags by name
+ *
+ * This sorts the nodes of the list of tags for an @c LCFGTag by using
+ * the @c lcfgtag_compare() function.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ *
+ */
 
 void lcfgtaglist_sort( LCFGTagList * taglist ) {
 
@@ -443,6 +758,29 @@ void lcfgtaglist_sort( LCFGTagList * taglist ) {
 
 }
 
+/**
+ * @brief Mutator: Replace tags in list
+ *
+ * This will replace tags in the list which have the @c old_name with
+ * the required @c new_name. There is the option to replace a single
+ * tag or all tags with the name. Note that the new name must be a
+ * valid tag name.
+ *
+ * If any tags are replaced the @c LCFG_CHANGE_REPLACED value will be
+ * returned, if there is no change then @c LCFG_CHANGE_NONE will be
+ * returned. If an error occurs the @ LCFG_CHANGE_ERROR will be
+ * returned along with a diagnostic message.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ * @param[in] old_name The tag name which will be replaced
+ * @param[in] new_name The replacement tag name
+ * @param[in] global Boolean which controls whether to replace single or all tags.
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Integer value indicating type of change
+ *
+ */
+
 LCFGChange lcfgtaglist_mutate_replace( LCFGTagList * taglist,
 				       const char * old_name,
 				       const char * new_name,
@@ -451,6 +789,8 @@ LCFGChange lcfgtaglist_mutate_replace( LCFGTagList * taglist,
   assert( taglist != NULL );
   assert( old_name != NULL );
   assert( new_name != NULL );
+
+  if ( lcfgtaglist_is_empty(taglist) ) return LCFG_CHANGE_NONE;
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
@@ -484,6 +824,25 @@ LCFGChange lcfgtaglist_mutate_replace( LCFGTagList * taglist,
   return change;
 }
 
+/**
+ * @brief Mutator: Append tag to list
+ *
+ * This will append an @c LCFGTag with the specified name to the
+ * @c LCFGTagList. Note that the list does NOT take "ownership" of the
+ * string for the specified name.
+ *
+ * If the tag is successfully appended the @c LCFG_CHANGE_ADDED value
+ * will be returned, if an error occurs the @c LCFG_CHANGE_ERROR will
+ * be returned along with a diagnostic message.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ * @param[in] tagname The tag name which will be appended
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Integer value indicating type of change
+ *
+ */
+
 LCFGChange lcfgtaglist_mutate_append( LCFGTagList * taglist,
                                       const char * tagname,
                                       char ** msg ) {
@@ -502,6 +861,25 @@ LCFGChange lcfgtaglist_mutate_append( LCFGTagList * taglist,
   return change;
 }
 
+/**
+ * @brief Mutator: Prepend tag to list
+ *
+ * This will prepend an @c LCFGTag with the specified name to the
+ * @c LCFGTagList. Note that the list does NOT take "ownership" of the
+ * string for the specified name.
+ *
+ * If the tag is successfully prepended the @c LCFG_CHANGE_ADDED value
+ * will be returned, if an error occurs the @c LCFG_CHANGE_ERROR will
+ * be returned along with a diagnostic message.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ * @param[in] tagname The tag name which will be prepended
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Integer value indicating type of change
+ *
+ */
+
 LCFGChange lcfgtaglist_mutate_prepend( LCFGTagList * taglist,
 				       const char * tagname,
 				       char ** msg ) {
@@ -519,6 +897,26 @@ LCFGChange lcfgtaglist_mutate_prepend( LCFGTagList * taglist,
 
   return change;
 }
+
+/**
+ * @brief Mutator: Append tag to list if not already present
+ *
+ * This will append an @c LCFGTag with the specified name to the
+ * @c LCFGTagList if the list does not already contain a tag with the
+ * same name. Note that the list does NOT take "ownership" of the
+ * string for the specified name.
+ *
+ * If the tag is successfully prepended the @c LCFG_CHANGE_ADDED value
+ * will be returned, if an error occurs the @c LCFG_CHANGE_ERROR will
+ * be returned along with a diagnostic message.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ * @param[in] tagname The tag name which will be added
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Integer value indicating type of change
+ *
+ */
 
 LCFGChange lcfgtaglist_mutate_add( LCFGTagList * taglist,
 				   const char * tagname,

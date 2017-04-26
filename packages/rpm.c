@@ -819,16 +819,6 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 }
 
 /**
- * @brief
- *
- *
- * @param[in]
- *
- * @return
- *
- */
-
-/**
  * @brief Write a package list to an rpmcfg file
  *
  * This can be used to create an rpmcfg file which is used as input by

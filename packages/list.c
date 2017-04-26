@@ -210,6 +210,7 @@ void lcfgpkglist_relinquish( LCFGPackageList * pkglist ) {
   if ( pkglist->_refcount > 0 )
     pkglist->_refcount -= 1;
 
+
   if ( pkglist->_refcount == 0 )
     lcfgpkglist_destroy(pkglist);
 
@@ -841,8 +842,8 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
  * will be returned. If an error occurs then the @c LCFG_CHANGE_ERROR
  * value will be returned.
  *
- * @param[in] Pointer to @c LCFGPackageList into which second list is merged
- * @param[in] Pointer to @c LCFGPackageList to be merged 
+ * @param[in] pkglist1 Pointer to @c LCFGPackageList into which second list is merged
+ * @param[in] pkglist2 Pointer to @c LCFGPackageList to be merged 
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return Integer value indicating type of change
@@ -896,7 +897,7 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
  * This sorts the nodes of the @c LCFGPackageList by using the 
  * @c lcfgpackage_compare() function.
  *
- * @param[in] ctxlist Pointer to @c LCFGPackageList
+ * @param[in] pkglist Pointer to @c LCFGPackageList
  *
  */
 

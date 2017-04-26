@@ -392,7 +392,7 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
  * an empty list will be returned.
  *
  * @param[in] contextdir Location of contexts directory
- * @param[out] newactive Reference to pointer to pending @c LCFGContextList
+ * @param[out] ctxlist Reference to pointer to pending @c LCFGContextList
  * @param[out] modtime Modification time of pending contexts file
  * @param[out] msg Pointer to any diagnostic messages.
  *
@@ -423,7 +423,7 @@ LCFGStatus lcfgcontext_load_pending( const char * contextdir,
  * an empty list will be returned.
  *
  * @param[in] contextdir Location of contexts directory
- * @param[out] newactive Reference to pointer to active @c LCFGContextList
+ * @param[out] ctxlist Reference to pointer to active @c LCFGContextList
  * @param[out] modtime Modification time of active contexts file
  * @param[out] msg Pointer to any diagnostic messages.
  *

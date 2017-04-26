@@ -1,3 +1,10 @@
+/**
+ * @file context/list.c
+ * @brief Functions for working with lists of LCFG contexts
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date: 2017-04-25 15:04:02 +0100 (Tue, 25 Apr 2017) $
+ * $Revision: 32496 $
+ */
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -454,11 +461,11 @@ bool lcfgctxlist_contains( const LCFGContextList * ctxlist,
  *      @c lcfgcontext_equals() function) then no change will occur
  *      and @c LCFG_CHANGE_NONE is returned.
  *    - If a context of the same name is already in the list but
- *      differs in value then the current @LCFGContext will be
+ *      differs in value then the current @c LCFGContext will be
  *      replaced with the new one and @c LCFG_CHANGE_MODIFIED is returned.
  *
- * @param[in] Pointer to @c LCFGContextList
- * @param[in] Pointer to @c LCFGContext
+ * @param[in] ctxlist Pointer to @c LCFGContextList
+ * @param[in] new_ctx Pointer to @c LCFGContext
  *
  * @return Integer value indicating type of change
  *

@@ -1751,7 +1751,7 @@ static bool walk_backwards_until( const char * input, size_t * len,
  * function.
  *
  * @param[in] input The package specification string.
- * @param[out] result Reference to the pointer for the @c LCFGPackage.
+ * @param[out] result Reference to the pointer for the new @c LCFGPackage.
  * @param[out] msg Pointer to any diagnostic messages.
  *
  * @return Status value indicating success of the process
@@ -3079,7 +3079,7 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
  * See the documentation for each function to see which options are
  * supported.
  *
- * @param[in] ctx Pointer to @c LCFGPackage
+ * @param[in] pkg Pointer to @c LCFGPackage
  * @param[in] defarch Default architecture string (may be @c NULL)
  * @param[in] style Integer indicating required style of formatting
  * @param[in] options Integer for any additional options
@@ -3125,8 +3125,8 @@ bool lcfgpackage_print( const LCFGPackage * pkg,
  * This can be used to assemble package-specific message, typically
  * this is used for generating diagnostic error messages.
  *
- * @param[in] Pointer to @c LCFGPackage
- * @param[in] Format string for message (and any additional arguments)
+ * @param[in] pkg Pointer to @c LCFGPackage
+ * @param[in] fmt Format string for message (and any additional arguments)
  *
  * @return Pointer to message string (call @c free(3) when no longer required)
  *

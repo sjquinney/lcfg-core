@@ -110,6 +110,7 @@ void * lcfgctx_yy_scan_string (const char * str, lcfgctx_yyscan_t ctxscanner );
  * @param[in] ctxlist Pointer to @c LCFGContextList
  * @param[in] expr Context query string
  * @param[out] result Integer result of evaluation
+ * @param[out] msg Pointer to any diagnostic messages
  *
  * @return Boolean indicating success
  *

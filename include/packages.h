@@ -402,7 +402,7 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
  * returned package structure. To retain the package call the
  * @c lcfgpackage_acquire() function.
  *
- * @param[in] pkglist Pointer to @c LCFGPackageNode
+ * @param[in] pkgnode Pointer to @c LCFGPackageNode
  *
  * @return Pointer to @c LCFGPackage structure
  *

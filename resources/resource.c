@@ -1,5 +1,5 @@
 /**
- * @file resource.c
+ * @file resources/resource.c
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date$
@@ -222,14 +222,8 @@ void lcfgresource_relinquish( LCFGResource * res ) {
  * @brief Destroy the resource
  *
  * When the specified @c LCFGResource is no longer required this will
- * free all associated memory.
- *
- * *Reference Counting:* There is support for very simple reference
- * counting which allows an @c LCFGResource to appear in multiple
- * lists. Incrementing and decrementing that reference counter is the
- * responsibility of the container code. If the reference count for
- * the specified resource is greater than zero this function will have
- * no affect.
+ * free all associated memory. There is support for reference counting
+ * so typically the @c lcfgresource_relinquish() function should be used.
  *
  * This will call @c free() on each parameter of the structure (or
  * @c lcfgtemplate_destroy() for the template parameter ) and then set each
@@ -311,7 +305,7 @@ bool lcfgresource_valid_name( const char * name ) {
  * @brief Check if the resource has a name
  *
  * Checks if the specified @c LCFGResource currently has a value set
- * for the name attribute. Although a name is required for an LCFG
+ * for the @e name attribute. Although a name is required for an LCFG
  * resource to be valid it is possible for the value of the name to be
  * set to @c NULL when the structure is first created.
  *
@@ -330,7 +324,7 @@ bool lcfgresource_has_name( const LCFGResource * res ) {
 /**
  * @brief Get the name for the resource
  *
- * This returns the value of the @E name parameter for the
+ * This returns the value of the @e name parameter for the
  * @c LCFGResource. If the resource does not currently have a @e
  * name then the pointer returned will be @c NULL.
  *
@@ -1489,7 +1483,7 @@ bool lcfgresource_has_derivation( const LCFGResource * res ) {
 /**
  * @brief Get the derivation for the resource
  *
- * This returns the value of the @E derivation parameter for the
+ * This returns the value of the @e derivation parameter for the
  * @c LCFGResource. If the resource does not currently have a
  * value for the @e derivation then the pointer returned will be
  * @c NULL.
@@ -1635,7 +1629,7 @@ bool lcfgresource_has_context( const LCFGResource * res ) {
 /**
  * @brief Get the context for the resource
  *
- * This returns the value of the @E context parameter for the
+ * This returns the value of the @e context parameter for the
  * @c LCFGResource. If the resource does not currently have a
  * value for the @e context then the pointer returned will be @c
  * NULL.
@@ -1763,7 +1757,7 @@ bool lcfgresource_has_comment( const LCFGResource * res ) {
 /**
  * @brief Get the comment for the resource
  *
- * This returns the value of the @E comment parameter for the @c
+ * This returns the value of the @e comment parameter for the @c
  * LCFGResource. If the resource does not currently have a
  * value for the @e comment then the pointer returned will be @c
  * NULL.
@@ -1968,7 +1962,7 @@ bool lcfgresource_is_active( const LCFGResource * res ) {
  * @param[in] name The name of the resource
  * @param[in] val_pfx The prefix for the value variable name
  * @param[in] type_pfx The prefix for the type variable name
- * @param[out] Reference to the pointer for the @c LCFGResource
+ * @param[out] result Reference to the pointer for the @c LCFGResource
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return Status value indicating success of the process
@@ -3141,8 +3135,9 @@ bool lcfgresource_equals( const LCFGResource * res1,
  * This can be used to assemble resource-specific message, typically
  * this is used for generating diagnostic error messages.
  *
- * @param[in] Pointer to @c LCFGResource
- * @param[in] Format string for message (and any additional arguments)
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] component Component name string (or @c NULL)
+ * @param[in] fmt Format string for message (and any additional arguments)
  *
  * @return Pointer to message string (call @c free(3) when no longer required)
  *

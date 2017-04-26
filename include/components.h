@@ -208,7 +208,7 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
  * @c lcfgcomponent_find_or_create_resource()
  *
  * @param[in] comp Pointer to @c LCFGComponent
- * @param[in] pkg Pointer to @c LCFGResource
+ * @param[in] res Pointer to @c LCFGResource
  * 
  * @return Integer value indicating type of change
  *

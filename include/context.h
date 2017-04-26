@@ -252,7 +252,7 @@ void lcfgctxlist_destroy(LCFGContextList * ctxlist);
  * returned context structure. To retain the context call the
  * @c lcfgcontext_acquire() function.
  *
- * @param[in] ctxlist Pointer to @c LCFGContextNode
+ * @param[in] ctxnode Pointer to @c LCFGContextNode
  *
  * @return Pointer to @c LCFGContext structure
  *

@@ -176,7 +176,7 @@ bool lcfgtag_matches( const LCFGTag * tag, const char * name );
  * returned tag structure. To retain the tag call the
  * @c lcfgtag_acquire() function.
  *
- * @param[in] taglist Pointer to @c LCFGTagNode
+ * @param[in] tagnode Pointer to @c LCFGTagNode
  *
  * @return Pointer to @c LCFGTag structure
  *

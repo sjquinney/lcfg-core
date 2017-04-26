@@ -1,3 +1,11 @@
+/**
+ * @file context/context.c
+ * @brief Functions for working with LCFG contexts
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date: 2017-04-25 15:04:02 +0100 (Tue, 25 Apr 2017) $
+ * $Revision: 32496 $
+ */
+
 #define _GNU_SOURCE /* for asprintf */
 
 #include <stdbool.h>
@@ -788,7 +796,7 @@ bool lcfgcontext_same_name( const LCFGContext * ctx1,
  * as an empty string.
  *
  * @param[in] ctx1 Pointer to @c LCFGContext struct
- * @param[in] ctx1 Pointer to @c LCFGContext struct
+ * @param[in] ctx2 Pointer to @c LCFGContext struct
  *
  * @return boolean which indicates if the values are the same
  *
@@ -813,7 +821,7 @@ bool lcfgcontext_same_value( const LCFGContext * ctx1,
  * the @e name and @e value attributes.
  *
  * @param[in] ctx1 Pointer to @c LCFGContext struct
- * @param[in] ctx1 Pointer to @c LCFGContext struct
+ * @param[in] ctx2 Pointer to @c LCFGContext struct
  *
  * @return boolean which indicates if the contexts are equal
  *
@@ -834,7 +842,7 @@ bool lcfgcontext_equals( const LCFGContext * ctx1,
  * compared.
  *
  * @param[in] ctx1 Pointer to @c LCFGContext struct
- * @param[in] ctx1 Pointer to @c LCFGContext struct
+ * @param[in] ctx2 Pointer to @c LCFGContext struct
  *
  * @return boolean which indicates if the contexts are identical
  *
