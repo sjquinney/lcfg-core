@@ -415,6 +415,7 @@ LCFGChange lcfgcomplist_transplant_components( LCFGComponentList * list1,
 LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
                                          LCFGComponentList ** result,
                                          const LCFGTagList * comps_wanted,
+					 LCFGOption options,
                                          char ** msg ) {
   assert( status_dir != NULL );
 
@@ -425,21 +426,29 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
     return LCFG_STATUS_ERROR;
   }
 
+  LCFGStatus status = LCFG_STATUS_OK;
+
+  /* Create the new empty component list which will eventually be returned */
+
+  LCFGComponentList * complist = lcfgcomplist_new();
+
   DIR * dh;
   if ( ( dh = opendir(status_dir) ) == NULL ) {
 
     if ( errno == ENOENT || errno == ENOTDIR ) {
-      lcfgutils_build_message( msg, "Status directory '%s' does not exist", status_dir );
+
+      if ( !(options&LCFG_OPT_ALLOW_NOEXIST) ) {
+	lcfgutils_build_message( msg, "Status directory '%s' does not exist", status_dir );
+	status = LCFG_STATUS_ERROR;
+      }
+
     } else {
       lcfgutils_build_message( msg, "Status directory '%s' is not readable", status_dir );
+      status = LCFG_STATUS_ERROR;
     }
 
-    return LCFG_STATUS_ERROR;
+    goto cleanup;
   }
-
-  LCFGStatus status = LCFG_STATUS_OK;
-
-  LCFGComponentList * complist = lcfgcomplist_new();
 
   struct dirent *entry;
   struct stat sb;
@@ -454,7 +463,7 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
     if ( !lcfgcomponent_valid_name(comp_name) ) continue;
 
     /* Ignore any filename which is not in the list of wanted components. */
-    if ( comps_wanted != NULL &&
+    if ( !lcfgtaglist_is_empty(comps_wanted) &&
          !lcfgtaglist_contains( comps_wanted, comp_name ) ) {
       continue;
     }
@@ -465,11 +474,11 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
 
       LCFGComponent * component = NULL;
       char * read_msg = NULL;
-      status = lcfgcomponent_from_statusfile( status_file,
-                                              &component,
-                                              comp_name,
-					      LCFG_OPT_NONE,
-                                              &read_msg );
+      status = lcfgcomponent_from_status_file( status_file,
+					       &component,
+					       comp_name,
+					       options,
+					       &read_msg );
 
       if ( status == LCFG_STATUS_ERROR ) {
         lcfgutils_build_message( msg, "Failed to read status file '%s': %s",
@@ -478,8 +487,7 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
 
       free(read_msg);
 
-      if ( status != LCFG_STATUS_ERROR &&
-	   !lcfgcomponent_is_empty(component) ) {
+      if ( status != LCFG_STATUS_ERROR && !lcfgcomponent_is_empty(component) ) {
 
         char * insert_msg = NULL;
         LCFGChange insert_rc =
@@ -507,7 +515,9 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
 
   closedir(dh);
 
-  if ( status != LCFG_STATUS_OK ) {
+ cleanup:
+
+  if ( status == LCFG_STATUS_ERROR ) {
     lcfgcomplist_destroy(complist);
     complist = NULL;
   }
@@ -519,6 +529,7 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
 
 LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
 				       const char * status_dir,
+				       LCFGOption options,
 				       char ** msg ) {
   assert( complist != NULL );
   assert( status_dir != NULL );
@@ -567,14 +578,14 @@ LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
 
     char * statfile = lcfgutils_catfile( status_dir, comp_name );
 
-    /* Sort the list of resources so that the statusfile is always
+    /* Sort the list of resources so that the status file is always
        produced in the same order - makes comparisons simpler. */
 
     lcfgcomponent_sort(cur_comp);
 
     char * comp_msg = NULL;
-    rc = lcfgcomponent_to_statusfile( cur_comp, statfile,
-				      LCFG_OPT_NONE, &comp_msg );
+    rc = lcfgcomponent_to_status_file( cur_comp, statfile,
+				       options, &comp_msg );
 
     if ( rc == LCFG_STATUS_ERROR ) {
       lcfgutils_build_message( msg, "Failed to write status file for '%s' component: %s",

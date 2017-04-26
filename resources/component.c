@@ -668,11 +668,11 @@ void lcfgcomponent_sort( LCFGComponent * comp ) {
  *
  */
 
-LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
-                                          LCFGComponent ** result,
-                                          const char * compname_in,
-					  LCFGOption options,
-                                          char ** msg ) {
+LCFGStatus lcfgcomponent_from_status_file( const char * filename,
+					   LCFGComponent ** result,
+					   const char * compname_in,
+					   LCFGOption options,
+					   char ** msg ) {
   assert( filename != NULL );
 
   *result = NULL;
@@ -1037,10 +1037,10 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
  *
  */
 
-LCFGStatus lcfgcomponent_to_statusfile( const LCFGComponent * comp,
-                                        const char * filename,
-					LCFGOption options,
-                                        char ** msg ) {
+LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
+					 const char * filename,
+					 LCFGOption options,
+					 char ** msg ) {
   assert( comp != NULL );
 
   bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);

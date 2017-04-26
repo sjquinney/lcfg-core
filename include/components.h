@@ -65,17 +65,17 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
                           FILE * out )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomponent_from_statusfile( const char * filename,
-                                          LCFGComponent ** result,
-                                          const char * compname,
-					  LCFGOption options,
-                                          char ** msg )
+LCFGStatus lcfgcomponent_from_status_file( const char * filename,
+					   LCFGComponent ** result,
+					   const char * compname,
+					   LCFGOption options,
+					   char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomponent_to_statusfile( const LCFGComponent * comp,
-                                        const char * filename,
-					LCFGOption options,
-                                        char ** msg )
+LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
+					 const char * filename,
+					 LCFGOption options,
+					 char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomponent_from_env( const char * compname,
@@ -333,11 +333,13 @@ LCFGChange lcfgcomplist_merge( LCFGComponentList * list1,
 LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
                                          LCFGComponentList ** complist,
                                          const LCFGTagList * comps_wanted,
+					 LCFGOption options,
                                          char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
                                        const char * status_dir,
+				       LCFGOption options,
                                        char ** msg )
   __attribute__((warn_unused_result));
 

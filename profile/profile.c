@@ -355,6 +355,7 @@ LCFGStatus lcfgprofile_from_status_dir( const char * status_dir,
   LCFGStatus rc = lcfgcomplist_from_status_dir( status_dir,
                                                 &components,
                                                 comps_wanted,
+						LCFG_OPT_NONE,
                                                 msg );
 
   /* It is NOT a failure if the directory does not contain any files
@@ -381,6 +382,7 @@ LCFGStatus lcfgprofile_to_status_dir( const LCFGProfile * profile,
 
   return lcfgcomplist_to_status_dir( profile->components,
 				     status_dir,
+				     LCFG_OPT_NONE,
 				     msg );
 
 }
