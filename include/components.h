@@ -53,6 +53,8 @@ void lcfgcomponent_destroy(LCFGComponent * comp);
 void lcfgcomponent_acquire(LCFGComponent * comp);
 void lcfgcomponent_relinquish(LCFGComponent * comp);
 
+bool lcfgcomponent_is_valid( const LCFGComponent * comp );
+
 bool lcfgcomponent_has_name(const LCFGComponent * comp);
 bool lcfgcomponent_valid_name(const char * name );
 char * lcfgcomponent_get_name(const LCFGComponent * comp);
@@ -346,6 +348,13 @@ LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
 				       LCFGOption options,
                                        char ** msg )
   __attribute__((warn_unused_result));
+
+LCFGTagList * lcfgcomplist_get_components_as_taglist(
+					        const LCFGComponent * complist,
+						LCFGOption options );
+
+char * lcfgcomplist_get_components_as_string(const LCFGComponentList * complist,
+					     LCFGOption options );
 
 /* Resource List iterator */
 

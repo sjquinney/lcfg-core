@@ -256,6 +256,23 @@ bool lcfgcomponent_valid_name(const char * name) {
 }
 
 /**
+ * @brief Check validity of component
+ *
+ * Checks the specified @c LCFGComponent to ensure that it is valid. For a
+ * component to be considered valid the pointer must not be @c NULL and
+ * the component must have a name.
+ *
+ * @param[in] comp Pointer to an @c LCFGComponent
+ *
+ * @return Boolean which indicates if component is valid
+ *
+ */
+
+bool lcfgcomponent_is_valid( const LCFGComponent * comp ) {
+  return ( comp != NULL && lcfgcomponent_has_name(comp) );
+}
+
+/**
  * @brief Check if the component has a name
  *
  * Checks if the specified @c LCFGComponent currently has a value set
@@ -1471,7 +1488,7 @@ LCFGChange lcfgcomponent_merge( LCFGComponent * comp,
  * then an empty tag list will be returned. Only those resources which
  * are considered to be @e active ( a priority value of zero or
  * greater) will be included unless the @c LCFG_OPT_ALL_PRIORITIES
- * option is specified.
+ * option is specified.  Will return @c NULL if an error occurs.
  *
  * To avoid memory leaks, when the list is no longer required the 
  * @c lcfgtaglist_relinquish() function should be called.
@@ -1565,6 +1582,7 @@ char * lcfgcomponent_get_resources_as_string( const LCFGComponent * comp,
 
   return res_as_str;
 }
+
 /**
  * @brief Import a component from the environment
  *

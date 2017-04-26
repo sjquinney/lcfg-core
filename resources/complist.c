@@ -834,4 +834,101 @@ LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
   return rc;
 }
 
+/**
+ * @brief Get the list of component names as a taglist
+ *
+ * This generates a new @c LCFGTagList which contains a list of
+ * component names for the @c LCFGComponentList. If the list is empty
+ * then an empty tag list will be returned. Will return @c NULL if an
+ * error occurs.
+ *
+ * To avoid memory leaks, when the list is no longer required the 
+ * @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ * @param[in] options Integer which controls behaviour.
+ *
+ * @return Pointer to a new @c LCFGTagList of component names
+ *
+ */
+
+LCFGTagList * lcfgcomplist_get_components_as_taglist(
+					        const LCFGComponent * complist,
+						LCFGOption options ) {
+  assert( complist != NULL );
+
+  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
+
+  LCFGTagList * comp_names = lcfgtaglist_new();
+
+  bool ok = true;
+
+  const LCFGComponentNode * cur_node = NULL;
+  for ( cur_node = lcfgcomplist_head(complist);
+        cur_node != NULL && ok;
+        cur_node = lcfgcomplist_next(cur_node) ) {
+
+    const LCFGComponent * comp = lcfgcomplist_component(cur_node);
+
+    /* Ignore any without names */
+    if ( !lcfgcomponent_is_valid(comp) ) continue;
+
+    const char * comp_name = lcfgcomponent_get_name(comp);
+
+    char * msg = NULL;
+    LCFGChange change = lcfgtaglist_mutate_add( comp_names, comp_name, &msg );
+    if ( change == LCFG_CHANGE_ERROR )
+      ok = false;
+
+    free(msg); /* Just ignoring any message */
+  }
+
+  if (!ok) {
+    lcfgtaglist_relinquish(comp_names);
+    comp_names = NULL;
+  }
+
+  return comp_names;
+}
+
+/**
+ * @brief Get the list of component names as a string
+ *
+ * This generates a new string which contains a space-separated sorted
+ * list of component names for the @c LCFGComponentList. If the list
+ * is empty then an empty string will be returned.
+ *
+ * @param[in] complist Pointer to @c LCFGComponent
+ * @param[in] options Integer which controls behaviour.
+ *
+ * @return Pointer to a new string (call @c free(3) when no longer required)
+ *
+ */
+
+char * lcfgcomplist_get_components_as_string(const LCFGComponentList * complist,
+					     LCFGOption options ) {
+  assert( complist != NULL );
+
+  if ( lcfgcomplist_is_empty(complist) ) return strdup("");
+
+  LCFGTagList * comp_names =
+    lcfgcomplist_get_components_as_taglist( complist, options );
+
+  if ( comp_names == NULL ) return NULL;
+
+  lcfgtaglist_sort(comp_names);
+
+  size_t buf_len = 0;
+  char * res_as_str = NULL;
+
+  if ( lcfgtaglist_to_string( comp_names, 0, &res_as_str, &buf_len ) < 0 ) {
+    free(res_as_str);
+    res_as_str = NULL;
+  }
+
+  lcfgtaglist_relinquish(comp_names);
+
+  return res_as_str;
+}
+
 /* eof */
