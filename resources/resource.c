@@ -302,6 +302,23 @@ bool lcfgresource_valid_name( const char * name ) {
 }
 
 /**
+ * @brief Check validity of resource
+ *
+ * Checks the specified @c LCFGResource to ensure that it is valid. For a
+ * resource to be considered valid the pointer must not be @c NULL and
+ * the resource must have a name.
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ *
+ * @return Boolean which indicates if resource is valid
+ *
+ */
+
+bool lcfgresource_is_valid( const LCFGResource * res ) {
+  return ( res != NULL && lcfgresource_has_name(res) );
+}
+
+/**
  * @brief Check if the resource has a name
  *
  * Checks if the specified @c LCFGResource currently has a value set

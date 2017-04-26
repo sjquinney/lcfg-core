@@ -90,6 +90,8 @@ void lcfgresource_acquire( LCFGResource * res );
 void lcfgresource_relinquish( LCFGResource * res );
 void lcfgresource_destroy(LCFGResource * res);
 
+bool lcfgresource_is_valid( const LCFGResource * res );
+
 /* Resources: Names */
 
 bool lcfgresource_valid_name( const char * name );
