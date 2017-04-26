@@ -208,9 +208,10 @@ LCFGStatus lcfgprofile_apply_overrides( LCFGProfile * profile1,
   LCFGStatus status = LCFG_STATUS_OK;
   if ( lcfgprofile_has_components(profile1) &&
        lcfgprofile_has_components(profile2) ) {
-    LCFGChange change = lcfgcomplist_apply_overrides( profile1->components,
-                                                      profile2->components,
-                                                      msg );
+    LCFGChange change = lcfgcomplist_merge( profile1->components,
+					    profile2->components,
+					    false,
+					    msg );
 
     if ( change == LCFG_CHANGE_ERROR )
       status = LCFG_STATUS_ERROR;
@@ -261,12 +262,12 @@ LCFGStatus lcfgprofile_apply_overrides( LCFGProfile * profile1,
   return status;
 }
 
-LCFGStatus lcfgprofile_transplant_components( LCFGProfile * profile1,
+LCFGChange lcfgprofile_transplant_components( LCFGProfile * profile1,
 					      const LCFGProfile * profile2,
 					      char ** msg ) {
 
   if ( profile2 == NULL || !lcfgprofile_has_components(profile2) )
-    return true;
+    return LCFG_CHANGE_NONE;
 
   if ( profile1->components == NULL )
     profile1->components = lcfgcomplist_new();

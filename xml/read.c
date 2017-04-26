@@ -345,9 +345,12 @@ LCFGStatus lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
         }
 
         if (ok) {
-          ok = lcfgprofile_transplant_components( main_profile,
-                                                  override_profile,
-                                                  msg );
+          LCFGChange transplant_rc
+	    = lcfgprofile_transplant_components( main_profile,
+						 override_profile,
+						 msg );
+	  if ( transplant_rc == LCFG_CHANGE_ERROR )
+	    ok = false;
         }
 
 	lcfgprofile_destroy(override_profile);

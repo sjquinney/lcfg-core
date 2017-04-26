@@ -143,7 +143,7 @@ LCFGChange lcfgcomplist_insert_next( LCFGComponentList * complist,
       complist->tail = new_node;
 
     new_node->next = complist->head;
-    complist->head     = new_node;
+    complist->head = new_node;
 
   } else {
     
@@ -171,7 +171,7 @@ LCFGChange lcfgcomplist_remove_next( LCFGComponentList * complist,
 
   if ( compnode == NULL ) { /* HEAD */
 
-    old_node = complist->head;
+    old_node       = complist->head;
     complist->head = complist->head->next;
 
     if ( lcfgcomplist_size(complist) == 1 )
@@ -181,7 +181,7 @@ LCFGChange lcfgcomplist_remove_next( LCFGComponentList * complist,
 
     if ( compnode->next == NULL ) return LCFG_CHANGE_ERROR;
 
-    old_node = compnode->next;
+    old_node       = compnode->next;
     compnode->next = compnode->next->next;
 
     if ( compnode->next == NULL )
@@ -211,10 +211,13 @@ LCFGComponentNode * lcfgcomplist_find_node( const LCFGComponentList * complist,
 	cur_node != NULL && result == NULL;
 	cur_node = lcfgcomplist_next(cur_node) ) {
 
-    const LCFGComponent * cur_comp = lcfgcomplist_component(cur_node);
-    const char * cur_name = lcfgcomponent_get_name(cur_comp);
+    const LCFGComponent * comp = lcfgcomplist_component(cur_node);
 
-    if ( cur_name != NULL && strcmp( cur_name, want_name ) == 0 )
+    if ( !lcfgcomponent_has_name(comp) ) continue;
+
+    const char * comp_name = lcfgcomponent_get_name(comp);
+
+    if ( strcmp( comp_name, want_name ) == 0 )
       result = (LCFGComponentNode *) cur_node;
 
   }
@@ -283,8 +286,6 @@ bool lcfgcomplist_print( const LCFGComponentList * complist,
 
   if ( lcfgcomplist_is_empty(complist) ) return true;
 
-  bool style_is_status = ( style == LCFG_RESOURCE_STYLE_STATUS );
-
   bool ok = true;
 
   const LCFGComponentNode * cur_node = NULL;
@@ -292,26 +293,9 @@ bool lcfgcomplist_print( const LCFGComponentList * complist,
 	cur_node != NULL && ok;
 	cur_node = lcfgcomplist_next(cur_node) ) {
 
-    LCFGComponent * cur_comp = lcfgcomplist_component(cur_node);
+    const LCFGComponent * comp = lcfgcomplist_component(cur_node);
 
-    char * msg = NULL;
-
-    if (style_is_status) {
-      /* Sort the list of resources so that the statusfile is always
-	 produced in the same order - makes comparisons simpler. */
-
-      lcfgcomponent_sort(cur_comp);
-
-      ok = lcfgcomponent_to_statusfile( cur_comp, NULL, LCFG_OPT_NONE, &msg );
-    } else {
-      ok = lcfgcomponent_print( cur_comp, style, options, out );
-    }
-
-    if ( msg != NULL ) {
-      fprintf( stderr, "%s", msg );
-      free(msg);
-    }
-
+    ok = lcfgcomponent_print( comp, style, options, out );
   }
 
   return ok;
@@ -322,9 +306,12 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
                                               LCFGComponent * new_comp,
                                               char ** msg ) {
   assert( complist != NULL );
+  assert( new_comp != NULL );
 
-  *msg = NULL;
   LCFGChange result = LCFG_CHANGE_ERROR;
+
+  /* Name for component is required */
+  if ( !lcfgcomponent_has_name(new_res) ) return LCFG_CHANGE_ERROR;
 
   LCFGComponentNode * cur_node =
     lcfgcomplist_find_node( complist, lcfgcomponent_get_name(new_comp) );
@@ -347,16 +334,17 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
   return result;
 }
 
-LCFGChange lcfgcomplist_apply_overrides( LCFGComponentList * list1,
-                                         const LCFGComponentList * list2,
-                                         char ** msg ) {
+LCFGChange lcfgcomplist_merge( LCFGComponentList * list1,
+			       const LCFGComponentList * list2,
+			       bool take_new,
+			       char ** msg ) {
   assert( list1 != NULL );
-
-  /* Only overriding existing components so nothing to do if list is empty */
-  if ( lcfgcomplist_is_empty(list1) ) return LCFG_CHANGE_NONE;
 
   /* No overrides to apply if second list is empty */
   if ( lcfgcomplist_is_empty(list2) ) return LCFG_CHANGE_NONE;
+
+  /* Only overriding existing components so nothing to do if list is empty */
+  if ( lcfgcomplist_is_empty(list1) && !take_new ) return LCFG_CHANGE_NONE;
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
@@ -366,20 +354,24 @@ LCFGChange lcfgcomplist_apply_overrides( LCFGComponentList * list1,
 	cur_node = lcfgcomplist_next(cur_node) ) {
 
     LCFGComponent * override_comp = lcfgcomplist_component(cur_node);
+    if ( !lcfgcomponent_has_name(override_comp) ) continue;
+
     const char * comp_name =  lcfgcomponent_get_name(override_comp);
 
     LCFGComponent * target_comp =
       lcfgcomplist_find_component( list1, comp_name );
 
+    LCFGChange rc = LCFG_CHANGE_NONE;
     if ( target_comp != NULL ) {
-      LCFGChange rc = lcfgcomponent_merge( target_comp, override_comp, msg );
+      rc = lcfgcomponent_merge( target_comp, override_comp, msg );
+    } else if ( take_new ) {
+      rc = lcfgcomplist_append( list1, override_comp );
+    }
 
-      if ( rc == LCFG_CHANGE_ERROR ) {
-        change = LCFG_CHANGE_ERROR;
-      } else if ( rc != LCFG_CHANGE_NONE ) {
-        change = LCFG_CHANGE_MODIFIED;
-      }
-
+    if ( rc == LCFG_CHANGE_ERROR ) {
+      change = LCFG_CHANGE_ERROR;
+    } else if ( rc != LCFG_CHANGE_NONE ) {
+      change = LCFG_CHANGE_MODIFIED;
     }
 
   }
@@ -387,29 +379,34 @@ LCFGChange lcfgcomplist_apply_overrides( LCFGComponentList * list1,
   return change;
 }
 
-LCFGStatus lcfgcomplist_transplant_components( LCFGComponentList * list1,
+LCFGChange lcfgcomplist_transplant_components( LCFGComponentList * list1,
 					       const LCFGComponentList * list2,
 					       char ** msg ) {
   assert( list1 != NULL );
 
   if ( lcfgcomplist_is_empty(list2) ) return LCFG_STATUS_OK;
 
-  LCFGStatus status = LCFG_STATUS_OK;
+  LCFGStatus change = LCFG_CHANGE_NONE;
 
   const LCFGComponentNode * cur_node = NULL;
   for ( cur_node = lcfgcomplist_head(list2);
-	cur_node != NULL && status != LCFG_STATUS_ERROR;
+	cur_node != NULL && change != LCFG_CHANGE_ERROR;
 	cur_node = lcfgcomplist_next(cur_node) ) {
 
     LCFGComponent * cur_comp = lcfgcomplist_component(cur_node);
 
-    if ( lcfgcomplist_insert_or_replace_component( list1, cur_comp, msg )
-         == LCFG_CHANGE_ERROR )
-      status = LCFG_STATUS_ERROR;
+    LCFGChange rc =
+      lcfgcomplist_insert_or_replace_component( list1, cur_comp, msg );
+
+    if ( rc == LCFG_CHANGE_ERROR ) {
+      change = LCFG_CHANGE_ERROR;
+    } else if ( rc != LCFG_CHANGE_NONE ) {
+      change = LCFG_CHANGE_MODIFIED;
+    }
 
   }
 
-  return status;
+  return change;
 }
 
 LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
@@ -417,7 +414,6 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
                                          const LCFGTagList * comps_wanted,
                                          char ** msg ) {
 
-  *msg = NULL;
   *result = NULL;
 
   if ( isempty(status_dir) ) {
@@ -502,8 +498,7 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
     free(status_file);
     status_file = NULL;
 
-    if ( status != LCFG_STATUS_OK )
-      break;
+    if ( status != LCFG_STATUS_OK ) break;
   }
 
   closedir(dh);

@@ -440,7 +440,7 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
 
     if ( resnode->next == NULL ) return LCFG_CHANGE_ERROR;
 
-    old_node = resnode->next;
+    old_node      = resnode->next;
     resnode->next = resnode->next->next;
 
     if ( resnode->next == NULL )
@@ -514,6 +514,8 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
 
     export_res = lcfgtaglist_new();
   }
+
+  /* Preallocate string buffer for efficiency */
 
   size_t buf_size = 256;
   char * buffer = calloc( buf_size, sizeof(char) );
@@ -1165,11 +1167,11 @@ LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
 
     const LCFGResource * res = lcfgcomponent_resource(cur_node); 
 
-    if ( !lcfgresource_is_active(res) ) continue;
+    if ( !lcfgresource_has_name(res) || !lcfgresource_is_active(res) ) continue;
 
     const char * res_name = lcfgresource_get_name(res);
 
-    if ( res_name != NULL && strcmp( res_name, name ) == 0 )
+    if ( strcmp( res_name, name ) == 0 )
       result = (LCFGResourceNode *) cur_node;
 
   }
@@ -1382,6 +1384,7 @@ LCFGChange lcfgcomponent_insert_or_replace_resource(
                                               LCFGResource * new_res,
                                               char ** msg ) {
   assert( comp != NULL );
+  assert( new_res != NULL );
 
   LCFGChange result = LCFG_CHANGE_ERROR;
 

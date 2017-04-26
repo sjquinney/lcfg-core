@@ -319,14 +319,15 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
                                               char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomplist_transplant_components( LCFGComponentList * list1,
+LCFGChange lcfgcomplist_transplant_components( LCFGComponentList * list1,
                                                const LCFGComponentList * list2,
                                                char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgcomplist_apply_overrides( LCFGComponentList * list1,
-                                         const LCFGComponentList * list2,
-                                         char ** msg )
+LCFGChange lcfgcomplist_merge( LCFGComponentList * list1,
+			       const LCFGComponentList * list2,
+			       bool take_new,
+			       char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,

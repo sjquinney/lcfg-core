@@ -81,7 +81,7 @@ LCFGChange lcfgprofile_insert_or_replace_component( LCFGProfile   * profile,
                                                     char ** msg )
   __attribute__((nonnull (1,2))) __attribute__((warn_unused_result));
 
-LCFGStatus lcfgprofile_transplant_components( LCFGProfile * profile1,
+LCFGChange lcfgprofile_transplant_components( LCFGProfile * profile1,
 					      const LCFGProfile * profile2,
 					      char ** msg )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
