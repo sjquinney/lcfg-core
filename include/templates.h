@@ -62,7 +62,7 @@ LCFGTemplate * lcfgtemplate_find( const LCFGTemplate * head_template,
                                   const char * field_name );
 
 char * lcfgresource_build_name( const LCFGTemplate * templates,
-                                const LCFGTagList  * taglist,
+                                LCFGTagList  * taglist,
                                 const char * field_name,
                                 char ** msg );
 
