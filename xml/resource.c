@@ -236,7 +236,7 @@ LCFGStatus lcfgxml_process_record( xmlTextReaderPtr reader,
       current_tags = lcfgtaglist_new();
 
     char * tagmsg = NULL;
-    if ( lcfgtaglist_mutate_extra( current_tags, tagname, &tagmsg )
+    if ( lcfgtaglist_mutate_append( current_tags, tagname, &tagmsg )
          == LCFG_CHANGE_ERROR ) {
       status = LCFG_STATUS_ERROR;
       lcfgxml_set_error_message( errmsg, "Failed to append tag '%s' to list of current tags: %s", tagname, tagmsg );
@@ -376,7 +376,7 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
       current_tags = lcfgtaglist_new();
 
     char * tagmsg = NULL;
-    if ( lcfgtaglist_mutate_extra( current_tags, tagname, &tagmsg )
+    if ( lcfgtaglist_mutate_append( current_tags, tagname, &tagmsg )
          == LCFG_CHANGE_ERROR ) {
       status = LCFG_STATUS_ERROR;
       lcfgxml_set_error_message( errmsg, "Failed to append tag '%s' to list of current tags: %s", tagname, tagmsg );
@@ -551,7 +551,7 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
               child_tags = lcfgtaglist_new();
 
             char * tagmsg = NULL;
-            if ( lcfgtaglist_mutate_extra( child_tags, child_tagname, &tagmsg )
+            if ( lcfgtaglist_mutate_append( child_tags, child_tagname, &tagmsg )
                  == LCFG_CHANGE_ERROR ) {
 
               status = LCFG_STATUS_ERROR;

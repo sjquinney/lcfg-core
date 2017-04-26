@@ -199,6 +199,22 @@ bool lcfgtag_matches( const LCFGTag * tag, const char * name );
 #define lcfgtaglist_append_tag(taglist, tag) ( lcfgtaglist_insert_next( taglist, lcfgtaglist_tail(taglist), tag ) )
 
 /**
+ * @brief Prepend a tag to a list
+ *
+ * This is a simple macro wrapper around the
+ * @c lcfgtaglist_insert_next() function which can be used to prepend
+ * a tag structure on to the start of the specified tag list.
+ *
+ * @param[in] taglist Pointer to @c LCFGTagList
+ * @param[in] tag Pointer to @c LCFGTag
+ * 
+ * @return Integer value indicating type of change
+ *
+ */
+
+#define lcfgtaglist_prepend_tag(taglist, tag) ( lcfgtaglist_insert_next( taglist, NULL, tag ) )
+
+/**
  * @brief A structure to wrap an LCFG tag as a doubly-linked list item
  */
 
@@ -244,11 +260,6 @@ LCFGChange lcfgtaglist_remove_tag( LCFGTagList * taglist,
                                    LCFGTag ** tag )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgtaglist_append_string( LCFGTagList * taglist,
-                                      const char * tagname,
-                                      char ** msg )
-  __attribute__((warn_unused_result));
-
 LCFGTagNode * lcfgtaglist_find_node( const LCFGTagList * taglist,
                                      const char * name );
 
@@ -275,12 +286,26 @@ void lcfgtaglist_sort( LCFGTagList * taglist );
 
 /* Mutators */
 
-LCFGChange lcfgtaglist_mutate_add( LCFGTagList * taglist, const char * name,
+LCFGChange lcfgtaglist_mutate_append( LCFGTagList * taglist,
+                                      const char * tagname,
+                                      char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgtaglist_mutate_prepend( LCFGTagList * taglist,
+                                      const char * tagname,
+                                      char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgtaglist_mutate_add( LCFGTagList * taglist,
+				   const char * tagname,
                                    char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgtaglist_mutate_extra( LCFGTagList * taglist, const char * name,
-                                     char ** msg )
+LCFGChange lcfgtaglist_mutate_replace( LCFGTagList * taglist,
+				       const char * old_name,
+				       const char * new_name,
+				       bool global,
+				       char ** msg )
   __attribute__((warn_unused_result));
 
 /**
