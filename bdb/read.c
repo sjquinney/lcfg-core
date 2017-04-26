@@ -78,7 +78,7 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
   lcfgbdb_close_db(dbh);
 
   if ( status != LCFG_STATUS_OK ) {
-    lcfgprofile_relinquish(profile);
+    lcfgprofile_destroy(profile);
     profile = NULL;
   }
 
