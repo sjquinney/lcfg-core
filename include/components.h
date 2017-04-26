@@ -271,7 +271,7 @@ LCFGComponentList * lcfgcomplist_new(void);
 
 void lcfgcomplist_destroy(LCFGComponentList * complist);
 void lcfgcomplist_acquire(LCFGComponentList * complist);
-void lcfgcomplist_relinquish(LCFGComponent * complist);
+void lcfgcomplist_relinquish(LCFGComponentList * complist);
 
 LCFGChange lcfgcomplist_insert_next( LCFGComponentList * complist,
                                      LCFGComponentNode * compnode,

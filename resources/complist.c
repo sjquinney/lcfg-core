@@ -115,7 +115,7 @@ void lcfgcomplist_acquire(LCFGComponentList * complist) {
  *
  */
 
-void lcfgcomplist_relinquish(LCFGComponent * complist) {
+void lcfgcomplist_relinquish(LCFGComponentList * complist) {
 
   if ( complist == NULL ) return;
 
@@ -314,7 +314,7 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
   LCFGChange result = LCFG_CHANGE_ERROR;
 
   /* Name for component is required */
-  if ( !lcfgcomponent_has_name(new_res) ) return LCFG_CHANGE_ERROR;
+  if ( !lcfgcomponent_has_name(new_comp) ) return LCFG_CHANGE_ERROR;
 
   LCFGComponentNode * cur_node =
     lcfgcomplist_find_node( complist, lcfgcomponent_get_name(new_comp) );
