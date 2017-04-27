@@ -235,7 +235,7 @@ void lcfgcomplist_relinquish(LCFGComponentList * complist) {
  * value is returned, if an error occurs then @c LCFG_CHANGE_ERROR is
  * returned.
  *
- * @param[in] complist Pointer to @c LCFGComponent
+ * @param[in] complist Pointer to @c LCFGComponentList
  * @param[in] compnode Pointer to @c LCFGComponentNode
  * @param[in] comp Pointer to @c LCFGComponent
  * 
@@ -296,7 +296,7 @@ LCFGChange lcfgcomplist_insert_next( LCFGComponentList * complist,
  * avoid memory leaks, when the struct is no longer required it should
  * be released by calling @c lcfgcomponent_relinquish().
  *
- * @param[in] complist Pointer to @c LCFGComponent
+ * @param[in] complist Pointer to @c LCFGComponentList
  * @param[in] compnode Pointer to @c LCFGComponentNode
  * @param[out] comp Pointer to @c LCFGComponent
  * 
@@ -426,7 +426,7 @@ bool lcfgcomplist_has_component(  const LCFGComponentList * complist,
  * the parent @c LCFGComponentList is destroyed you would need to
  * call the @c lcfgcomponent_acquire() function.
  *
- * @param[in] complist Pointer to @c LCFGComponent to be searched
+ * @param[in] complist Pointer to @c LCFGComponentList to be searched
  * @param[in] want_name The name of the required component
  *
  * @return Pointer to an @c LCFGComponent (or the @c NULL value).
@@ -1125,7 +1125,7 @@ LCFGTagList * lcfgcomplist_get_components_as_taglist(
  * list of component names for the @c LCFGComponentList. If the list
  * is empty then an empty string will be returned.
  *
- * @param[in] complist Pointer to @c LCFGComponent
+ * @param[in] complist Pointer to @c LCFGComponentList
  * @param[in] options Integer which controls behaviour.
  *
  * @return Pointer to a new string (call @c free(3) when no longer required)
