@@ -253,9 +253,13 @@ void lcfgcomponent_sort( LCFGComponent * comp );
 
 /* Component list */
 
+/**
+ * @brief A structure to wrap an LCFG component as a single-linked list item
+ */
+
 struct LCFGComponentNode {
-  LCFGComponent * component;
-  struct LCFGComponentNode * next;
+  LCFGComponent * component;       /**< Pointer to the component structure */
+  struct LCFGComponentNode * next; /**< Next node in the list */
 };
 
 typedef struct LCFGComponentNode LCFGComponentNode;
@@ -264,10 +268,16 @@ LCFGComponentNode * lcfgcomponentnode_new(LCFGComponent * comp);
 
 void lcfgcomponentnode_destroy(LCFGComponentNode * compnode);
 
+/**
+ * @brief A structure to represent a list of LCFG components
+ */
+
 struct LCFGComponentList {
-  LCFGComponentNode * head;
-  LCFGComponentNode * tail;
-  unsigned int size;
+  /*@{*/
+  LCFGComponentNode * head; /**< The first resource node in the list */
+  LCFGComponentNode * tail; /**< The last resource node in the list */
+  unsigned int size;        /**< The length of the list */
+  /*@}*/
   unsigned int _refcount;
 };
 
@@ -308,14 +318,115 @@ bool lcfgcomplist_print( const LCFGComponentList * complist,
                          FILE * out )
   __attribute__((warn_unused_result));
 
+/**
+ * @brief Retrieve the first component node in the list
+ *
+ * This is a simple macro which can be used to get the first component
+ * node structure in the list. Note that if the list is empty this
+ * will be the @c NULL value. To retrieve the component from this node
+ * use @c lcfgcomplist_component()
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ *
+ * @return Pointer to first @c LCFGComponentNode structure in list
+ *
+ */
+
 #define lcfgcomplist_head(complist) ((complist)->head)
+
+/**
+ * @brief Retrieve the last component node in the list
+ *
+ * This is a simple macro which can be used to get the last component
+ * node structure in the list. Note that if the list is empty this
+ * will be the @c NULL value. To retrieve the component from this node
+ * use @c lcfgcomplist_component()
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ *
+ * @return Pointer to last @c LCFGComponentNode structure in list
+ *
+ */
+
 #define lcfgcomplist_tail(complist) ((complist)->tail)
+
+/**
+ * @brief Get the number of nodes in the list
+ *
+ * This is a simple macro which can be used to get the length of the
+ * single-linked component list.
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ *
+ * @return Integer length of the list of components
+ *
+ */
+
 #define lcfgcomplist_size(complist) ((complist)->size)
+
+/**
+ * @brief Test if the list has no components
+ *
+ * This is a simple macro which can be used to test if the
+ * single-linked list of components contains any nodes.
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ *
+ * @return Boolean which indicates whether the list contains any nodes
+ *
+ */
 
 #define lcfgcomplist_is_empty(complist) ( complist == NULL || (complist)->size == 0)
 
+/**
+ * @brief Retrieve the next component node in the list
+ *
+ * This is a simple macro which can be used to fetch the next node in
+ * the single-linked component list for a given node. If the node
+ * specified is the final item in the list this will return a @c NULL
+ * value.
+ *
+ * @param[in] compnode Pointer to current @c LCFGComponentNode
+ *
+ * @return Pointer to next @c LCFGComponentNode
+ */
+
 #define lcfgcomplist_next(compnode)     ((compnode)->next)
+
+/**
+ * @brief Retrieve the component for a list node
+ *
+ * This is a simple macro which can be used to get the component
+ * structure from the specified node. 
+ *
+ * Note that this does @b NOT increment the reference count for the
+ * returned component structure. To retain the component call the
+ * @c lcfgcomponent_acquire() function.
+ *
+ * @param[in] compnode Pointer to @c LCFGComponentNode
+ *
+ * @return Pointer to @c LCFGComponent structure
+ *
+ */
+
 #define lcfgcomplist_component(compnode) ((compnode)->component)
+
+/**
+ * @brief Append a component to a list
+ *
+ * This is a simple macro wrapper around the @c
+ * lcfgcomplist_insert_next() function which can be used to simply
+ * append a component structure on to the end of the specified
+ * list. Depending on the situation it may be more appropriate to use
+ * one of @c lcfgcomplist_insert_or_replace_component() or
+ * @c lcfgcomplist_find_or_create_component()
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ * @param[in] comp Pointer to @c LCFGComponent
+ * 
+ * @return Integer value indicating type of change
+ *
+ */
 
 #define lcfgcomplist_append(complist, comp) ( lcfgcomplist_insert_next( complist, lcfgcomplist_tail(complist), comp ) )
 
