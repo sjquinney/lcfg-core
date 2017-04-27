@@ -1,3 +1,11 @@
+/**
+ * @file packages/list.c
+ * @brief Functions for working with lists of LCFG packages
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date$
+ * $Revision$
+ */
+
 #define _WITH_GETLINE /* for BSD */
 
 #include <errno.h>

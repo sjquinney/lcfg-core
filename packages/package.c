@@ -1,3 +1,11 @@
+/**
+ * @file packages/package.c
+ * @brief Functions for working with LCFG packages
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date$
+ * $Revision$
+ */
+
 #define _GNU_SOURCE /* for asprintf */
 
 #include <stdarg.h>
