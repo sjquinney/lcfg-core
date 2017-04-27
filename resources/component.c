@@ -935,8 +935,8 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
                                  char ** msg ) {
   assert( comp != NULL );
 
-  if ( lcfgcomponent_is_empty(comp) ) return LCFG_STATUS_OK;
-  if ( !lcfgcomponent_has_name(comp) ) return LCFG_STATUS_ERROR;
+  if ( !lcfgcomponent_is_valid(comp) ) return LCFG_STATUS_ERROR;
+  if ( lcfgcomponent_is_empty(comp) )  return LCFG_STATUS_OK;
 
   bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
   bool all_values     = (options&LCFG_OPT_ALL_VALUES);
@@ -944,7 +944,6 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
   LCFGStatus status = LCFG_STATUS_OK;
 
   const char * comp_name = lcfgcomponent_get_name(comp);
-  size_t name_len = strlen(comp_name);
 
   if ( val_pfx == NULL )
     val_pfx = default_val_pfx;
