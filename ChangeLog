@@ -1,6 +1,208 @@
-2017-04-25  SVN: new release
+2017-04-27  SVN: new release
 
-	* Release: 1.36.0
+	* Release: 1.37.0
+
+2017-04-27 13:33  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/complist.c: minor doc fixes
+
+2017-04-27 13:30  squinney@INF.ED.AC.UK
+
+	* resources/complist.c: Added docs for
+	  lcfgcomplist_transplant_components and lcfgcomplist_merge
+
+2017-04-27 13:19  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/rpm.c: fixed doc header
+
+2017-04-27 13:19  squinney@INF.ED.AC.UK
+
+	* Doxyfile.in: Avoid producing docs for parse_pkgspec
+
+2017-04-27 13:11  squinney@INF.ED.AC.UK
+
+	* include/components.h, lcfg.yml, resources/complist.c: Added
+	  complist_from_env and complist_to_env
+
+2017-04-27 13:10  squinney@INF.ED.AC.UK
+
+	* resources/component.c: Silence some compiler warnings
+
+2017-04-27 12:12  squinney@INF.ED.AC.UK
+
+	* include/components.h: Added docs for complist structures and
+	  macros
+
+2017-04-27 10:58  squinney@INF.ED.AC.UK
+
+	* packages/list.c, packages/package.c, packages/rpm.c: Added doc
+	  headers
+
+2017-04-27 10:57  squinney@INF.ED.AC.UK
+
+	* include/components.h, include/packages.h, include/tags.h,
+	  packages/iterator.c, resources/iterator.c, resources/tagiter.c:
+	  Standardised how the iterator functions work
+
+2017-04-26 20:17  squinney@INF.ED.AC.UK
+
+	* TODO: updated todo
+
+2017-04-26 20:16  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/complist.c,
+	  resources/component.c: Added
+	  lcfgcomplist_get_components_as_taglist and
+	  lcfgcomplist_get_components_as_string
+
+2017-04-26 16:35  squinney@INF.ED.AC.UK
+
+	* TODO, bdb/write.c, include/components.h, resources/component.c:
+	  Added lcfgcomponent_get_resources_as_taglist function (and use it
+	  in lcfgcomponent_get_resources_as_string
+
+2017-04-26 16:35  squinney@INF.ED.AC.UK
+
+	* include/resources.h, resources/resource.c: Added
+	  lcfgresource_is_valid function
+
+2017-04-26 16:34  squinney@INF.ED.AC.UK
+
+	* include/templates.h, resources/templates.c: due to reference
+	  counting cannot take taglist as a const in
+	  lcfgresource_build_name
+
+2017-04-26 15:58  squinney@INF.ED.AC.UK
+
+	* resources/complist.c: Began adding docs
+
+2017-04-26 15:30  squinney@INF.ED.AC.UK
+
+	* resources/complist.c, resources/component.c,
+	  resources/iterator.c, resources/tag.c, resources/tagiter.c,
+	  resources/taglist.c, resources/templates.c: More docs
+
+2017-04-26 14:03  squinney@INF.ED.AC.UK
+
+	* context/context.c, context/list.c, context/scanner.c,
+	  context/tools.c, include/common.h, include/components.h,
+	  include/context.h, include/packages.h, include/tags.h,
+	  packages/list.c, packages/package.c, packages/rpm.c,
+	  resources/component.c, resources/resource.c, resources/tag.c,
+	  resources/taglist.c: Lots of documentation improvements
+
+2017-04-26 13:37  squinney@INF.ED.AC.UK
+
+	* include/tags.h: added spec for lcfgtag_has_name
+
+2017-04-26 12:51  squinney@INF.ED.AC.UK
+
+	* resources/tag.c: Added docs for all functions
+
+2017-04-26 11:20  squinney@INF.ED.AC.UK
+
+	* include/tags.h, resources/tagiter.c, resources/taglist.c,
+	  xml/resource.c: reworked the tag list mutators slightly and added
+	  mutate_replace
+
+2017-04-26 11:19  squinney@INF.ED.AC.UK
+
+	* bdb/read.c: fixed call to lcfgprofile_destroy
+
+2017-04-26 11:18  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/complist.c: fixed spec for
+	  lcfgcomplist_relinquish
+
+2017-04-26 10:24  squinney@INF.ED.AC.UK
+
+	* include/components.h, profile/profile.c, resources/complist.c,
+	  resources/component.c: Slightly reworked status directory
+	  handling so that options can be passed through to the file
+	  read/write functions
+
+2017-04-26 10:10  squinney@INF.ED.AC.UK
+
+	* resources/complist.c, resources/component.c: Added some more
+	  assertions for safety
+
+2017-04-26 10:06  squinney@INF.ED.AC.UK
+
+	* include/components.h, include/profile.h, profile/profile.c,
+	  resources/complist.c, resources/component.c, xml/read.c:
+	  complist_apply_overrides is now complist_merge and takes an
+	  option which controls whether 'new' components are also copied in
+
+2017-04-26 09:31  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, include/components.h, profile/profile.c,
+	  resources/complist.c, xml/components.c: Added reference counting
+	  for component lists
+
+2017-04-25 20:29  squinney@INF.ED.AC.UK
+
+	* resources/templates.c: use taglist iterator when building
+	  resource name
+
+2017-04-25 20:29  squinney@INF.ED.AC.UK
+
+	* include/tags.h, resources/tagiter.c: Added support for walking
+	  taglist in reverse
+
+2017-04-25 20:07  squinney@INF.ED.AC.UK
+
+	* include/tags.h: Added lcfgtagiter functions
+
+2017-04-25 20:06  squinney@INF.ED.AC.UK
+
+	* resources/component.c: use iterator to walk through taglist
+
+2017-04-25 20:05  squinney@INF.ED.AC.UK
+
+	* resources/CMakeLists.txt: added tagiter.c to sources list
+
+2017-04-25 20:05  squinney@INF.ED.AC.UK
+
+	* resources/tag.c: tweaked docs
+
+2017-04-25 20:05  squinney@INF.ED.AC.UK
+
+	* resources/tagiter.c: Added taglist iterator
+
+2017-04-25 20:04  squinney@INF.ED.AC.UK
+
+	* resources/taglist.c: Fixed lcfgtaglist_from_string so that an
+	  empty string results in an empty list
+
+2017-04-25 18:58  squinney@INF.ED.AC.UK
+
+	* resources/CMakeLists.txt, resources/tag.c, resources/tags.c:
+	  renamed for clarity
+
+2017-04-25 18:57  squinney@INF.ED.AC.UK
+
+	* resources/CMakeLists.txt, resources/taglist.c, resources/tags.c:
+	  Split out taglist functions
+
+2017-04-25 14:04  squinney@INF.ED.AC.UK
+
+	* include/components.h, lcfg.yml, profile/profile.c,
+	  resources/complist.c, resources/component.c:
+	  lcfgcomponent_apply_overrides is now named lcfgcomponent_merge.
+	  Merge/overrides functions now return the change type instead of a
+	  simple status
+
+2017-04-25 14:04  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: minor tweaks to docs
+
+2017-04-25 12:58  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Improved error reporting in from_env
+
+2017-04-25 12:35  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.36.0
 
 2017-04-25 12:32  squinney@INF.ED.AC.UK
 
