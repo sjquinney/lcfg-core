@@ -28,13 +28,13 @@
  * To avoid memory leaks, when you no longer require access to the
  * iterator you should call @c lcfgtagiter_destroy().
  *
- * @param[in] taglist Pointer to @c LCFGTagList
+ * @param[in] list Pointer to @c LCFGTagList
  *
  * @return Pointer to new @c LCFGTagIterator
  *
  */
 
-LCFGTagIterator * lcfgtagiter_new( LCFGTagList * taglist ) {
+LCFGTagIterator * lcfgtagiter_new( LCFGTagList * list ) {
 
   LCFGTagIterator * iterator = malloc( sizeof(LCFGTagIterator) );
   if ( iterator == NULL ) {
@@ -42,9 +42,9 @@ LCFGTagIterator * lcfgtagiter_new( LCFGTagList * taglist ) {
     exit(EXIT_FAILURE);
   }
 
-  lcfgtaglist_acquire(taglist);
+  lcfgtaglist_acquire(list);
 
-  iterator->taglist = taglist;
+  iterator->list    = list;
   iterator->current = NULL;
 
   return iterator;
@@ -68,9 +68,9 @@ void lcfgtagiter_destroy( LCFGTagIterator * iterator ) {
 
   if ( iterator == NULL ) return;
 
-  lcfgtaglist_relinquish(iterator->taglist);
+  lcfgtaglist_relinquish(iterator->list);
 
-  iterator->taglist = NULL;
+  iterator->list    = NULL;
   iterator->current = NULL;
 
   free(iterator);
@@ -108,7 +108,7 @@ bool lcfgtagiter_has_next( LCFGTagIterator * iterator ) {
 
   bool has_next = false;
   if ( iterator->current == NULL )
-    has_next = !lcfgtaglist_is_empty(iterator->taglist);
+    has_next = !lcfgtaglist_is_empty(iterator->list);
   else
     has_next = ( lcfgtaglist_next(iterator->current) != NULL );
 
@@ -132,15 +132,15 @@ LCFGTag * lcfgtagiter_next(LCFGTagIterator * iterator) {
   if ( !lcfgtagiter_has_next(iterator) ) return NULL;
 
   if ( iterator->current == NULL )
-    iterator->current = lcfgtaglist_head(iterator->taglist);
+    iterator->current = lcfgtaglist_head(iterator->list);
   else
     iterator->current = lcfgtaglist_next(iterator->current);
 
-  LCFGTag * tag = NULL;
+  LCFGTag * next = NULL;
   if ( iterator->current != NULL )
-    tag = lcfgtaglist_tag(iterator->current);
+    next = lcfgtaglist_tag(iterator->current);
 
-  return tag;
+  return next;
 }
 
 /**
@@ -159,7 +159,7 @@ bool lcfgtagiter_has_prev( LCFGTagIterator * iterator ) {
 
   bool has_prev = false;
   if ( iterator->current == NULL )
-    has_prev = !lcfgtaglist_is_empty(iterator->taglist);
+    has_prev = !lcfgtaglist_is_empty(iterator->list);
   else
     has_prev = ( lcfgtaglist_prev(iterator->current) != NULL );
 
@@ -183,15 +183,15 @@ LCFGTag * lcfgtagiter_prev(LCFGTagIterator * iterator) {
   if ( !lcfgtagiter_has_prev(iterator) ) return NULL;
 
   if ( iterator->current == NULL )
-    iterator->current = lcfgtaglist_tail(iterator->taglist);
+    iterator->current = lcfgtaglist_tail(iterator->list);
   else
     iterator->current = lcfgtaglist_prev(iterator->current);
 
-  LCFGTag * tag = NULL;
+  LCFGTag * prev = NULL;
   if ( iterator->current != NULL )
-    tag = lcfgtaglist_tag(iterator->current);
+    prev = lcfgtaglist_tag(iterator->current);
 
-  return tag;
+  return prev;
 }
 
 /* eof */

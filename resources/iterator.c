@@ -28,13 +28,13 @@
  * To avoid memory leaks, when you no longer require access to the
  * iterator you should call @c lcfgresiter_destroy().
  *
- * @param[in] component Pointer to @c LCFGComponent
+ * @param[in] list Pointer to @c LCFGComponent
  *
  * @return Pointer to new @c LCFGResourceIterator
  *
  */
 
-LCFGResourceIterator * lcfgresiter_new( LCFGComponent * component ) {
+LCFGResourceIterator * lcfgresiter_new( LCFGComponent * list ) {
 
   LCFGResourceIterator * iterator = malloc( sizeof(LCFGResourceIterator) );
   if ( iterator == NULL ) {
@@ -42,10 +42,10 @@ LCFGResourceIterator * lcfgresiter_new( LCFGComponent * component ) {
     exit(EXIT_FAILURE);
   }
 
-  lcfgcomponent_acquire(component);
+  lcfgcomponent_acquire(list);
 
-  iterator->component = component;
-  iterator->current   = NULL;
+  iterator->list    = list;
+  iterator->current = NULL;
 
   return iterator;
 }
@@ -68,9 +68,9 @@ void lcfgresiter_destroy( LCFGResourceIterator * iterator ) {
 
   if ( iterator == NULL ) return;
 
-  lcfgcomponent_relinquish(iterator->component);
+  lcfgcomponent_relinquish(iterator->list);
 
-  iterator->component = NULL;
+  iterator->list = NULL;
   iterator->current = NULL;
 
   free(iterator);
@@ -108,7 +108,7 @@ bool lcfgresiter_has_next( LCFGResourceIterator * iterator ) {
 
   bool has_next = false;
   if ( iterator->current == NULL )
-    has_next = !lcfgcomponent_is_empty(iterator->component);
+    has_next = !lcfgcomponent_is_empty(iterator->list);
   else
     has_next = ( lcfgcomponent_next(iterator->current) != NULL );
 
@@ -132,15 +132,15 @@ LCFGResource * lcfgresiter_next(LCFGResourceIterator * iterator) {
   if ( !lcfgresiter_has_next(iterator) ) return NULL;
 
   if ( iterator->current == NULL )
-    iterator->current = lcfgcomponent_head(iterator->component);
+    iterator->current = lcfgcomponent_head(iterator->list);
   else
     iterator->current = lcfgcomponent_next(iterator->current);
 
-  LCFGResource * res = NULL;
+  LCFGResource * next = NULL;
   if ( iterator->current != NULL )
-    res = lcfgcomponent_resource(iterator->current);
+    next = lcfgcomponent_resource(iterator->current);
 
-  return res;
+  return next;
 }
 
 /* eof */

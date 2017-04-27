@@ -510,13 +510,12 @@ LCFGPackageList * lcfgpkglist_match( const LCFGPackageList * pkglist,
  */
 
 struct LCFGPackageIterator {
-  LCFGPackageList * pkglist; /**< The package list */
-  LCFGPackageNode * current; /**< Current location in the package list */
-  bool done;                 /**< Indicates if end has been reached */
+  LCFGPackageList * list; /**< The package list */
+  LCFGPackageNode * current; /**< Current location in the list */
 };
 typedef struct LCFGPackageIterator LCFGPackageIterator;
 
-LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * pkglist );
+LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * list );
 
 void lcfgpkgiter_destroy( LCFGPackageIterator * iterator );
 

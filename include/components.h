@@ -357,15 +357,17 @@ char * lcfgcomplist_get_components_as_string(const LCFGComponentList * complist,
 					     LCFGOption options );
 
 /* Resource List iterator */
+/**
+ * @brief Simple iterator for lists of resources (i.e. a component)
+ */
 
 struct LCFGResourceIterator {
-  LCFGComponent * component;
-  LCFGResourceNode * current;
-  bool done;
+  LCFGComponent * list;       /**< The resource list */
+  LCFGResourceNode * current; /**< Current location in the list */
 };
 typedef struct LCFGResourceIterator LCFGResourceIterator;
 
-LCFGResourceIterator * lcfgresiter_new( LCFGComponent * component );
+LCFGResourceIterator * lcfgresiter_new( LCFGComponent * list );
 
 void lcfgresiter_destroy( LCFGResourceIterator * iterator );
 void lcfgresiter_reset( LCFGResourceIterator * iterator );

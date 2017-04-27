@@ -1,3 +1,10 @@
+/**
+ * @file packages/iterator.c
+ * @brief Functions for iterating through LCFG package lists
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date$
+ * $Revision$
+ */
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -21,13 +28,13 @@
  * To avoid memory leaks, when you no longer require access to the
  * iterator you should call @c lcfgpkgiter_destroy().
  *
- * @param[in] pkglist Pointer to @c LCFGPackageList
+ * @param[in] list Pointer to @c LCFGPackageList
  *
  * @return Pointer to new @c LCFGPackageIterator
  *
  */
 
-LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * pkglist ) {
+LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * list ) {
 
   LCFGPackageIterator * iterator = malloc( sizeof(LCFGPackageIterator) );
   if ( iterator == NULL ) {
@@ -35,11 +42,10 @@ LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * pkglist ) {
     exit(EXIT_FAILURE);
   }
 
-  lcfgpkglist_acquire(pkglist);
+  lcfgpkglist_acquire(list);
 
-  iterator->pkglist = pkglist;
+  iterator->list    = list;
   iterator->current = NULL;
-  iterator->done    = false;
 
   return iterator;
 }
@@ -62,9 +68,9 @@ void lcfgpkgiter_destroy( LCFGPackageIterator * iterator ) {
 
   if ( iterator == NULL ) return;
 
-  lcfgpkglist_relinquish(iterator->pkglist);
+  lcfgpkglist_relinquish(iterator->list);
 
-  iterator->pkglist = NULL;
+  iterator->list    = NULL;
   iterator->current = NULL;
 
   free(iterator);
@@ -84,7 +90,6 @@ void lcfgpkgiter_destroy( LCFGPackageIterator * iterator ) {
 
 void lcfgpkgiter_reset( LCFGPackageIterator * iterator ) {
   iterator->current = NULL;
-  iterator->done    = false;
 }
 
 /**
@@ -102,24 +107,10 @@ void lcfgpkgiter_reset( LCFGPackageIterator * iterator ) {
 bool lcfgpkgiter_has_next( LCFGPackageIterator * iterator ) {
 
   bool has_next = false;
-
-  if ( !iterator->done ) {
-
-    /* not yet started and something available */
-    if ( iterator->current == NULL &&
-         iterator->pkglist != NULL &&
-         lcfgpkglist_size(iterator->pkglist) > 0 ) {
-      has_next = true;
-    } else {
-
-      /* started and more to come */
-      if ( iterator->current != NULL &&
-           lcfgpkglist_next(iterator->current) != NULL ) {
-        has_next = true;
-      }
-    }
-
-  }
+  if ( iterator->current == NULL )
+    has_next = !lcfgpkglist_is_empty(iterator->list);
+  else
+    has_next = ( lcfgpkglist_next(iterator->current) != NULL );
 
   return has_next;
 }
@@ -138,25 +129,18 @@ bool lcfgpkgiter_has_next( LCFGPackageIterator * iterator ) {
 
 LCFGPackage * lcfgpkgiter_next(LCFGPackageIterator * iterator) {
 
-  if ( iterator->done )
-    return NULL;
+  if ( !lcfgpkgiter_has_next(iterator) ) return NULL;
 
-  if ( !lcfgpkgiter_has_next(iterator) ) {
-    iterator->done = true;
-    return NULL;
-  }
-
-  if ( iterator->current == NULL ) {
-    iterator->current = lcfgpkglist_head(iterator->pkglist);
-  } else {
+  if ( iterator->current == NULL )
+    iterator->current = lcfgpkglist_head(iterator->list);
+  else
     iterator->current = lcfgpkglist_next(iterator->current);
-  }
 
-  LCFGPackage * pkg = NULL;
+  LCFGPackage * next = NULL;
   if ( iterator->current != NULL )
-    pkg = lcfgpkglist_package(iterator->current);
+    next = lcfgpkglist_package(iterator->current);
 
-  return pkg;
+  return next;
 }
 
 /* eof */

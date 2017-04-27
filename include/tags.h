@@ -315,12 +315,12 @@ LCFGChange lcfgtaglist_mutate_replace( LCFGTagList * taglist,
  */
 
 struct LCFGTagIterator {
-  LCFGTagList * taglist;     /**< The tag list */
-  LCFGTagNode * current;     /**< Current location in the tag list */
+  LCFGTagList * list;        /**< The tag list */
+  LCFGTagNode * current;     /**< Current location in the list */
 };
 typedef struct LCFGTagIterator LCFGTagIterator;
 
-LCFGTagIterator * lcfgtagiter_new( LCFGTagList * taglist );
+LCFGTagIterator * lcfgtagiter_new( LCFGTagList * list );
 
 void lcfgtagiter_destroy( LCFGTagIterator * iterator );
 
