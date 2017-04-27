@@ -587,6 +587,29 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
   return result;
 }
 
+/**
+ * @brief Merge lists of components
+ *
+ * This will @e merge the components from the second list into the
+ * first. If the component appears in both lists the @c
+ * lcfgcomponent_merge() function will be used to merge the two. For
+ * each resource in the second component if it also exists in the
+ * first list it will be replaced if not it is just added.
+ *
+ * If the component does NOT exist in the first list then it will only
+ * be added when the @c take_new parameter is set to true. When the @c
+ * take_new parameter is false this is effectively an "override" mode
+ * which only changes existing components.
+ *
+ * @param[in] list1 Pointer to @c LCFGComponentList to be merged to
+ * @param[in] list2 Pointer to @c LCFGComponentList to be merged from
+ * @param[in] take_new Boolean which controls whether components are added
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Integer value indicating type of change
+ *
+ */
+
 LCFGChange lcfgcomplist_merge( LCFGComponentList * list1,
 			       const LCFGComponentList * list2,
 			       bool take_new,
@@ -631,6 +654,22 @@ LCFGChange lcfgcomplist_merge( LCFGComponentList * list1,
 
   return change;
 }
+
+/**
+ * @brief Copy components from one list to another
+ *
+ * This will copy all the components in the second list into the
+ * first. If the component already exists in the target list it will
+ * be replaced if not the component is simply added. This is done
+ * using the @c lcfgcomplist_insert_or_replace_component() function.
+ *
+ * @param[in] list1 Pointer to @c LCFGComponentList to be copied to
+ * @param[in] list2 Pointer to @c LCFGComponentList to be copied from
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Integer value indicating type of change
+ *
+ */
 
 LCFGChange lcfgcomplist_transplant_components( LCFGComponentList * list1,
 					       const LCFGComponentList * list2,
@@ -808,7 +847,7 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
 }
 
 /**
- * Write out status files for all components in the list
+ * @brief Write out status files for all components in the list
  *
  * For each @c LCFGComponent in the @c LCFGComponentList this will
  * call the @c lcfgcomponent_to_status_file() function to write out
@@ -898,7 +937,7 @@ LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
 }
 
 /**
- * Export resources for all components in the list
+ * @brief Export resources for all components in the list
  *
  * For each @c LCFGComponent in the @c LCFGComponentList this will
  * call the @c lcfgcomponent_to_env() function to export the resource
@@ -947,7 +986,7 @@ LCFGStatus lcfgcomplist_to_env( const LCFGComponentList * complist,
 }
 
 /**
- * Import resources for list of components
+ * @brief Import resources for list of components
  *
  * For each component name in the @c LCFGTagList this will call the @c
  * lcfgcomponent_from_env() function to import the resource state from
