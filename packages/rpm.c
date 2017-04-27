@@ -1,5 +1,5 @@
 /**
- * @file packages/package.c
+ * @file packages/rpm.c
  * @brief Functions for working with RPMs
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date$
