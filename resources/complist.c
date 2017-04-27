@@ -498,6 +498,22 @@ LCFGComponent * lcfgcomplist_find_or_create_component(
   return result;
 }
 
+/**
+ * @brief Write list of serialised components to file stream
+ *
+ * This simply calls @c lcfgcomponent_print() for each component in
+ * the @c LCFGComponentList. The style and options are passed onto
+ * that function.
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ * @param[in] style Integer indicating required style of formatting
+ * @param[in] options Integer that controls formatting
+ * @param[in] out Stream to which the list of resources should be written
+ *
+ * @return Boolean indicating success
+ *
+ */
+
 bool lcfgcomplist_print( const LCFGComponentList * complist,
                          LCFGResourceStyle style,
                          LCFGOption options,
@@ -623,7 +639,7 @@ LCFGChange lcfgcomplist_transplant_components( LCFGComponentList * list1,
 
   if ( lcfgcomplist_is_empty(list2) ) return LCFG_STATUS_OK;
 
-  LCFGStatus change = LCFG_CHANGE_NONE;
+  LCFGChange change = LCFG_CHANGE_NONE;
 
   const LCFGComponentNode * cur_node = NULL;
   for ( cur_node = lcfgcomplist_head(list2);
@@ -645,6 +661,36 @@ LCFGChange lcfgcomplist_transplant_components( LCFGComponentList * list1,
 
   return change;
 }
+
+/**
+ * @brief Load resources for components from status directory
+ *
+ * This creates a new @c LCFGComponentList which holds a list of
+ * components which are loaded using the @c
+ * lcfgcomponent_from_status_file() function from the status files
+ * found in the directory.
+ *
+ * It is expected that the file names will be valid component names,
+ * any files with invalid names will simply be ignored. Empty files
+ * will also be ignored.
+ *
+ * To limit which components are loaded a set of required names can be
+ * specified as a @c LCFGTagList. If the list is empty or a @c NULL
+ * value is passed in all components will be loaded.
+ *
+ * If the status directory does not exist an error will be returned
+ * unless the @c LCFG_ALLOW_NOEXIST option is specified, in that case
+ * an empty @c LCFGComponentList will be returned.
+ *
+ * @param[in] status_dir Path to directory of status files
+ * @param[out] result Reference to pointer for new @c LCFGComponentList
+ * @param[in] comps_wanted List of names for required components
+ * @param[in] options Controls the behaviour of the process
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
 
 LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
                                          LCFGComponentList ** result,
@@ -761,6 +807,23 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
   return status;
 }
 
+/**
+ * Write out status files for all components in the list
+ *
+ * For each @c LCFGComponent in the @c LCFGComponentList this will
+ * call the @c lcfgcomponent_to_status_file() function to write out
+ * the resource state as a status file. Any options specified will be
+ * passed on to that function.
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ * @param[in] status_dir Path to directory for status files
+ * @param[in] options Controls the behaviour of the process
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
 				       const char * status_dir,
 				       LCFGOption options,
@@ -806,7 +869,7 @@ LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
 
     LCFGComponent * cur_comp = lcfgcomplist_component(cur_node);
 
-    if ( !lcfgcomponent_has_name(cur_comp) ) continue;
+    if ( !lcfgcomponent_is_valid(cur_comp) ) continue;
 
     const char * comp_name = lcfgcomponent_get_name(cur_comp);
 
@@ -835,6 +898,133 @@ LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
 }
 
 /**
+ * Export resources for all components in the list
+ *
+ * For each @c LCFGComponent in the @c LCFGComponentList this will
+ * call the @c lcfgcomponent_to_env() function to export the resource
+ * state to the environment. The prefixes and any options specified
+ * will be passed on to that function.
+ *
+ * The value prefix will typically be like @c LCFG_%s_ and the type
+ * prefix will typically be like @c LCFGTYPE_%s_ where @c '%s' is
+ * replaced with the name of the component. If the prefixes are not
+ * specified (i.e. @c NULL values are given) the default prefixes are
+ * used. 
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ * @param[in] val_pfx The prefix for the value variable name
+ * @param[in] type_pfx The prefix for the type variable name
+ * @param[in] options Controls the behaviour of the process
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgcomplist_to_env( const LCFGComponentList * complist,
+                                const char * val_pfx, const char * type_pfx,
+                                LCFGOption options,
+                                char ** msg ) {
+  assert( complist != NULL );
+
+  if ( lcfgcomplist_is_empty(complist) ) return LCFG_STATUS_OK;
+
+  LCFGStatus status = LCFG_STATUS_OK;
+
+  const LCFGComponentNode * cur_node = NULL;
+  for ( cur_node = lcfgcomplist_head(complist);
+	cur_node != NULL && status != LCFG_STATUS_ERROR;
+	cur_node = lcfgcomplist_next(cur_node) ) {
+
+    const LCFGComponent * comp = lcfgcomplist_component(cur_node);
+
+    if ( !lcfgcomponent_is_valid(comp) ) continue;
+
+    status = lcfgcomponent_to_env( comp, val_pfx, type_pfx, options, msg );
+  }
+
+  return status;
+}
+
+/**
+ * Import resources for list of components
+ *
+ * For each component name in the @c LCFGTagList this will call the @c
+ * lcfgcomponent_from_env() function to import the resource state from
+ * the environment. The prefixes and any options specified will be
+ * passed on to that function.
+ *
+ * If the @c LCFGTagList is empty nothing will be imported and an
+ * empty @c LCFGComponentList will be returned.
+ *
+ * The value prefix will typically be like @c LCFG_%s_ and the type
+ * prefix will typically be like @c LCFGTYPE_%s_ where @c '%s' is
+ * replaced with the name of the component. If the prefixes are not
+ * specified (i.e. @c NULL values are given) the default prefixes are
+ * used. 
+ *
+ * @param[in] val_pfx The prefix for the value variable name
+ * @param[in] type_pfx The prefix for the type variable name
+ * @param[out] result Reference to pointer for new @c LCFGComponentList
+ * @param[in] comps_wanted List of names for required components
+ * @param[in] options Controls the behaviour of the process
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgcomplist_from_env( const char * val_pfx, const char * type_pfx,
+                                  LCFGComponentList ** result,
+                                  LCFGTagList * comps_wanted,
+                                  LCFGOption options,
+                                  char ** msg ) {
+  assert( comps_wanted != NULL );
+
+  LCFGStatus status = LCFG_STATUS_OK;
+
+  LCFGComponentList * complist = lcfgcomplist_new();
+
+  LCFGTagIterator * tagiter = lcfgtagiter_new(comps_wanted);
+
+  const LCFGTag * tag = NULL;
+
+  while ( status != LCFG_STATUS_ERROR &&
+          ( tag = lcfgtagiter_next(tagiter) ) != NULL ) {
+
+    const char * comp_name = lcfgtag_get_name(tag);
+
+    LCFGComponent * new_comp = NULL;
+
+    status = lcfgcomponent_from_env( comp_name,
+                                     val_pfx, type_pfx,
+                                     &new_comp,
+                                     options, msg );
+
+    if ( status != LCFG_STATUS_ERROR ) {
+      LCFGChange change = 
+        lcfgcomplist_insert_or_replace_component( complist, new_comp, msg );
+
+      if ( change == LCFG_CHANGE_ERROR )
+        status = LCFG_STATUS_ERROR;
+    }
+
+    lcfgcomponent_relinquish(new_comp);
+  }
+
+  lcfgtagiter_destroy(tagiter);
+
+  if ( status == LCFG_STATUS_ERROR ) {
+    lcfgcomplist_relinquish(complist);
+    complist = NULL;
+  }
+
+  *result = complist;
+
+  return status;
+}
+
+/**
  * @brief Get the list of component names as a taglist
  *
  * This generates a new @c LCFGTagList which contains a list of
@@ -853,11 +1043,9 @@ LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
  */
 
 LCFGTagList * lcfgcomplist_get_components_as_taglist(
-					        const LCFGComponent * complist,
-						LCFGOption options ) {
+					    const LCFGComponentList * complist,
+                                            LCFGOption options ) {
   assert( complist != NULL );
-
-  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
 
   LCFGTagList * comp_names = lcfgtaglist_new();
 

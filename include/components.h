@@ -460,9 +460,22 @@ LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
                                        char ** msg )
   __attribute__((warn_unused_result));
 
+LCFGStatus lcfgcomplist_from_env( const char * val_pfx, const char * type_pfx,
+                                  LCFGComponentList ** result,
+                                  LCFGTagList * comps_wanted,
+                                  LCFGOption options,
+                                  char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgcomplist_to_env( const LCFGComponentList * complist,
+                                const char * val_pfx, const char * type_pfx,
+                                LCFGOption options,
+                                char ** msg )
+  __attribute__((warn_unused_result));
+
 LCFGTagList * lcfgcomplist_get_components_as_taglist(
-					        const LCFGComponent * complist,
-						LCFGOption options );
+					     const LCFGComponentList * complist,
+					     LCFGOption options );
 
 char * lcfgcomplist_get_components_as_string(const LCFGComponentList * complist,
 					     LCFGOption options );
