@@ -450,7 +450,7 @@ ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_TOSTR_ARGS ) {
  * @param[in] defarch Default architecture string (may be @c NULL)
  * @param[in] filename Path file to be created
  * @param[in] mtime Modification time to set on file (or zero)
- * @param[out] msg msg Pointer to any diagnostic messages.
+ * @param[out] msg Pointer to any diagnostic messages.
  *
  * @return Integer value indicating type of change
  *
@@ -851,11 +851,11 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
  * @param[in] inactive Pointer to inactive @c LCFGPackageList
  * @param[in] defarch Default architecture string (may be @c NULL)
  * @param[in] filename Path of file to be created
- * @param[in] rpminc
+ * @param[in] rpminc Extra file to be included by cpp
  * @param[in] mtime Modification time to set on file (or zero)
- * @param[out] msg msg Pointer to any diagnostic messages.
+ * @param[out] msg Pointer to any diagnostic messages.
  *
- * @return Integer value indicating type of change
+ * @return Integer value indicating type of change for file
  *
  */
 
