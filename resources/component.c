@@ -1048,7 +1048,7 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
  * @param[in] comp Pointer to @c LCFGComponent
  * @param[in] filename Path of status file to be created (optional)
  * @param[in] options Controls the behaviour of the process
- * @param[out] msg msg Pointer to any diagnostic messages.
+ * @param[out] msg Pointer to any diagnostic messages.
  *
  * @return Status value indicating success of the process
  *

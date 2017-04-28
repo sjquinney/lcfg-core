@@ -448,9 +448,9 @@ LCFGComponent * lcfgcomplist_find_component( const LCFGComponentList * complist,
 /**
  * @brief Find or create a new component
  *
- * Searches the @c LCFGComponentList for an @c LCFGComponent with the
- * required name. If none is found then a new @c LCFGComponent is
- * created and added to the @c LCFGComponent.
+ * Searches the @c LCFGComponentList to find an @c LCFGComponent with
+ * the required name. If none is found then a new @c LCFGComponent is
+ * created and added to the @c LCFGComponentList.
  *
  * If an error occurs during the creation of a new component a @c NULL
  * value will be returned.
@@ -505,7 +505,7 @@ LCFGComponent * lcfgcomplist_find_or_create_component(
  * @param[in] complist Pointer to @c LCFGComponentList
  * @param[in] style Integer indicating required style of formatting
  * @param[in] options Integer that controls formatting
- * @param[in] out Stream to which the list of resources should be written
+ * @param[in] out Stream to which the list of components should be written
  *
  * @return Boolean indicating success
  *
@@ -537,11 +537,11 @@ bool lcfgcomplist_print( const LCFGComponentList * complist,
 /**
  * @brief Insert or replace a component
  *
- * Searches the @c LCFGComponentList for a matching @c LCFGComponent with
- * the same name. If none is found the component is simply added and @c
- * LCFG_CHANGE_ADDED is returned. If there is a match then the new
- * component will replace the current and @c LCFG_CHANGE_REPLACED
- * is returned.
+ * Searches the @c LCFGComponentList to find a matching @c
+ * LCFGComponent with the same name. If none is found the component is
+ * simply added and @c LCFG_CHANGE_ADDED is returned. If there is a
+ * match then the new component will replace the current and @c
+ * LCFG_CHANGE_REPLACED is returned.
  *
  * @param[in] complist Pointer to @c LCFGComponentList
  * @param[in] new_comp Pointer to @c LCFGComponent
@@ -593,10 +593,11 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
  * each resource in the second component if it also exists in the
  * first list it will be replaced if not it is just added.
  *
- * If the component does NOT exist in the first list then it will only
- * be added when the @c take_new parameter is set to true. When the @c
- * take_new parameter is false this is effectively an "override" mode
- * which only changes existing components.
+ * If the component from the second profile does NOT exist in the
+ * first then it will only be added when the @c take_new parameter is
+ * set to true. When the @c take_new parameter is false this is
+ * effectively an "override" mode which only changes existing
+ * components.
  *
  * @param[in] list1 Pointer to @c LCFGComponentList to be merged to
  * @param[in] list2 Pointer to @c LCFGComponentList to be merged from
