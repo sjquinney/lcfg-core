@@ -1171,7 +1171,6 @@ LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
 
 LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
                                             const char * name ) {
-  assert( comp != NULL );
   assert( name != NULL );
 
   if ( lcfgcomponent_is_empty(comp) ) return NULL;
@@ -1217,7 +1216,6 @@ LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
 
 LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
                                             const char * name ) {
-  assert( comp != NULL );
   assert( name != NULL );
 
   LCFGResource * res = NULL;
@@ -1240,7 +1238,7 @@ LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
  * relevant node. If a @c NULL value is specified for the list or the
  * list is empty then a false value will be returned.
  *
- * @param[in] comp Pointer to @c LCFGComponent to be searched
+ * @param[in] comp Pointer to @c LCFGComponent to be searched (may be @c NULL)
  * @param[in] name The name of the required resource
  *
  * @return Boolean value which indicates presence of resource in component
@@ -1249,7 +1247,6 @@ LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
 
 bool lcfgcomponent_has_resource( const LCFGComponent * comp,
                                  const char * name ) {
-  assert( comp != NULL );
   assert( name != NULL );
 
   return ( lcfgcomponent_find_node( comp, name ) != NULL );
