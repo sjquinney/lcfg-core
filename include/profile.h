@@ -1,13 +1,13 @@
 /**
- * @file context.h
- * @brief LCFG profile handling library
+ * @file profile.h
+ * @brief Functions for working with LCFG profiles
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date$
  * $Revision$
  */
 
-#ifndef LCFG_PROFILE_H
-#define LCFG_PROFILE_H
+#ifndef LCFG_CORE_PROFILE_H
+#define LCFG_CORE_PROFILE_H
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -17,16 +17,20 @@
 #include "packages.h"
 #include "components.h"
 
+/**
+ * @brief A structure to represent an LCFG Profile
+ */
+
 struct LCFGProfile {
-  char * published_by;
-  char * published_at;
-  char * server_version;
-  char * last_modified;
-  char * last_modified_file;
-  LCFGPackageList   * active_packages;
-  LCFGPackageList   * inactive_packages;
-  LCFGComponentList * components;
-  time_t mtime;
+  char * published_by;        /**< Name of publisher */
+  char * published_at;        /**< Timestamp for when profile was published */
+  char * server_version;      /**< Version of server which generated profile */
+  char * last_modified;       /**< Timestamp for most recently modified source file */
+  char * last_modified_file;  /**< Name for most recently modified source file */
+  LCFGPackageList   * active_packages;   /**< List of packages which are active in current contexts */
+  LCFGPackageList   * inactive_packages; /**< List of packages which are inactive in current contexts */
+  LCFGComponentList * components;        /**< List of components */
+  time_t mtime;               /**< Modification time of input file (seconds since epoch) */
 };
 
 typedef struct LCFGProfile LCFGProfile;
@@ -98,20 +102,23 @@ bool lcfgprofile_print( const LCFGProfile * profile,
                         bool show_pkgs,
                         const char * defarch,
                         LCFGResourceStyle comp_style,
+                        LCFGPkgStyle pkg_style,
                         FILE * out )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgprofile_from_status_dir( const char * status_dir,
                                         LCFGProfile ** result,
                                         const LCFGTagList * comps_wanted,
+                                        LCFGOption options,
                                         char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgprofile_to_status_dir( const LCFGProfile * profile,
 				      const char * status_dir,
+                                      LCFGOption options,
 				      char ** msg )
   __attribute__((warn_unused_result));
 
-#endif /* LCFG_PROFILE_H */
+#endif /* LCFG_CORE_PROFILE_H */
 
 /* eof */
