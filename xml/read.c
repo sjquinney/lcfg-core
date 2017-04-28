@@ -434,8 +434,9 @@ LCFGStatus lcfgprofile_overrides_context( LCFGProfile * main_profile,
 				&parse_msg );
 
 	if ( rc == LCFG_STATUS_OK ) {
-	  rc = lcfgprofile_apply_overrides( main_profile, ctx_profile,
-					    &parse_msg );
+          bool take_new_comps = false;
+	  rc = lcfgprofile_merge( main_profile, ctx_profile,
+                                  take_new_comps, &parse_msg );
 	}
 
 	if ( rc != LCFG_STATUS_OK ) {
