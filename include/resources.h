@@ -21,6 +21,13 @@
 
 #define LCFG_RESOURCE_NOVALUE ""
 
+/* Used when creating environment variables from resources */
+
+#define LCFG_RESOURCE_ENV_VAL_PFX  "LCFG_%s_"
+#define LCFG_RESOURCE_ENV_TYPE_PFX "LCFGTYPE_%s_"
+#define LCFG_RESOURCE_ENV_PHOLDER  "%s"
+#define LCFG_RESOURCE_ENV_LISTKEY  "_RESOURCES"
+
 /* These are marker symbols for the keys which are used when resources
    are serialised into storage such as Berkeley DB or status files. */
 
@@ -271,12 +278,18 @@ bool lcfgresource_print( const LCFGResource * res,
                          FILE * out )
   __attribute__((warn_unused_result));
 
+bool lcfgresource_build_env_prefix( const char * prefix,
+                                    const char * compname,
+                                    char ** result );
+
 LCFGStatus lcfgresource_from_env( const char * resname,
+                                  const char * compname,
 				  const char * val_pfx, const char * type_pfx,
 				  LCFGResource ** result, char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgresource_to_env( const LCFGResource * res,
+                                const char * compname,
 				const char * val_pfx, const char * type_pfx,
 				LCFGOption options )
   __attribute__((warn_unused_result));
@@ -306,6 +319,7 @@ ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS )
   __attribute__((warn_unused_result));
 
 ssize_t lcfgresource_to_export( const LCFGResource * res,
+                                const char * compname,
                                 const char * val_pfx, const char * type_pfx,
                                 LCFGOption options,
                                 char ** result, size_t * size )

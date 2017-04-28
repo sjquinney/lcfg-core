@@ -17,13 +17,6 @@
 #include "components.h"
 #include "utils.h"
 
-/* Used when creating environment variables from resources */
-
-static const char * default_val_pfx  = "LCFG_%s_";
-static const char * default_type_pfx = "LCFGTYPE_%s_";
-static const char * env_placeholder  = "%s";
-static const char * reslist_keyname  = "_RESOURCES";
-
 /**
  * @brief Create and initialise a new resource node
  *
@@ -519,15 +512,27 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
 
   bool print_export = ( style == LCFG_RESOURCE_STYLE_EXPORT );
 
-  char * val_pfx  = NULL;
-  char * type_pfx = NULL;
+  const char * val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
+  const char * type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
+
+  /* Need these to handle the copies (if any) and free them later */
+  char * val_pfx2  = NULL;
+  char * type_pfx2 = NULL;
 
   LCFGTagList * export_res = NULL;
   if ( print_export ) {
-    val_pfx  = lcfgutils_string_replace( default_val_pfx,
-                                         env_placeholder, comp_name );
-    type_pfx = lcfgutils_string_replace( default_type_pfx,
-                                         env_placeholder, comp_name );
+    if ( lcfgresource_build_env_prefix( val_pfx, comp_name, &val_pfx2 )
+         && val_pfx2 != NULL ) {
+      val_pfx = val_pfx2;
+    }
+
+    /* No point doing this if the type data isn't required */
+    if ( options&LCFG_OPT_USE_META ) {
+      if ( lcfgresource_build_env_prefix( type_pfx, comp_name, &type_pfx2 )
+           && type_pfx2 != NULL ) {
+        type_pfx = type_pfx2;
+      }
+    }
 
     export_res = lcfgtaglist_new();
   }
@@ -558,7 +563,7 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
 
       ssize_t rc;
       if ( print_export ) {
-        rc = lcfgresource_to_export( res, val_pfx, type_pfx, options,
+        rc = lcfgresource_to_export( res, NULL, val_pfx, type_pfx, options,
                                      &buffer, &buf_size );
 
         /* Stash the resource name so we can create an env variable
@@ -604,7 +609,8 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
     if ( len < 0 ) {
       ok = false;
     } else {
-      int rc = fprintf( out, "export %s%s='%s'\n", val_pfx, reslist_keyname, reslist );
+      int rc = fprintf( out, "export %s%s='%s'\n", val_pfx, 
+                        LCFG_RESOURCE_ENV_LISTKEY, reslist );
       if ( rc < 0 )
         ok = false;
     }
@@ -615,8 +621,8 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
   free(buffer);
 
   lcfgtaglist_relinquish(export_res);
-  free(val_pfx);
-  free(type_pfx);
+  free(val_pfx2);
+  free(type_pfx2);
 
   return ok;
 }
@@ -945,28 +951,22 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 
   const char * comp_name = lcfgcomponent_get_name(comp);
 
-  if ( val_pfx == NULL )
-    val_pfx = default_val_pfx;
+  if ( val_pfx  == NULL ) val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
+  if ( type_pfx == NULL ) type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
 
-  if ( type_pfx == NULL )
-    type_pfx = default_type_pfx;
+  /* Need these to handle the copies (if any) and free them later */
+  char * val_pfx2  = NULL;
+  char * type_pfx2 = NULL;
 
-  /* For security avoid using the user-specified prefix as a format string. */
-
-  char * val_pfx2 = NULL;
-  if ( strstr( val_pfx, env_placeholder ) != NULL ) {
-    val_pfx2 = lcfgutils_string_replace( val_pfx,
-					 env_placeholder, comp_name );
+  if ( lcfgresource_build_env_prefix( val_pfx, comp_name, &val_pfx2 )
+       && val_pfx2 != NULL ) {
     val_pfx = val_pfx2;
   }
 
-  char * type_pfx2 = NULL;
-
   /* No point doing this if the type data isn't required */
   if ( options&LCFG_OPT_USE_META ) {
-    if ( strstr( type_pfx, env_placeholder ) != NULL ) {
-      type_pfx2 = lcfgutils_string_replace( type_pfx,
-					    env_placeholder, comp_name );
+    if ( lcfgresource_build_env_prefix( type_pfx, comp_name, &type_pfx2 )
+         && type_pfx2 != NULL ) {
       type_pfx = type_pfx2;
     }
   }
@@ -983,7 +983,7 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
     if ( ( all_values     || lcfgresource_has_value(res) ) &&
          ( all_priorities || lcfgresource_is_active(res) ) ) {
 
-      status = lcfgresource_to_env( res, val_pfx, type_pfx, options );
+      status = lcfgresource_to_env( res, NULL, val_pfx, type_pfx, options );
 
       if ( status == LCFG_STATUS_ERROR ) {
         *msg = lcfgresource_build_message( res, comp_name,
@@ -1008,7 +1008,8 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
     /* Also create an environment variable which holds list of
        resource names for this component. */
 
-    char * reslist_key = lcfgutils_string_join( "", val_pfx, reslist_keyname );
+    char * reslist_key =
+      lcfgutils_string_join( "", val_pfx, LCFG_RESOURCE_ENV_LISTKEY );
 
     lcfgtaglist_sort(export_res);
 
@@ -1627,26 +1628,20 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
     return LCFG_STATUS_ERROR;
   }
 
-  if ( val_pfx == NULL )
-    val_pfx = default_val_pfx;
+  if ( val_pfx  == NULL ) val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
+  if ( type_pfx == NULL ) type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
 
-  if ( type_pfx == NULL )
-    type_pfx = default_type_pfx;
+  /* Need these to handle the copies (if any) and free them later */
+  char * val_pfx2  = NULL;
+  char * type_pfx2 = NULL;
 
-  /* For security avoid using the user-specified prefix as a format string. */
-
-  char * val_pfx2 = NULL;
-  if ( strstr( val_pfx, env_placeholder ) != NULL ) {
-    val_pfx2 = lcfgutils_string_replace( val_pfx,
-                                         env_placeholder, compname_in );
+  if ( lcfgresource_build_env_prefix( val_pfx, compname_in, &val_pfx2 )
+       && val_pfx2 != NULL ) {
     val_pfx = val_pfx2;
   }
 
-  char * type_pfx2 = NULL;
-
-  if ( strstr( type_pfx, env_placeholder ) != NULL ) {
-    type_pfx2 = lcfgutils_string_replace( type_pfx,
-                                          env_placeholder, compname_in );
+  if ( lcfgresource_build_env_prefix( type_pfx, compname_in, &type_pfx2 )
+       && type_pfx2 != NULL ) {
     type_pfx = type_pfx2;
   }
 
@@ -1659,7 +1654,8 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
 
   /* Find the list of resource names for the component */
 
-  char * reslist_key = lcfgutils_string_join( "", val_pfx, reslist_keyname );
+  char * reslist_key =
+    lcfgutils_string_join( "", val_pfx, LCFG_RESOURCE_ENV_LISTKEY );
 
   const char * reslist_value = getenv(reslist_key);
 
@@ -1707,7 +1703,7 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
     }
 
     LCFGResource * res = NULL;
-    status = lcfgresource_from_env( resname, val_pfx, type_pfx, 
+    status = lcfgresource_from_env( resname, NULL, val_pfx, type_pfx, 
                                     &res, msg );
 
     if ( status != LCFG_STATUS_ERROR ) {
@@ -1730,6 +1726,7 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
 
   free(val_pfx2);
   free(type_pfx2);
+
   lcfgtaglist_relinquish(import_res);
 
   if ( status ==  LCFG_STATUS_ERROR ) {
