@@ -363,7 +363,6 @@ LCFGChange lcfgcomplist_remove_next( LCFGComponentList * complist,
 
 LCFGComponentNode * lcfgcomplist_find_node( const LCFGComponentList * complist,
                                             const char * want_name ) {
-  assert( complist != NULL );
   assert( want_name != NULL );
 
   if ( lcfgcomplist_is_empty(complist) ) return NULL;
@@ -409,7 +408,6 @@ LCFGComponentNode * lcfgcomplist_find_node( const LCFGComponentList * complist,
 
 bool lcfgcomplist_has_component(  const LCFGComponentList * complist,
                                   const char * name ) {
-  assert( complist != NULL );
   assert( name != NULL );
 
   return ( lcfgcomplist_find_node( complist, name ) != NULL );
@@ -435,7 +433,6 @@ bool lcfgcomplist_has_component(  const LCFGComponentList * complist,
 
 LCFGComponent * lcfgcomplist_find_component( const LCFGComponentList * complist,
                                              const char * want_name ) {
-  assert( complist != NULL );
   assert( want_name != NULL );
 
   LCFGComponent * comp = NULL;
@@ -854,7 +851,7 @@ LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
  * the resource state as a status file. Any options specified will be
  * passed on to that function.
  *
- * @param[in] complist Pointer to @c LCFGComponentList
+ * @param[in] complist Pointer to @c LCFGComponentList (may be @c NULL)
  * @param[in] status_dir Path to directory for status files
  * @param[in] options Controls the behaviour of the process
  * @param[out] msg Pointer to any diagnostic messages.
@@ -867,7 +864,6 @@ LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
 				       const char * status_dir,
 				       LCFGOption options,
 				       char ** msg ) {
-  assert( complist != NULL );
   assert( status_dir != NULL );
 
   if ( isempty(status_dir) ) {
