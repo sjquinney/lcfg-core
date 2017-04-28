@@ -112,11 +112,37 @@ void lcfgprofile_destroy(LCFGProfile * profile) {
 
 }
 
+/**
+ * @brief Get the name of the profile publisher
+ *
+ * This is typically the name of the server which generated the
+ * profile. Note that this is typically only set when the profile has
+ * been loaded from an XML file.
+ *
+ * @param[in] profile Pointer to @c LCFGProfile.
+ *
+ * @return Pointer to string holding name of publisher
+ *
+ */
+
 char * lcfgprofile_get_published_by( const LCFGProfile * profile ) {
   assert( profile != NULL );
 
   return profile->published_by;
 }
+
+/**
+ * @brief Get the time at which the profile was published
+ *
+ * This is a string which holds the timestamp (date and time) at which
+ * the profile was generated. Note that this is typically only set
+ * when the profile has been loaded from an XML file.
+ *
+ * @param[in] profile Pointer to @c LCFGProfile.
+ *
+ * @return Pointer to string holding timestamp for profile
+ *
+ */
 
 char * lcfgprofile_get_published_at( const LCFGProfile * profile ) {
   assert( profile != NULL );
@@ -124,11 +150,40 @@ char * lcfgprofile_get_published_at( const LCFGProfile * profile ) {
   return profile->published_at;
 }
 
+/**
+ * @brief Get the version of the server which published the profile
+ *
+ * This is a string which holds the version string for the LCFG server
+ * which generated the profile. Note that this is typically only set
+ * when the profile has been loaded from an XML file.
+ *
+ * @param[in] profile Pointer to @c LCFGProfile.
+ *
+ * @return Pointer to string holding server version
+ *
+ */
+
 char * lcfgprofile_get_server_version( const LCFGProfile * profile ) {
   assert( profile != NULL );
 
   return profile->server_version;
 }
+
+/**
+ * @brief Get the latest modification time for the profile sources
+ *
+ * This is a string which holds the timestamp (date and time) of
+ * modification for the most recently modified source file. The name
+ * of the file is accessible using the @c
+ * lcfgprofile_get_last_modified_file() function. Note that this is
+ * typically only set when the profile has been loaded from an XML
+ * file.
+ *
+ * @param[in] profile Pointer to @c LCFGProfile.
+ *
+ * @return Pointer to string holding timestamp of most recently modified source
+ *
+ */
 
 char * lcfgprofile_get_last_modified( const LCFGProfile * profile ) {
   assert( profile != NULL );
@@ -136,11 +191,42 @@ char * lcfgprofile_get_last_modified( const LCFGProfile * profile ) {
   return profile->last_modified;
 }
 
+/**
+ * @brief Get the latest modified file for the profile sources
+ *
+ * This is a string which holds the name of the most recently modified
+ * source file for the profile. The name of the file is accessible
+ * using the @c lcfgprofile_get_last_modified_file() function. Note
+ * that this is typically only set when the profile has been loaded
+ * from an XML file.
+ *
+ * @param[in] profile Pointer to @c LCFGProfile.
+ *
+ * @return Pointer to string holding name of most recently modified source
+ *
+ */
+
 char * lcfgprofile_get_last_modified_file( const LCFGProfile * profile ) {
   assert( profile != NULL );
 
   return profile->last_modified_file;
 }
+
+/**
+ * @brief Get the modification time of the profile
+ *
+ * This returns the modification time of the input file from which the
+ * profile was loaded (e.g. XML file, Berkeley DB, status directory)
+ * as an integer number of seconds since the epoch (see @c ctime(3)
+ * manual page). If the @c lcfgprofile_get_last_modified() function
+ * returns a value it will typically match with this value but that is
+ * not guaranteed.
+ *
+ * @param[in] profile Pointer to @c LCFGProfile.
+ *
+ * @return Integer Modification time of profile (seconds since epoch)
+ *
+ */
 
 time_t lcfgprofile_get_mtime( const LCFGProfile * profile ) {
   assert( profile != NULL );
@@ -205,21 +291,26 @@ char * lcfgprofile_nodename( const LCFGProfile * profile ) {
 /* Convenience wrappers around the component list functions */
 
 bool lcfgprofile_has_components( const LCFGProfile * profile ) {
-  return !lcfgcomplist_is_empty(profile->components);
+  return ( profile != NULL && !lcfgcomplist_is_empty(profile->components) );
 }
 
 bool lcfgprofile_has_component( const LCFGProfile * profile,
                                 const char * name ) {
   assert( name != NULL );
 
-  return lcfgcomplist_has_component( profile->components, name );
+  return ( lcfgprofile_has_components(profile) &&
+           lcfgcomplist_has_component( profile->components, name ) );
 }
 
 LCFGComponent * lcfgprofile_find_component( const LCFGProfile * profile,
                                             const char * name ) {
   assert( name != NULL );
 
-  return lcfgcomplist_find_component( profile->components, name );
+  LCFGComponent * comp = NULL;
+  if ( profile != NULL )
+    comp = lcfgcomplist_find_component( profile->components, name );
+
+  return comp;
 }
 
 LCFGComponent * lcfgprofile_find_or_create_component( LCFGProfile * profile,
