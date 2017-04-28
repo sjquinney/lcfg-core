@@ -6,8 +6,8 @@
  * $Revision$
  */
 
-#ifndef LCFG_COMPONENT_H
-#define LCFG_COMPONENT_H
+#ifndef LCFG_CORE_COMPONENT_H
+#define LCFG_CORE_COMPONENT_H
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -499,6 +499,6 @@ bool lcfgresiter_has_next( LCFGResourceIterator * iterator );
 LCFGResource * lcfgresiter_next(LCFGResourceIterator * iterator);
 
 
-#endif /* LCFG_COMPONENT_H */
+#endif /* LCFG_CORE_COMPONENT_H */
 
 /* eof */

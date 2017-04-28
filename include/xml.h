@@ -1,5 +1,13 @@
-#ifndef LCFG_XMLREADER_H
-#define LCFG_XMLREADER_H
+/**
+ * @file xml.h
+ * @brief Functions for importing profiles from XML
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date$
+ * $Revision$
+ */
+
+#ifndef LCFG_CORE_XML_H
+#define LCFG_CORE_XML_H
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -125,6 +133,6 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
 				     char ** msg )
   __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-#endif /* LCFG_XMLREADER_H */
+#endif /* LCFG_CORE_XML_H */
 
 /* eof */

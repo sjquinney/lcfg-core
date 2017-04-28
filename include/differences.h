@@ -1,6 +1,6 @@
 
-#ifndef LCFG_DIFFERENCES_H
-#define LCFG_DIFFERENCES_H
+#ifndef LCFG_CORE_DIFFERENCES_H
+#define LCFG_CORE_DIFFERENCES_H
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -253,6 +253,6 @@ LCFGStatus lcfgprofile_diff( const LCFGProfile * profile1,
                              char ** msg )
   __attribute__((warn_unused_result));
 
-#endif /* LCFG_DIFFERENCES_H */
+#endif /* LCFG_CORE_DIFFERENCES_H */
 
 /* eof */

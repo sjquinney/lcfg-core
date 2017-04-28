@@ -6,8 +6,8 @@
  * $Revision$
  */
 
-#ifndef LCFG_RESOURCES_H
-#define LCFG_RESOURCES_H
+#ifndef LCFG_CORE_RESOURCES_H
+#define LCFG_CORE_RESOURCES_H
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -365,6 +365,6 @@ bool lcfgresource_set_attribute( LCFGResource * res,
                                  char ** msg )
   __attribute__((warn_unused_result));
 
-#endif /* LCFG_RESOURCES_H */
+#endif /* LCFG_CORE_RESOURCES_H */
 
 /* eof */

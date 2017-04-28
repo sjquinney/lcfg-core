@@ -1,5 +1,13 @@
-#ifndef LCFG_BDB
-#define LCFG_BDB
+/**
+ * @file bdb.h
+ * @brief Functions for importing and export profiles to Berkeley DB
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date$
+ * $Revision$
+ */
+
+#ifndef LCFG_CORE_BDB_H
+#define LCFG_CORE_BDB_H
 
 #include <sys/types.h>
 
@@ -73,6 +81,6 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
                                char ** errmsg )
    __attribute__((nonnull (1))) __attribute__((warn_unused_result));
 
-#endif /* LCFG_BDB */
+#endif /* LCFG_CORE_BDB_H */
 
 /* eof */
