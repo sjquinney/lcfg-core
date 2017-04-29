@@ -470,7 +470,7 @@ char * lcfgutils_string_replace( const char * input,
 
   char * to = result;
 
-  char * start = input;
+  char * start = (char *) input;
   bool done = false;
   while ( !done ) {
     p = strstr( start, match );
