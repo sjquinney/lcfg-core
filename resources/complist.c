@@ -674,7 +674,7 @@ LCFGChange lcfgcomplist_transplant_components( LCFGComponentList * list1,
 					       char ** msg ) {
   assert( list1 != NULL );
 
-  if ( lcfgcomplist_is_empty(list2) ) return LCFG_STATUS_OK;
+  if ( lcfgcomplist_is_empty(list2) ) return LCFG_CHANGE_NONE;
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
