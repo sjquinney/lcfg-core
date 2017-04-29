@@ -2158,6 +2158,7 @@ bool lcfgresource_build_env_prefix( const char * base,
       ok = false;
   }
 
+  return ok;
 }
 
 /**
@@ -2262,6 +2263,9 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
   return status;
 }
 
+static const char env_fn_name[] = "export";
+static const size_t env_fn_len = sizeof(env_fn_name) - 1;
+
 /**
  * @brief Format resource information for shell evaluation
  *
@@ -2346,17 +2350,14 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   const char * name = lcfgresource_get_name(res);
   size_t name_len = strlen(name);
 
-  static const char * fn_name = "export";
-  size_t fn_len = strlen(fn_name);
-
   size_t new_len = 0;
 
   /* Value */
 
   size_t val_pfx_len = strlen(val_pfx);
 
-  static const char * escaped = "'\"'\"'";
-  size_t escaped_len = strlen(escaped);
+  static const char escaped[] = "'\"'\"'";
+  static const size_t escaped_len = sizeof(escaped) - 1;
 
   const char * value = NULL;
   size_t value_len = 0;
@@ -2373,7 +2374,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   }
 
   /* +1 space, +1 =, +2 '', +1 '\n' == 5 */
-  new_len += ( fn_len + val_pfx_len + name_len + value_len + 5 );
+  new_len += ( env_fn_len + val_pfx_len + name_len + value_len + 5 );
 
   /* Type - optional */
 
@@ -2401,7 +2402,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
       }
 
       /* +1 space, +1 =, +2 '', +1 '\n' == 5 */
-      new_len += ( fn_len + type_pfx_len + name_len + type_len + 5 );
+      new_len += ( env_fn_len + type_pfx_len + name_len + type_len + 5 );
     }
   }
 
@@ -2430,7 +2431,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
   if ( type_len > 0 ) {
 
-    to = stpncpy( to, fn_name, fn_len );
+    to = stpncpy( to, env_fn_name, env_fn_len );
 
     *to = ' ';
     to++;
@@ -2457,7 +2458,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
   /* Value */
 
-  to = stpncpy( to, fn_name, fn_len );
+  to = stpncpy( to, env_fn_name, env_fn_len );
 
   *to = ' ';
   to++;
@@ -2538,8 +2539,8 @@ client.ack:
 ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS ) {
   assert( res != NULL );
 
-  static const char * format = " %7s=%s\n";
-  size_t base_len = 10; /* 1 for indent + 7 for key + 1 for '=' +1 for newline */
+  static const char format[] = " %7s=%s\n";
+  static const size_t base_len = 10; /* 1 for indent + 7 for key + 1 for '=' +1 for newline */
 
   ssize_t key_len = lcfgresource_to_spec( res, prefix,
                                           LCFG_OPT_NOVALUE|LCFG_OPT_NOCONTEXT,
