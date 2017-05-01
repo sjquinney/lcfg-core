@@ -75,7 +75,7 @@ LCFGProfile * lcfgprofile_new(void) {
  * profile which has already been destroyed (or potentially was
  * never created).
  *
- * @param[in] comp Pointer to @c LCFGProfile to be destroyed.
+ * @param[in] profile Pointer to @c LCFGProfile to be destroyed.
  *
  */
 
@@ -253,7 +253,7 @@ time_t lcfgprofile_get_mtime( const LCFGProfile * profile ) {
  *
  * @param[in] profile Pointer to @c LCFGProfile.
  * @param[in] metakey Meta-data key name
- * @param[out] Reference to pointer to meta-data value
+ * @param[out] metavalue Reference to pointer to meta-data value
  *
  * @return Boolean which indicates success of fetch
  *
@@ -340,7 +340,7 @@ char * lcfgprofile_nodename( const LCFGProfile * profile ) {
  *
  * This can be used to check if the @c LCFGProfile has any components.
  *
- * @param[in] complist Pointer to @c LCFGProfile
+ * @param[in] profile Pointer to @c LCFGProfile
  *
  * @return Boolean which indicates whether the profile contains any components
  *
@@ -798,7 +798,7 @@ LCFGStatus lcfgprofile_from_status_dir( const char * status_dir,
  * resource state as a status file. Any options specified will be
  * passed on to that function.
  *
- * @param[in] complist Pointer to @c LCFGProfile (may be @c NULL)
+ * @param[in] profile Pointer to @c LCFGProfile (may be @c NULL)
  * @param[in] status_dir Path to directory for status files
  * @param[in] options Controls the behaviour of the process
  * @param[out] msg Pointer to any diagnostic messages.
