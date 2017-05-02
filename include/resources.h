@@ -285,7 +285,8 @@ bool lcfgresource_build_env_prefix( const char * prefix,
 LCFGStatus lcfgresource_from_env( const char * resname,
                                   const char * compname,
 				  const char * val_pfx, const char * type_pfx,
-				  LCFGResource ** result, char ** msg )
+				  LCFGResource ** result,
+                                  LCFGOption options, char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgresource_to_env( const LCFGResource * res,

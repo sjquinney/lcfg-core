@@ -1984,6 +1984,7 @@ bool lcfgresource_is_active( const LCFGResource * res ) {
  * @param[in] val_pfx The prefix for the value variable name
  * @param[in] type_pfx The prefix for the type variable name
  * @param[out] result Reference to the pointer for the @c LCFGResource
+ * @param[in] options Integer which controls behaviour
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return Status value indicating success of the process
@@ -1993,7 +1994,8 @@ bool lcfgresource_is_active( const LCFGResource * res ) {
 LCFGStatus lcfgresource_from_env( const char * name,
                                   const char * compname,
 				  const char * val_pfx, const char * type_pfx,
-				  LCFGResource ** result, char ** msg ) {
+				  LCFGResource ** result, 
+                                  LCFGOption options, char ** msg ) {
 
   if ( val_pfx  == NULL ) val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
   if ( type_pfx == NULL ) type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;

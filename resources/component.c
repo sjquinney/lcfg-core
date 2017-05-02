@@ -1704,7 +1704,7 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
 
     LCFGResource * res = NULL;
     status = lcfgresource_from_env( resname, NULL, val_pfx, type_pfx, 
-                                    &res, msg );
+                                    &res, LCFG_OPT_NONE, msg );
 
     if ( status != LCFG_STATUS_ERROR ) {
 
