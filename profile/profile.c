@@ -857,18 +857,17 @@ LCFGTagList * lcfgprofile_get_components_as_taglist(
 /**
  * @brief Get the list of ngeneric component names as a taglist
  *
- * This generates a new @c LCFGTagList which contains a list of
- * component names for the @c LCFGProfile. If the list is empty
- * then an empty tag list will be returned. Will return @c NULL if an
- * error occurs. Uses @c lcfgcomplist_get_components_as_taglist() to do
- * the work.
+ * This generates a new @c LCFGTagList which contains a list of names
+ * for components in the @c LCFGProfile which have 'ngeneric'
+ * resources. If the list is empty then an empty tag list will be
+ * returned.
  *
  * To avoid memory leaks, when the list is no longer required the 
  * @c lcfgtaglist_relinquish() function should be called.
  *
  * @param[in] complist Pointer to @c LCFGProfile
  *
- * @return Pointer to a new @c LCFGTagList of component names
+ * @return Pointer to a new @c LCFGTagList of ngeneric component names
  *
  */
 

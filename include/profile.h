@@ -119,6 +119,11 @@ LCFGStatus lcfgprofile_to_status_dir( const LCFGProfile * profile,
 				      char ** msg )
   __attribute__((warn_unused_result));
 
+LCFGTagList * lcfgprofile_get_components_as_taglist(
+                                               const LCFGProfile * profile );
+
+LCFGTagList * lcfgprofile_ngeneric_components( const LCFGProfile * profile );
+
 #endif /* LCFG_CORE_PROFILE_H */
 
 /* eof */
