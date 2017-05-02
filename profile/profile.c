@@ -779,7 +779,7 @@ LCFGStatus lcfgprofile_from_status_dir( const char * status_dir,
 
     struct stat sb;
     if ( stat( status_dir, &sb ) == 0 )
-      ( *result )->mtime = sb.st_mtime;
+      new_profile->mtime = sb.st_mtime;
 
   }
 
@@ -821,6 +821,97 @@ LCFGStatus lcfgprofile_to_status_dir( const LCFGProfile * profile,
 				     options,
 				     msg );
 
+}
+
+/**
+ * @brief Get the list of component names as a taglist
+ *
+ * This generates a new @c LCFGTagList which contains a list of
+ * component names for the @c LCFGProfile. If the list is empty
+ * then an empty tag list will be returned. Will return @c NULL if an
+ * error occurs. Uses @c lcfgcomplist_get_components_as_taglist() to do
+ * the work.
+ *
+ * To avoid memory leaks, when the list is no longer required the 
+ * @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] complist Pointer to @c LCFGProfile
+ *
+ * @return Pointer to a new @c LCFGTagList of component names
+ *
+ */
+
+LCFGTagList * lcfgprofile_get_components_as_taglist(
+                                               const LCFGProfile * profile ) {
+
+  LCFGTagList * names = NULL;
+  if ( !lcfgprofile_has_components(profile) ) {
+    names = lcfgtaglist_new();
+  } else {
+    names = lcfgcomplist_get_components_as_taglist(profile->components);
+  }
+
+  return names;
+}
+
+/**
+ * @brief Get the list of ngeneric component names as a taglist
+ *
+ * This generates a new @c LCFGTagList which contains a list of
+ * component names for the @c LCFGProfile. If the list is empty
+ * then an empty tag list will be returned. Will return @c NULL if an
+ * error occurs. Uses @c lcfgcomplist_get_components_as_taglist() to do
+ * the work.
+ *
+ * To avoid memory leaks, when the list is no longer required the 
+ * @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] complist Pointer to @c LCFGProfile
+ *
+ * @return Pointer to a new @c LCFGTagList of component names
+ *
+ */
+
+LCFGTagList * lcfgprofile_ngeneric_components( const LCFGProfile * profile ) {
+
+  LCFGTagList * comp_names = lcfgtaglist_new();
+
+  if ( !lcfgprofile_has_components(profile) )
+    return comp_names;
+
+  bool ok = true;
+
+  const LCFGComponentNode * cur_node = NULL;
+  for ( cur_node = lcfgcomplist_head(profile->components);
+        cur_node != NULL && ok;
+        cur_node = lcfgcomplist_next(cur_node) ) {
+
+    const LCFGComponent * cur_comp = lcfgcomplist_component(cur_node);
+
+    if ( !lcfgcomponent_is_valid(cur_comp) ) continue;
+
+    if ( lcfgcomponent_has_resource( cur_comp, "ng_statusdisplay" ) ) {
+      const char * comp_name = lcfgcomponent_get_name(cur_comp);
+
+      char * msg = NULL;
+
+      LCFGChange change = lcfgtaglist_mutate_add( comp_names, comp_name, &msg );
+      if ( change == LCFG_CHANGE_ERROR )
+        ok = false;
+
+      free(msg); /* Just ignoring any message */
+    }
+
+  }
+
+  if (ok) {
+    lcfgtaglist_sort(comp_names);
+  } else {
+    lcfgtaglist_relinquish(comp_names);
+    comp_names = NULL;
+  }
+
+  return comp_names;
 }
 
 /* eof */
