@@ -94,10 +94,10 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
   __attribute__((warn_unused_result));
 
 LCFGTagList * lcfgcomponent_get_resources_as_taglist(const LCFGComponent * comp,
-						     LCFGOption options );
+                                                     LCFGOption options );
 
 char * lcfgcomponent_get_resources_as_string( const LCFGComponent * comp,
-					      LCFGOption options );
+                                              LCFGOption options );
 
 LCFGChange lcfgcomponent_insert_next( LCFGComponent    * comp,
                                       LCFGResourceNode * resnode,
@@ -474,11 +474,10 @@ LCFGStatus lcfgcomplist_to_env( const LCFGComponentList * complist,
   __attribute__((warn_unused_result));
 
 LCFGTagList * lcfgcomplist_get_components_as_taglist(
-					     const LCFGComponentList * complist,
-					     LCFGOption options );
+					    const LCFGComponentList * complist);
 
-char * lcfgcomplist_get_components_as_string(const LCFGComponentList * complist,
-					     LCFGOption options );
+char * lcfgcomplist_get_components_as_string(
+                                            const LCFGComponentList * complist);
 
 /* Resource List iterator */
 /**

@@ -1072,15 +1072,13 @@ LCFGStatus lcfgcomplist_from_env( const char * val_pfx, const char * type_pfx,
  * @c lcfgtaglist_relinquish() function should be called.
  *
  * @param[in] complist Pointer to @c LCFGComponentList
- * @param[in] options Integer which controls behaviour.
  *
  * @return Pointer to a new @c LCFGTagList of component names
  *
  */
 
 LCFGTagList * lcfgcomplist_get_components_as_taglist(
-					    const LCFGComponentList * complist,
-                                            LCFGOption options ) {
+					  const LCFGComponentList * complist ) {
   assert( complist != NULL );
 
   LCFGTagList * comp_names = lcfgtaglist_new();
@@ -1107,7 +1105,9 @@ LCFGTagList * lcfgcomplist_get_components_as_taglist(
     free(msg); /* Just ignoring any message */
   }
 
-  if (!ok) {
+  if (ok) {
+    lcfgtaglist_sort(comp_names);
+  } else {
     lcfgtaglist_relinquish(comp_names);
     comp_names = NULL;
   }
@@ -1123,20 +1123,19 @@ LCFGTagList * lcfgcomplist_get_components_as_taglist(
  * is empty then an empty string will be returned.
  *
  * @param[in] complist Pointer to @c LCFGComponentList
- * @param[in] options Integer which controls behaviour.
  *
  * @return Pointer to a new string (call @c free(3) when no longer required)
  *
  */
 
-char * lcfgcomplist_get_components_as_string(const LCFGComponentList * complist,
-					     LCFGOption options ) {
+char * lcfgcomplist_get_components_as_string(
+                                         const LCFGComponentList * complist ) {
   assert( complist != NULL );
 
   if ( lcfgcomplist_is_empty(complist) ) return strdup("");
 
   LCFGTagList * comp_names =
-    lcfgcomplist_get_components_as_taglist( complist, options );
+    lcfgcomplist_get_components_as_taglist(complist);
 
   if ( comp_names == NULL ) return NULL;
 
