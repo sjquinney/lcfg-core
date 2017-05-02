@@ -1969,8 +1969,11 @@ bool lcfgresource_is_active( const LCFGResource * res ) {
  * the name of the component. If the type prefix is @c NULL then no
  * attempt will be made to load type information from the environment.
  *
- * This will return a new (empty) @c LCFGResource even when no
- * information is found for either of the value or type variables.
+ * If there is no variable for the resource value in the environment
+ * an error will be returned unless the @c LCFG_OPT_ALLOW_NOEXIST
+ * option is specified. When the option is specified and there is no
+ * variable the value is assumed to be an empty string. Note that this
+ * may not be a valid value for some resource types.
  *
  * To avoid memory leaks, when the newly created resource structure is
  * no longer required you should call the @c lcfgresource_relinquish()
@@ -2019,7 +2022,7 @@ LCFGStatus lcfgresource_from_env( const char * name,
   char * resname = strdup(name);
   if ( !lcfgresource_set_name( res, resname ) ) {
     status = LCFG_STATUS_ERROR;
-    *msg = lcfgresource_build_message( res, NULL, "Invalid name '%s'",
+    *msg = lcfgresource_build_message( res, compname, "Invalid name '%s'",
                                        resname );
     free(resname);
     goto cleanup;
@@ -2034,7 +2037,7 @@ LCFGStatus lcfgresource_from_env( const char * name,
     char * type_msg = NULL;
     if ( !lcfgresource_set_type_as_string( res, type, &type_msg ) ) {
       status = LCFG_STATUS_ERROR;
-      *msg = lcfgresource_build_message( res, NULL, "Invalid type '%s': %s",
+      *msg = lcfgresource_build_message( res, compname, "Invalid type '%s': %s",
                                          type, type_msg );
       free(type_msg);
       goto cleanup;
@@ -2049,7 +2052,17 @@ LCFGStatus lcfgresource_from_env( const char * name,
   const char * value = getenv(val_key);
   free(val_key);
 
-  if ( value != NULL ) {
+  if ( value == NULL ) {
+    if ( options&LCFG_OPT_ALLOW_NOEXIST ) {
+      value = ""; /* Assume it is an empty string */
+    } else {
+      status = LCFG_STATUS_ERROR;
+      *msg = lcfgresource_build_message( res, compname, 
+                                        "Could not find value in environment" );
+    }
+  }
+
+  if ( status != LCFG_STATUS_ERROR ) {
     char * res_value = strdup(value);
     if ( !lcfgresource_set_value( res, res_value ) ) {
       status = LCFG_STATUS_ERROR;
