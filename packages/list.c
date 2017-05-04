@@ -650,8 +650,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
     const LCFGPackage * pkg = lcfgpkglist_package(node);
 
-    if ( !lcfgpackage_is_valid(pkg) || !lcfgpackage_is_active(pkg) )
-      continue;
+    if ( !lcfgpackage_is_valid(pkg) ) continue;
 
     const char * name = lcfgpackage_get_name(pkg);
     if ( strcmp( name, match_name ) == 0 ) {
