@@ -631,13 +631,13 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
   bool append_new = false;
   bool accept     = false;
 
-  /* Doing a search here rather than calling find_node so that the
-     previous node can also be selected. That is needed for removals. */
-
-  if ( !lcfgpackage_has_name(new_pkg) ) {
-    lcfgutils_build_message( msg, "New package does not have a name" );
+  if ( !lcfgpackage_is_valid(new_pkg) ) {
+    lcfgutils_build_message( msg, "Package is invalid" );
     goto apply;
   }
+
+  /* Doing a search here rather than calling find_node so that the
+     previous node can also be selected. That is needed for removals. */
 
   const char * match_name = lcfgpackage_get_name(new_pkg);
   const char * match_arch = lcfgpackage_has_arch(new_pkg) ?
@@ -680,7 +680,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
     }
   }
 
-  /* Apply any prefix rules */
+  /* 1. Apply any prefix rules */
 
   if ( merge_rules&LCFG_PKG_RULE_USE_PREFIX ) {
 
@@ -730,7 +730,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   }
 
-  /* If the package is not currently in the list then just append */
+  /* 2. If the package is not currently in the list then just append */
 
   if ( cur_pkg == NULL ) {
     append_new = true;
@@ -738,7 +738,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
     goto apply;
   }
 
-  /* If the package in the list is identical then replace (updates
+  /* 3. If the package in the list is identical then replace (updates
      the derivation) */
 
   if ( merge_rules&LCFG_PKG_RULE_SQUASH_IDENTICAL ) {
@@ -752,7 +752,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   }
 
-  /* Might want to just keep everything */
+  /* 4. Might want to just keep everything */
 
   if ( merge_rules&LCFG_PKG_RULE_KEEP_ALL ) {
     append_new = true;
@@ -760,7 +760,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
     goto apply;
   }
 
-  /* Use the priorities from the context evaluations */
+  /* 5. Use the priorities from the context evaluations */
 
   if ( merge_rules&LCFG_PKG_RULE_USE_PRIORITY ) {
 
@@ -773,8 +773,8 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
       remove_old = true;
       append_new = true;
       accept     = true;
-    } else if ( opriority < priority ) {
-      accept     = true;
+    } else if ( priority < opriority ) {
+      accept     = true; /* no change, old pkg is higher priority */
     }
 
     goto apply;
