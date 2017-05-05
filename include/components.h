@@ -31,6 +31,14 @@ LCFGResourceNode * lcfgresourcenode_new(LCFGResource * res);
 
 void lcfgresourcenode_destroy(LCFGResourceNode * resnode);
 
+typedef enum {
+  LCFG_MERGE_RULE_NONE             = 0, /**< Null Option */
+  LCFG_MERGE_RULE_KEEP_ALL         = 1, /**< Keep all */
+  LCFG_MERGE_RULE_SQUASH_IDENTICAL = 2, /**< Ignore extra identical */
+  LCFG_MERGE_RULE_USE_PRIORITY     = 4, /**< Merge using context priority */
+  LCFG_MERGE_RULE_USE_PREFIX       = 8  /**< Merge using package prefix */
+} LCFGMergeRule;
+
 /**
  * @brief A structure to represent an LCFG Component
  */
@@ -40,6 +48,7 @@ struct LCFGComponent {
   char * name;              /**< Name (required) */
   LCFGResourceNode * head;  /**< The first resource node in the list */
   LCFGResourceNode * tail;  /**< The last resource node in the list */
+  LCFGMergeRule merge_rules; /**< Rules which control how resources are merged */
   unsigned int size;        /**< The length of the list */
   /*@}*/
   unsigned int _refcount;
@@ -52,6 +61,11 @@ LCFGComponent * lcfgcomponent_new(void);
 void lcfgcomponent_destroy(LCFGComponent * comp);
 void lcfgcomponent_acquire(LCFGComponent * comp);
 void lcfgcomponent_relinquish(LCFGComponent * comp);
+
+LCFGMergeRule lcfgcomponent_get_merge_rules( const LCFGComponent * comp );
+bool lcfgcomponent_set_merge_rules( LCFGComponent * comp,
+                                    LCFGMergeRule new_rules );
+  __attribute__((warn_unused_result));
 
 bool lcfgcomponent_is_valid( const LCFGComponent * comp );
 
@@ -209,9 +223,7 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
  * lcfgcomponent_insert_next() function which can be used to simply
  * append a resource structure on to the end of the specified
  * component. Depending on the situation it may be more appropriate to use
- * one of @c lcfgcomponent_insert_or_merge_resource(), 
- * @c lcfgcomponent_insert_or_replace_resource() or
- * @c lcfgcomponent_find_or_create_resource()
+ * @c lcfgcomponent_merge_resource()
  *
  * @param[in] comp Pointer to @c LCFGComponent
  * @param[in] res Pointer to @c LCFGResource
@@ -223,25 +235,24 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
 #define lcfgcomponent_append(comp, res) ( lcfgcomponent_insert_next( comp, lcfgcomponent_tail(comp), res ) )
 
 LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
-                                            const char * name );
+                                            const char * name,
+                                            bool all_priorities );
 
 LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
-                                            const char * name );
+                                            const char * name,
+                                            bool all_priorities );
 
 bool lcfgcomponent_has_resource(  const LCFGComponent * comp,
-                                  const char * name );
+                                  const char * name,
+                                  bool all_priorities );
 
 LCFGResource * lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
-                                                      const char * name );
+                                                      const char * name,
+                                                      bool all_priorities );
 
-LCFGChange lcfgcomponent_insert_or_merge_resource( LCFGComponent * comp,
-                                                   LCFGResource  * res,
-                                                   char ** msg )
-  __attribute__((warn_unused_result));
-
-LCFGChange lcfgcomponent_insert_or_replace_resource( LCFGComponent * comp,
-                                                     LCFGResource  * res,
-                                                     char ** msg )
+LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
+                                         LCFGResource  * res,
+                                         char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgcomponent_merge( LCFGComponent * comp,

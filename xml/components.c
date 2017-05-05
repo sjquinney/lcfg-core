@@ -32,6 +32,14 @@ LCFGStatus lcfgxml_process_component( xmlTextReaderPtr reader,
     goto cleanup;
   }
 
+  if ( !lcfgcomponent_set_merge_rules( lcfgcomp, 
+           LCFG_MERGE_RULE_SQUASH_IDENTICAL|LCFG_MERGE_RULE_USE_PRIORITY ) ) {
+    lcfgxml_set_error_message( errmsg,
+                               "Failed to set merge rules for component '%s'", compname );
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
+  }
+
   int topdepth = xmlTextReaderDepth(reader);
 
   bool done  = false;

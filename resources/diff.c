@@ -741,7 +741,7 @@ LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
     const char * res1_name = lcfgresource_get_name(res1);
 
     LCFGResource * res2 = comp2 != NULL ?
-      lcfgcomponent_find_resource( comp2, res1_name ) : NULL;
+      lcfgcomponent_find_resource( comp2, res1_name, false ) : NULL;
 
     LCFGDiffResource * resdiff = NULL;
     LCFGStatus rc = lcfgresource_diff( res1, res2, &resdiff );
@@ -781,7 +781,7 @@ LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
     const char * res2_name = lcfgresource_get_name(res2);
 
     if ( comp1 == NULL ||
-	 !lcfgcomponent_has_resource( comp1, res2_name ) ) {
+	 !lcfgcomponent_has_resource( comp1, res2_name, false ) ) {
 
       LCFGDiffResource * resdiff = NULL;
       LCFGStatus rc = lcfgresource_diff( NULL, res2, &resdiff );
@@ -974,7 +974,7 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
     const char * res1_name = lcfgresource_get_name(res1);
 
     const LCFGResource * res2 =
-      lcfgcomponent_find_resource( comp2, res1_name );
+      lcfgcomponent_find_resource( comp2, res1_name, false );
 
     if ( res2 == NULL || !lcfgresource_same_value( res1, res2 ) ) {
       status = LCFG_CHANGE_MODIFIED;
@@ -998,7 +998,7 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
 
       const char * res2_name = lcfgresource_get_name(res2);
 
-      if ( !lcfgcomponent_has_resource( comp1, res2_name ) ) {
+      if ( !lcfgcomponent_has_resource( comp1, res2_name, false ) ) {
         status = LCFG_CHANGE_MODIFIED;
         break;
       }

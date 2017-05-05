@@ -270,7 +270,7 @@ bool lcfgprofile_get_meta( const LCFGProfile * profile,
   if ( profcomp == NULL ) return false;
 
   const LCFGResource * metares =
-    lcfgcomponent_find_resource( profcomp, metakey );
+    lcfgcomponent_find_resource( profcomp, metakey, false );
 
   if ( metares == NULL ) return false;
 
@@ -311,7 +311,7 @@ char * lcfgprofile_nodename( const LCFGProfile * profile ) {
   /* profile.node resource is required */
 
   const LCFGResource * node_res =
-    lcfgcomponent_find_resource( profcomp, "node" );
+    lcfgcomponent_find_resource( profcomp, "node", false );
 
   if ( node_res != NULL && lcfgresource_has_value(node_res) ) {
     const char * node = lcfgresource_get_value(node_res);
@@ -319,7 +319,7 @@ char * lcfgprofile_nodename( const LCFGProfile * profile ) {
     /* profile.domain resource is optional */
 
     const LCFGResource * domain_res =
-      lcfgcomponent_find_resource( profcomp, "domain" );
+      lcfgcomponent_find_resource( profcomp, "domain", false );
 
     if ( domain_res != NULL && lcfgresource_has_value(domain_res) ) {
       const char * domain = lcfgresource_get_value(domain_res);
@@ -889,7 +889,7 @@ LCFGTagList * lcfgprofile_ngeneric_components( const LCFGProfile * profile ) {
 
     if ( !lcfgcomponent_is_valid(cur_comp) ) continue;
 
-    if ( lcfgcomponent_has_resource( cur_comp, "ng_statusdisplay" ) ) {
+    if ( lcfgcomponent_has_resource( cur_comp, "ng_statusdisplay", false ) ) {
       const char * comp_name = lcfgcomponent_get_name(cur_comp);
 
       char * msg = NULL;

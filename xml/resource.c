@@ -662,8 +662,8 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
       if ( lcfgresource_is_active(resource) ) {
         char * merge_errmsg = NULL;
         LCFGChange rc =
-          lcfgcomponent_insert_or_merge_resource( lcfgcomp, resource,
-                                                  &merge_errmsg );
+          lcfgcomponent_merge_resource( lcfgcomp, resource,
+                                        &merge_errmsg );
 
         if ( rc == LCFG_CHANGE_ERROR ) {
           status = LCFG_STATUS_ERROR;

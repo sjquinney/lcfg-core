@@ -312,7 +312,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
       break;
     }
 
-    res = lcfgcomponent_find_or_create_resource( comp, this_resname );
+    res = lcfgcomponent_find_or_create_resource( comp, this_resname, true );
     if ( res == NULL ) {
       asprintf( msg, "Failed to load LCFG resource '%s.%s'",
                 this_compname, this_resname );

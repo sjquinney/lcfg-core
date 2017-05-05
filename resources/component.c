@@ -121,6 +121,7 @@ LCFGComponent * lcfgcomponent_new(void) {
   /* Set default values */
 
   comp->name = NULL;
+  comp->merge_rules = LCFG_MERGE_RULE_NONE;
   comp->size = 0;
   comp->head = NULL;
   comp->tail = NULL;
@@ -225,6 +226,62 @@ void lcfgcomponent_relinquish(LCFGComponent * comp) {
   if ( comp->_refcount == 0 )
     lcfgcomponent_destroy(comp);
 
+}
+
+/**
+ * @brief Set the component merge rules
+ *
+ * An @c LCFGComponent may have a set of rules which control how
+ * resources should be 'merged' when using the @c
+ * lcfgcomponent_merge_resource() and @c lcfgcomponent_merge()
+ * functions. For full details, see the documentation for the @c
+ * lcfgcomponent_merge_resource() function. The following rules are
+ * supported:
+ *
+ *   - LCFG_MERGE_RULE_NONE - null rule (the default)
+ *   - LCFG_MERGE_RULE_KEEP_ALL - keep all resources
+ *   - LCFG_MERGE_RULE_SQUASH_IDENTICAL - ignore additional identical resources
+ *   - LCFG_MERGE_RULE_USE_PRIORITY - resolve conflicts using context priority 
+ *   - LCFG_MERGE_RULE_USE_PREFIX - mutate resource according to prefix (TODO)
+ * 
+ * Rules can be used in any combination by using a @c '|' (bitwise
+ * 'or').
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] new_rules Integer merge rules
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgcomponent_set_merge_rules( LCFGComponent * comp,
+                                    LCFGMergeRule new_rules ) {
+  assert( comp != NULL );
+
+  comp->merge_rules = new_rules;
+
+  return true;
+}
+
+/**
+ * @brief Get the current component merge rules
+ *
+ * An @c LCFGComponent may have a set of rules which control how
+ * resources should be 'merged' when using the @c
+ * lcfgcomponent_merge_resource() and @c lcfgcomponent_merge()
+ * functions. For full details, see the documentation for the @c
+ * lcfgcomponent_merge_resource() function.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ *
+ * @return Integer merge rules
+ *
+ */
+
+LCFGMergeRule lcfgcomponent_get_merge_rules( const LCFGComponent * comp ) {
+  assert( comp != NULL );
+
+  return comp->merge_rules;
 }
 
 /**
@@ -833,7 +890,7 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
     /* Grab the resource or create a new one if necessary */
 
     LCFGResource * res =
-      lcfgcomponent_find_or_create_resource( comp, this_resname );
+      lcfgcomponent_find_or_create_resource( comp, this_resname, true );
 
     if ( res == NULL ) {
       lcfgutils_build_message( msg, "Failed to parse line %d of status file '%s'",
@@ -1165,13 +1222,15 @@ LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
  *
  * @param[in] comp Pointer to @c LCFGComponent to be searched
  * @param[in] name The name of the required resource node
+ * @param[in] all_priorities Search through all resources (not just active)
  *
  * @return Pointer to an @c LCFGResourceNode (or the @c NULL value).
  *
  */
 
 LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
-                                            const char * name ) {
+                                            const char * name,
+                                            bool all_priorities ) {
   assert( name != NULL );
 
   if ( lcfgcomponent_is_empty(comp) ) return NULL;
@@ -1185,7 +1244,8 @@ LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
 
     const LCFGResource * res = lcfgcomponent_resource(cur_node); 
 
-    if ( !lcfgresource_has_name(res) || !lcfgresource_is_active(res) ) continue;
+    if ( !lcfgresource_has_name(res) || 
+         ( !all_priorities && !lcfgresource_is_active(res) ) ) continue;
 
     const char * res_name = lcfgresource_get_name(res);
 
@@ -1210,18 +1270,21 @@ LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
  *
  * @param[in] comp Pointer to @c LCFGComponent to be searched
  * @param[in] name The name of the required resource
+ * @param[in] all_priorities Search through all resources (not just active)
  *
  * @return Pointer to an @c LCFGResource (or the @c NULL value).
  *
  */
 
 LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
-                                            const char * name ) {
+                                            const char * name,
+                                            bool all_priorities ) {
   assert( name != NULL );
 
   LCFGResource * res = NULL;
 
-  const LCFGResourceNode * res_node = lcfgcomponent_find_node( comp, name );
+  const LCFGResourceNode * res_node = 
+    lcfgcomponent_find_node( comp, name, all_priorities );
   if ( res_node != NULL )
     res = lcfgcomponent_resource(res_node);
 
@@ -1241,16 +1304,18 @@ LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
  *
  * @param[in] comp Pointer to @c LCFGComponent to be searched (may be @c NULL)
  * @param[in] name The name of the required resource
+ * @param[in] all_priorities Search through all resources (not just active)
  *
  * @return Boolean value which indicates presence of resource in component
  *
  */
 
 bool lcfgcomponent_has_resource( const LCFGComponent * comp,
-                                 const char * name ) {
+                                 const char * name,
+                                 bool all_priorities ) {
   assert( name != NULL );
 
-  return ( lcfgcomponent_find_node( comp, name ) != NULL );
+  return ( lcfgcomponent_find_node( comp, name, all_priorities ) != NULL );
 }
 
 /**
@@ -1265,19 +1330,22 @@ bool lcfgcomponent_has_resource( const LCFGComponent * comp,
  *
  * @param[in] comp Pointer to @c LCFGComponent
  * @param[in] name The name of the required resource
+ * @param[in] all_priorities Search through all resources (not just active)
  *
  * @return The required @c LCFGResource (or @c NULL)
  *
  */
 
 LCFGResource * lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
-                                                      const char * name ) {
+                                                      const char * name,
+                                                      bool all_priorities ) {
   assert( comp != NULL );
   assert( name != NULL );
 
   /* Only searches 'active' resources */
 
-  LCFGResource * result = lcfgcomponent_find_resource( comp, name );
+  LCFGResource * result =
+    lcfgcomponent_find_resource( comp, name, all_priorities );
 
   if ( result != NULL ) return result;
 
@@ -1307,18 +1375,57 @@ LCFGResource * lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
 }
 
 /**
- * @brief Insert or merge a resource
+ * @brief Merge resource into component
  *
- * Searches the @c LCFGComponent for a matching @c LCFGResource with
- * the same name. If none is found the resource is simply added and @c
- * LCFG_CHANGE_ADDED is returned. If there is a match then the new
- * resource will be @e merged using to the priority (which comes from
- * the evaluation of the context expressions) of the two
- * resources. Whichever has the greatest priority will be retained. If
- * the new resource replaces the current then @c LCFG_CHANGE_REPLACED
- * is returned otherwise @c LCFG_CHANGE_NONE will be returned. If both
- * resources have the same priority then an unresolvable conflict
- * occurs and @c LCFG_CHANGE_ERROR is returned.
+ * Merges an @c LCFGResource into an existing @c LCFGComponent
+ * according to the particular merge rules specified for the component.
+ *
+ * The action of merging a resource into a component differs from
+ * simply appending in that a search is done to check if a resource
+ * with the same name is already present in the component. By default,
+ * with no rules specified, merging a resource when it is already
+ * present is not permitted. This behaviour can be modified in various
+ * ways, the following rules are supported (in this order):
+ *
+ *   - LCFG_MERGE_RULE_NONE - null rule (the default)
+ *   - LCFG_MERGE_RULE_USE_PREFIX - mutate value according to prefix (TODO)
+ *   - LCFG_MERGE_RULE_SQUASH_IDENTICAL - ignore additional identical resources
+ *   - LCFG_MERGE_RULE_KEEP_ALL - keep all resources
+ *   - LCFG_MERGE_RULE_USE_PRIORITY - resolve conflicts using context priority
+ * 
+ * Rules can be used in any combination by using a @c '|' (bitwise
+ * 'or'), for example @c LCFG_MERGE_RULE_SQUASH_IDENTICAL can be
+ * combined with @c LCFG_MERGE_RULE_KEEP_ALL to keep all resources which
+ * are not identical. The combination of rules can result in some very
+ * complex scenarios so care should be take to choose the best set of
+ * rules.
+ *
+ * A rule controls whether a change is accepted or rejected. If it is
+ * accepted the change can result in the removal, addition or
+ * replacement of a resource. If a rule neither explicitly accepts or
+ * rejects a resource then the next rule in the list is applied. If no
+ * rule leads to the acceptance of a change then it is rejected.
+ *
+ * <b>Squash identical</b>: If the resources are the same, according
+ * to the @c lcfgresource_equals() function (which compares name,
+ * value and context), then the current entry is replaced with the new
+ * one (which effectively updates the derivation information).
+ *
+ * <b>Keep all</b>: Keep all resources (i.e. ignore any conflicts).
+ *
+ * <b>Use priority</b>: Compare the values of the priority which is
+ * the result of evaluating the context expression (if any) for the
+ * resource. If the new resource has a greater priority then it
+ * replaces the current one. If the current has a greater priority
+ * then the new resource is ignored. If the priorities are the same
+ * the conflict remains unresolved.
+ *
+ * The process can successfully result in any of the following being returned:
+ *
+ *   - @c LCFG_CHANGE_NONE - the component is unchanged
+ *   - @c LCFG_CHANGE_ADDED - the new resource was added
+ *   - @c LCFG_CHANGE_REMOVED - the current resource was removed
+ *   - @c LCFG_CHANGE_REPLACED - the current resource was replaced with the new one
  *
  * @param[in] comp Pointer to @c LCFGComponent
  * @param[in] new_res Pointer to @c LCFGResource
@@ -1328,116 +1435,181 @@ LCFGResource * lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
  *
  */
 
-LCFGChange lcfgcomponent_insert_or_merge_resource(
-                                            LCFGComponent * comp,
-                                            LCFGResource * new_res,
-                                            char ** msg ) {
+LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
+                                         LCFGResource * new_res,
+                                         char ** msg ) {
   assert( comp != NULL );
   assert( new_res != NULL );
 
-  LCFGChange result = LCFG_CHANGE_ERROR;
+  LCFGMergeRule merge_rules = lcfgcomponent_get_merge_rules(comp);
 
-  /* Name for resource is required */
-  if ( !lcfgresource_has_name(new_res) ) return LCFG_CHANGE_ERROR;
+  /* Define these ahead of any jumps to the "apply" label */
 
-  LCFGResourceNode * cur_node =
-    lcfgcomponent_find_node( comp, lcfgresource_get_name(new_res) );
+  LCFGResourceNode * prev_node = NULL;
+  LCFGResourceNode * cur_node  = NULL;
+  LCFGResource * cur_res  = NULL;
 
-  if ( cur_node == NULL ) {
-    result = lcfgcomponent_append( comp, new_res );
-  } else {
-    LCFGResource * cur_res = lcfgcomponent_resource(cur_node);
+  /* Actions */
 
-    int priority  = lcfgresource_get_priority(new_res);
-    int opriority = lcfgresource_get_priority(cur_res);
+  bool remove_old = false;
+  bool append_new = false;
+  bool accept     = false;
 
-    /* If the priority of the older version of this resource is
-       greater than the proposed replacement then no change is
-       required. */
+  if ( !lcfgresource_is_valid(new_res) ) {
+    lcfgutils_build_message( msg, "Resource is invalid" );
+    goto apply;
+  }
 
-    if ( opriority > priority ) {  /* nothing more to do */
-      result = LCFG_CHANGE_NONE;
-    } else if ( priority > opriority ||
-                lcfgresource_same_value( cur_res, new_res ) ) {
+  /* Doing a search here rather than calling find_node so that the
+     previous node can also be selected. That is needed for removals. */
 
-      if ( !lcfgresource_same_type( cur_res, new_res ) ) {
-        /* warn about different types */
-      }
+  const char * match_name = lcfgresource_get_name(new_res);
 
-      /* replace current version of resource with new one */
+  const LCFGResourceNode * node = NULL;
+  for ( node = lcfgcomponent_head(comp);
+        node != NULL && cur_node == NULL;
+        node = lcfgcomponent_next(node) ) {
 
-      lcfgresource_acquire(new_res);
-      cur_node->resource = new_res;
+    const LCFGResource * res = lcfgcomponent_resource(node);
 
-      lcfgresource_relinquish(cur_res);
+    if ( !lcfgresource_is_valid(res) ) continue;
 
-      result = LCFG_CHANGE_REPLACED;
+    const char * name = lcfgresource_get_name(res);
 
+    if ( strcmp( name, match_name ) == 0 ) {
+      cur_node  = (LCFGResourceNode *) node;
+      cur_res   = lcfgcomponent_resource(cur_node);
     } else {
-      lcfgutils_build_message( msg, "Resource conflict" );
+      prev_node = (LCFGResourceNode *) node; /* used later if removal is required */
     }
 
   }
 
-  return result;
-}
+  /* 0. Merging a pointer to a struct which is already in the list is
+        a no-op. Note that this does not prevent the same resource
+        appearing multiple times in the list if they are in different
+        structs. */
 
-/**
- * @brief Insert or replace a resource
- *
- * Searches the @c LCFGComponent for a matching @c LCFGResource with
- * the same name. If none is found the resource is simply added and @c
- * LCFG_CHANGE_ADDED is returned. If there is a match then the new
- * resource will replace the current and @c LCFG_CHANGE_REPLACED
- * is returned.
- *
- * @param[in] comp Pointer to @c LCFGComponent
- * @param[in] new_res Pointer to @c LCFGResource
- * @param[out] msg Pointer to any diagnostic messages
- *
- * @return Integer value indicating type of change
- *
- */
+  if ( cur_res == new_res ) {
+    accept = true;
+    goto apply;
+  }
 
-LCFGChange lcfgcomponent_insert_or_replace_resource(
-                                              LCFGComponent * comp,
-                                              LCFGResource * new_res,
-                                              char ** msg ) {
-  assert( comp != NULL );
-  assert( new_res != NULL );
+  /* 1. TODO: mutations */
 
-  LCFGChange result = LCFG_CHANGE_ERROR;
 
-  /* Name for resource is required */
-  if ( !lcfgresource_has_name(new_res) ) return LCFG_CHANGE_ERROR;
+  /* 2. If the resource is not currently in the component then just append */
 
-  LCFGResourceNode * cur_node =
-    lcfgcomponent_find_node( comp, lcfgresource_get_name(new_res) );
+  if ( cur_res == NULL ) {
+    append_new = true;
+    accept     = true;
+    goto apply;
+  }
 
-  if ( cur_node == NULL ) {
-    result = lcfgcomponent_append( comp, new_res );
+  /* 3. If the resource in the component is identical then replace
+        (updates the derivation) */
+
+  if ( merge_rules&LCFG_MERGE_RULE_SQUASH_IDENTICAL ) {
+
+    if ( lcfgresource_equals( cur_res, new_res ) ) {
+      remove_old = true;
+      append_new = true;
+      accept     = true;
+      goto apply;
+    }
+  }
+
+  /* 4. Might want to just keep everything */
+
+  if ( merge_rules&LCFG_MERGE_RULE_KEEP_ALL ) {
+    append_new = true;
+    accept     = true;
+    goto apply;
+  }
+
+  /* 5. Use the priorities from the context evaluations */
+
+  if ( merge_rules&LCFG_MERGE_RULE_USE_PRIORITY ) {
+
+    int priority  = lcfgresource_get_priority(new_res);
+    int opriority = lcfgresource_get_priority(cur_res);
+
+    /* same priority for both is a conflict */
+
+    if ( priority > opriority ) {
+      remove_old = true;
+      append_new = true;
+      accept     = true;
+    } else if ( priority < opriority ) {
+      accept     = true; /* no change, old res is higher priority */
+    }
+
+    goto apply;
+  }
+
+ apply:
+  ;
+
+  /* Note that is permissible for a new resource to be "accepted"
+     without any changes occurring to the component */
+
+  LCFGChange result = LCFG_CHANGE_NONE;
+
+  if ( accept ) {
+
+    if ( remove_old && cur_node != NULL ) {
+
+      LCFGResource * old_res = NULL;
+      LCFGChange remove_rc =
+        lcfgcomponent_remove_next( comp, prev_node, &old_res );
+
+      if ( remove_rc == LCFG_CHANGE_REMOVED ) {
+        lcfgresource_relinquish(old_res);
+        result = LCFG_CHANGE_REMOVED;
+      } else {
+        lcfgutils_build_message( msg, "Failed to remove old resource" );
+        result = LCFG_CHANGE_ERROR;
+      }
+
+    }
+
+    if ( append_new && result != LCFG_CHANGE_ERROR ) {
+      LCFGChange append_rc = lcfgcomponent_append( comp, new_res );
+
+      if ( append_rc == LCFG_CHANGE_ADDED ) {
+
+        if ( result == LCFG_CHANGE_REMOVED ) {
+          result = LCFG_CHANGE_REPLACED;
+        } else {
+          result = LCFG_CHANGE_ADDED;
+        }
+
+      } else {
+        lcfgutils_build_message( msg, "Failed to append new resource" );
+        result = LCFG_CHANGE_ERROR;
+      }
+
+    }
+
   } else {
-    LCFGResource * cur_res = lcfgcomponent_resource(cur_node);
+    result = LCFG_CHANGE_ERROR;
 
-    /* replace current version of resource with new one */
+    if ( *msg == NULL )
+      *msg = lcfgresource_build_message( cur_res, lcfgcomponent_get_name(comp),
+                                         "conflict" );
 
-    lcfgresource_acquire(new_res);
-    cur_node->resource = new_res;
-
-    lcfgresource_relinquish(cur_res);
-
-    result = LCFG_CHANGE_REPLACED;
   }
 
   return result;
 }
+
 
 /**
  * @brief Merge overrides from one component to another
  *
  * Iterates through the list of resources in the overrides @c
  * LCFGComponent and merges them to the target component by calling
- * @c lcfgcomponent_insert_or_replace_resource().
+ * @c lcfgcomponent_merge_resource().
  *
  * @param[in] comp Pointer to @c LCFGComponent
  * @param[in] overrides Pointer to override @c LCFGComponent
@@ -1463,8 +1635,7 @@ LCFGChange lcfgcomponent_merge( LCFGComponent * comp,
 
     LCFGResource * override_res = lcfgcomponent_resource(cur_node);
 
-    LCFGChange rc =
-      lcfgcomponent_insert_or_replace_resource( comp, override_res, msg );
+    LCFGChange rc = lcfgcomponent_merge_resource( comp, override_res, msg );
 
     if ( rc == LCFG_CHANGE_ERROR ) {
       change = LCFG_CHANGE_ERROR;
