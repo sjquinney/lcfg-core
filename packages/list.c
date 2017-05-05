@@ -273,6 +273,7 @@ bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
  * @return Integer merge rules
  *
  */
+
 LCFGPkgRule lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist ) {
   assert( pkglist != NULL );
 
