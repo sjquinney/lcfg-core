@@ -452,10 +452,10 @@ LCFGChange lcfgcomplist_transplant_components( LCFGComponentList * list1,
                                                char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgcomplist_merge( LCFGComponentList * list1,
-			       const LCFGComponentList * list2,
-			       bool take_new,
-			       char ** msg )
+LCFGChange lcfgcomplist_merge_components( LCFGComponentList * list1,
+					  const LCFGComponentList * list2,
+					  bool take_new,
+					  char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,

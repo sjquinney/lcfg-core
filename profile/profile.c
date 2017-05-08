@@ -477,7 +477,7 @@ LCFGChange lcfgprofile_insert_or_replace_component( LCFGProfile   * profile,
  *
  * This will @e merge the components and packages from the second
  * profile into the first. This is done using the @c
- * lcfgcomplist_merge() and @c lcfgpkglist_merge_list() functions.
+ * lcfgcomplist_merge_components() and @c lcfgpkglist_merge_list() functions.
  *
  * If a component from the second profile does NOT exist in the first
  * then it will only be added when the @c take_new_comps parameter is
@@ -512,10 +512,10 @@ LCFGStatus lcfgprofile_merge( LCFGProfile * profile1,
     if ( profile1->components == NULL && take_new_comps )
       profile1->components = lcfgcomplist_new();
 
-    LCFGChange change = lcfgcomplist_merge( profile1->components,
-					    profile2->components,
-					    take_new_comps,
-					    msg );
+    LCFGChange change = lcfgcomplist_merge_components( profile1->components,
+						       profile2->components,
+						       take_new_comps,
+						       msg );
 
     if ( change == LCFG_CHANGE_ERROR )
       status = LCFG_STATUS_ERROR;

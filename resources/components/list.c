@@ -608,10 +608,10 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
  *
  */
 
-LCFGChange lcfgcomplist_merge_component( LCFGComponentList * list1,
-					 const LCFGComponentList * list2,
-					 bool take_new,
-					 char ** msg ) {
+LCFGChange lcfgcomplist_merge_components( LCFGComponentList * list1,
+					  const LCFGComponentList * list2,
+					  bool take_new,
+					  char ** msg ) {
   assert( list1 != NULL );
 
   /* No overrides to apply if second list is empty */
