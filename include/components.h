@@ -31,14 +31,6 @@ LCFGResourceNode * lcfgresourcenode_new(LCFGResource * res);
 
 void lcfgresourcenode_destroy(LCFGResourceNode * resnode);
 
-typedef enum {
-  LCFG_MERGE_RULE_NONE             = 0, /**< Null Option */
-  LCFG_MERGE_RULE_KEEP_ALL         = 1, /**< Keep all */
-  LCFG_MERGE_RULE_SQUASH_IDENTICAL = 2, /**< Ignore extra identical */
-  LCFG_MERGE_RULE_USE_PRIORITY     = 4, /**< Merge using context priority */
-  LCFG_MERGE_RULE_USE_PREFIX       = 8  /**< Merge using package prefix */
-} LCFGMergeRule;
-
 /**
  * @brief A structure to represent an LCFG Component
  */

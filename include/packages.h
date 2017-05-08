@@ -253,18 +253,6 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
 /* Package Lists */
 
 /**
- * @brief Rules for merging a package into a list
- */
-
-typedef enum {
-  LCFG_PKG_RULE_NONE             = 0, /**< Null Option */
-  LCFG_PKG_RULE_KEEP_ALL         = 1, /**< Keep all packages */
-  LCFG_PKG_RULE_SQUASH_IDENTICAL = 2, /**< Ignore extra identical package */
-  LCFG_PKG_RULE_USE_PRIORITY     = 4, /**< Merge using context priority */
-  LCFG_PKG_RULE_USE_PREFIX       = 8  /**< Merge using package prefix */
-} LCFGPkgRule;
-
-/**
  * @brief A structure to wrap an LCFG package as a single-linked list item
  */
 
@@ -287,7 +275,7 @@ struct LCFGPackageList {
   /*@{*/
   LCFGPackageNode * head;  /**< The first package node in the list */
   LCFGPackageNode * tail;  /**< The last package node in the list */
-  LCFGPkgRule merge_rules; /**< Rules which control how packages are merged */
+  LCFGMergeRule merge_rules; /**< Rules which control how packages are merged */
   unsigned int size;       /**< The length of the list */
   /*@}*/
   unsigned int _refcount;
@@ -301,10 +289,10 @@ void lcfgpkglist_destroy(LCFGPackageList * pkglist);
 void lcfgpkglist_acquire( LCFGPackageList * pkglist );
 void lcfgpkglist_relinquish( LCFGPackageList * pkglist );
 
-LCFGPkgRule lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist );
+LCFGMergeRule lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist );
 
 bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
-				  LCFGPkgRule new_rules )
+				  LCFGMergeRule new_rules )
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,

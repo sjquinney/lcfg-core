@@ -68,6 +68,18 @@ typedef enum {
   LCFG_OPT_ALL_VALUES     = 1024 /**< Include all values */
 } LCFGOption;
 
+/**
+ * @brief Options to control how resources or packages are merged into lists
+ */
+
+typedef enum {
+  LCFG_MERGE_RULE_NONE             = 0, /**< Null Option */
+  LCFG_MERGE_RULE_KEEP_ALL         = 1, /**< Keep all */
+  LCFG_MERGE_RULE_SQUASH_IDENTICAL = 2, /**< Ignore extra identical */
+  LCFG_MERGE_RULE_USE_PRIORITY     = 4, /**< Merge according to context priority */
+  LCFG_MERGE_RULE_USE_PREFIX       = 8  /**< Merge/mutate according to prefix */
+} LCFGMergeRule;
+
 #endif /* LCFG_CORE_COMMON_H */
 
 /* eof */

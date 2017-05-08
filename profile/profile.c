@@ -522,10 +522,10 @@ LCFGStatus lcfgprofile_merge( LCFGProfile * profile1,
   }
 
   /* default rules, only used when creating new empty lists */
-  LCFGPkgRule active_merge_rules =
-    LCFG_PKG_RULE_SQUASH_IDENTICAL | LCFG_PKG_RULE_USE_PRIORITY;
-  LCFGPkgRule inactive_merge_rules =
-    LCFG_PKG_RULE_SQUASH_IDENTICAL | LCFG_PKG_RULE_KEEP_ALL;
+  LCFGMergeRule active_merge_rules =
+    LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_USE_PRIORITY;
+  LCFGMergeRule inactive_merge_rules =
+    LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_KEEP_ALL;
 
   /* Merge active packages lists */
 

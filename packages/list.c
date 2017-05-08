@@ -120,7 +120,7 @@ LCFGPackageList * lcfgpkglist_new(void) {
     exit(EXIT_FAILURE);
   }
 
-  pkglist->merge_rules = LCFG_PKG_RULE_NONE;
+  pkglist->merge_rules = LCFG_MERGE_RULE_NONE;
   pkglist->head        = NULL;
   pkglist->tail        = NULL;
   pkglist->size        = 0;
@@ -234,11 +234,11 @@ void lcfgpkglist_relinquish( LCFGPackageList * pkglist ) {
  * @c lcfgpkglist_merge_package() function. The following rules are
  * supported: 
  *
- *   - LCFG_PKG_RULE_NONE - null rule (the default)
- *   - LCFG_PKG_RULE_KEEP_ALL - keep all packages
- *   - LCFG_PKG_RULE_SQUASH_IDENTICAL - ignore additional identical versions of packages
- *   - LCFG_PKG_RULE_USE_PRIORITY - resolve conflicts using context priority value
- *   - LCFG_PKG_RULE_USE_PREFIX - resolve conflicts using the package prefix
+ *   - LCFG_MERGE_RULE_NONE - null rule (the default)
+ *   - LCFG_MERGE_RULE_KEEP_ALL - keep all packages
+ *   - LCFG_MERGE_RULE_SQUASH_IDENTICAL - ignore additional identical versions of packages
+ *   - LCFG_MERGE_RULE_USE_PRIORITY - resolve conflicts using context priority value
+ *   - LCFG_MERGE_RULE_USE_PREFIX - resolve conflicts using the package prefix
  * 
  * Rules can be used in any combination by using a @c '|' (bitwise
  * 'or').
@@ -251,7 +251,7 @@ void lcfgpkglist_relinquish( LCFGPackageList * pkglist ) {
  */
 
 bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
-				  LCFGPkgRule new_rules ) {
+				  LCFGMergeRule new_rules ) {
   assert( pkglist != NULL );
 
   pkglist->merge_rules = new_rules;
@@ -274,7 +274,7 @@ bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
  *
  */
 
-LCFGPkgRule lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist ) {
+LCFGMergeRule lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist ) {
   assert( pkglist != NULL );
 
   return pkglist->merge_rules;
@@ -553,16 +553,16 @@ bool lcfgpkglist_contains( const LCFGPackageList * pkglist,
  * modified in various ways, the following rules are supported (in
  * this order):
  *
- *   - LCFG_PKG_RULE_NONE - null rule (the default)
- *   - LCFG_PKG_RULE_USE_PREFIX - resolve conflicts using the package prefix
- *   - LCFG_PKG_RULE_SQUASH_IDENTICAL - ignore additional identical versions of packages
- *   - LCFG_PKG_RULE_KEEP_ALL - keep all packages
- *   - LCFG_PKG_RULE_USE_PRIORITY - resolve conflicts using context priority val
+ *   - LCFG_MERGE_RULE_NONE - null rule (the default)
+ *   - LCFG_MERGE_RULE_USE_PREFIX - resolve conflicts using the package prefix
+ *   - LCFG_MERGE_RULE_SQUASH_IDENTICAL - ignore additional identical versions of packages
+ *   - LCFG_MERGE_RULE_KEEP_ALL - keep all packages
+ *   - LCFG_MERGE_RULE_USE_PRIORITY - resolve conflicts using context priority val
 ue
  * 
  * Rules can be used in any combination by using a @c '|' (bitwise
- * 'or'), for example @c LCFG_PKG_RULE_SQUASH_IDENTICAL can be
- * combined with @c LCFG_PKG_RULE_KEEP_ALL to keep all packages which
+ * 'or'), for example @c LCFG_MERGE_RULE_SQUASH_IDENTICAL can be
+ * combined with @c LCFG_MERGE_RULE_KEEP_ALL to keep all packages which
  * are not identical. The combination of rules can result in some very
  * complex scenarios so care should be take to choose the best set of
  * rules.
@@ -618,7 +618,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
   assert( pkglist != NULL );
   assert( new_pkg != NULL );
 
-  LCFGPkgRule merge_rules = lcfgpkglist_get_merge_rules(pkglist);
+  LCFGMergeRule merge_rules = lcfgpkglist_get_merge_rules(pkglist);
 
   /* Define these ahead of any jumps to the "apply" label */
 
@@ -683,7 +683,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   /* 1. Apply any prefix rules */
 
-  if ( merge_rules&LCFG_PKG_RULE_USE_PREFIX ) {
+  if ( merge_rules&LCFG_MERGE_RULE_USE_PREFIX ) {
 
     char cur_prefix = cur_pkg != NULL ?
                       lcfgpackage_get_prefix(cur_pkg) : '\0';
@@ -742,7 +742,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
   /* 3. If the package in the list is identical then replace (updates
      the derivation) */
 
-  if ( merge_rules&LCFG_PKG_RULE_SQUASH_IDENTICAL ) {
+  if ( merge_rules&LCFG_MERGE_RULE_SQUASH_IDENTICAL ) {
 
     if ( lcfgpackage_equals( cur_pkg, new_pkg ) ) {
       remove_old = true;
@@ -755,7 +755,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   /* 4. Might want to just keep everything */
 
-  if ( merge_rules&LCFG_PKG_RULE_KEEP_ALL ) {
+  if ( merge_rules&LCFG_MERGE_RULE_KEEP_ALL ) {
     append_new = true;
     accept     = true;
     goto apply;
@@ -763,7 +763,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   /* 5. Use the priorities from the context evaluations */
 
-  if ( merge_rules&LCFG_PKG_RULE_USE_PRIORITY ) {
+  if ( merge_rules&LCFG_MERGE_RULE_USE_PRIORITY ) {
 
     int priority  = lcfgpackage_get_priority(new_pkg);
     int opriority = lcfgpackage_get_priority(cur_pkg);
@@ -1148,9 +1148,9 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
   pkglist = lcfgpkglist_new();
 
-  LCFGPkgRule merge_rules = LCFG_PKG_RULE_SQUASH_IDENTICAL;
+  LCFGMergeRule merge_rules = LCFG_MERGE_RULE_SQUASH_IDENTICAL;
   if (all_contexts)
-    merge_rules = merge_rules | LCFG_PKG_RULE_KEEP_ALL;
+    merge_rules = merge_rules | LCFG_MERGE_RULE_KEEP_ALL;
 
   lcfgpkglist_set_merge_rules( pkglist, merge_rules );
 
