@@ -233,7 +233,7 @@ void lcfgcomponent_relinquish(LCFGComponent * comp) {
  *
  * An @c LCFGComponent may have a set of rules which control how
  * resources should be 'merged' when using the @c
- * lcfgcomponent_merge_resource() and @c lcfgcomponent_merge()
+ * lcfgcomponent_merge_resource() and @c lcfgcomponent_merge_component()
  * functions. For full details, see the documentation for the @c
  * lcfgcomponent_merge_resource() function. The following rules are
  * supported:
@@ -268,7 +268,7 @@ bool lcfgcomponent_set_merge_rules( LCFGComponent * comp,
  *
  * An @c LCFGComponent may have a set of rules which control how
  * resources should be 'merged' when using the @c
- * lcfgcomponent_merge_resource() and @c lcfgcomponent_merge()
+ * lcfgcomponent_merge_resource() and @c lcfgcomponent_merge_component()
  * functions. For full details, see the documentation for the @c
  * lcfgcomponent_merge_resource() function.
  *
@@ -1619,9 +1619,9 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
  *
  */
 
-LCFGChange lcfgcomponent_merge( LCFGComponent * comp,
-                                const LCFGComponent * overrides,
-                                char ** msg ) {
+LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp,
+					  const LCFGComponent * overrides,
+					  char ** msg ) {
   assert( comp != NULL );
 
   if ( lcfgcomponent_is_empty(overrides) ) return LCFG_CHANGE_NONE;

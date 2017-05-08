@@ -589,9 +589,9 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
  *
  * This will @e merge the components from the second list into the
  * first. If the component appears in both lists the @c
- * lcfgcomponent_merge() function will be used to merge the two. For
- * each resource in the second component if it also exists in the
- * first list it will be replaced if not it is just added.
+ * lcfgcomponent_merge_component() function will be used to merge the
+ * two. For each resource in the second component if it also exists in
+ * the first list it will be replaced if not it is just added.
  *
  * If the component from the second profile does NOT exist in the
  * first then it will only be added when the @c take_new parameter is
@@ -608,10 +608,10 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
  *
  */
 
-LCFGChange lcfgcomplist_merge( LCFGComponentList * list1,
-			       const LCFGComponentList * list2,
-			       bool take_new,
-			       char ** msg ) {
+LCFGChange lcfgcomplist_merge_component( LCFGComponentList * list1,
+					 const LCFGComponentList * list2,
+					 bool take_new,
+					 char ** msg ) {
   assert( list1 != NULL );
 
   /* No overrides to apply if second list is empty */
@@ -637,7 +637,7 @@ LCFGChange lcfgcomplist_merge( LCFGComponentList * list1,
 
     LCFGChange rc = LCFG_CHANGE_NONE;
     if ( target_comp != NULL ) {
-      rc = lcfgcomponent_merge( target_comp, override_comp, msg );
+      rc = lcfgcomponent_merge_component( target_comp, override_comp, msg );
     } else if ( take_new ) {
       rc = lcfgcomplist_append( list1, override_comp );
     }

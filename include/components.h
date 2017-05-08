@@ -255,9 +255,9 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
                                          char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgcomponent_merge( LCFGComponent * comp,
-                                const LCFGComponent * overrides,
-                                char ** msg )
+LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp,
+					  const LCFGComponent * overrides,
+					  char ** msg )
   __attribute__((warn_unused_result));
 
 void lcfgcomponent_sort( LCFGComponent * comp );
