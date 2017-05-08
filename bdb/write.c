@@ -36,6 +36,8 @@
 
 DB * lcfgbdb_init_writer( const char * filename,
                           char ** msg ) {
+  assert( filename != NULL );
+
   return lcfgbdb_open_db( filename, DB_CREATE | DB_EXCL, msg );
 }
 
@@ -73,6 +75,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
                                  const char * namespace,
                                  DB * dbh,
                                  char ** msg ) {
+  assert( dbh != NULL );
 
   if ( lcfgcomponent_is_empty(component) ) return LCFG_STATUS_OK;
 
@@ -377,6 +380,7 @@ LCFGStatus lcfgcomplist_to_bdb( const LCFGComponentList * components,
                                 const char * namespace,
                                 DB * dbh,
                                 char ** msg ) {
+  assert( dbh != NULL );
 
   if ( lcfgcomplist_is_empty(components) ) return LCFG_STATUS_OK;
 
@@ -432,6 +436,8 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
                                const char * namespace,
                                const char * dbfile,
                                char ** msg ) {
+  assert( profile != NULL );
+  assert( dbfile != NULL );
 
   /* Early declarations so available if jumping to cleanup */
   LCFGStatus status = LCFG_STATUS_OK;

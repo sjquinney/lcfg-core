@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 
 #include <db.h>
 
@@ -56,6 +57,7 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
                                  const char * namespace,
 				 LCFGOption options,
                                  char ** msg ) {
+  assert( filename != NULL );
 
   LCFGStatus status = LCFG_STATUS_OK;
 
@@ -125,6 +127,8 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
                                    const char * namespace,
 				   LCFGOption options,
                                    char ** msg ) {
+  assert( filename != NULL );
+  assert( compname != NULL );
 
   if ( !lcfgcomponent_valid_name(compname) ) {
     lcfgutils_build_message( msg, "Invalid component name '%s'", compname );
@@ -225,6 +229,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
                                        const LCFGTagList * comps_wanted,
                                        const char * namespace,
                                        char ** msg ) {
+  assert( dbh != NULL );
 
   *result = NULL;
 
@@ -395,6 +400,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
 DB * lcfgbdb_open_db( const char * filename,
                       u_int32_t flags,
                       char ** msg ) {
+  assert( filename != NULL );
 
   DB *dbp;               /* DB structure handle */
   int ret;               /* function return value */
@@ -444,6 +450,7 @@ DB * lcfgbdb_open_db( const char * filename,
 
 DB * lcfgbdb_init_reader( const char * filename,
                           char ** msg ) {
+  assert( filename != NULL );
 
   FILE * file;
   if ( ( file = fopen(filename, "r") ) == NULL ) {
