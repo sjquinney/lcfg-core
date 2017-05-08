@@ -1,5 +1,5 @@
 /**
- * @file resources/taglist.c
+ * @file resources/tags/list.c
  * @brief Functions for working with lists of LCFG resource tags
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date$

@@ -1,5 +1,5 @@
 /**
- * @file resources/complist.c
+ * @file resources/components/list.c
  * @brief Functions for working with lists of LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * $Date$

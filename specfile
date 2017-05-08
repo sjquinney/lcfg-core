@@ -52,6 +52,8 @@ rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 # Removed for now to avoid conflict with old lcfg-utils package
 rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec $RPM_BUILD_ROOT/usr/sbin/daemon $RPM_BUILD_ROOT/usr/sbin/lcfgmsg $RPM_BUILD_ROOT/usr/sbin/shiftpressed
+
+
 %post -p /sbin/ldconfig
 
 %postun -p /sbin/ldconfig
