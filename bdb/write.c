@@ -1,4 +1,10 @@
-#define _GNU_SOURCE /* for asprintf */
+/**
+ * @file bdb/write.c
+ * @brief Functions for writing a profile to Berkeley DB
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date: 2017-05-02 15:30:13 +0100 (Tue, 02 May 2017) $
+ * $Revision: 32603 $
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,27 +74,30 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
                                  DB * dbh,
                                  char ** msg ) {
 
-  if ( component == NULL || lcfgcomponent_is_empty(component) )
-    return LCFG_STATUS_OK;
+  if ( lcfgcomponent_is_empty(component) ) return LCFG_STATUS_OK;
 
   /* A sorted list of resources is stored for each component keyed on
      the component name. It does not appear to be used but we still do
      it to ensure backwards compatibility. */
 
-  const char * compname = lcfgcomponent_get_name(component);
-  if ( compname == NULL || *compname == '\0' ) {
-    asprintf( msg, "Component does not have a name" );
+  if ( !lcfgcomponent_has_name(component) ) {
+    lcfgutils_build_message( msg, "Component does not have a name" );
     return LCFG_STATUS_ERROR;
   }
+
+  const char * compname = lcfgcomponent_get_name(component);
 
   /* Declarations ahead of any jumps to cleanup */
 
   LCFGStatus status = LCFG_STATUS_OK;
 
+  /* Using a taglist to track the list of names of stored resources */
+  LCFGTagList * stored_res = lcfgtaglist_new();
+
   /* This is used (and reused) as a buffer for all the resource keys
      to avoid allocating and freeing lots of memory. */
 
-  char * reskey = NULL;
+  char * res_buf = NULL;
   size_t buf_size = 0;
   ssize_t keylen = 0;
 
@@ -98,30 +107,12 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
   memset( &key,  0, sizeof(DBT) );
   memset( &data, 0, sizeof(DBT) );
 
-  key.data = (char *) compname;
-  key.size = strlen(compname);
+  const LCFGResourceNode * cur_node = NULL;
+  for ( cur_node = lcfgcomponent_head(comp);
+	cur_node != NULL && status != LCFG_STATUS_ERROR;
+	cur_node = lcfgcomponent_next(cur_node) ) {
 
-  char * res_as_str = lcfgcomponent_get_resources_as_string( component,
-							     LCFG_OPT_NONE );
-
-  data.data = res_as_str;
-  data.size = strlen(res_as_str);
-
-  int ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
-
-  free(res_as_str);
-  res_as_str = NULL;
-
-  if ( ret != 0 ) {
-    status = LCFG_STATUS_ERROR;
-    asprintf( msg, "Failed to store list of resources for component: %s\n",
-              db_strerror(ret) );
-    goto cleanup;
-  }
-
-  LCFGResourceNode * cur_node = lcfgcomponent_head(component);
-  while ( cur_node != NULL ) {
-    LCFGResource * resource = lcfgcomponent_resource(cur_node);
+    const LCFGResource * resource = lcfgcomponent_resource(cur_node);
 
     /* Only want to store active resources (priority >= 0).
        They MUST have a name. */
@@ -136,25 +127,26 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
                                        compname,
                                        namespace,
                                        LCFG_RESOURCE_SYMBOL_DERIVATION,
-                                       &reskey, &buf_size );
+                                       &res_buf, &buf_size );
 
       if ( keylen < 0 ) {
+	status = LCFG_STATUS_ERROR;
 	*msg = lcfgresource_build_message( resource, compname,
 					   "Failed to build derivation key" );
 	break;
       }
 
-      key.data = reskey;
+      key.data = res_buf;
       key.size = keylen;
 
-      char * deriv = lcfgresource_get_derivation(resource);
-      data.data = deriv;
+      const char * deriv = lcfgresource_get_derivation(resource);
+      data.data = (char *) deriv;
       data.size = strlen(deriv);
 
       ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
       if ( ret != 0 ) {
         status = LCFG_STATUS_ERROR;
-        asprintf( msg, "Failed to store resource derivation data: %s\n",
+        lcfgutils_build_message( msg, "Failed to store resource derivation data: %s\n",
                   db_strerror(ret) );
         break;
       }
@@ -170,15 +162,16 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
                                        compname,
                                        namespace,
                                        LCFG_RESOURCE_SYMBOL_TYPE,
-                                       &reskey, &buf_size );
+                                       &res_buf, &buf_size );
 
       if ( keylen < 0 ) {
+	status = LCFG_STATUS_ERROR;
 	*msg = lcfgresource_build_message( resource, compname,
 					   "Failed to build type key" );
 	break;
       }
 
-      key.data = reskey;
+      key.data = res_buf;
       key.size = keylen;
 
       char * type_as_str =
@@ -192,8 +185,9 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
 
       if ( ret != 0 ) {
         status = LCFG_STATUS_ERROR;
-        asprintf( msg, "Failed to store resource type data: %s\n",
-                  db_strerror(ret) );
+        lcfgutils_build_message( msg,
+				 "Failed to store resource type data: %s\n",
+				 db_strerror(ret) );
         break;
       }
 
@@ -207,26 +201,28 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
                                        compname,
                                        namespace,
                                        LCFG_RESOURCE_SYMBOL_CONTEXT,
-                                       &reskey, &buf_size );
+                                       &res_buf, &buf_size );
 
       if ( keylen < 0 ) {
+	status = LCFG_STATUS_ERROR;
 	*msg = lcfgresource_build_message( resource, compname,
 					   "Failed to build context key" );
 	break;
       }
 
-      key.data = reskey;
+      key.data = res_buf;
       key.size = keylen;
 
-      char * context = lcfgresource_get_context(resource);
-      data.data = context;
+      const char * context = lcfgresource_get_context(resource);
+      data.data = (char *) context;
       data.size = strlen(context);
 
       ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
       if ( ret != 0 ) {
         status = LCFG_STATUS_ERROR;
-        asprintf( msg, "Failed to store resource context data: %s\n",
-                  db_strerror(ret) );
+        lcfgutils_build_message( msg,
+				 "Failed to store resource context data: %s\n",
+				 db_strerror(ret) );
         break;
       }
 
@@ -243,15 +239,16 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
                                        compname,
                                        namespace,
                                        LCFG_RESOURCE_SYMBOL_PRIORITY,
-                                       &reskey, &buf_size );
+                                       &res_buf, &buf_size );
 
       if ( keylen < 0 ) {
+	status = LCFG_STATUS_ERROR;
 	*msg = lcfgresource_build_message( resource, compname,
 					   "Failed to build priority key" );
 	break;
       }
 
-      key.data = reskey;
+      key.data = res_buf;
       key.size = keylen;
 
       char * prio_as_str = lcfgresource_get_priority_as_string(resource);
@@ -264,8 +261,9 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
 
       if ( ret != 0 ) {
         status = LCFG_STATUS_ERROR;
-        asprintf( msg, "Failed to store resource priority data: %s\n",
-                  db_strerror(ret) );
+        lcfgutils_build_message( msg,
+				 "Failed to store resource priority data: %s\n",
+				 db_strerror(ret) );
         break;
       }
 
@@ -277,38 +275,82 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
                                      compname,
                                      namespace,
                                      LCFG_RESOURCE_SYMBOL_VALUE,
-                                     &reskey, &buf_size );
+                                     &res_buf, &buf_size );
 
     if ( keylen < 0 ) {
+      status = LCFG_STATUS_ERROR;
       *msg = lcfgresource_build_message( resource, compname,
 					 "Failed to build value key" );
       break;
     }
 
-    key.data = reskey;
+    key.data = res_buf;
     key.size = keylen;
 
-    char * value = lcfgresource_has_value(resource) ?
-                   lcfgresource_get_value(resource) : "";
+    const char * value = lcfgresource_has_value(resource) ?
+                         lcfgresource_get_value(resource) : "";
 
-    data.data = value;
+    data.data = (char *) value;
     data.size = strlen(value);
 
     ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
 
     if ( ret != 0 ) {
       status = LCFG_STATUS_ERROR;
-      asprintf( msg, "Failed to store resource value data: %s\n",
-                db_strerror(ret) );
+      lcfgutils_build_message( msg,
+			       "Failed to store resource value data: %s\n",
+			       db_strerror(ret) );
       break;
     }
 
-    cur_node = lcfgcomponent_next(cur_node);
+    /* Stash the resource name */
+
+    const char * res_name = lcfgresource_get_name(resource);
+
+    char * add_msg = NULL;
+    LCFGChange add_rc = lcfgtaglist_mutate_add( stored_res, res_name,
+						&add_msg );
+    if ( add_rc == LCFG_CHANGE_ERROR )
+      status = LCFG_STATUS_ERROR;
+
+    free(add_msg);
+
+  }
+
+  /* Store the list of resource names */
+
+  if ( status != LCFG_STATUS_ERROR ) {
+
+    lcfgtaglist_sort(stored_res);
+
+    ssize_t len = lcfgtaglist_to_string( stored_res, LCFG_OPT_NONE,
+                                         &res_buf, &buf_size );
+
+    if ( len > 0 ) {
+
+      key.data = (char *) compname;
+      key.size = strlen(compname);
+
+      data.data = res_buf;
+      data.size = len;
+
+      int ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
+
+      if ( ret != 0 ) {
+	status = LCFG_STATUS_ERROR;
+	lcfgutils_build_message( msg,
+	   "Failed to store list of resources for component: %s\n",
+				 db_strerror(ret) );
+	goto cleanup;
+      }
+    }
+
   }
 
  cleanup:
 
-  free(reskey);
+  lcfgtaglist_relinquish(stored_res);
+  free(res_buf);
 
   return status;
 }
@@ -335,24 +377,21 @@ LCFGStatus lcfgcomplist_to_bdb( const LCFGComponentList * components,
                                 DB * dbh,
                                 char ** msg ) {
 
-  if ( components == NULL || lcfgcomplist_is_empty(components) )
-    return LCFG_STATUS_OK;
+  if ( lcfgcomplist_is_empty(components) ) return LCFG_STATUS_OK;
 
   LCFGStatus status = LCFG_STATUS_OK;
 
-  LCFGComponentNode * cur_node = lcfgcomplist_head(components);
-  while ( cur_node != NULL ) {
+  const LCFGComponentNode * cur_node = NULL;
+  for ( cur_node = lcfgcomplist_head(components);
+	cur_node != NULL && status != LCFG_STATUS_ERROR;
+	cur_node = lcfgcomplist_next(cur_node) ) {
+
     const LCFGComponent * component = lcfgcomplist_component(cur_node);
     
     status = lcfgcomponent_to_bdb( component,
                                    namespace,
                                    dbh,
                                    msg );
-
-    if ( status != LCFG_STATUS_OK )
-      break;
-
-    cur_node = lcfgcomplist_next(cur_node);
   }
 
   return status;
@@ -393,8 +432,6 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
                                const char * dbfile,
                                char ** msg ) {
 
-  *msg = NULL;
-
   /* Early declarations so available if jumping to cleanup */
   LCFGStatus status = LCFG_STATUS_OK;
   char * tmpfile = NULL;
@@ -420,7 +457,7 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
   char * dirname = lcfgutils_dirname(dbfile);
   if ( dirname == NULL ) {
     status = LCFG_STATUS_ERROR;
-    asprintf( msg, "Failed to get directory part of path '%s'", dbfile );
+    lcfgutils_build_message( msg, "Failed to get directory part of path '%s'", dbfile );
     goto cleanup;
   }
 
@@ -429,7 +466,7 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
 
   if ( tmpfile == NULL ) {
     status = LCFG_STATUS_ERROR;
-    asprintf( msg, "Failed to generate safe temporary file name");
+    lcfgutils_build_message( msg, "Failed to generate safe temporary file name");
     goto cleanup;
   }
 
@@ -437,7 +474,7 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
   DB * dbh = lcfgbdb_init_writer( tmpfile, &init_errmsg );
   if ( dbh == NULL ) {
     status = LCFG_STATUS_ERROR;
-    asprintf( msg, "Failed to initialise new DB: %s", init_errmsg );
+    lcfgutils_build_message( msg, "Failed to initialise new DB: %s", init_errmsg );
   }
 
   free(init_errmsg);
@@ -469,7 +506,7 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
 
     } else {
       status = LCFG_STATUS_ERROR;
-      asprintf( msg, "Failed to rename DB file to '%s'", dbfile );
+      lcfgutils_build_message( msg, "Failed to rename DB file to '%s'", dbfile );
     }
 
   }
