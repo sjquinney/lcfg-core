@@ -101,6 +101,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
   size_t buf_size = 0;
   ssize_t keylen = 0;
 
+  int ret;
   DBT key, data;
 
   /* Initialize our DBTs. */
@@ -108,7 +109,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
   memset( &data, 0, sizeof(DBT) );
 
   const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(comp);
+  for ( cur_node = lcfgcomponent_head(component);
 	cur_node != NULL && status != LCFG_STATUS_ERROR;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
