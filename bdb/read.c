@@ -1,4 +1,10 @@
-#define _GNU_SOURCE /* for asprintf */
+/**
+ * @file bdb/read.c
+ * @brief Functions for reading a profile from Berkeley DB
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date: 2017-05-02 15:30:13 +0100 (Tue, 02 May 2017) $
+ * $Revision: 32603 $
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +16,7 @@
 
 #include <db.h>
 
+#include "utils.h"
 #include "bdb.h"
 
 /**
@@ -49,8 +56,6 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
                                  const char * namespace,
 				 LCFGOption options,
                                  char ** msg ) {
-
-  *msg = NULL;
 
   LCFGStatus status = LCFG_STATUS_OK;
 
@@ -121,10 +126,8 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
 				   LCFGOption options,
                                    char ** msg ) {
 
-  *msg = NULL;
-
   if ( !lcfgcomponent_valid_name(compname) ) {
-    asprintf( msg, "Invalid component name '%s'", compname );
+    lcfgutils_build_message( msg, "Invalid component name '%s'", compname );
     return LCFG_STATUS_ERROR;
   }
 
@@ -149,7 +152,8 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
     if ( lcfgtaglist_mutate_add( collect_comps, compname, &tagmsg ) 
          == LCFG_CHANGE_ERROR ) {
       status = LCFG_STATUS_ERROR;
-      asprintf( msg, "Invalid component name '%s': %s", compname, tagmsg );
+      lcfgutils_build_message( msg, "Invalid component name '%s': %s",
+			       compname, tagmsg );
     }
     free(tagmsg);
 
@@ -176,8 +180,9 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
 
       } else {
 	status = LCFG_STATUS_ERROR;
-	asprintf( msg, "Failed to load resources for component '%s'",
-		  compname );
+	lcfgutils_build_message( msg,
+				 "Failed to load resources for component '%s'",
+				 compname );
       }
     }
 
@@ -222,7 +227,6 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
                                        char ** msg ) {
 
   *result = NULL;
-  *msg = NULL;
 
   LCFGStatus status = LCFG_STATUS_OK;
 
@@ -262,7 +266,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
     if ( !lcfgresource_parse_key( reskey, &this_namespace, &this_compname,
                                   &this_resname, &this_type ) ) {
       status = LCFG_STATUS_ERROR;
-      asprintf( msg, "Invalid DB entry '%s'", reskey );
+      lcfgutils_build_message( msg, "Invalid DB entry '%s'", reskey );
       break;
     }
 
@@ -271,8 +275,9 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
       if ( this_namespace == NULL ||
            strcmp( namespace, this_namespace ) != 0 ) {
         status = LCFG_STATUS_ERROR;
-        asprintf( msg, "Invalid DB entry '%s' (invalid namespace '%s')",
-                  reskey, this_namespace );
+        lcfgutils_build_message( msg,
+			       "Invalid DB entry '%s' (invalid namespace '%s')",
+				 reskey, this_namespace );
         break;
       }
     }
@@ -289,15 +294,17 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
 
     if ( !lcfgcomponent_valid_name(this_compname) ) {
       status = LCFG_STATUS_ERROR;
-      asprintf( msg, "Invalid DB entry '%s' (invalid component name '%s')",
-                reskey, this_compname );
+      lcfgutils_build_message( msg,
+			 "Invalid DB entry '%s' (invalid component name '%s')",
+			       reskey, this_compname );
       break;
     }
 
     if ( !lcfgresource_valid_name(this_resname) ) {
       status = LCFG_STATUS_ERROR;
-      asprintf( msg, "Invalid DB entry '%s' (invalid resource name '%s')",
-                reskey, this_resname );
+      lcfgutils_build_message( msg,
+			  "Invalid DB entry '%s' (invalid resource name '%s')",
+			       reskey, this_resname );
       break;
     }
 
@@ -306,7 +313,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
 
     comp = lcfgcomplist_find_or_create_component( complist, this_compname ); 
     if ( comp == NULL ) {
-      asprintf( msg, "Failed to load LCFG component '%s'",
+      lcfgutils_build_message( msg, "Failed to load LCFG component '%s'",
                 this_compname );
       status = LCFG_STATUS_ERROR;
       break;
@@ -314,7 +321,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
 
     res = lcfgcomponent_find_or_create_resource( comp, this_resname, true );
     if ( res == NULL ) {
-      asprintf( msg, "Failed to load LCFG resource '%s.%s'",
+      lcfgutils_build_message( msg, "Failed to load LCFG resource '%s.%s'",
                 this_compname, this_resname );
       status = LCFG_STATUS_ERROR;
       break;
@@ -353,7 +360,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
   if ( status != LCFG_STATUS_OK ) {
 
     if ( *msg == NULL )
-      asprintf( msg, "Something bad happened whilst processing DB." );
+      lcfgutils_build_message( msg, "Something bad happened whilst processing DB." );
 
     lcfgcomplist_relinquish(complist);
     complist = NULL;
@@ -397,7 +404,8 @@ DB * lcfgbdb_open_db( const char * filename,
    * so the environment pointer is NULL. */
   ret = db_create( &dbp, NULL, 0 );
   if (ret != 0) {
-    asprintf( msg, "Failed to initialise DB: %s\n", db_strerror(ret) );
+    lcfgutils_build_message( msg, "Failed to initialise DB: %s\n",
+			     db_strerror(ret) );
     return NULL;
   }
 
@@ -411,7 +419,7 @@ DB * lcfgbdb_open_db( const char * filename,
                   0);         /* File mode (using defaults) */
 
   if (ret != 0) {
-    asprintf( msg, "Failed to open DB '%s': %s\n",
+    lcfgutils_build_message( msg, "Failed to open DB '%s': %s\n",
               filename, db_strerror(ret));
     return NULL;
   }
@@ -441,9 +449,9 @@ DB * lcfgbdb_init_reader( const char * filename,
   if ( ( file = fopen(filename, "r") ) == NULL ) {
 
     if (errno == ENOENT) {
-      asprintf( msg, "File '%s' does not exist.\n", filename );
+      lcfgutils_build_message( msg, "File '%s' does not exist.\n", filename );
     } else {
-      asprintf( msg, "File '%s' is not readable.\n", filename );
+      lcfgutils_build_message( msg, "File '%s' is not readable.\n", filename );
     }
     return NULL;
 
