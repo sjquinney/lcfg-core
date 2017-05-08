@@ -865,7 +865,7 @@ LCFGTagList * lcfgprofile_get_components_as_taglist(
  * To avoid memory leaks, when the list is no longer required the 
  * @c lcfgtaglist_relinquish() function should be called.
  *
- * @param[in] complist Pointer to @c LCFGProfile
+ * @param[in] profile Pointer to @c LCFGProfile
  *
  * @return Pointer to a new @c LCFGTagList of ngeneric component names
  *
