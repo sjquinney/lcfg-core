@@ -58,6 +58,7 @@ typedef struct LCFGComponent LCFGComponent;
 
 LCFGComponent * lcfgcomponent_new(void);
 
+void lcfgcomponent_remove_all_resources( LCFGComponent * comp );
 void lcfgcomponent_destroy(LCFGComponent * comp);
 void lcfgcomponent_acquire(LCFGComponent * comp);
 void lcfgcomponent_relinquish(LCFGComponent * comp);
@@ -66,6 +67,8 @@ LCFGMergeRule lcfgcomponent_get_merge_rules( const LCFGComponent * comp );
 bool lcfgcomponent_set_merge_rules( LCFGComponent * comp,
                                     LCFGMergeRule new_rules )
   __attribute__((warn_unused_result));
+
+LCFGComponent * lcfgcomponent_clone( LCFGComponent * comp, bool deep_copy );
 
 bool lcfgcomponent_is_valid( const LCFGComponent * comp );
 

@@ -131,6 +131,30 @@ LCFGComponent * lcfgcomponent_new(void) {
 }
 
 /**
+ * @brief Remove all the resources for the component
+ *
+ * This will remove all the @c LCFGResource associated with the @c
+ * LCFGComponent. The @c lcfgresource_relinquish() function will be
+ * called on each one, if the reference count for any reaches zero
+ * they will be destroyed.
+ *
+ * @param[in] comp The @c LCFGComponent to be emptied.
+ *
+ */
+
+void lcfgcomponent_remove_all_resources( LCFGComponent * comp ) {
+
+  while ( lcfgcomponent_size(comp) > 0 ) {
+    LCFGResource * resource = NULL;
+    if ( lcfgcomponent_remove_next( comp, NULL, &resource )
+         == LCFG_CHANGE_REMOVED ) {
+      lcfgresource_relinquish(resource);
+    }
+  }
+
+}
+
+/**
  * @brief Destroy the component
  *
  * When the specified @c LCFGComponent is no longer required this
@@ -163,13 +187,7 @@ void lcfgcomponent_destroy(LCFGComponent * comp) {
 
   if ( comp == NULL ) return;
 
-  while ( lcfgcomponent_size(comp) > 0 ) {
-    LCFGResource * resource = NULL;
-    if ( lcfgcomponent_remove_next( comp, NULL, &resource )
-         == LCFG_CHANGE_REMOVED ) {
-      lcfgresource_relinquish(resource);
-    }
-  }
+  lcfgcomponent_remove_all_resources(comp);
 
   free(comp->name);
   comp->name = NULL;
@@ -523,6 +541,78 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
 
   return LCFG_CHANGE_REMOVED;
 }
+
+/**
+ * @brief Clone a component
+ *
+ * This will create a clone of the specified component. If the @c
+ * deep_copy parameter is false then this is a shallow-copy and the
+ * resources are shared by the two components. If the @c deep_copy
+ * parameter is true then the resources will also be cloned using the
+ * @c lcfgresource_clone() function.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent to be cloned.
+ * @param[in] deep_copy Boolean that controls whether resources are also cloned.
+ *
+ * @return Pointer to new clone @c LCFGComponent (@c NULL if error occurs)
+ *
+ */
+
+LCFGComponent * lcfgcomponent_clone( LCFGComponent * comp, bool deep_copy ) {
+
+  bool ok = true;
+
+  LCFGComponent * comp_clone = lcfgcomponent_new();
+
+  /* Copy over the name if present */
+
+  if ( lcfgcomponent_has_name(comp) ) {
+    char * new_name = strdup( lcfgcomponent_get_name(comp) );
+    ok = lcfgcomponent_set_name( comp_clone, new_name );
+    if ( !ok ) {
+      free(new_name);
+      goto cleanup;
+    }
+  }
+
+  /* Copy over the merge rules */
+
+  ok = lcfgcomponent_set_merge_rules( comp_clone,
+				      lcfgcomponent_get_merge_rules(comp) );
+  if (!ok) goto cleanup;
+
+  /* Copy the resources */
+
+  const LCFGResourceNode * cur_node = NULL;
+  for ( cur_node = lcfgcomponent_head(comp);
+	cur_node != NULL && ok;
+	cur_node = lcfgcomponent_next(cur_node) ) {
+
+    LCFGResource * res = lcfgcomponent_resource(cur_node);
+
+    LCFGResource * res_clone = NULL;
+    if ( deep_copy ) {
+      res_clone = lcfgresource_clone(res);
+      res = res_clone;
+    }
+
+    LCFGChange change = lcfgcomponent_append( comp_clone, res );
+    if ( change == LCFG_CHANGE_ERROR ) ok = false;
+
+    if ( res_clone != NULL )
+      lcfgresource_relinquish(res_clone);
+  }
+  
+ cleanup:
+
+  if ( !ok ) {
+    lcfgcomponent_relinquish(comp_clone);
+    comp_clone = NULL;
+  }
+
+  return comp_clone;
+}
+
 
 /**
  * @brief Write list of formatted resources to file stream
@@ -1626,6 +1716,12 @@ LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp,
 
   if ( lcfgcomponent_is_empty(overrides) ) return LCFG_CHANGE_NONE;
 
+  /* Using a (shallow) clone so we don't affect the original list if
+     an error occurs */
+
+  LCFGComponent * comp_clone = lcfgcomponent_clone( comp, false );
+  if ( comp_clone == NULL ) return LCFG_CHANGE_ERROR;
+
   LCFGChange change = LCFG_CHANGE_NONE;
 
   const LCFGResourceNode * cur_node = NULL;
@@ -1635,7 +1731,8 @@ LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp,
 
     LCFGResource * override_res = lcfgcomponent_resource(cur_node);
 
-    LCFGChange rc = lcfgcomponent_merge_resource( comp, override_res, msg );
+    LCFGChange rc =
+      lcfgcomponent_merge_resource( comp_clone, override_res, msg );
 
     if ( rc == LCFG_CHANGE_ERROR ) {
       change = LCFG_CHANGE_ERROR;
@@ -1644,6 +1741,26 @@ LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp,
     }
 
   }
+
+  if ( change == LCFG_CHANGE_MODIFIED ) {
+    /* push changes back to original list */
+
+    /* For efficiency - empty the original then steal the brains of
+       the clone. */
+
+    lcfgcomponent_remove_all_resources(comp);
+
+    comp->head = comp_clone->head;
+    comp->tail = comp_clone->tail;
+    comp->size = comp_clone->size;
+
+    comp_clone->head = NULL;
+    comp_clone->tail = NULL;
+    comp_clone->size = 0;
+
+  }
+
+  lcfgcomponent_relinquish(comp_clone);
 
   return change;
 }
