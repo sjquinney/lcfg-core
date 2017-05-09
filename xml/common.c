@@ -16,6 +16,21 @@
 
 #include "xml.h"
 
+/**
+ * @brief Generate an XML error message
+ *
+ * This can be used to generate a standard error message in the XML
+ * processor. As well as creating the message it returns the @c
+ * LCFG_STATUS_ERROR integer value so that error handling is
+ * simplified.
+ *
+ * @param[out] msg Reference to pointer to new message string
+ * @param[in] fmt Format string for the message
+ *
+ * @return Integer error status value
+ *
+ */
+
 LCFGStatus lcfgxml_error( char ** msg, const char *fmt, ...) {
   free(*msg);
 
@@ -29,6 +44,20 @@ LCFGStatus lcfgxml_error( char ** msg, const char *fmt, ...) {
 
   return LCFG_STATUS_ERROR;
 }
+
+/**
+ * @brief Move the XML reader to the next tag
+ *
+ * This can be used to move the reader to the next node which has a
+ * type of @c XML_READER_TYPE_ELEMENT or @c
+ * XML_READER_TYPE_END_ELEMENT. If no node of the required type is
+ * found the function will return a false value.
+ *
+ * @param[in] reader Pointer to XML reader
+ *
+ * @return Boolean indicating success
+ *
+ */
 
 bool lcfgxml_moveto_next_tag( xmlTextReaderPtr reader ) {
 
@@ -51,6 +80,20 @@ bool lcfgxml_moveto_next_tag( xmlTextReaderPtr reader ) {
   return done;
 }
 
+/**
+ * @brief Move the XML reader to the next node with the required name
+ *
+ * This can be used to move the XML reader onto the next node with the
+ * required name. If no node is found with the required name this
+ * function will return false.
+ *
+ * @param[in] reader Pointer to XML reader
+ * @param[in] target_nodename The name of the required node
+ *
+ * @return Boolean indicating success
+ *
+ */
+
 bool lcfgxml_moveto_node( xmlTextReaderPtr reader,
                          const char * target_nodename ) {
 
@@ -72,6 +115,19 @@ bool lcfgxml_moveto_node( xmlTextReaderPtr reader,
 
   return done;
 }
+
+/**
+ * @brief Check if the current node has the required name
+ *
+ * This can be used to test if the name of the current XML node
+ * matches with that specified.
+ *
+ * @param[in] reader Pointer to XML reader
+ * @param[in] expected_nodename The name of the required node
+ *
+ * @return Boolean indicating success
+ *
+ */
 
 bool lcfgxml_correct_location( xmlTextReaderPtr reader,
                                const char * expected_nodename ) {
