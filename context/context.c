@@ -860,9 +860,9 @@ bool lcfgcontext_identical( const LCFGContext * ctx1,
 /**
  * @brief Generate the path for a context-specific profile
  *
- * The LCFG client supports the use of context-specific XML
+ * The LCFG client supports the use of context-specific XML override
  * profiles. A context-specific profile can be used to add or modify
- * components and resources when a context is enabled.
+ * components and resources when a particular context is enabled.
  *
  * The path to the context profile is based on a combination of the
  * values for the @e name and @e value attributes for the context, if
