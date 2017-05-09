@@ -1,28 +1,140 @@
+/**
+ * @file xml/packages.c
+ * @brief Functions for processing package data in LCFG XML profiles
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date: 2017-04-27 11:58:12 +0100 (Thu, 27 Apr 2017) $
+ * $Revision: 32561 $
+ */
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include <libxml/xmlreader.h>
 
 #include "xml.h"
 
-LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
-                                              LCFGPackage ** result,
-                                              const char * base_context,
-                                              const char * base_derivation,
-                                              char ** errmsg ) {
+/**
+ * @brief Collect package information from attributes
+ *
+ * Collects the following resource information from the attributes for
+ * the current node:
+ *
+ *   - derivation (@c cfg:derivation)
+ *   - context (@c cfg:context)
+ *
+ * @param[in] reader Pointer to XML reader
+ * @param[in] res Pointer to @c LCFGPackage
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success of the process
+ *
+ */
 
-  *errmsg = NULL;
-  *result = NULL;
+static LCFGStatus lcfgxml_gather_package_attributes( xmlTextReaderPtr reader,
+                                                     LCFGPackage * pkg,
+                                                     char ** msg ) {
+  assert( reader != NULL );
+  assert( pkg != NULL );
 
-  if ( !lcfgxml_correct_location(reader, LCFGXML_PACKAGES_CHILD_NODE ) ) {
-    lcfgxml_set_error_message( errmsg, "Not an LCFG package node." );
-    return LCFG_STATUS_ERROR;
+  if ( !xmlTextReaderHasAttributes(reader) ) return LCFG_STATUS_OK;
+
+  LCFGStatus status = LCFG_STATUS_OK;
+
+  /* Do the derivation first so that any errors after this point get
+     the derivation information attached. */
+
+  xmlChar * derivation =
+    xmlTextReaderGetAttribute( reader, BAD_CAST "cfg:derivation" );
+  if ( derivation != NULL && xmlStrlen(derivation) > 0 ) {
+
+    if ( lcfgpackage_has_derivation(pkg) ) {
+
+      if ( !lcfgpackage_add_derivation( pkg, (char *) derivation ) )
+        status = LCFG_STATUS_ERROR;
+
+    } else {
+
+      if ( lcfgpackage_set_derivation( pkg, (char *) derivation ) )
+        derivation = NULL; /* Package now "owns" derivation string */
+      else
+        status = LCFG_STATUS_ERROR;
+
+    }
+
+    if ( status == LCFG_STATUS_ERROR ) {
+      *msg = lcfgpackage_build_message( pkg, "Invalid derivation '%s'",
+                                        (char *) derivation );
+    }
+
   }
 
-  if (xmlTextReaderIsEmptyElement(reader))
-    return LCFG_STATUS_OK; /* Nothing to do */
+  xmlFree(derivation);
+  derivation = NULL;
+
+  if ( status == LCFG_STATUS_ERROR ) return status;
+
+  /* Context Expression */
+
+  xmlChar * context =
+    xmlTextReaderGetAttribute( reader, BAD_CAST "cfg:context" );
+  if ( context != NULL && xmlStrlen(context) > 0 ) {
+
+    if ( lcfgpackage_has_context(pkg) ) {
+
+      if ( !lcfgpackage_add_context( pkg, (char *) context ) )
+        status = LCFG_STATUS_ERROR;
+
+    } else {
+
+      if ( lcfgpackage_set_context( pkg, (char *) context ) )
+        context = NULL; /* Package now "owns" context string */
+      else
+        status = LCFG_STATUS_ERROR;
+
+    }
+
+    if ( status == LCFG_STATUS_ERROR ) {
+      *msg = lcfgpackage_build_message( pkg, "Invalid context '%s'", 
+                                        (char *) context );
+    }
+
+  }
+
+  xmlFree(context);
+  context = NULL;
+
+  return status;
+}
+
+/**
+ * @brief Process XML for a single package
+
+ * @param[in] reader Pointer to XML reader
+ * @param[out] result Reference to pointer to new @c LCFGPackage
+ * @param[in] base_context A context which will be applied to the package
+ * @param[in] base_derivation A derivation which will be applied to the package
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
+                                    LCFGPackage ** result,
+                                    const char * base_context,
+                                    const char * base_derivation,
+                                    char ** msg ) {
+  assert( reader != NULL );
+
+  *result = NULL;
+
+  if ( !lcfgxml_correct_location(reader, LCFGXML_PACKAGES_CHILD_NODE ) )
+    return lcfgxml_error( msg, "Not an LCFG package node." );
+
+  if (xmlTextReaderIsEmptyElement(reader)) return LCFG_STATUS_OK; /* Nothing to do */
 
   int topdepth = xmlTextReaderDepth(reader);
   LCFGStatus status = LCFG_STATUS_OK;
@@ -37,93 +149,28 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
   /* add base context and derivation rather than set so that we take a copy */
 
-  if ( base_context != NULL ) {
+  if ( !isempty(base_context) ) {
     if ( !lcfgpackage_add_context( pkg, base_context ) ) {
       status = LCFG_STATUS_ERROR;
-      *errmsg = lcfgpackage_build_message( pkg,
+      *msg = lcfgpackage_build_message( pkg,
                 "Failed to set base context '%s'", base_context );
       goto cleanup;
     }
   }
 
-  if ( base_derivation != NULL ) {
+  if ( !isempty(base_derivation) ) {
     if ( !lcfgpackage_add_derivation( pkg, base_derivation ) ) {
       status = LCFG_STATUS_ERROR;
-      *errmsg = lcfgpackage_build_message( pkg,
+      *msg = lcfgpackage_build_message( pkg,
                 "Failed to set base derivation '%s'", base_derivation );
       goto cleanup;
     }
   }
 
-  /* Handle the context and derivation which are stored as attributes */
+  /* Gather any derivation and context information */
 
-  if ( xmlTextReaderHasAttributes(reader) ) {
-
-    /* Optional derivation string for package */
-
-    xmlChar * derivation =
-                 xmlTextReaderGetAttribute( reader, BAD_CAST "cfg:derivation");
-
-    if ( derivation != NULL ) {
-      if ( lcfgpackage_has_derivation(pkg) ) {
-
-        if ( !lcfgpackage_add_derivation( pkg, (char *) derivation ) ) {
-          status = LCFG_STATUS_ERROR;
-          *errmsg = lcfgpackage_build_message( pkg,
-                    "Invalid derivation '%s'", (char *) derivation );
-        }
-
-        /* always free as add_derivation makes a copy of the value */
-        xmlFree(derivation);
-
-      } else {
-
-        if ( !lcfgpackage_set_derivation( pkg, (char *) derivation ) ) {
-          status = LCFG_STATUS_ERROR;
-          *errmsg = lcfgpackage_build_message( pkg,
-                    "Invalid derivation '%s'", (char *) derivation );
-          xmlFree(derivation);
-        }
-
-      }
-    }
-
-    if ( status != LCFG_STATUS_OK )
-      goto cleanup;
-
-    /* Optional context expression for the package */
-
-    xmlChar * context =
-                 xmlTextReaderGetAttribute( reader, BAD_CAST "cfg:context" );
-
-    if ( context != NULL ) {
-      if ( lcfgpackage_has_context(pkg) ) {
-
-        if ( !lcfgpackage_add_context( pkg, (char *) context ) ) {
-          status = LCFG_STATUS_ERROR;
-          *errmsg = lcfgpackage_build_message( pkg,
-                    "Invalid context '%s'", (char *) context );
-        }
-
-        /* always free as add_context makes a copy of the value */
-        xmlFree(context);
-
-      } else {
-
-        if ( !lcfgpackage_set_context( pkg, (char *) context ) ) {
-          status = LCFG_STATUS_ERROR;
-          *errmsg = lcfgpackage_build_message( pkg,
-                    "Invalid context '%s'", (char *) context );
-          xmlFree(context);
-        }
-
-      }
-    }
-
-    if ( status != LCFG_STATUS_OK )
-      goto cleanup;
-
-  }
+  status = lcfgxml_gather_package_attributes( reader, pkg, msg );
+  if ( status == LCFG_STATUS_ERROR ) goto cleanup;
 
   bool done  = false;
 
@@ -146,11 +193,8 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
       read_status = xmlTextReaderRead(reader);
 
       if ( read_status != 1 ) {
-        status = LCFG_STATUS_ERROR;
-
-        lcfgxml_set_error_message( errmsg,
-                                   "Malformed LCFG package node at line %d",
-                                   linenum);
+        status = lcfgxml_error( msg, "Malformed LCFG package node at line %d",
+                                linenum);
 
       } else if ( !xmlTextReaderIsEmptyElement(reader) &&
                   xmlTextReaderHasValue(reader) ) {
@@ -159,52 +203,55 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
         /* Name (and optional architecture) */
 
+        /* Due to a historical horrid hack, the name field may contain
+           a "secondary" architecture prefix. In that case the forward
+           slash character is used as a separator */
+
         if ( xmlStrcmp(nodename, BAD_CAST "name" ) == 0 ) {
           char * archname = (char *) nodevalue;
 
           /* Check for the '/' (forward-slash) separator */
-          char * slash = strrchr(archname,'/');
-          if ( slash == NULL ) {
+          char * arch_name_sep = strrchr(archname,'/');
+          if ( arch_name_sep == NULL ) {
 
-            if ( !lcfgpackage_set_name( pkg, archname ) ) {
+            if ( lcfgpackage_set_name( pkg, archname ) ) {
+              nodevalue = NULL; /* Package now "owns" string as the name */
+            } else {
               status = LCFG_STATUS_ERROR;
-              *errmsg = lcfgpackage_build_message( pkg,
+              *msg = lcfgpackage_build_message( pkg,
                         "Invalid name '%s'", archname );
-
-              xmlFree(nodevalue);
-              nodevalue = NULL;
             }
 
           } else {
-            /* Handle secondary architecture */
+            *arch_name_sep = '\0';
 
-            *slash = '\0';
-            slash += 1; /* move on past the separator */
-            size_t name_len = strlen(slash);
-            if ( name_len > 0 ) {
-              char * name = strndup(slash,name_len);
+            const char * name_start = arch_name_sep + 1;
+            if ( !isempty(name_start) ) {
+
+              char * name = strdup(name_start);
 
               if ( !lcfgpackage_set_name( pkg, name ) ) {
                 status = LCFG_STATUS_ERROR;
-                *errmsg = lcfgpackage_build_message( pkg,
+                *msg = lcfgpackage_build_message( pkg,
                           "Invalid name '%s'", name );
                 free(name);
               }
 
             } else {
               status = LCFG_STATUS_ERROR;
-              *errmsg = lcfgpackage_build_message( pkg,
-                        "Missing name" );
+              *msg = lcfgpackage_build_message( pkg, "Missing name" );
             }
 
             if ( status == LCFG_STATUS_OK ) {
+              /* Handle secondary architecture */
 
-              char * arch = strdup(archname); /* everything before slash */
-              if ( !lcfgpackage_set_arch( pkg, arch ) ) {
+              if ( lcfgpackage_set_arch( pkg, archname ) ) {
+                nodevalue = NULL; /* Package now "owns" string as the arch */
+              } else {
                 status = LCFG_STATUS_ERROR;
-                *errmsg = lcfgpackage_build_message( pkg,
-                          "Invalid architecture '%s'", arch );
-                free(arch);
+                *msg = lcfgpackage_build_message( pkg,
+                                                  "Invalid architecture '%s'",
+                                                  archname );
               }
 
             }
@@ -219,7 +266,7 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
           if ( !lcfgpackage_set_version( pkg, (char *) nodevalue ) ) {
             status = LCFG_STATUS_ERROR;
-            *errmsg = lcfgpackage_build_message( pkg,
+            *msg = lcfgpackage_build_message( pkg,
                      "Invalid version '%s'", (char *) nodevalue );
             xmlFree(nodevalue);
             nodevalue = NULL;
@@ -236,18 +283,18 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
              look for the final occurrence and split the string at
              that point. */
 
-          char * relarch = (char *) nodevalue;
-          char * slash = strrchr(relarch,'/');
-          if ( slash != NULL ) {
-            *slash = '\0';
-            slash += 1; /* move on past the separator */
-            size_t arch_len = strlen(slash);
-            if ( arch_len > 0 ) {
-              char * arch = strndup(slash,arch_len);
+          char * rel_arch = (char *) nodevalue;
+          char * rel_arch_sep = strrchr(rel_arch,'/');
+          if ( rel_arch_sep != NULL ) {
+            *rel_arch_sep = '\0';
+            const char * arch_start = rel_arch_sep + 1;
+
+            if ( !isempty(arch_start) ) {
+              char * arch = strdup(arch_start);
 
               if ( !lcfgpackage_set_arch( pkg, arch ) ) {
                 status = LCFG_STATUS_ERROR;
-                *errmsg = lcfgpackage_build_message( pkg,
+                *msg = lcfgpackage_build_message( pkg,
                         "Invalid architecture '%s'", arch );
                 free(arch);
               }
@@ -257,10 +304,10 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
           if ( status == LCFG_STATUS_OK ) {
 
-            if ( !lcfgpackage_set_release( pkg, relarch ) ) {
+            if ( !lcfgpackage_set_release( pkg, rel_arch ) ) {
               status = LCFG_STATUS_ERROR;
-              *errmsg = lcfgpackage_build_message( pkg,
-                        "Invalid release '%s'", relarch );
+              *msg = lcfgpackage_build_message( pkg,
+                        "Invalid release '%s'", rel_arch );
             }
 
           }
@@ -276,7 +323,7 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
           if ( !lcfgpackage_set_flags( pkg, (char *) nodevalue ) ) {
             status = LCFG_STATUS_ERROR;
-            *errmsg = lcfgpackage_build_message( pkg,
+            *msg = lcfgpackage_build_message( pkg,
                       "Invalid flags '%s'", (char *) nodevalue );
             xmlFree(nodevalue);
             nodevalue = NULL;
@@ -285,9 +332,7 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
         /* Anything else is an error */
 
         } else {
-          status = LCFG_STATUS_ERROR;
-
-          lcfgxml_set_error_message( errmsg, "Unexpected node '%s' at line %d whilst processing package.", nodename, linenum );
+          status = lcfgxml_error( msg, "Unexpected node '%s' at line %d whilst processing package.", nodename, linenum );
 
           xmlFree(nodevalue);
           nodevalue = NULL;
@@ -304,16 +349,13 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
           done = true;
         } else if ( cur_element == NULL ||
                     xmlStrcmp(nodename, cur_element) != 0 ) {
-          status = LCFG_STATUS_ERROR;
-
-          lcfgxml_set_error_message( errmsg, "Unexpected end element '%s' at line %d whilst processing package.", nodename, linenum );
+          status = lcfgxml_error( msg, "Unexpected end element '%s' at line %d whilst processing package.", nodename, linenum );
         }
 
       } else if ( nodetype != XML_READER_TYPE_WHITESPACE &&
                   nodetype != XML_READER_TYPE_SIGNIFICANT_WHITESPACE ) {
-        status = LCFG_STATUS_ERROR;
 
-        lcfgxml_set_error_message( errmsg, "Unexpected element '%s' of type %d at line %d whilst processing package.", nodename, nodetype, linenum);
+        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line %d whilst processing package.", nodename, nodetype, linenum);
 
       }
 
@@ -323,7 +365,7 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
     }
 
     /* Quit if the processing status is no longer OK */
-    if ( status != LCFG_STATUS_OK )
+    if ( status == LCFG_STATUS_ERROR )
       done = true;
 
     if ( !done )
@@ -335,65 +377,92 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
   xmlFree(cur_element);
 
-  if ( status == LCFG_STATUS_OK ) {
-    *result = pkg;
-  } else {
+  if ( status == LCFG_STATUS_ERROR ) {
 
-    if ( *errmsg != NULL )
-      lcfgxml_set_error_message( errmsg, "Something bad happened whilst processing package at line %d.", linenum );
+    if ( *msg != NULL )
+      lcfgxml_error( msg, "Something bad happened whilst processing package at line %d.", linenum );
 
-    lcfgpackage_destroy(pkg);
-    *result = NULL;
+    lcfgpackage_relinquish(pkg);
+    pkg = NULL;
   }
+
+  *result = pkg;
 
   return status;
 }
 
+/**
+ * @brief Process XML for all packages
+ *
+ * @param[in] reader Pointer to XML reader
+ * @param[out] active Reference to pointer to new @c LCFGPackageList for active packages
+ * @param[out] inactive  Reference to pointer to new @c LCFGPackageList for inactive packages
+ * @param[in] base_context A context which will be applied to each package
+ * @param[in] base_derivation A derivation which will be applied to each package
+ * @param[in] ctxlist An @c LCFGContextList which is used to evaluate priority
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return
+ *
+ */
+
 LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
-                                               LCFGPackageList ** active,
-                                               LCFGPackageList ** inactive,
-                                               const char * base_context,
-                                               const char * base_derivation,
-                                               const LCFGContextList * ctxlist,
-                                               char ** errmsg ) {
-  *errmsg   = NULL;
+                                     LCFGPackageList ** active,
+                                     LCFGPackageList ** inactive,
+                                     const char * base_context,
+                                     const char * base_derivation,
+                                     const LCFGContextList * ctxlist,
+                                     char ** msg ) {
+  assert( reader != NULL );
+
   *active   = NULL;
   *inactive = NULL;
 
   if ( !lcfgxml_correct_location(reader, LCFGXML_PACKAGES_PARENT_NODE) ) {
     if ( !lcfgxml_moveto_node( reader, LCFGXML_PACKAGES_PARENT_NODE ) ) {
-      lcfgxml_set_error_message( errmsg, "Failed to find top-level packages element." );
-      return LCFG_STATUS_ERROR;
+      return lcfgxml_error( msg, "Failed to find top-level packages element." );
     }
   }
 
-  if (xmlTextReaderIsEmptyElement(reader)) {
-    /* nothing to do */
-    return LCFG_STATUS_OK;
-  }
+  if (xmlTextReaderIsEmptyElement(reader)) return LCFG_STATUS_OK; /* nothing to do */
+
+  /* Declare variables here which are used in the 'cleanup' section */
 
   *active   = lcfgpkglist_new();
   *inactive = lcfgpkglist_new();
 
+  LCFGStatus status = LCFG_STATUS_OK;
+  int linenum = 0;
+
+  /* Any conflicts for "active" packages are resolved according to priority */
+
   LCFGMergeRule active_merge_rules =
     LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_USE_PRIORITY;
 
-  lcfgpkglist_set_merge_rules( *active, active_merge_rules );
+  if ( !lcfgpkglist_set_merge_rules( *active, active_merge_rules ) ) {
+    status = lcfgxml_error( msg,
+                   "Failed to set merge rules for active packages list" );
+    goto cleanup;
+  }
+
+  /* All other "inactive" packages are stored separately */
 
   LCFGMergeRule inactive_merge_rules =
     LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_KEEP_ALL;
 
-  lcfgpkglist_set_merge_rules( *inactive, inactive_merge_rules );
+  if ( !lcfgpkglist_set_merge_rules( *inactive, inactive_merge_rules ) ) {
+    status = lcfgxml_error( msg,
+                   "Failed to set merge rules for inactive packages list" );
+    goto cleanup;
+  }
 
   /* Need to store the depth of the packages element. */
 
   int topdepth = xmlTextReaderDepth(reader);
 
   bool done  = false;
-  LCFGStatus status = LCFG_STATUS_OK;
 
   int read_status = xmlTextReaderRead(reader);
-  int linenum = 0;
 
   while ( !done && read_status == 1 ) {
 
@@ -409,58 +478,44 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
 
       status = lcfgxml_process_package( reader, &pkg, 
                                         base_context, base_derivation,
-                                        errmsg );
+                                        msg );
 
-      if ( status == LCFG_STATUS_OK ) {
-
-        /* Ignore empty package nodes */
-        if ( pkg == NULL ) continue;
+      if ( status == LCFG_STATUS_OK && pkg != NULL ) {
 
 	char * eval_msg = NULL;
         if ( !lcfgpackage_has_context(pkg) ||
              lcfgpackage_eval_priority( pkg, ctxlist, &eval_msg ) ) {
 
           LCFGChange rc;
-          char * merge_errmsg = NULL;
+          char * merge_msg = NULL;
           if ( lcfgpackage_is_active(pkg) ) {
             rc = lcfgpkglist_merge_package( *active, pkg,
-                                            &merge_errmsg );
+                                            &merge_msg );
           } else {
             rc = lcfgpkglist_merge_package( *inactive, pkg,
-					    &merge_errmsg );
-          }
-
-          /* Either did not need to store or failed in some way */
-          if ( rc != LCFG_CHANGE_ADDED ) {
-            lcfgpackage_destroy(pkg);
-            pkg = NULL;
+					    &merge_msg );
           }
 
           if ( rc == LCFG_CHANGE_ERROR ) {
-            status = LCFG_STATUS_ERROR;
-
-            lcfgxml_set_error_message( errmsg,
-                                       "Failed to store package '%s': %s",
-                                       lcfgpackage_get_name(pkg),
-                                       merge_errmsg );
+            status = lcfgxml_error( msg,
+                                    "Failed to store package '%s': %s",
+                                    lcfgpackage_get_name(pkg),
+                                    merge_msg );
           }
 
-	  free(merge_errmsg);
+	  free(merge_msg);
 
         } else { /* context eval failure */
           status = LCFG_STATUS_ERROR;
 
           lcfgpackage_build_message( pkg,
-				     "Failed to evaluate context: ",
+				     "Failed to evaluate context: %s",
 				     eval_msg );
         }
 	free(eval_msg);
       }
 
-      if ( status != LCFG_STATUS_OK ) {
-        lcfgpackage_destroy(pkg);
-        pkg = NULL;
-      }
+      lcfgpackage_relinquish(pkg);
 
     } else if ( nodetype == XML_READER_TYPE_END_ELEMENT ) {
 
@@ -468,17 +523,15 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
            xmlStrcmp( nodename, BAD_CAST LCFGXML_PACKAGES_PARENT_NODE ) == 0 ) {
         done = true;
       } else {
-        status = LCFG_STATUS_ERROR;
 
-        lcfgxml_set_error_message( errmsg, "Unexpected end element '%s' at line %d whilst processing packages.", nodename, linenum );
+        status = lcfgxml_error( msg, "Unexpected end element '%s' at line %d whilst processing packages.", nodename, linenum );
 
       }
 
     } else if ( nodetype != XML_READER_TYPE_WHITESPACE &&
                 nodetype != XML_READER_TYPE_SIGNIFICANT_WHITESPACE ) {
-      status = LCFG_STATUS_ERROR;
 
-      lcfgxml_set_error_message( errmsg, "Unexpected element '%s' of type %d at line %d whilst processing packages.", nodename, nodetype, linenum );
+      status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line %d whilst processing packages.", nodename, nodetype, linenum );
 
     }
 
@@ -486,7 +539,7 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
     nodename = NULL;
 
     /* Quit if the processing status is no longer OK */
-    if ( status != LCFG_STATUS_OK )
+    if ( status == LCFG_STATUS_ERROR )
       done = true;
 
     if ( !done )
@@ -494,15 +547,17 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
 
   }
 
-  if ( status != LCFG_STATUS_OK ) {
+ cleanup:
 
-    if ( *errmsg == NULL )
-      lcfgxml_set_error_message( errmsg, "Something bad happened whilst processing packages at line %d.", linenum );
+  if ( status == LCFG_STATUS_ERROR ) {
 
-    lcfgpkglist_destroy(*active);
+    if ( *msg == NULL )
+      lcfgxml_error( msg, "Something bad happened whilst processing packages at line %d.", linenum );
+
+    lcfgpkglist_relinquish(*active);
     *active = NULL;
 
-    lcfgpkglist_destroy(*inactive);
+    lcfgpkglist_relinquish(*inactive);
     *inactive = NULL;
 
   }
