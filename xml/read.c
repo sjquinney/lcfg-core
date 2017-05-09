@@ -156,7 +156,7 @@ LCFGStatus lcfgxml_collect_metadata( xmlTextReaderPtr reader,
  */
 
 LCFGStatus lcfgxml_init_reader( const char * filename,
-                                xmlTextReaderPtr ** result,
+                                xmlTextReaderPtr * result,
                                 char ** msg ) {
   assert( filename != NULL );
 

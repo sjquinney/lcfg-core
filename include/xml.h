@@ -22,7 +22,11 @@
 #define LCFGXML_ATTR_DEPTH 2
 #define LCFGXML_ATTRVALUE_DEPTH 3
 
-xmlTextReaderPtr lcfgxml_init_reader( const char * filename, char ** msg );
+LCFGStatus lcfgxml_init_reader( const char * filename,
+                                xmlTextReaderPtr * result,
+                                char ** msg )
+  __attribute__((warn_unused_result));
+
 void lcfgxml_end_reader(xmlTextReaderPtr reader);
 
 LCFGStatus lcfgxml_collect_metadata( xmlTextReaderPtr reader,
