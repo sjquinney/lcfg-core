@@ -1,3 +1,11 @@
+/**
+ * @file xml/common.c
+ * @brief Functions for processing LCFG XML profiles
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date: 2017-04-27 11:58:12 +0100 (Thu, 27 Apr 2017) $
+ * $Revision: 32561 $
+ */
+
 #define _GNU_SOURCE /* for vasprintf */
 
 #include <stdarg.h>
@@ -8,14 +16,18 @@
 
 #include "xml.h"
 
-void lcfgxml_set_error_message( char **errmsg, const char *fmt, ...) {
+LCFGStatus lcfgxml_error( char ** msg, const char *fmt, ...) {
+  free(*msg);
+
   va_list ap;
 
   va_start(ap, fmt);
   /* The BSD version apparently sets ptr to NULL on fail.  GNU loses. */
-  if (vasprintf(errmsg, fmt, ap) < 0)
-    *errmsg = NULL;
+  if (vasprintf( msg, fmt, ap) < 0)
+    *msg = NULL;
   va_end(ap);
+
+  return LCFG_STATUS_ERROR;
 }
 
 bool lcfgxml_moveto_next_tag( xmlTextReaderPtr reader ) {
