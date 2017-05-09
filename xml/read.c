@@ -1,19 +1,25 @@
-#define _GNU_SOURCE /* for asprintf */
+/**
+ * @file xml/read.c
+ * @brief Functions for reading LCFG XML profiles
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date: 2017-04-27 11:58:12 +0100 (Thu, 27 Apr 2017) $
+ * $Revision: 32561 $
+ */
 
+#include <assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <libxml/xmlreader.h>
 
-#include "xml.h"
 #include "utils.h"
+#include "xml.h"
 
 LCFGStatus lcfgxml_collect_metadata( xmlTextReaderPtr reader,
                                      const char * stop_nodename,
@@ -53,7 +59,7 @@ LCFGStatus lcfgxml_collect_metadata( xmlTextReaderPtr reader,
           if ( ! ( nodetype == XML_READER_TYPE_END_ELEMENT &&
                    xmlStrcmp( nodename, metaname ) == 0 )  &&
                nodetype != XML_READER_TYPE_SIGNIFICANT_WHITESPACE ) {
-            lcfgxml_set_error_message( errmsg, "Unexpected element '%s' of type %d at line %d whilst gathering metadata", nodename, nodetype, linenum );
+            lcfgxml_error( errmsg, "Unexpected element '%s' of type %d at line %d whilst gathering metadata", nodename, nodetype, linenum );
 
             status = LCFG_STATUS_ERROR;
           }
@@ -82,7 +88,7 @@ LCFGStatus lcfgxml_collect_metadata( xmlTextReaderPtr reader,
           }
 
         } else {
-          lcfgxml_set_error_message( errmsg,"Unexpected element '%s' of type %d at line %d whilst gathering metadata", nodename, nodetype, linenum );
+          lcfgxml_error( errmsg,"Unexpected element '%s' of type %d at line %d whilst gathering metadata", nodename, nodetype, linenum );
 
           status = LCFG_STATUS_ERROR;
         }
@@ -119,9 +125,9 @@ xmlTextReaderPtr lcfgxml_init_reader(const char *filename, char ** errmsg ) {
   if ((file = fopen(filename, "r")) == NULL) {
 
     if (errno == ENOENT) {
-      lcfgxml_set_error_message( errmsg, "File '%s' does not exist.\n", filename );
+      lcfgxml_error( errmsg, "File '%s' does not exist.\n", filename );
     } else {
-      lcfgxml_set_error_message( errmsg, "File '%s' is not readable.\n", filename );
+      lcfgxml_error( errmsg, "File '%s' is not readable.\n", filename );
     }
     return NULL;
 
@@ -134,7 +140,7 @@ xmlTextReaderPtr lcfgxml_init_reader(const char *filename, char ** errmsg ) {
 
   xmlTextReaderPtr reader = xmlReaderForFile( filename, "UTF-8", XML_PARSE_DTDATTR | XML_PARSE_NOENT);
   if ( reader == NULL ) {
-    lcfgxml_set_error_message( errmsg, "Failed to initialise the LCFG XML reader." );
+    lcfgxml_error( errmsg, "Failed to initialise the LCFG XML reader." );
     return NULL;
   }
 
@@ -148,14 +154,14 @@ xmlTextReaderPtr lcfgxml_init_reader(const char *filename, char ** errmsg ) {
   if ( !move_ok ) {
     /* not a valid lcfg profile */
     xmlTextReaderClose(reader);
-    lcfgxml_set_error_message( errmsg, "Invalid LCFG XML profile." );
+    lcfgxml_error( errmsg, "Invalid LCFG XML profile." );
     return NULL;
   }
 
   return reader;
 }
 
-static void lcfgxml_end_reader(xmlTextReaderPtr reader) {
+void lcfgxml_end_reader(xmlTextReaderPtr reader) {
 
   xmlTextReaderClose(reader);
   xmlFreeTextReader(reader);
@@ -194,8 +200,7 @@ LCFGStatus lcfgprofile_from_xml( const char * filename,
   status = lcfgxml_collect_metadata( reader, LCFGXML_COMPS_PARENT_NODE,
                                      profile, errmsg );
 
-  if ( status != LCFG_STATUS_OK )
-    goto cleanup;
+  if ( status == LCFG_STATUS_ERROR ) goto cleanup;
 
   /* components */
 
@@ -212,7 +217,7 @@ LCFGStatus lcfgprofile_from_xml( const char * filename,
                                          errmsg );
 
   } else {
-    lcfgxml_set_error_message( errmsg, "Failed to find components section in LCFG XML profile." );
+    lcfgxml_error( errmsg, "Failed to find components section in LCFG XML profile." );
     status = LCFG_STATUS_ERROR;
   }
 
@@ -237,7 +242,7 @@ LCFGStatus lcfgprofile_from_xml( const char * filename,
     lcfgxml_moveto_next_tag(reader); /* step to next tag after </packages> */
 
   } else if (require_packages) {
-    lcfgxml_set_error_message( errmsg, "Failed to find packages section in LCFG XML profile." );
+    lcfgxml_error( errmsg, "Failed to find packages section in LCFG XML profile." );
     status = LCFG_STATUS_ERROR;
   }
 
@@ -253,12 +258,12 @@ LCFGStatus lcfgprofile_from_xml( const char * filename,
 
   lcfgxml_end_reader(reader);
 
-  if ( status == LCFG_STATUS_OK ) {
-    *result = profile;
-  } else {
+  if ( status == LCFG_STATUS_ERROR ) {
     lcfgprofile_destroy(profile);
-    *result = NULL;
+    profile = NULL;
   }
+
+  *result = profile;
 
   return status;
 }
@@ -278,7 +283,7 @@ LCFGStatus lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
 
   DIR * dh = opendir(override_dir);
   if ( dh == NULL ) {
-    lcfgxml_set_error_message( msg,
+    lcfgxml_error( msg,
 			       "XML override directory '%s' is not accessible",
 			       override_dir );
     return LCFG_STATUS_ERROR;
@@ -298,7 +303,7 @@ LCFGStatus lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
 
       char * comp_name = lcfgutils_basename( entry->d_name, ".xml" );
       if ( !lcfgcomponent_valid_name(comp_name) ) {
-        lcfgxml_set_error_message( msg, 
+        lcfgxml_error( msg, 
              "Ignoring override profile '%s' for invalid component name '%s'.",
                                    entry->d_name, comp_name );
         free(comp_name);
@@ -322,7 +327,7 @@ LCFGStatus lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
 	if ( lcfgtaglist_mutate_add( comps_wanted, comp_name, &tagmsg ) 
              == LCFG_CHANGE_ERROR ) {
           ok = false;
-          lcfgxml_set_error_message( msg, 
+          lcfgxml_error( msg, 
                                "Failed to create list of required components: ",
                                      tagmsg );
         }
@@ -416,7 +421,7 @@ LCFGStatus lcfgprofile_overrides_context( LCFGProfile * main_profile,
       ssize_t ctx_len = lcfgcontext_to_string( ctx, LCFG_OPT_NONE,
 					       &ctx_as_str, &buf_size );
       if ( ctx_len < 0 ) {
-	asprintf( msg, "Failed to convert context to string" );
+	lcfgutils_build_message( msg, "Failed to convert context to string" );
 	ok = false;
       }
 
@@ -462,5 +467,6 @@ LCFGStatus lcfgprofile_overrides_context( LCFGProfile * main_profile,
 
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
+
 
 /* eof */
