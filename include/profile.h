@@ -79,7 +79,7 @@ LCFGChange lcfgprofile_transplant_components( LCFGProfile * profile1,
 					      char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgprofile_merge( LCFGProfile * profile1,
+LCFGChange lcfgprofile_merge( LCFGProfile * profile1,
 			      const LCFGProfile * profile2,
 			      bool take_new_comps,
 			      char ** msg )
