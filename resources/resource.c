@@ -3053,6 +3053,55 @@ bool lcfgresource_print( const LCFGResource * res,
 }
 
 /**
+ * @brief Compare the resource names
+ *
+ * This compares the names for two resources, this is mostly useful
+ * for sorting lists of resources. An integer value is returned which
+ * indicates lesser than, equal to or greater than in the same way as
+ * @c strcmp(3).
+ *
+ * @param[in] res1 Pointer to @c LCFGResource
+ * @param[in] res2 Pointer to @c LCFGResource
+ * 
+ * @return Integer (-1,0,+1) indicating lesser,equal,greater
+ *
+ */
+
+int lcfgresource_compare_names( const LCFGResource * res1, 
+                                const LCFGResource * res2 ) {
+  assert( res1 != NULL );
+  assert( res2 != NULL );
+
+  const char * name1 = lcfgresource_has_name(res1) ?
+                       lcfgresource_get_name(res1) : "";
+  const char * name2 = lcfgresource_has_name(res2) ?
+                       lcfgresource_get_name(res2) : "";
+
+  return strcmp( name1, name2 );
+}
+
+/**
+ * @brief Test if resources have same name
+ *
+ * Compares the @e name for the two resources using the 
+ * @c lcfgresource_compare_names() function.
+ *
+ * @param[in] res1 Pointer to @c LCFGResource
+ * @param[in] res2 Pointer to @c LCFGResource
+ *
+ * @return boolean indicating equality of names
+ *
+ */
+
+bool lcfgresource_same_name( const LCFGResource * res1, 
+                              const LCFGResource * res2 ) {
+  assert( res1 != NULL );
+  assert( res2 != NULL );
+
+  return ( lcfgresource_compare_names( res1, res2 ) == 0 );
+}
+
+/**
  * @brief Compare the resource values
  *
  * This compares the values for two resources, this is mostly useful
@@ -3138,12 +3187,7 @@ int lcfgresource_compare( const LCFGResource * res1,
 
   /* Name */
 
-  const char * name1 = lcfgresource_has_name(res1) ?
-                       lcfgresource_get_name(res1) : LCFG_RESOURCE_NOVALUE;
-  const char * name2 = lcfgresource_has_name(res2) ?
-                       lcfgresource_get_name(res2) : LCFG_RESOURCE_NOVALUE;
-
-  int result = strcmp( name1, name2 );
+  int result = lcfgresource_compare_names( res1, res2 );
 
   /* Value - explicitly doing a string comparison rather than type-based */
 
