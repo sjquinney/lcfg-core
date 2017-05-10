@@ -68,10 +68,16 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
                                   char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
+int lcfgdiffresource_match( const LCFGDiffResource * resdiff,
+                            const char * want_name );
+
+int lcfgdiffresource_compare( const LCFGDiffResource * resdiff1, 
+                              const LCFGDiffResource * resdiff2 );
+
 struct LCFGDiffComponent {
   char * name;
-  LCFGDiffResource * head;
-  LCFGDiffResource * tail;
+  LCFGSListNode * head;
+  LCFGSListNode * tail;
   struct LCFGDiffComponent * next;
   unsigned int size;
   LCFGChange change_type;
@@ -83,11 +89,8 @@ typedef struct LCFGDiffComponent LCFGDiffComponent;
 LCFGDiffComponent * lcfgdiffcomponent_new(void);
 
 void lcfgdiffcomponent_destroy(LCFGDiffComponent * compdiff );
-
-#define lcfgdiffcomponent_inc_ref(compdiff) (((compdiff)->_refcount)++)
-#define lcfgdiffcomponent_dec_ref(compdiff) (((compdiff)->_refcount)--)
-
-bool lcfgdiffcomponent_valid_name(const char * name);
+void lcfgdiffcomponent_acquire( LCFGDiffResource * compdiff );
+void lcfgdiffcomponent_relinquish( LCFGDiffResource * compdiff );
 
 bool lcfgdiffcomponent_has_name(const LCFGDiffComponent * compdiff);
 
@@ -112,25 +115,26 @@ bool lcfgdiffcomponent_is_modified( const LCFGDiffComponent * compdiff );
 
 bool lcfgdiffcomponent_is_removed( const LCFGDiffComponent * compdiff );
 
-LCFGChange lcfgdiffcomponent_insert_next( LCFGDiffComponent * compdiff,
-                                          LCFGDiffResource  * current,
-                                          LCFGDiffResource  * new )
+LCFGChange lcfgdiffcomponent_insert_next( LCFGDiffComponent * list,
+                                          LCFGSListNode     * node,
+                                          LCFGDiffResource  * item )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgdiffcomponent_remove_next( LCFGDiffComponent * compdiff,
-                                          LCFGDiffResource  * current,
-                                          LCFGDiffResource ** old )
+LCFGChange lcfgdiffcomponent_remove_next( LCFGDiffComponent * list,
+                                          LCFGSListNode     * node,
+                                          LCFGDiffResource ** item )
   __attribute__((warn_unused_result));
 
-#define lcfgdiffcomponent_head(compdiff) ((compdiff)->head)
-#define lcfgdiffcomponent_tail(compdiff) ((compdiff)->tail)
-#define lcfgdiffcomponent_size(compdiff) ((compdiff)->size)
+#define lcfgdiffcomponent_head     lcfgslist_head
+#define lcfgdiffcomponent_tail     lcfgslist_tail
+#define lcfgdiffcomponent_size     lcfgslist_size
+#define lcfgdiffcomponent_is_empty lcfgslist_is_empty
 
-#define lcfgdiffcomponent_is_empty(compdiff) ( compdiff != NULL && (compdiff)->size == 0)
+#define lcfgdiffcomponent_has_next lcfgslist_has_next
+#define lcfgdiffcomponent_next     lcfgslist_next
+#define lcfgdiffcomponent_resdiff  lcfgslist_data
 
-#define lcfgdiffcomponent_next(resdiff)     ((resdiff)->next)
-
-#define lcfgdiffcomponent_append(compdiff, resdiff) ( lcfgdiffcomponent_insert_next( compdiff, lcfgdiffcomponent_tail(compdiff), resdiff ) )
+#define lcfgdiffcomponent_append(list, item) ( lcfgdiffcomponent_insert_next( list, lcfgslist_tail(list), item ) )
 
 LCFGDiffResource * lcfgdiffcomponent_find_resource(
 					  const LCFGDiffComponent * compdiff,

@@ -56,8 +56,7 @@ LCFGStatus lcfgprofile_diff( const LCFGProfile * profile1,
     bool added = false;
     if ( diff_rc != LCFG_STATUS_ERROR ) {
 
-      if ( compdiff != NULL &&
-	   !lcfgdiffcomponent_is_empty(compdiff) ) {
+      if ( !lcfgdiffcomponent_is_empty(compdiff) ) {
 
 	LCFGChange change = lcfgdiffprofile_append( profdiff, compdiff );
 	if ( change == LCFG_CHANGE_ADDED ) {
@@ -193,7 +192,7 @@ LCFGChange lcfgdiffprofile_insert_next( LCFGDiffProfile    * profdiff,
 
   }
 
-  lcfgdiffcomponent_inc_ref(new);
+  lcfgdiffcomponent_acquire(new);
 
   profdiff->size++;
 
@@ -228,7 +227,7 @@ LCFGChange lcfgdiffprofile_remove_next( LCFGDiffProfile    * profdiff,
 
   }
 
-  lcfgdiffcomponent_dec_ref(*old);
+  lcfgdiffcomponent_relinquish(*old);
 
   profdiff->size--;
 
