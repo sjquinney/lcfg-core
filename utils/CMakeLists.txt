@@ -4,7 +4,7 @@ project (lcfg-utils C)
 
 # Generate the lcfgutils shared library.
 
-set(MY_SOURCES libmsg.c utils.c entities.c md5.c)
+set(MY_SOURCES libmsg.c utils.c entities.c md5.c slist.c)
 
 add_library(lcfg_utils SHARED ${MY_SOURCES})
 
