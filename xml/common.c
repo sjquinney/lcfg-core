@@ -11,6 +11,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include <libxml/xmlreader.h>
 
@@ -61,6 +62,7 @@ LCFGStatus lcfgxml_error( char ** msg, const char *fmt, ...) {
  */
 
 bool lcfgxml_moveto_next_tag( xmlTextReaderPtr reader ) {
+  assert( reader != NULL );
 
   bool done = false;
   int read_status = xmlTextReaderRead(reader);
@@ -97,6 +99,8 @@ bool lcfgxml_moveto_next_tag( xmlTextReaderPtr reader ) {
 
 bool lcfgxml_moveto_node( xmlTextReaderPtr reader,
                          const char * target_nodename ) {
+  assert( reader != NULL );
+  assert( target_nodename != NULL );
 
   xmlChar * nodename = NULL;
 
@@ -133,6 +137,8 @@ bool lcfgxml_moveto_node( xmlTextReaderPtr reader,
 
 bool lcfgxml_correct_location( xmlTextReaderPtr reader,
                                const char * expected_nodename ) {
+  assert( reader != NULL );
+  assert( expected_nodename != NULL );
 
   xmlChar * nodename = xmlTextReaderName(reader);
 
