@@ -443,35 +443,35 @@ bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name ) {
  *
  */
 
-LCFGChange lcfgcomponent_insert_next( LCFGComponent    * comp,
-                                      LCFGResourceNode * resnode,
-                                      LCFGResource     * res ) {
-  assert( comp != NULL );
+LCFGChange lcfgcomponent_insert_next( LCFGComponent    * list,
+                                      LCFGResourceNode * node,
+                                      LCFGResource     * item ) {
+  assert( list != NULL );
 
-  LCFGResourceNode * new_node = lcfgresourcenode_new(res);
+  LCFGResourceNode * new_node = lcfgresourcenode_new(item);
   if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
 
-  lcfgresource_acquire(res);
+  lcfgresource_acquire(item);
 
-  if ( resnode == NULL ) { /* HEAD */
+  if ( node == NULL ) { /* HEAD */
 
-    if ( lcfgcomponent_is_empty(comp) )
-      comp->tail = new_node;
+    if ( lcfgcomponent_is_empty(list) )
+      list->tail = new_node;
 
-    new_node->next = comp->head;
-    comp->head     = new_node;
+    new_node->next = list->head;
+    list->head     = new_node;
 
   } else {
     
-    if ( resnode->next == NULL )
-      comp->tail = new_node;
+    if ( node->next == NULL )
+      list->tail = new_node;
 
-    new_node->next = resnode->next;
-    resnode->next  = new_node;
+    new_node->next = node->next;
+    node->next     = new_node;
 
   }
 
-  comp->size++;
+  list->size++;
 
   return LCFG_CHANGE_ADDED;
 }
@@ -504,38 +504,38 @@ LCFGChange lcfgcomponent_insert_next( LCFGComponent    * comp,
  *
  */
 
-LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
-                                      LCFGResourceNode * resnode,
-                                      LCFGResource    ** res ) {
-  assert( comp != NULL );
+LCFGChange lcfgcomponent_remove_next( LCFGComponent    * list,
+                                      LCFGResourceNode * node,
+                                      LCFGResource    ** item ) {
+  assert( list != NULL );
 
-  if ( lcfgcomponent_is_empty(comp) ) return LCFG_CHANGE_NONE;
+  if ( lcfgcomponent_is_empty(list) ) return LCFG_CHANGE_NONE;
 
   LCFGResourceNode * old_node = NULL;
 
-  if ( resnode == NULL ) { /* HEAD */
+  if ( node == NULL ) { /* HEAD */
 
-    old_node   = comp->head;
-    comp->head = comp->head->next;
+    old_node   = list->head;
+    list->head = list->head->next;
 
-    if ( lcfgcomponent_size(comp) == 1 )
-      comp->tail = NULL;
+    if ( lcfgcomponent_size(list) == 1 )
+      list->tail = NULL;
 
   } else {
 
-    if ( resnode->next == NULL ) return LCFG_CHANGE_ERROR;
+    if ( node->next == NULL ) return LCFG_CHANGE_ERROR;
 
-    old_node      = resnode->next;
-    resnode->next = resnode->next->next;
+    old_node   = node->next;
+    node->next = node->next->next;
 
-    if ( resnode->next == NULL )
-      comp->tail = resnode;
+    if ( node->next == NULL )
+      list->tail = node;
 
   }
 
-  comp->size--;
+  list->size--;
 
-  *res = lcfgcomponent_resource(old_node);
+  *item = lcfgcomponent_resource(old_node);
 
   lcfgresourcenode_destroy(old_node);
 
