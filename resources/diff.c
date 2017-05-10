@@ -419,4 +419,50 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
   return new_len;
 }
 
+int lcfgdiffresource_match( const LCFGDiffResource * resdiff,
+                            const char * want_name ) {
+
+  const char * name = lcfgdiffresource_get_name(resdiff);
+
+  return ( !isempty(name) && strcmp( name, want_name ) == 0 );
+}
+
+int lcfgdiffresource_compare( const LCFGDiffResource * resdiff1, 
+                              const LCFGDiffResource * resdiff2 ) {
+
+  const char * name1 = lcfgdiffresource_get_name(resdiff1);
+  if ( name1 == NULL )
+    name1 = "";
+
+  const char * name2 = lcfgdiffresource_get_name(resdiff2);
+  if ( name2 == NULL )
+    name2 = "";
+
+  return strcmp( name1, name2 );
+}
+
+LCFGStatus lcfgresource_diff( LCFGResource * old_res,
+                              LCFGResource * new_res,
+                              LCFGDiffResource ** result ) {
+
+  bool ok = true;
+
+  /* If both resources are specified require that they have same name */
+
+  if ( old_res != NULL && new_res != NULL )
+    ok = lcfgresource_same_name( old_res, new_res );
+
+  LCFGDiffResource * resdiff = NULL;
+
+  if (ok) {
+    resdiff = lcfgdiffresource_new();
+    lcfgdiffresource_set_old( resdiff, old_res );
+    lcfgdiffresource_set_new( resdiff, new_res );
+  }
+
+  *result = resdiff;
+
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+}
+
 /* eof */
