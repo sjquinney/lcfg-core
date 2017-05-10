@@ -33,6 +33,7 @@
 
 LCFGStatus lcfgxml_error( char ** msg, const char *fmt, ...) {
   free(*msg);
+  *msg = NULL;
 
   va_list ap;
 
@@ -97,7 +98,7 @@ bool lcfgxml_moveto_next_tag( xmlTextReaderPtr reader ) {
 bool lcfgxml_moveto_node( xmlTextReaderPtr reader,
                          const char * target_nodename ) {
 
-  xmlChar * nodename;
+  xmlChar * nodename = NULL;
 
   bool done = false;
   int read_status = 1;
@@ -105,6 +106,7 @@ bool lcfgxml_moveto_node( xmlTextReaderPtr reader,
     read_status = xmlTextReaderRead(reader);
     if ( read_status == 1 ) {
       nodename = xmlTextReaderName(reader);
+
       if (xmlStrcmp(nodename, BAD_CAST target_nodename) == 0 )
         done = true;
 
