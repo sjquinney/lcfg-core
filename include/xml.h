@@ -45,13 +45,13 @@ LCFGStatus lcfgprofile_from_xml( const char   * filename,
 				 char        ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgprofile_overrides_xmldir( LCFGProfile  * profile,
+LCFGChange lcfgprofile_overrides_xmldir( LCFGProfile  * profile,
                                          const char   * override_dir,
                                          const LCFGContextList * ctxlist,
                                          char        ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgprofile_overrides_context( LCFGProfile * profile,
+LCFGChange lcfgprofile_overrides_context( LCFGProfile * profile,
 					  const char * override_dir,
                                           LCFGContextList * ctxlist,
                                           char       ** msg )

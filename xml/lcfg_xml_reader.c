@@ -48,19 +48,31 @@ int main(int argc, char* argv[]) {
   /* Option local overrides */
 
   if ( apply_local ) {
-    status = lcfgprofile_overrides_context( new_profile, context_dir,
-					    ctxlist, &msg );
+    char * override_msg = NULL;
 
-    if ( status == LCFG_STATUS_OK ) {
-      lcfgprofile_overrides_xmldir( new_profile, override_dir,
-                                    ctxlist, &msg );
+    LCFGChange ctx_change = lcfgprofile_overrides_context( new_profile,
+                                                           context_dir,
+                                                           ctxlist,
+                                                           &override_msg );
+
+    if ( ctx_change == LCFG_CHANGE_ERROR ) {
+      fprintf( stderr, "Failed to apply context overrides to profile: %s\n",
+               override_msg );
     }
+
+    LCFGChange override_change = lcfgprofile_overrides_xmldir( new_profile,
+                                                               override_dir,
+                                                               ctxlist,
+                                                               &override_msg );
+
+    if ( override_change == LCFG_CHANGE_ERROR ) {
+      fprintf( stderr, "Failed to apply context overrides to profile: %s\n",
+               override_msg );
+    }
+
+    free(override_msg);
   }
 
-  if ( status != LCFG_STATUS_OK ) {
-    fprintf( stderr, "Failed to apply local overrides to profile: %s\n", msg );
-    goto cleanup;
-  }
 
   /* Write out the results */
 

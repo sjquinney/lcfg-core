@@ -76,9 +76,7 @@ LCFGStatus lcfgxml_collect_metadata( xmlTextReaderPtr reader,
 
         if ( nodetype == XML_READER_TYPE_ELEMENT ) {
 
-          if ( metaname != NULL )
-            xmlFree(metaname);
-
+          xmlFree(metaname);
           metaname = nodename;
 
         } else {
@@ -131,10 +129,8 @@ LCFGStatus lcfgxml_collect_metadata( xmlTextReaderPtr reader,
 
   }
 
-  if ( metaname != NULL ) {
-    xmlFree(metaname);
-    metaname = NULL;
-  }
+  xmlFree(metaname);
+  metaname = NULL;
 
   return status;
 }
@@ -160,6 +156,9 @@ LCFGStatus lcfgxml_init_reader( const char * filename,
                                 char ** msg ) {
   assert( filename != NULL );
 
+  if ( isempty(filename) )
+    return lcfgxml_error( msg, "Invalid XML profile filename" );
+
   /* 1. Firstly need to check that the file actually exists and is
         readable. Doing an fopen is better than just calling stat. */
 
@@ -167,9 +166,9 @@ LCFGStatus lcfgxml_init_reader( const char * filename,
   if ((file = fopen(filename, "r")) == NULL) {
 
     if (errno == ENOENT) {
-      return lcfgxml_error( msg, "File '%s' does not exist.\n", filename );
+      return lcfgxml_error( msg, "File '%s' does not exist", filename );
     } else {
-      return lcfgxml_error( msg, "File '%s' is not readable.\n", filename );
+      return lcfgxml_error( msg, "File '%s' is not readable", filename );
     }
 
   } else {
@@ -181,23 +180,24 @@ LCFGStatus lcfgxml_init_reader( const char * filename,
   xmlTextReaderPtr reader = xmlReaderForFile( filename, "UTF-8",
                                            XML_PARSE_DTDATTR | XML_PARSE_NOENT);
   if ( reader == NULL )
-    return lcfgxml_error( msg, "Failed to initialise the LCFG XML reader." );
+    return lcfgxml_error( msg, "Failed to initialise the LCFG XML reader" );
 
   /* 3. Walk to the start of the profile */
 
-  bool move_ok = lcfgxml_moveto_node( reader, LCFGXML_TOP_NODE );
-  if ( move_ok )
-    move_ok = lcfgxml_moveto_next_tag( reader );
+  bool ok = lcfgxml_moveto_node( reader, LCFGXML_TOP_NODE );
+  if ( ok )
+    ok = lcfgxml_moveto_next_tag( reader );
 
-  if ( !move_ok ) {
+  if ( !ok ) {
     /* not a valid lcfg profile */
-    xmlTextReaderClose(reader);
-    return lcfgxml_error( msg, "Invalid LCFG XML profile." );
+    lcfgxml_end_reader(reader);
+    reader = NULL;
+    lcfgxml_error( msg, "Invalid LCFG XML profile" );
   }
 
   *result = reader;
 
-  return LCFG_STATUS_OK;
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
 /**
@@ -354,11 +354,11 @@ LCFGStatus lcfgprofile_from_xml( const char * filename,
  * @param[in] ctxlist An @c LCFGContextList of current contexts
  * @param[out] msg Pointer to any diagnostic messages
  *
- * @return Status value indicating success of the process
+ * @return Integer value indicating type of change
  *
  */
 
-LCFGStatus lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
+LCFGChange lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
                                          const char * override_dir,
                                          const LCFGContextList * ctxlist,
                                          char ** msg ) {
@@ -369,16 +369,17 @@ LCFGStatus lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
   struct stat sb;
   if ( override_dir == NULL ||
        ( stat( override_dir, &sb ) != 0 && errno == ENOENT ) ) {
-    return LCFG_STATUS_OK;
+    return LCFG_CHANGE_NONE;
   }
 
   DIR * dh = opendir(override_dir);
   if ( dh == NULL ) {
-    return lcfgxml_error( msg, "XML override directory '%s' is not accessible",
-                          override_dir );
+    lcfgxml_error( msg, "XML override directory '%s' is not accessible",
+                   override_dir );
+    return LCFG_CHANGE_ERROR;
   }
 
-  LCFGStatus status = LCFG_STATUS_OK;
+  LCFGChange change = LCFG_CHANGE_NONE;
 
   struct dirent * entry;
 
@@ -404,53 +405,68 @@ LCFGStatus lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
 
       char * fullpath = lcfgutils_catfile( override_dir, entry->d_name );
 
-      if ( stat( fullpath, &sb ) == 0 && S_ISREG(sb.st_mode) ) {
-
-	/* only store this component */
-	LCFGTagList * comps_wanted = lcfgtaglist_new();
-        char * tagmsg = NULL;
-	if ( lcfgtaglist_mutate_add( comps_wanted, comp_name, &tagmsg ) 
-             == LCFG_CHANGE_ERROR ) {
-          status = lcfgxml_error( msg, 
-                               "Failed to create list of required components: ",
-                                  tagmsg );
-        }
-        free(tagmsg);
-
-        LCFGProfile * override_profile = NULL;
-        if ( status != LCFG_STATUS_ERROR ) {
-          status = lcfgprofile_from_xml( fullpath,
-                                         &override_profile,/* result */
-                                         NULL,            /* base context */
-                                         fullpath,        /* base derivation */
-                                         ctxlist,         /* current contexts */
-                                         comps_wanted,
-                                         false,           /* no packages */
-                                         msg );
-        }
-
-        if ( status != LCFG_STATUS_ERROR ) {
-          LCFGChange transplant_rc
-	    = lcfgprofile_transplant_components( main_profile,
-						 override_profile,
-						 msg );
-	  if ( transplant_rc == LCFG_CHANGE_ERROR )
-            status = LCFG_STATUS_ERROR;
-        }
-
-	lcfgprofile_destroy(override_profile);
-
-        /* warn but do not fail entire processing */
-        if ( status == LCFG_STATUS_ERROR )
-          fprintf( stderr, "Failed to process '%s': %s\n", fullpath, *msg );
-
-	free(*msg);
-	*msg = NULL;
-
-	lcfgtaglist_relinquish(comps_wanted);
+      if ( fullpath == NULL ||
+           stat( fullpath, &sb ) != 0 ||
+           !S_ISREG(sb.st_mode) ) {
+        free(fullpath);
+        continue;
       }
 
+      LCFGChange override_change = LCFG_CHANGE_NONE;
+
+      /* We only want to load this component */
+
+      LCFGTagList * comps_wanted = lcfgtaglist_new();
+      char * tagmsg = NULL;
+      if ( lcfgtaglist_mutate_add( comps_wanted, comp_name, &tagmsg ) 
+           == LCFG_CHANGE_ERROR ) {
+        lcfgxml_error( msg, "Failed to create list of required components: ",
+                       tagmsg );
+        override_change = LCFG_CHANGE_ERROR;
+      }
+      free(tagmsg);
       free(comp_name);
+
+      LCFGProfile * override_profile = NULL;
+      char * import_msg = NULL;
+
+      if ( override_change != LCFG_CHANGE_ERROR ) {
+
+        LCFGStatus read_status = 
+          lcfgprofile_from_xml( fullpath,
+                                &override_profile,/* result */
+                                NULL,            /* base context */
+                                fullpath,        /* base derivation */
+                                ctxlist,         /* current contexts */
+                                comps_wanted,
+                                false,           /* no packages */
+                                &import_msg );
+
+        if ( read_status == LCFG_STATUS_ERROR )
+          override_change = LCFG_CHANGE_ERROR;
+
+      }
+
+      lcfgtaglist_relinquish(comps_wanted);
+
+      if ( override_change != LCFG_CHANGE_ERROR ) {
+        override_change = lcfgprofile_transplant_components( main_profile,
+                                                             override_profile,
+                                                             &import_msg );
+      }
+
+      if ( override_change == LCFG_CHANGE_ERROR ) {
+        /* warn but do not fail entire processing */
+        fprintf( stderr, "Failed to process '%s': %s\n", fullpath,
+                 import_msg );
+      } else if ( override_change != LCFG_CHANGE_NONE ) {
+        change = LCFG_CHANGE_MODIFIED;
+      }
+
+      free(import_msg);
+
+      lcfgprofile_destroy(override_profile);
+
       free(fullpath);
 
     }
@@ -459,7 +475,7 @@ LCFGStatus lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
 
   closedir(dh);
 
-  return status;
+  return change;
 }
 
 /**
@@ -484,28 +500,31 @@ LCFGStatus lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
  * @param[in] ctxlist An @c LCFGContextList of current contexts
  * @param[out] msg Pointer to any diagnostic messages
  *
- * @return Status value indicating success of the process
+ * @return Integer value indicating type of change
  *
  */
 
-LCFGStatus lcfgprofile_overrides_context( LCFGProfile * main_profile,
+LCFGChange lcfgprofile_overrides_context( LCFGProfile * main_profile,
 					  const char * override_dir,
                                           LCFGContextList * ctxlist,
                                           char ** msg ) {
   assert( main_profile != NULL );
   assert(override_dir != NULL );
 
-  if ( lcfgctxlist_is_empty(ctxlist) ) return LCFG_STATUS_OK;
+  if ( lcfgctxlist_is_empty(ctxlist) ) return LCFG_CHANGE_NONE;
 
-  LCFGStatus status = LCFG_STATUS_OK;
+  LCFGChange change = LCFG_CHANGE_NONE;
 
   /* Always apply any context overrides in order of priority */
 
   lcfgctxlist_sort_by_priority(ctxlist);
 
+  size_t buf_size   = 0;
+  char * ctx_as_str = NULL;
+
   LCFGContextNode * cur_node = NULL;
   for ( cur_node = lcfgctxlist_head(ctxlist);
-        cur_node != NULL && status != LCFG_STATUS_ERROR;
+        cur_node != NULL && change != LCFG_CHANGE_ERROR;
         cur_node = lcfgctxlist_next(cur_node) ) {
 
     const LCFGContext * ctx = lcfgctxlist_context(cur_node);
@@ -515,60 +534,72 @@ LCFGStatus lcfgprofile_overrides_context( LCFGProfile * main_profile,
     if ( ctxvarfile == NULL ) continue;
 
     /* Ignore any files which do not have a .xml suffix */
-    if ( !lcfgutils_endswith( ctxvarfile, ".xml" ) ) continue;
 
     struct stat sb;
-    if ( stat( ctxvarfile, &sb ) != 0 || !S_ISREG(sb.st_mode) ) continue;
+    if ( stat( ctxvarfile, &sb ) != 0 ||
+         !S_ISREG(sb.st_mode) ||
+         !lcfgutils_endswith( ctxvarfile, ".xml" ) ) {
+      free(ctxvarfile);
+      continue;
+    }
 
-    size_t buf_size   = 0;
-    char * ctx_as_str = NULL;
+    LCFGChange override_change = LCFG_CHANGE_NONE;
+
     ssize_t ctx_len = lcfgcontext_to_string( ctx, LCFG_OPT_NONE,
                                              &ctx_as_str, &buf_size );
     if ( ctx_len < 0 ) {
       lcfgutils_build_message( msg, "Failed to convert context to string" );
-      status = LCFG_STATUS_ERROR;
+      override_change = LCFG_CHANGE_ERROR;
     }
 
-    if ( status != LCFG_STATUS_ERROR ) {
-      char * import_msg = NULL;
+    LCFGProfile * ctx_profile = NULL;
+    char * import_msg = NULL;
 
-      LCFGProfile * ctx_profile = NULL;
-      status = lcfgprofile_from_xml( ctxvarfile,
-                                     &ctx_profile,
-                                     ctx_as_str, /* base context */
-                                     ctxvarfile, /* base derivation */
-                                     ctxlist,    /* current contexts */
-                                     NULL,       /* store ALL components */
-                                     false,      /* packages not required */
-                                     &import_msg );
+    /* Attempt to read the override profile */
 
-      if ( status != LCFG_STATUS_ERROR ) {
-        bool take_new_comps = false;
-        LCFGChange merge_rc = lcfgprofile_merge( main_profile, ctx_profile,
-                                                 take_new_comps, &import_msg );
+    if ( override_change != LCFG_CHANGE_ERROR ) {
 
-	if ( merge_rc == LCFG_CHANGE_ERROR )
-          status = LCFG_STATUS_ERROR;
-      }
+      LCFGStatus read_status = 
+        lcfgprofile_from_xml( ctxvarfile,
+                              &ctx_profile,
+                              ctx_as_str, /* base context */
+                              ctxvarfile, /* base derivation */
+                              ctxlist,    /* current contexts */
+                              NULL,       /* store ALL components */
+                              false,      /* packages not required */
+                              &import_msg );
 
-      if ( status == LCFG_STATUS_ERROR ) {
-        /* warn but do not fail entire processing */
-        fprintf( stderr, "Failed to process '%s': %s\n", ctxvarfile,
-                 import_msg );
-      }
+      if ( read_status == LCFG_STATUS_ERROR )
+        override_change = LCFG_CHANGE_ERROR;
 
-      free(import_msg);
-
-      lcfgprofile_destroy(ctx_profile);
-
-      free(ctx_as_str);
     }
+
+    /* Merge override profile if successfully read */
+
+    if ( override_change != LCFG_CHANGE_ERROR ) {
+      bool take_new_comps = false;
+      override_change = lcfgprofile_merge( main_profile, ctx_profile,
+                                           take_new_comps, &import_msg );
+    }
+
+    if ( override_change == LCFG_CHANGE_ERROR ) {
+      /* warn but do not fail entire processing */
+      fprintf( stderr, "Failed to process '%s': %s\n", ctxvarfile,
+               import_msg );
+    } else if ( override_change != LCFG_CHANGE_NONE ) {
+      change = LCFG_CHANGE_MODIFIED;
+    }
+
+    free(import_msg);
+
+    lcfgprofile_destroy(ctx_profile);
 
     free(ctxvarfile);
-
   }
 
-  return status;
+  free(ctx_as_str);
+
+  return change;
 }
 
 
