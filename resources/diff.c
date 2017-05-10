@@ -57,15 +57,20 @@ void lcfgdiffresource_relinquish( LCFGDiffResource * resdiff ) {
 }
 
 bool lcfgdiffresource_has_old( const LCFGDiffResource * resdiff ) {
+  assert( resdiff != NULL );
+
   return ( resdiff->old != NULL );
 }
 
 LCFGResource * lcfgdiffresource_get_old( const LCFGDiffResource * resdiff ) {
+  assert( resdiff != NULL );
+
   return resdiff->old;
 }
 
 bool lcfgdiffresource_set_old( LCFGDiffResource * resdiff,
                                LCFGResource * res ) {
+  assert( resdiff != NULL );
 
   LCFGResource * current = resdiff->old;
   lcfgresource_relinquish(current);
@@ -79,15 +84,20 @@ bool lcfgdiffresource_set_old( LCFGDiffResource * resdiff,
 }
 
 bool lcfgdiffresource_has_new( const LCFGDiffResource * resdiff ) {
+  assert( resdiff != NULL );
+
   return ( resdiff->new != NULL );
 }
 
 LCFGResource * lcfgdiffresource_get_new( const LCFGDiffResource * resdiff ) {
+  assert( resdiff != NULL );
+
   return resdiff->new;
 }
 
 bool lcfgdiffresource_set_new( LCFGDiffResource * resdiff,
                                LCFGResource * res ) {
+  assert( resdiff != NULL );
 
   LCFGResource * current = resdiff->new;
   lcfgresource_relinquish(current);
@@ -101,8 +111,9 @@ bool lcfgdiffresource_set_new( LCFGDiffResource * resdiff,
 }
 
 char * lcfgdiffresource_get_name( const LCFGDiffResource * resdiff ) {
+  assert( resdiff != NULL );
   
-  LCFGResource * res = NULL;
+  const LCFGResource * res = NULL;
   
   /* Check if there is an old resource with a name */
   if ( lcfgdiffresource_has_old(resdiff) )
@@ -119,6 +130,7 @@ char * lcfgdiffresource_get_name( const LCFGDiffResource * resdiff ) {
 }
 
 LCFGChange lcfgdiffresource_get_type( const LCFGDiffResource * resdiff ) {
+  assert( resdiff != NULL );
 
   LCFGChange difftype = LCFG_CHANGE_NONE;
 
@@ -152,6 +164,8 @@ LCFGChange lcfgdiffresource_get_type( const LCFGDiffResource * resdiff ) {
 }
 
 bool lcfgdiffresource_is_changed( const LCFGDiffResource * resdiff ) {
+  assert( resdiff != NULL );
+
   LCFGChange difftype = lcfgdiffresource_get_type(resdiff);
   return ( difftype == LCFG_CHANGE_ADDED   ||
 	   difftype == LCFG_CHANGE_REMOVED ||
@@ -159,18 +173,26 @@ bool lcfgdiffresource_is_changed( const LCFGDiffResource * resdiff ) {
 }
 
 bool lcfgdiffresource_is_nochange( const LCFGDiffResource * resdiff ) {
+  assert( resdiff != NULL );
+
   return ( lcfgdiffresource_get_type(resdiff) == LCFG_CHANGE_NONE );
 }
 
 bool lcfgdiffresource_is_modified( const LCFGDiffResource * resdiff ) {
+  assert( resdiff != NULL );
+
   return ( lcfgdiffresource_get_type(resdiff) == LCFG_CHANGE_MODIFIED );
 }
 
 bool lcfgdiffresource_is_added( const LCFGDiffResource * resdiff ) {
+  assert( resdiff != NULL );
+
   return ( lcfgdiffresource_get_type(resdiff) == LCFG_CHANGE_ADDED );
 }
 
 bool lcfgdiffresource_is_removed( const LCFGDiffResource * resdiff ) {
+  assert( resdiff != NULL );
+
   return ( lcfgdiffresource_get_type(resdiff) == LCFG_CHANGE_REMOVED );
 }
 
@@ -179,6 +201,7 @@ ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
 				    const char * comments,
 				    bool pending,
 				    char ** result, size_t * size ) {
+  assert( resdiff != NULL );
 
   size_t new_len = 0;
 
@@ -303,13 +326,14 @@ ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
 ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
                                   const char * prefix,
                                   char ** result, size_t * size ) {
+  assert( resdiff != NULL );
 
   const char * name = lcfgdiffresource_get_name(resdiff);
   if ( name == NULL ) return -1;
 
   const char * old_value = NULL;
   if ( lcfgdiffresource_has_old(resdiff) ) {
-    LCFGResource * old_res = lcfgdiffresource_get_old(resdiff);
+    const LCFGResource * old_res = lcfgdiffresource_get_old(resdiff);
 
     if ( lcfgresource_has_value(old_res) )
       old_value = lcfgresource_get_value(old_res);
@@ -320,7 +344,7 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
 
   const char * new_value = NULL;
   if ( lcfgdiffresource_has_new(resdiff) ) {
-    LCFGResource * new_res = lcfgdiffresource_get_new(resdiff);
+    const LCFGResource * new_res = lcfgdiffresource_get_new(resdiff);
 
     if ( lcfgresource_has_value(new_res) )
       new_value = lcfgresource_get_value(new_res);

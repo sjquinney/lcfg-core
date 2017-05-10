@@ -29,58 +29,44 @@ void lcfgdiffresource_destroy(LCFGDiffResource * resdiff);
 void lcfgdiffresource_acquire( LCFGDiffResource * resdiff );
 void lcfgdiffresource_relinquish( LCFGDiffResource * resdiff );
 
-bool lcfgdiffresource_has_old( const LCFGDiffResource * resdiff )
-  __attribute__((nonnull (1)));
+bool lcfgdiffresource_has_old( const LCFGDiffResource * resdiff );
 
-LCFGResource * lcfgdiffresource_get_old( const LCFGDiffResource * resdiff )
-  __attribute__((nonnull (1)));
+LCFGResource * lcfgdiffresource_get_old( const LCFGDiffResource * resdiff );
 
 bool lcfgdiffresource_set_old( LCFGDiffResource * resdiff,
-                               LCFGResource * res )
-  __attribute__((nonnull (1)));
+                               LCFGResource * res );
 
-bool lcfgdiffresource_has_new( const LCFGDiffResource * resdiff )
-  __attribute__((nonnull (1)));
+bool lcfgdiffresource_has_new( const LCFGDiffResource * resdiff );
 
-LCFGResource * lcfgdiffresource_get_new( const LCFGDiffResource * resdiff )
-  __attribute__((nonnull (1)));
+LCFGResource * lcfgdiffresource_get_new( const LCFGDiffResource * resdiff );
 
 bool lcfgdiffresource_set_new( LCFGDiffResource * resdiff,
-                               LCFGResource * res )
-  __attribute__((nonnull (1)));
+                               LCFGResource * res );
 
-char * lcfgdiffresource_get_name( const LCFGDiffResource * resdiff )
-  __attribute__((nonnull (1)));
+char * lcfgdiffresource_get_name( const LCFGDiffResource * resdiff );
 
-LCFGChange lcfgdiffresource_get_type( const LCFGDiffResource * resdiff )
-  __attribute__((nonnull (1)));
+LCFGChange lcfgdiffresource_get_type( const LCFGDiffResource * resdiff );
 
-bool lcfgdiffresource_is_changed( const LCFGDiffResource * resdiff )
-  __attribute__((nonnull (1)));
+bool lcfgdiffresource_is_changed( const LCFGDiffResource * resdiff );
 
-bool lcfgdiffresource_is_nochange( const LCFGDiffResource * resdiff )
-  __attribute__((nonnull (1)));
+bool lcfgdiffresource_is_nochange( const LCFGDiffResource * resdiff );
 
-bool lcfgdiffresource_is_modified( const LCFGDiffResource * resdiff )
-  __attribute__((nonnull (1)));
+bool lcfgdiffresource_is_modified( const LCFGDiffResource * resdiff );
 
-bool lcfgdiffresource_is_added( const LCFGDiffResource * resdiff )
-  __attribute__((nonnull (1)));
+bool lcfgdiffresource_is_added( const LCFGDiffResource * resdiff );
 
-bool lcfgdiffresource_is_removed( const LCFGDiffResource * resdiff )
-  __attribute__((nonnull (1)));
+bool lcfgdiffresource_is_removed( const LCFGDiffResource * resdiff );
 
 ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
 				    const char * prefix,
 				    const char * comments,
 				    bool pending,
-				    char ** result, size_t * size )
-  __attribute__((nonnull (1)));
+				    char ** result, size_t * size );
 
 ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
                                   const char * prefix,
                                   char ** result, size_t * size )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 struct LCFGDiffComponent {
   char * name;
@@ -103,53 +89,44 @@ void lcfgdiffcomponent_destroy(LCFGDiffComponent * compdiff );
 
 bool lcfgdiffcomponent_valid_name(const char * name);
 
-bool lcfgdiffcomponent_has_name(const LCFGDiffComponent * compdiff)
-  __attribute__((nonnull (1)));
+bool lcfgdiffcomponent_has_name(const LCFGDiffComponent * compdiff);
 
-char * lcfgdiffcomponent_get_name(const LCFGDiffComponent * compdiff)
-  __attribute__((nonnull (1)));
+char * lcfgdiffcomponent_get_name(const LCFGDiffComponent * compdiff);
 
 bool lcfgdiffcomponent_set_name( LCFGDiffComponent * compdiff,
                                  char * new_name )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 void lcfgdiffcomponent_set_type( LCFGDiffComponent * compdiff,
-                                 LCFGChange change_type )
-  __attribute__((nonnull (1)));
+                                 LCFGChange change_type );
 
-LCFGChange lcfgdiffcomponent_get_type( const LCFGDiffComponent * compdiff )
-  __attribute__((nonnull (1)));
+LCFGChange lcfgdiffcomponent_get_type( const LCFGDiffComponent * compdiff );
 
-bool lcfgdiffcomponent_is_nochange( const LCFGDiffComponent * compdiff )
-  __attribute__((nonnull (1)));
+bool lcfgdiffcomponent_is_nochange( const LCFGDiffComponent * compdiff );
 
-bool lcfgdiffcomponent_is_changed( const LCFGDiffComponent * compdiff )
-  __attribute__((nonnull (1)));
+bool lcfgdiffcomponent_is_changed( const LCFGDiffComponent * compdiff );
 
-bool lcfgdiffcomponent_is_added( const LCFGDiffComponent * compdiff )
-  __attribute__((nonnull (1)));
+bool lcfgdiffcomponent_is_added( const LCFGDiffComponent * compdiff );
 
-bool lcfgdiffcomponent_is_modified( const LCFGDiffComponent * compdiff )
-  __attribute__((nonnull (1)));
+bool lcfgdiffcomponent_is_modified( const LCFGDiffComponent * compdiff );
 
-bool lcfgdiffcomponent_is_removed( const LCFGDiffComponent * compdiff )
-  __attribute__((nonnull (1)));
+bool lcfgdiffcomponent_is_removed( const LCFGDiffComponent * compdiff );
 
 LCFGChange lcfgdiffcomponent_insert_next( LCFGDiffComponent * compdiff,
                                           LCFGDiffResource  * current,
                                           LCFGDiffResource  * new )
- __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGChange lcfgdiffcomponent_remove_next( LCFGDiffComponent * compdiff,
                                           LCFGDiffResource  * current,
                                           LCFGDiffResource ** old )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 #define lcfgdiffcomponent_head(compdiff) ((compdiff)->head)
 #define lcfgdiffcomponent_tail(compdiff) ((compdiff)->tail)
 #define lcfgdiffcomponent_size(compdiff) ((compdiff)->size)
 
-#define lcfgdiffcomponent_is_empty(compdiff) ((compdiff)->size == 0)
+#define lcfgdiffcomponent_is_empty(compdiff) ( compdiff != NULL && (compdiff)->size == 0)
 
 #define lcfgdiffcomponent_next(resdiff)     ((resdiff)->next)
 
@@ -157,20 +134,17 @@ LCFGChange lcfgdiffcomponent_remove_next( LCFGDiffComponent * compdiff,
 
 LCFGDiffResource * lcfgdiffcomponent_find_resource(
 					  const LCFGDiffComponent * compdiff,
-					  const char * want_name )
-  __attribute__((nonnull (1,2)));
+					  const char * want_name );
 
 bool lcfgdiffcomponent_has_resource( const LCFGDiffComponent * compdiff,
-				     const char * want_name )
-  __attribute__((nonnull (1,2)));
+				     const char * want_name );
 
-void lcfgdiffcomponent_sort( LCFGDiffComponent * compdiff )
-  __attribute__((nonnull (1)));
+void lcfgdiffcomponent_sort( LCFGDiffComponent * compdiff );
 
 LCFGStatus lcfgdiffcomponent_to_holdfile( const LCFGDiffComponent * compdiff,
                                           FILE * holdfile,
                                           md5_state_t * md5state )
-  __attribute__((nonnull (1,2))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGStatus lcfgresource_diff( LCFGResource * old_res,
                               LCFGResource * new_res,
@@ -210,18 +184,18 @@ void lcfgdiffprofile_destroy(LCFGDiffProfile * profdiff );
 LCFGChange lcfgdiffprofile_insert_next( LCFGDiffProfile    * profdiff,
                                         LCFGDiffComponent  * current,
                                         LCFGDiffComponent  * new )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGChange lcfgdiffprofile_remove_next( LCFGDiffProfile    * profdiff,
                                         LCFGDiffComponent  * current,
                                         LCFGDiffComponent ** old )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 #define lcfgdiffprofile_head(profdiff) ((profdiff)->head)
 #define lcfgdiffprofile_tail(profdiff) ((profdiff)->tail)
 #define lcfgdiffprofile_size(profdiff) ((profdiff)->size)
 
-#define lcfgdiffprofile_is_empty(profdiff) ((profdiff)->size == 0)
+#define lcfgdiffprofile_is_empty(profdiff) ( profdiff != NULL && (profdiff)->size == 0)
 
 #define lcfgdiffprofile_next(compdiff)     ((compdiff)->next)
 
@@ -229,18 +203,16 @@ LCFGChange lcfgdiffprofile_remove_next( LCFGDiffProfile    * profdiff,
 
 LCFGDiffComponent * lcfgdiffprofile_find_component(
 					    const LCFGDiffProfile * profdiff,
-					    const char * want_name )
-  __attribute__((nonnull (1,2)));
+					    const char * want_name );
 
 bool lcfgdiffprofile_has_component( const LCFGDiffProfile * profdiff,
-				    const char * comp_name )
-  __attribute__((nonnull (1,2)));
+				    const char * comp_name );
 
 LCFGStatus lcfgdiffprofile_to_holdfile( const LCFGDiffProfile * profdiff,
                                         const char * holdfile,
                                         char ** signature,
                                         char ** msg )
-  __attribute__((nonnull (1))) __attribute__((warn_unused_result));
+  __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
                                const LCFGComponent * comp2,
