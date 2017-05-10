@@ -367,7 +367,7 @@ LCFGChange lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
   /* If the overrides directory does not exist then just return success */
 
   struct stat sb;
-  if ( override_dir == NULL ||
+  if ( isempty(override_dir) ||
        ( stat( override_dir, &sb ) != 0 && errno == ENOENT ) ) {
     return LCFG_CHANGE_NONE;
   }
@@ -509,9 +509,17 @@ LCFGChange lcfgprofile_overrides_context( LCFGProfile * main_profile,
                                           LCFGContextList * ctxlist,
                                           char ** msg ) {
   assert( main_profile != NULL );
-  assert(override_dir != NULL );
+  assert( override_dir != NULL );
 
   if ( lcfgctxlist_is_empty(ctxlist) ) return LCFG_CHANGE_NONE;
+
+  /* If the overrides directory does not exist then just return success */
+
+  struct stat sb;
+  if ( isempty(override_dir) ||
+       ( stat( override_dir, &sb ) != 0 && errno == ENOENT ) ) {
+    return LCFG_CHANGE_NONE;
+  }
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
@@ -535,7 +543,6 @@ LCFGChange lcfgprofile_overrides_context( LCFGProfile * main_profile,
 
     /* Ignore any files which do not have a .xml suffix */
 
-    struct stat sb;
     if ( stat( ctxvarfile, &sb ) != 0 ||
          !S_ISREG(sb.st_mode) ||
          !lcfgutils_endswith( ctxvarfile, ".xml" ) ) {
