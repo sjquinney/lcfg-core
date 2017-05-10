@@ -26,8 +26,8 @@ LCFGDiffResource * lcfgdiffresource_new(void);
 
 void lcfgdiffresource_destroy(LCFGDiffResource * resdiff);
 
-#define lcfgdiffresource_inc_ref(resdiff) (((resdiff)->_refcount)++)
-#define lcfgdiffresource_dec_ref(resdiff) (((resdiff)->_refcount)--)
+void lcfgdiffresource_acquire( LCFGDiffResource * resdiff );
+void lcfgdiffresource_relinquish( LCFGDiffResource * resdiff );
 
 bool lcfgdiffresource_has_old( const LCFGDiffResource * resdiff )
   __attribute__((nonnull (1)));

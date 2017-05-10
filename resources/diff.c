@@ -18,23 +18,41 @@ LCFGDiffResource * lcfgdiffresource_new(void) {
   resdiff->old  = NULL;
   resdiff->new  = NULL;
   resdiff->next = NULL;
+  resdiff->_refcount = 1;
 
   return resdiff;
 }
 
 void lcfgdiffresource_destroy(LCFGDiffResource * resdiff) {
 
-  if ( resdiff == NULL )
-    return;
+  if ( resdiff == NULL ) return;
 
-  if ( lcfgdiffresource_has_old(resdiff) )
-    lcfgdiffresource_set_old( resdiff, NULL );
+  lcfgresource_relinquish(resdiff->old);
+  resdiff->old = NULL;
 
-  if ( lcfgdiffresource_has_new(resdiff) )
-    lcfgdiffresource_set_new( resdiff, NULL );
+  lcfgresource_relinquish(resdiff->new);
+  resdiff->new = NULL;
 
   free(resdiff);
   resdiff = NULL;
+
+}
+
+void lcfgdiffresource_acquire( LCFGDiffResource * resdiff ) {
+  assert( resdiff != NULL );
+
+  resdiff->_refcount += 1;
+}
+
+void lcfgdiffresource_relinquish( LCFGDiffResource * resdiff ) {
+
+  if ( resdiff == NULL ) return;
+
+  if ( resdiff->_refcount > 0 )
+    resdiff->_refcount -= 1;
+
+  if ( resdiff->_refcount == 0 )
+    lcfgdiffresource_destroy(resdiff);
 
 }
 
@@ -87,18 +105,14 @@ char * lcfgdiffresource_get_name( const LCFGDiffResource * resdiff ) {
   LCFGResource * res = NULL;
   
   /* Check if there is an old resource with a name */
-  if ( lcfgdiffresource_has_old(resdiff) ) {
+  if ( lcfgdiffresource_has_old(resdiff) )
     res = lcfgdiffresource_get_old(resdiff);
 
-    if ( !lcfgresource_has_name(res) )
-      res = NULL;
-  }
-
-  if ( res == NULL )
+  if ( !lcfgresource_is_valid(res) )
     res = lcfgdiffresource_get_new(resdiff);
 
   char * name = NULL;
-  if ( res != NULL )
+  if ( lcfgresource_is_valid(res) )
     name = lcfgresource_get_name(res);
 
   return name;
@@ -291,10 +305,9 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
                                   char ** result, size_t * size ) {
 
   const char * name = lcfgdiffresource_get_name(resdiff);
-  if ( name == NULL )
-    return -1;
+  if ( name == NULL ) return -1;
 
-  char * old_value = NULL;
+  const char * old_value = NULL;
   if ( lcfgdiffresource_has_old(resdiff) ) {
     LCFGResource * old_res = lcfgdiffresource_get_old(resdiff);
 
@@ -305,7 +318,7 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
   if ( old_value == NULL )
     old_value = "";
 
-  char * new_value = NULL;
+  const char * new_value = NULL;
   if ( lcfgdiffresource_has_new(resdiff) ) {
     LCFGResource * new_res = lcfgdiffresource_get_new(resdiff);
 
@@ -351,8 +364,7 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
      old resource has no value are not worth reporting so simply avoid
      that here. */
 
-  if ( new_len == 0 )
-    return new_len;
+  if ( new_len == 0 ) return new_len;
 
   /* Build the new string - start at offset from the value line which
      was put there using lcfgresource_to_spec */
