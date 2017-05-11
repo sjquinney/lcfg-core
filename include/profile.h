@@ -17,6 +17,9 @@
 #include "packages.h"
 #include "components.h"
 
+#define ACTIVE_PACKAGE_RULES   ( LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_USE_PRIORITY )
+#define INACTIVE_PACKAGE_RULES ( LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_KEEP_ALL )
+
 /**
  * @brief A structure to represent an LCFG Profile
  */

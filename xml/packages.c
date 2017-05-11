@@ -436,10 +436,7 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
 
   /* Any conflicts for "active" packages are resolved according to priority */
 
-  LCFGMergeRule active_merge_rules =
-    LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_USE_PRIORITY;
-
-  if ( !lcfgpkglist_set_merge_rules( *active, active_merge_rules ) ) {
+  if ( !lcfgpkglist_set_merge_rules( *active, ACTIVE_PACKAGE_RULES ) ) {
     status = lcfgxml_error( msg,
                    "Failed to set merge rules for active packages list" );
     goto cleanup;
@@ -447,10 +444,7 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
 
   /* All other "inactive" packages are stored separately */
 
-  LCFGMergeRule inactive_merge_rules =
-    LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_KEEP_ALL;
-
-  if ( !lcfgpkglist_set_merge_rules( *inactive, inactive_merge_rules ) ) {
+  if ( !lcfgpkglist_set_merge_rules( *inactive, INACTIVE_PACKAGE_RULES ) ) {
     status = lcfgxml_error( msg,
                    "Failed to set merge rules for inactive packages list" );
     goto cleanup;
