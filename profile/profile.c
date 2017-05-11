@@ -351,6 +351,25 @@ bool lcfgprofile_has_components( const LCFGProfile * profile ) {
 }
 
 /**
+ * @brief Get the list of components for the profile
+ *
+ * This can be used to retrieve the @c LCFGComponentList for the @c
+ * LCFGProfile.
+ *
+ * @param[in] profile Pointer to @c LCFGProfile
+ *
+ * @return The @c LCFGComponentList for the profile
+ *
+ */
+
+LCFGComponentList * lcfgprofile_get_components( const LCFGProfile * profile ) {
+  assert( profile != NULL );
+
+  return profile->components;
+}
+
+
+/**
  * @brief Check if profile contains a particular component
  *
  * This can be used to search through the @c LCFGComponentList for the

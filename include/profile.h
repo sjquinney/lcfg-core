@@ -60,6 +60,8 @@ char * lcfgprofile_nodename( const LCFGProfile * profile );
 
 bool lcfgprofile_has_components( const LCFGProfile * profile );
 
+LCFGComponentList * lcfgprofile_get_components( const LCFGProfile * profile );
+
 bool lcfgprofile_has_component( const LCFGProfile * profile,
                                 const char * name );
 
