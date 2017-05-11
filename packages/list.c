@@ -1152,7 +1152,11 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
   if (all_contexts)
     merge_rules = merge_rules | LCFG_MERGE_RULE_KEEP_ALL;
 
-  lcfgpkglist_set_merge_rules( pkglist, merge_rules );
+  if ( !lcfgpkglist_set_merge_rules( pkglist, merge_rules ) ) {
+    ok = false;
+    lcfgutils_build_message( msg, "Failed to set package merge rules" );
+    goto cleanup;
+  }
 
   char * pkg_deriv   = NULL;
   char * pkg_context = NULL;
