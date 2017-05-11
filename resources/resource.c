@@ -3511,6 +3511,8 @@ ssize_t lcfgresource_insert_key( const LCFGResource * res,
 
   to = stpcpy( to, lcfgresource_get_name(res) );
 
+  *to = '\0';
+
   return ( to - result );
 }
 
@@ -3573,7 +3575,7 @@ ssize_t lcfgresource_build_key( const LCFGResource * res,
 
     *result = realloc( *result, ( *size * sizeof(char) ) );
     if ( *result == NULL ) {
-      perror("Failed to allocate memory for LCFG tag string");
+      perror("Failed to allocate memory for LCFG resource key");
       exit(EXIT_FAILURE);
     }
 
