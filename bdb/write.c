@@ -100,16 +100,17 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
   /* This is used (and reused) as a buffer for all the resource keys
      to avoid allocating and freeing lots of memory. */
 
-  char * res_buf = NULL;
-  size_t buf_size = 0;
+  size_t buf_size = 64;
+  char * res_buf = calloc( buf_size, sizeof(char) );
+  if ( res_buf == NULL ) {
+    perror("Failed to allocate memory for data buffer");
+    exit(EXIT_FAILURE);
+  }
+
   ssize_t keylen = 0;
 
   int ret;
   DBT key, data;
-
-  /* Initialize our DBTs. */
-  memset( &key,  0, sizeof(DBT) );
-  memset( &data, 0, sizeof(DBT) );
 
   const LCFGResourceNode * cur_node = NULL;
   for ( cur_node = lcfgcomponent_head(component);
@@ -127,6 +128,9 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
 
     if ( lcfgresource_has_derivation(resource) ) {
 
+      memset( &key,  0, sizeof(DBT) );
+      memset( &data, 0, sizeof(DBT) );
+
       keylen = lcfgresource_build_key( resource,
                                        compname,
                                        namespace,
@@ -141,11 +145,12 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       }
 
       key.data = res_buf;
-      key.size = keylen;
+      key.size = (u_int32_t) keylen + 1;
 
       const char * deriv = lcfgresource_get_derivation(resource);
+
       data.data = (char *) deriv;
-      data.size = strlen(deriv);
+      data.size = (u_int32_t) strlen(deriv) + 1;
 
       ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
       if ( ret != 0 ) {
@@ -162,6 +167,9 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
     if ( lcfgresource_get_type(resource) != LCFG_RESOURCE_TYPE_STRING ||
          lcfgresource_has_comment(resource) ) {
 
+      memset( &key,  0, sizeof(DBT) );
+      memset( &data, 0, sizeof(DBT) );
+
       keylen = lcfgresource_build_key( resource,
                                        compname,
                                        namespace,
@@ -176,12 +184,12 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       }
 
       key.data = res_buf;
-      key.size = keylen;
+      key.size = (u_int32_t) keylen + 1;
 
       char * type_as_str =
 	lcfgresource_get_type_as_string( resource, LCFG_OPT_NONE );
       data.data = type_as_str;
-      data.size = strlen(type_as_str);
+      data.size = (u_int32_t) strlen(type_as_str) + 1;
 
       ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
 
@@ -201,6 +209,9 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
 
     if ( lcfgresource_has_context(resource) ) {
 
+      memset( &key,  0, sizeof(DBT) );
+      memset( &data, 0, sizeof(DBT) );
+
       keylen = lcfgresource_build_key( resource,
                                        compname,
                                        namespace,
@@ -215,11 +226,11 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       }
 
       key.data = res_buf;
-      key.size = keylen;
+      key.size = (u_int32_t) keylen + 1;
 
       const char * context = lcfgresource_get_context(resource);
       data.data = (char *) context;
-      data.size = strlen(context);
+      data.size = (u_int32_t) strlen(context) + 1;
 
       ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
       if ( ret != 0 ) {
@@ -239,6 +250,9 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
 
     if ( lcfgresource_get_priority(resource) > 0 ) {
 
+      memset( &key,  0, sizeof(DBT) );
+      memset( &data, 0, sizeof(DBT) );
+
       keylen = lcfgresource_build_key( resource,
                                        compname,
                                        namespace,
@@ -253,11 +267,11 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       }
 
       key.data = res_buf;
-      key.size = keylen;
+      key.size = (u_int32_t) keylen + 1;
 
       char * prio_as_str = lcfgresource_get_priority_as_string(resource);
       data.data = prio_as_str;
-      data.size = strlen(prio_as_str);
+      data.size = (u_int32_t) strlen(prio_as_str) + 1;
 
       ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
 
@@ -275,6 +289,9 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
 
     /* Value */
 
+    memset( &key,  0, sizeof(DBT) );
+    memset( &data, 0, sizeof(DBT) );
+
     keylen = lcfgresource_build_key( resource,
                                      compname,
                                      namespace,
@@ -289,13 +306,13 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
     }
 
     key.data = res_buf;
-    key.size = keylen;
+    key.size = (u_int32_t) keylen + 1;
 
     const char * value = lcfgresource_has_value(resource) ?
                          lcfgresource_get_value(resource) : "";
 
     data.data = (char *) value;
-    data.size = strlen(value);
+    data.size = (u_int32_t) strlen(value) + 1;
 
     ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
 
@@ -332,11 +349,14 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
 
     if ( len > 0 ) {
 
+      memset( &key,  0, sizeof(DBT) );
+      memset( &data, 0, sizeof(DBT) );
+
       key.data = (char *) compname;
-      key.size = strlen(compname);
+      key.size = (u_int32_t) strlen(compname) + 1;
 
       data.data = res_buf;
-      data.size = len;
+      data.size = (u_int32_t) len + 1;
 
       int ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
 
