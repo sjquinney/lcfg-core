@@ -22,6 +22,7 @@ LCFGDiffComponent * lcfgdiffcomponent_new(void) {
   compdiff->tail = NULL;
   compdiff->size = 0;
   compdiff->change_type = LCFG_CHANGE_NONE;
+  compdiff->_refcount = 1;
 
   return compdiff;
 }
@@ -46,13 +47,13 @@ void lcfgdiffcomponent_destroy(LCFGDiffComponent * compdiff ) {
 
 }
 
-void lcfgdiffcomponent_acquire( LCFGDiffResource * compdiff ) {
+void lcfgdiffcomponent_acquire( LCFGDiffComponent * compdiff ) {
   assert( compdiff != NULL );
 
   compdiff->_refcount += 1;
 }
 
-void lcfgdiffcomponent_relinquish( LCFGDiffResource * compdiff ) {
+void lcfgdiffcomponent_relinquish( LCFGDiffComponent * compdiff ) {
 
   if ( compdiff == NULL ) return;
 
@@ -60,7 +61,7 @@ void lcfgdiffcomponent_relinquish( LCFGDiffResource * compdiff ) {
     compdiff->_refcount -= 1;
 
   if ( compdiff->_refcount == 0 )
-    lcfgdiffresource_destroy(compdiff);
+    lcfgdiffcomponent_destroy(compdiff);
 
 }
 
@@ -207,12 +208,12 @@ void lcfgdiffcomponent_sort( LCFGDiffComponent * list ) {
           cur_node != NULL && lcfgslist_has_next(cur_node);
           cur_node = lcfgslist_next(cur_node) ) {
 
-      LCFGDiffResource * data1 = lcfgslist_data(cur_node);
-      LCFGDiffResource * data2 = lcfgslist_data(cur_node->next);
+      LCFGDiffResource * item1 = lcfgslist_data(cur_node);
+      LCFGDiffResource * item2 = lcfgslist_data(cur_node->next);
 
-      if ( lcfgdiffresource_compare( data1, data2 ) > 0 ) {
-        cur_node->data       = data2;
-        cur_node->next->data = data1;
+      if ( lcfgdiffresource_compare( item1, item2 ) > 0 ) {
+        cur_node->data       = item2;
+        cur_node->next->data = item1;
         swapped = true;
       }
 
@@ -234,9 +235,9 @@ LCFGSListNode * lcfgdiffcomponent_find_node( const LCFGDiffComponent * list,
 	cur_node != NULL && result == NULL;
 	cur_node = lcfgslist_next(cur_node) ) {
 
-    const LCFGDiffResource * resdiff = lcfgslist_data(cur_node); 
+    const LCFGDiffResource * item = lcfgslist_data(cur_node); 
 
-    if ( lcfgdiffresource_match( resdiff, want_name ) )
+    if ( lcfgdiffresource_match( item, want_name ) )
       result = (LCFGSListNode *) cur_node;
 
   }
@@ -249,13 +250,13 @@ LCFGDiffResource * lcfgdiffcomponent_find_resource(
 					  const char * want_name ) {
   assert( want_name != NULL );
 
-  LCFGDiffResource * resdiff = NULL;
+  LCFGDiffResource * item = NULL;
 
   const LCFGSListNode * node = lcfgdiffcomponent_find_node( list, want_name );
   if ( node != NULL )
-    resdiff = lcfgslist_data(node);
+    item = lcfgslist_data(node);
 
-  return resdiff;
+  return item;
 }
 
 bool lcfgdiffcomponent_has_resource( const LCFGDiffComponent * list,
@@ -318,32 +319,33 @@ LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
 
   LCFGDiffComponent * compdiff = lcfgdiffcomponent_new();
 
-  const char * name = NULL;
-  if ( comp1 != NULL && lcfgcomponent_has_name(comp1) ) {
-    name = lcfgcomponent_get_name(comp1);
-  } else if ( comp2 != NULL && lcfgcomponent_has_name(comp2) ) {
-    name = lcfgcomponent_get_name(comp2);
-  }
+  /* Try to get the name from either component */
 
-  bool ok = true;
+  const char * name = NULL;
+  if ( comp1 != NULL && lcfgcomponent_has_name(comp1) )
+    name = lcfgcomponent_get_name(comp1);
+  else if ( comp2 != NULL && lcfgcomponent_has_name(comp2) )
+    name = lcfgcomponent_get_name(comp2);
+
+  LCFGStatus status = LCFG_STATUS_OK;
 
   if ( name != NULL ) {
     char * new_name = strdup(name);
     if ( !lcfgdiffcomponent_set_name( compdiff, new_name ) ) {
-      ok = false;
+      status = LCFG_STATUS_ERROR;
       free(new_name);
     }
   }
 
   const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(comp1);
-	cur_node != NULL;
+  for ( cur_node = comp1 != NULL ? lcfgcomponent_head(comp1) : NULL;
+	cur_node != NULL && status != LCFG_STATUS_ERROR;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
     LCFGResource * res1 = lcfgcomponent_resource(cur_node);
 
     /* Only diff 'active' resources which have a name attribute */
-    if ( !lcfgresource_is_active(res1) || !lcfgresource_has_name(res1) )
+    if ( !lcfgresource_is_active(res1) || !lcfgresource_is_valid(res1) )
       continue;
 
     const char * res1_name = lcfgresource_get_name(res1);
@@ -352,87 +354,85 @@ LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
       lcfgcomponent_find_resource( comp2, res1_name, false ) : NULL;
 
     LCFGDiffResource * resdiff = NULL;
-    LCFGStatus rc = lcfgresource_diff( res1, res2, &resdiff );
-    if ( rc == LCFG_STATUS_ERROR )
-      ok = false;
+    status = lcfgresource_diff( res1, res2, &resdiff );
 
     /* Just ignore anything where there are no differences */
 
-    bool wanted = true;
-    if ( ok && !lcfgdiffresource_is_nochange(resdiff) ) {
+    if ( status != LCFG_STATUS_ERROR &&
+         !lcfgdiffresource_is_nochange(resdiff) ) {
 
-      if ( !lcfgdiffcomponent_append( compdiff, resdiff ) )
-        ok = false;
+      LCFGChange append_rc = lcfgdiffcomponent_append( compdiff, resdiff );
+      if ( append_rc == LCFG_CHANGE_ERROR )
+        status = LCFG_STATUS_ERROR;
 
-    } else {
-      wanted = false;
     }
 
-    if ( !wanted || !ok )
-      lcfgdiffresource_destroy(resdiff);
-
+    lcfgdiffresource_relinquish(resdiff);
   }
-
 
   /* Look for resources which have been added */
 
-  for ( cur_node = lcfgcomponent_head(comp1);
-	cur_node != NULL;
+  for ( cur_node = comp2 != NULL ? lcfgcomponent_head(comp2) : NULL;
+	cur_node != NULL && status != LCFG_STATUS_ERROR;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
     LCFGResource * res2 = lcfgcomponent_resource(cur_node);
 
     /* Only diff 'active' resources which have a name attribute */
-    if ( !lcfgresource_is_active(res2) || !lcfgresource_has_name(res2) )
+    if ( !lcfgresource_is_active(res2) || !lcfgresource_is_valid(res2) )
       continue;
 
     const char * res2_name = lcfgresource_get_name(res2);
+
+    /* Only interested in resources which are NOT in first component */
 
     if ( comp1 == NULL ||
 	 !lcfgcomponent_has_resource( comp1, res2_name, false ) ) {
 
       LCFGDiffResource * resdiff = NULL;
-      LCFGStatus rc = lcfgresource_diff( NULL, res2, &resdiff );
-      if ( rc == LCFG_STATUS_ERROR )
-        ok = false;
+      status = lcfgresource_diff( NULL, res2, &resdiff );
 
-      if (ok) {
+      if ( status != LCFG_STATUS_ERROR ) {
 
-        if ( !lcfgdiffcomponent_append( compdiff, resdiff ) )
-          ok = false;
+        LCFGChange append_rc = lcfgdiffcomponent_append( compdiff, resdiff );
+        if ( append_rc == LCFG_CHANGE_ERROR )
+          status = LCFG_STATUS_ERROR;
 
       }
 
-      if ( !ok )
-        lcfgdiffresource_destroy(resdiff);
+      lcfgdiffresource_relinquish(resdiff);
 
     }
 
   }
 
-  if ( ok ) {
+  if ( status != LCFG_STATUS_ERROR ) {
 
     LCFGChange change_type = LCFG_CHANGE_NONE;
-    if ( comp1 != NULL ) {
-      if ( comp2 == NULL ) {
+    if ( lcfgcomponent_is_empty(comp1) ) {
+
+      if ( !lcfgcomponent_is_empty(comp2) )
+        change_type = LCFG_CHANGE_ADDED;
+
+    } else {
+
+      if ( lcfgcomponent_is_empty(comp2) )
         change_type = LCFG_CHANGE_REMOVED;
-      } else if ( compdiff->size > 0 ) {
+      else if ( !lcfgdiffcomponent_is_empty( compdiff ) )
         change_type = LCFG_CHANGE_MODIFIED;
-      }
-    } else if ( comp2 != NULL ) {
-      change_type = LCFG_CHANGE_ADDED;
+
     }
 
     lcfgdiffcomponent_set_type( compdiff, change_type );
 
   } else {
-    lcfgdiffcomponent_destroy(compdiff);
+    lcfgdiffcomponent_relinquish(compdiff);
     compdiff = NULL;
   }
 
   *result = compdiff;
 
-  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+  return status;
 }
 
 LCFGChange lcfgcomplist_quickdiff( const LCFGComponentList * list1,
@@ -449,12 +449,14 @@ LCFGChange lcfgcomplist_quickdiff( const LCFGComponentList * list1,
 
   /* Look for components which have been removed or modified */
   const LCFGComponentNode * cur_node = NULL;
-  for ( cur_node = lcfgcomplist_head(list1);
-	cur_node != NULL;
+  for ( cur_node = list1 != NULL ? lcfgcomplist_head(list1) : NULL;
+	cur_node != NULL && status != LCFG_CHANGE_ERROR;
 	cur_node = lcfgcomplist_next(cur_node) ) {
 
     const LCFGComponent * comp1 = lcfgcomplist_component(cur_node);
-    const char * comp1_name     = lcfgcomponent_get_name(comp1);
+    if ( !lcfgcomponent_is_valid(comp1) ) continue;
+
+    const char * comp1_name = lcfgcomponent_get_name(comp1);
 
     const LCFGComponent * comp2 =
       lcfgcomplist_find_component( list2, comp1_name );
@@ -470,12 +472,10 @@ LCFGChange lcfgcomplist_quickdiff( const LCFGComponentList * list1,
           status = LCFG_CHANGE_ERROR;
           break;
         case LCFG_CHANGE_MODIFIED:
-          printf("%s is modified\n",comp1_name);
           status  = LCFG_CHANGE_MODIFIED;
           taglist = &( *modified );
           break;
         case LCFG_CHANGE_REMOVED:
-          printf("%s is removed\n",comp1_name);
           status  = LCFG_CHANGE_MODIFIED;
           taglist = &( *removed );
           break;
@@ -497,21 +497,21 @@ LCFGChange lcfgcomplist_quickdiff( const LCFGComponentList * list1,
 
     }
 
-    if ( status == LCFG_CHANGE_ERROR )
-      goto cleanup;
-
   }
 
   /* Look for components which have been added */
 
-  for ( cur_node = lcfgcomplist_head(list2);
-	cur_node != NULL;
+  for ( cur_node = list2 != NULL ? lcfgcomplist_head(list2) : NULL;
+	cur_node != NULL && status != LCFG_CHANGE_ERROR;
 	cur_node = lcfgcomplist_next(cur_node) ) {
 
     const LCFGComponent * comp2 = lcfgcomplist_component(cur_node);
-    const char * comp2_name     = lcfgcomponent_get_name(comp2);
+    if ( !lcfgcomponent_is_valid(comp2) ) continue;
+
+    const char * comp2_name = lcfgcomponent_get_name(comp2);
 
     if ( !lcfgcomplist_has_component( list1, comp2_name ) ) {
+      status = LCFG_CHANGE_MODIFIED;
 
       if ( *added == NULL )
         *added = lcfgtaglist_new();
@@ -525,12 +525,7 @@ LCFGChange lcfgcomplist_quickdiff( const LCFGComponentList * list1,
 
     }
 
-    if ( status == LCFG_CHANGE_ERROR )
-      goto cleanup;
-
   }
-
- cleanup:
 
   if ( status == LCFG_CHANGE_ERROR || status == LCFG_CHANGE_NONE ) {
     lcfgtaglist_relinquish(*modified);
@@ -549,19 +544,17 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
 
   if ( comp1 == NULL ) {
 
-    if ( comp2 == NULL ) {
+    if ( comp2 == NULL )
       return LCFG_CHANGE_NONE;
-    } else if ( comp2 != NULL ) {
+    else if ( comp2 != NULL )
       return LCFG_CHANGE_ADDED;
-    }
 
   } else {
 
-    if ( comp2 == NULL ) {
+    if ( comp2 == NULL )
       return LCFG_CHANGE_REMOVED;
-    } else if ( lcfgcomponent_size(comp1) != lcfgcomponent_size(comp2) ) {
+    else if ( lcfgcomponent_size(comp1) != lcfgcomponent_size(comp2) )
       return LCFG_CHANGE_MODIFIED;
-    }
 
   }
 
@@ -569,14 +562,14 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
 
   /* Look for resources which have been removed or modified */
   const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(comp1);
+  for ( cur_node = comp1 != NULL ? lcfgcomponent_head(comp1) : NULL;
 	cur_node != NULL;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
     const LCFGResource * res1 = lcfgcomponent_resource(cur_node);
 
     /* Only diff 'active' resources which have a name attribute */
-    if ( !lcfgresource_is_active(res1) || !lcfgresource_has_name(res1) )
+    if ( !lcfgresource_is_active(res1) || !lcfgresource_is_valid(res1) )
       continue;
 
     const char * res1_name = lcfgresource_get_name(res1);
@@ -595,14 +588,14 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
 
     /* Look for resources which have been added */
 
-    for ( cur_node = lcfgcomponent_head(comp2);
+    for ( cur_node = comp2 != NULL ? lcfgcomponent_head(comp2) : NULL;
           cur_node != NULL;
           cur_node = lcfgcomponent_next(cur_node) ) {
 
       const LCFGResource * res2 = lcfgcomponent_resource(cur_node);
 
       /* Only diff 'active' resources which have a name attribute */
-      if ( !lcfgresource_is_active(res2) || !lcfgresource_has_name(res2) )
+      if ( !lcfgresource_is_active(res2) || !lcfgresource_is_valid(res2) )
 	continue;
 
       const char * res2_name = lcfgresource_get_name(res2);
@@ -617,6 +610,30 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
   }
 
   return status;
+}
+
+bool lcfgdiffcomponent_match( const LCFGDiffComponent * compdiff,
+                              const char * want_name ) {
+  assert( compdiff != NULL );
+  assert( want_name != NULL );
+
+  const char * name = lcfgdiffcomponent_get_name(compdiff);
+
+  return ( !isempty(name) && strcmp( name, want_name ) == 0 );
+}
+
+int lcfgdiffcomponent_compare( const LCFGDiffComponent * compdiff1, 
+                               const LCFGDiffComponent * compdiff2 ) {
+
+  const char * name1 = lcfgdiffcomponent_get_name(compdiff1);
+  if ( name1 == NULL )
+    name1 = "";
+
+  const char * name2 = lcfgdiffcomponent_get_name(compdiff2);
+  if ( name2 == NULL )
+    name2 = "";
+
+  return strcmp( name1, name2 );
 }
 
 /* eof */
