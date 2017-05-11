@@ -8,7 +8,13 @@
 #include "differences.h"
 
 int main(int argc, char* argv[]) {
-  const char * filename = argv[1];
+  const char * filename = NULL;
+  if ( argc > 1 ) {
+    filename = argv[1];
+  } else {
+    fprintf( stderr, "usage: lcfg_xml_reader /path/to/profile.xml\n" );
+    exit(EXIT_FAILURE);
+  }
 
   char * base_context    = NULL;
   char * base_derivation = NULL;
