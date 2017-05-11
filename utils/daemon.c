@@ -12,6 +12,8 @@
   int main ( int argc, const char *argv[] )
 /************************************************************************/
 {
+  if ( argc < 2 ) return 1;
+
   int fd;
 
   for (fd=3; fd<NOFILE; ++fd) { close(fd); }
