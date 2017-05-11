@@ -419,8 +419,10 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
   return new_len;
 }
 
-int lcfgdiffresource_match( const LCFGDiffResource * resdiff,
-                            const char * want_name ) {
+bool lcfgdiffresource_match( const LCFGDiffResource * resdiff,
+                             const char * want_name ) {
+  assert( resdiff != NULL );
+  assert( want_name != NULL );
 
   const char * name = lcfgdiffresource_get_name(resdiff);
 
