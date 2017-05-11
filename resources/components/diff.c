@@ -462,38 +462,39 @@ LCFGChange lcfgcomplist_quickdiff( const LCFGComponentList * list1,
       lcfgcomplist_find_component( list2, comp1_name );
 
     LCFGChange comp_diff = lcfgcomponent_quickdiff( comp1, comp2 );
-    if ( comp_diff != LCFG_CHANGE_NONE ) {
 
-      LCFGTagList ** taglist = NULL;
+    LCFGTagList ** taglist = NULL;
 
-      switch(comp_diff)
-        {
-        case LCFG_CHANGE_ERROR:
-          status = LCFG_CHANGE_ERROR;
-          break;
-        case LCFG_CHANGE_MODIFIED:
-          status  = LCFG_CHANGE_MODIFIED;
-          taglist = &( *modified );
-          break;
-        case LCFG_CHANGE_REMOVED:
-          status  = LCFG_CHANGE_MODIFIED;
-          taglist = &( *removed );
-          break;
-        }
-
-      if ( taglist != NULL ) { /* A component name needs storing */
-
-        if ( *taglist == NULL )
-          *taglist = lcfgtaglist_new();
-
-        char * tagmsg = NULL;
-        if ( lcfgtaglist_mutate_add( *taglist, comp1_name, &tagmsg )
-             == LCFG_CHANGE_ERROR ) {
-          status = LCFG_CHANGE_ERROR;
-        }
-        free(tagmsg);
-
+    switch(comp_diff)
+      {
+      case LCFG_CHANGE_ERROR:
+        status = LCFG_CHANGE_ERROR;
+        break;
+      case LCFG_CHANGE_MODIFIED:
+        status  = LCFG_CHANGE_MODIFIED;
+        taglist = &( *modified );
+        break;
+      case LCFG_CHANGE_REMOVED:
+        status  = LCFG_CHANGE_MODIFIED;
+        taglist = &( *removed );
+        break;
+      case LCFG_CHANGE_NONE:
+      case LCFG_CHANGE_ADDED:
+      case LCFG_CHANGE_REPLACED:
+        break; /* nothing to do */
       }
+
+    if ( taglist != NULL ) { /* A component name needs storing */
+
+      if ( *taglist == NULL )
+        *taglist = lcfgtaglist_new();
+
+      char * tagmsg = NULL;
+      if ( lcfgtaglist_mutate_add( *taglist, comp1_name, &tagmsg )
+           == LCFG_CHANGE_ERROR ) {
+        status = LCFG_CHANGE_ERROR;
+      }
+      free(tagmsg);
 
     }
 
