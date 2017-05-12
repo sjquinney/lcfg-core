@@ -41,12 +41,12 @@ typedef enum {
  */
 
 typedef enum {
-  LCFG_CHANGE_ERROR,    /**< Unrecoverable error occurred */
-  LCFG_CHANGE_NONE,     /**< Success - No change */
-  LCFG_CHANGE_MODIFIED, /**< Success - Modification */
-  LCFG_CHANGE_ADDED,    /**< Success - Addition */
-  LCFG_CHANGE_REPLACED, /**< Success - Replacement */
-  LCFG_CHANGE_REMOVED   /**< Success - Removal */
+  LCFG_CHANGE_ERROR       =   0, /**< Unrecoverable error occurred */
+  LCFG_CHANGE_NONE        =   1, /**< Success - No change */
+  LCFG_CHANGE_MODIFIED    =   2, /**< Success - Modification */
+  LCFG_CHANGE_ADDED       =   4, /**< Success - Addition */
+  LCFG_CHANGE_REPLACED    =   8, /**< Success - Replacement */
+  LCFG_CHANGE_REMOVED     =  16  /**< Success - Removal */
 } LCFGChange;
 
 /**
