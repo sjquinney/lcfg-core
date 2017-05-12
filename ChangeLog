@@ -1,6 +1,21 @@
 2017-05-12  SVN: new release
 
-	* Release: 1.38.0
+	* Release: 1.38.1
+
+2017-05-12 16:25  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/diff.c: to_holdfile needs to encode the
+	  resource values to avoid inserting newlines and other significant
+	  whitespace into the holdfile which could result in misleading
+	  information being stored
+
+2017-05-12 16:24  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: fixed enc_value
+
+2017-05-12 15:52  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.38.0
 
 2017-05-12 15:45  squinney@INF.ED.AC.UK
 
