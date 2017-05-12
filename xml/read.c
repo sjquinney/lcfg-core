@@ -391,7 +391,7 @@ LCFGChange lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
        basename which is used as the name of the component to
        override */
 
-    if ( lcfgutils_endswith( entry->d_name, ".xml" ) ) {
+    if ( lcfgutils_string_endswith( entry->d_name, ".xml" ) ) {
 
       char * comp_name = lcfgutils_basename( entry->d_name, ".xml" );
       if ( !lcfgcomponent_valid_name(comp_name) ) {
@@ -545,7 +545,7 @@ LCFGChange lcfgprofile_overrides_context( LCFGProfile * main_profile,
 
     if ( stat( ctxvarfile, &sb ) != 0 ||
          !S_ISREG(sb.st_mode) ||
-         !lcfgutils_endswith( ctxvarfile, ".xml" ) ) {
+         !lcfgutils_string_endswith( ctxvarfile, ".xml" ) ) {
       free(ctxvarfile);
       continue;
     }

@@ -1,3 +1,11 @@
+/**
+ * @file utils/utils.c
+ * @brief Commonly useful functions
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date: 2017-05-12 10:44:21 +0100 (Fri, 12 May 2017) $
+ * $Revision: 32703 $
+ */
+
 #define _GNU_SOURCE /* for asprintf */
 
 #include <ctype.h>
@@ -136,7 +144,7 @@ char * lcfgutils_string_join( const char * sep,
  *
  */
 
-void lcfgutils_chomp( char * str ) {
+void lcfgutils_string_chomp( char * str ) {
 
   if ( str == NULL || *str == '\0' )
     return;
@@ -164,7 +172,7 @@ void lcfgutils_chomp( char * str ) {
  *
  */
 
-void lcfgutils_trim_whitespace( char * str ) {
+void lcfgutils_string_trim( char * str ) {
 
   if ( str == NULL )
     return;
@@ -285,7 +293,7 @@ char * lcfgutils_catfile( const char * dir, const char * file ) {
  *
  */
 
-bool lcfgutils_endswith( const char * str, const char * suffix ) {
+bool lcfgutils_string_endswith( const char * str, const char * suffix ) {
 
   if ( str == NULL || suffix == NULL )
     return false;
@@ -333,7 +341,7 @@ char * lcfgutils_basename( const char * path, const char * suffix ) {
 
   size_t len = end - start + 1;
 
-  if ( suffix != NULL && lcfgutils_endswith( start, suffix ) ) {
+  if ( suffix != NULL && lcfgutils_string_endswith( start, suffix ) ) {
     len -= strlen(suffix);
   }
 

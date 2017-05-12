@@ -585,7 +585,7 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
         char * child_tagname = NULL;
 
         xmlChar * nodename  = xmlTextReaderName(reader);
-        if ( lcfgutils_endswith( (char *) nodename, "_RECORD" ) ) {
+        if ( lcfgutils_string_endswith( (char *) nodename, "_RECORD" ) ) {
 
           process_rc = lcfgxml_process_record( reader, lcfgcomp,
                                                resource->template,

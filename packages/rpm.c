@@ -153,7 +153,7 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
 
   /* Check the suffix */
 
-  if ( !lcfgutils_endswith( filename, rpm_file_suffix ) )
+  if ( !lcfgutils_string_endswith( filename, rpm_file_suffix ) )
     return invalid_rpm( msg, "lacks '%s' suffix", rpm_file_suffix );
 
   /* Results - note that the file name has to be split apart backwards */
@@ -613,7 +613,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
     if ( *filename == '.' ) continue;
 
     /* Just ignore anything which does not have a .rpm suffix */
-    if ( !lcfgutils_endswith( filename, rpm_file_suffix ) ) continue;
+    if ( !lcfgutils_string_endswith( filename, rpm_file_suffix ) ) continue;
 
     /* Only interested in files */
     char * fullpath  = lcfgutils_catfile( rpmdir, filename );
@@ -750,7 +750,7 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
     linenum++;
 
     char * trimmed = strdup(line);
-    lcfgutils_trim_whitespace(trimmed);
+    lcfgutils_string_trim(trimmed);
 
     /* Ignore empty lines */
     if ( *trimmed == '\0' || *trimmed == '#' ) {

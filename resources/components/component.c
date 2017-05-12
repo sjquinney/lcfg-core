@@ -922,7 +922,7 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
       exit(EXIT_FAILURE);
     }
 
-    lcfgutils_chomp(statusline);
+    lcfgutils_string_chomp(statusline);
 
     /* Search for the '=' which separates status keys and values */
 

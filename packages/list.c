@@ -1165,7 +1165,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
   while( ok && getline( &line, &line_len, fp ) != -1 ) {
     linenum++;
 
-    lcfgutils_trim_whitespace(line);
+    lcfgutils_string_trim(line);
 
     if ( *line == '\0' ) continue;
 
