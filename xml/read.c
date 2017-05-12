@@ -509,7 +509,6 @@ LCFGChange lcfgprofile_overrides_context( LCFGProfile * main_profile,
                                           LCFGContextList * ctxlist,
                                           char ** msg ) {
   assert( main_profile != NULL );
-  assert( override_dir != NULL );
 
   if ( lcfgctxlist_is_empty(ctxlist) ) return LCFG_CHANGE_NONE;
 
