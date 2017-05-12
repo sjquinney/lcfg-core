@@ -1,6 +1,474 @@
-2017-04-27  SVN: new release
+2017-05-12  SVN: new release
 
-	* Release: 1.37.0
+	* Release: 1.38.0
+
+2017-05-12 15:45  squinney@INF.ED.AC.UK
+
+	* xml/read.c: allow a NULL value for the context dir in
+	  lcfgprofile_overrides_context (just return immediately)
+
+2017-05-12 15:41  squinney@INF.ED.AC.UK
+
+	* include/differences.h, lcfg.yml, profile/diff.c,
+	  resources/components/diff.c: Added functions to get lists of
+	  names for various types of changed resources and components. This
+	  is needed by the perl interface to avoid horrid list mangling
+
+2017-05-12 15:40  squinney@INF.ED.AC.UK
+
+	* include/common.h: altered how the LCFGChange enum is declared so
+	  it's possible to logically combine them
+
+2017-05-12 14:28  squinney@INF.ED.AC.UK
+
+	* include/tags.h, lcfg.yml, resources/tags/list.c,
+	  resources/tags/tag.c: Added hashing of tag name, should be useful
+	  for set operations
+
+2017-05-12 14:02  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, utils/utils.c: Added lcfgutils_string_djbhash
+	  for hashing strings
+
+2017-05-12 13:47  squinney@INF.ED.AC.UK
+
+	* resources/components/list.c:
+	  lcfgcomplist_insert_or_replace_component now returns a helpful
+	  message when the new component is invalid
+
+2017-05-12 13:46  squinney@INF.ED.AC.UK
+
+	* profile/profile.c: Check that lcfgpkglist_set_merge_rules did not
+	  fail when creating new package lists
+
+2017-05-12 13:35  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/package.c, resources/resource.c: altered how
+	  some hardwired strings are declared so sizes can be calculated
+	  using sizeof for efficiency
+
+2017-05-12 13:14  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in: tweaked lcfgslist_head and lcfgslist_tail
+	  macros so they are safe when called with a NULL value for the
+	  list. This just makes the calling code a little tidier
+
+2017-05-12 13:11  squinney@INF.ED.AC.UK
+
+	* include/differences.h, lcfg.yml, profile/diff.c,
+	  resources/diff.c: Finished reworking how lists of component diffs
+	  are handled. Also completed documentation of diffs API
+
+2017-05-12 13:10  squinney@INF.ED.AC.UK
+
+	* context/scanner.c, context/tools.c: Added docs header
+
+2017-05-12 12:01  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: lcfgcomponent_diff now returns the
+	  type of differences between the two resources since we nearly
+	  always need that information immediately after calling the
+	  function
+
+2017-05-12 12:01  squinney@INF.ED.AC.UK
+
+	* resources/diff.c: lcfgresource_diff now returns the type of
+	  differences between the two resources since we nearly always need
+	  that information immediately after calling the function
+
+2017-05-12 11:27  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, packages/list.c, packages/rpm.c,
+	  resources/components/component.c, utils/utils.c, xml/read.c,
+	  xml/resource.c: Renamed a few string utilities so the names start
+	  with lcfgutils_string_ for consistency
+
+2017-05-12 11:22  squinney@INF.ED.AC.UK
+
+	* resources/diff.c: minor doc fixes
+
+2017-05-12 11:17  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: Added docs
+
+2017-05-12 09:44  squinney@INF.ED.AC.UK
+
+	* resources/diff.c: minor doc fix
+
+2017-05-12 09:43  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: minor doc fix
+
+2017-05-12 09:43  squinney@INF.ED.AC.UK
+
+	* profile/profile.c: tiny doc fix
+
+2017-05-12 09:36  squinney@INF.ED.AC.UK
+
+	* resources/diff.c: Added docs
+
+2017-05-11 15:51  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Check return code from
+	  lcfgpkglist_set_merge_rules
+
+2017-05-11 15:51  squinney@INF.ED.AC.UK
+
+	* include/profile.h, profile/profile.c, xml/packages.c: Use macros
+	  for ACTIVE_PACKAGE_RULES and INACTIVE_PACKAGE_RULES to avoid them
+	  being specified in multiple places
+
+2017-05-11 15:39  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: silenced warnings in
+	  lcfgcomplist_quickdiff by tweaking how the switch works
+
+2017-05-11 15:38  squinney@INF.ED.AC.UK
+
+	* xml/lcfg_xml_reader.c: Improved handling of missing command line
+	  arg
+
+2017-05-11 15:37  squinney@INF.ED.AC.UK
+
+	* utils/shiftpressed.c: changed main to void as no command line
+	  args necessary
+
+2017-05-11 15:37  squinney@INF.ED.AC.UK
+
+	* utils/daemon.c: Only attempt to run a command when one is given
+	  on the command line
+
+2017-05-11 15:19  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: fixed diffing of components. Added
+	  lcfgdiffcomponent_compare for sorting and lcfgdiffcomponent_match
+	  for finding in lists
+
+2017-05-11 15:17  squinney@INF.ED.AC.UK
+
+	* resources/diff.c: fixed spec for lcfgdiffresource_match so that
+	  it returns a bool
+
+2017-05-11 15:17  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: When writing components to DB pre-allocate a buffer
+	  for resource key data for efficiency to avoid lots of reallocs.
+	  Wipe key and data structs each time before use for safety
+
+2017-05-11 15:15  squinney@INF.ED.AC.UK
+
+	* include/profile.h, profile/profile.c: Added
+	  lcfgprofile_get_components
+
+2017-05-11 15:14  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: tweaked error message
+
+2017-05-10 15:26  squinney@INF.ED.AC.UK
+
+	* include/differences.h, lcfg.yml, profile/diff.c,
+	  resources/components/diff.c: Reworked lcfgdiffcomponent to use
+	  generic single-linked list
+
+2017-05-10 14:31  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, utils/CMakeLists.txt, utils/slist.c: Added
+	  basics for a generic single-linked list
+
+2017-05-10 14:04  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: some renaming of variables in
+	  lcfgcomponent_insert_next and lcfgcomponent_remove_next to make
+	  it more generic and easier to compare with similar functions in
+	  other libs
+
+2017-05-10 14:03  squinney@INF.ED.AC.UK
+
+	* resources/diff.c: Added lcfgdiffresource_match and
+	  lcfgdiffresource_compare to simplify finding and sorting of
+	  resource diffs
+
+2017-05-10 14:02  squinney@INF.ED.AC.UK
+
+	* include/resources.h, resources/resource.c: Added
+	  lcfgresource_same_name and lcfgresource_compare_names
+
+2017-05-10 12:20  squinney@INF.ED.AC.UK
+
+	* include/differences.h, resources/diff.c: replaced nonnull
+	  attributes with assertions
+
+2017-05-10 12:14  squinney@INF.ED.AC.UK
+
+	* include/differences.h, resources/diff.c: Updated ref counting
+
+2017-05-10 11:23  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/CMakeLists.txt, resources/components/diff.c,
+	  resources/diff.c: Split out the component diff code into a
+	  separate file to improve manageability
+
+2017-05-10 11:13  squinney@INF.ED.AC.UK
+
+	* xml/read.c: Improved error handling in overrides functions
+
+2017-05-10 11:13  squinney@INF.ED.AC.UK
+
+	* xml/common.c: added assertions
+
+2017-05-10 11:05  squinney@INF.ED.AC.UK
+
+	* include/xml.h, lcfg.yml, xml/lcfg_xml_reader.c, xml/read.c:
+	  lcfgprofile_overrides_xmldir and lcfgprofile_overrides_context
+	  now return the change type instead of just status
+
+2017-05-10 11:04  squinney@INF.ED.AC.UK
+
+	* xml/common.c: A few minor tweaks
+
+2017-05-09 15:30  squinney@INF.ED.AC.UK
+
+	* include/xml.h, lcfg.yml, xml/read.c: fixed spec for
+	  lcfgxml_init_reader
+
+2017-05-09 15:27  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, xml/common.c, xml/read.c: Added docs
+
+2017-05-09 15:27  squinney@INF.ED.AC.UK
+
+	* include/profile.h, profile/profile.c: lcfgprofile_merge now
+	  returns a change rather than a simple status
+
+2017-05-09 15:27  squinney@INF.ED.AC.UK
+
+	* context/context.c: minor doc tweaks
+
+2017-05-09 12:58  squinney@INF.ED.AC.UK
+
+	* include/xml.h, lcfg.yml: Updated function specs. Removed a few
+	  which are static
+
+2017-05-09 12:57  squinney@INF.ED.AC.UK
+
+	* xml/read.c: Added basic docs. Improved error handling
+
+2017-05-09 12:56  squinney@INF.ED.AC.UK
+
+	* xml/resource.c: Added basic docs. Improved error handling
+
+2017-05-09 12:55  squinney@INF.ED.AC.UK
+
+	* xml/packages.c: Added basic docs. Improved error handling
+
+2017-05-09 12:55  squinney@INF.ED.AC.UK
+
+	* xml/components.c: Added basic docs. Improved error handling
+
+2017-05-09 12:54  squinney@INF.ED.AC.UK
+
+	* xml/common.c: Renamed lcfgxml_set_error_message to lcfgxml_error
+	  and changed return type so that LCFG_STATUS_ERROR can be returned
+	  for ease of error handling
+
+2017-05-08 18:28  squinney@INF.ED.AC.UK
+
+	* include/common.h, include/components.h, include/packages.h,
+	  packages/list.c, packages/rpm.c, profile/profile.c,
+	  xml/packages.c: Moved LCFGMergeRule enum to common. Swapped
+	  package lists over from LCFGPkgRule to LCFGMergeRule
+
+2017-05-08 18:10  squinney@INF.ED.AC.UK
+
+	* profile/profile.c: fixed docs for lcfgprofile_ngeneric_components
+
+2017-05-08 18:02  squinney@INF.ED.AC.UK
+
+	* resources/tags/iterator.c: fixed doc
+
+2017-05-08 16:12  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, bdb/write.c, include/bdb.h: Replaced nonnull
+	  attribute with assertions
+
+2017-05-08 15:13  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: Fixed a couple of variable declarations
+
+2017-05-08 15:11  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: Only write out the list of names of the resources
+	  which are actually stored in the DB. Replaced calls to asprintf
+	  with lcfgutils_build_message. Minor tidying.
+
+2017-05-08 15:11  squinney@INF.ED.AC.UK
+
+	* bdb/read.c: Replaced calls to asprintf with
+	  lcfgutils_build_message. Minor tidying.
+
+2017-05-08 11:34  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/components/component.c: Added
+	  lcfgcomponent_remove_all_resources and lcfgcomponent_clone
+	  functions. Reworked lcfgcomponent_merge_component to use a
+	  temporary copy of the component so that the original is only
+	  modified if all resources are successfully merged
+
+2017-05-08 11:10  squinney@INF.ED.AC.UK
+
+	* include/components.h, profile/profile.c,
+	  resources/components/list.c: lcfgcomplist_merge is now
+	  lcfgcomplist_merge_components
+
+2017-05-08 08:43  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/components/component.c,
+	  resources/components/list.c: Renamed lcfgcomponent_merge as
+	  lcfgcomponent_merge_component so the purpose of the function is
+	  much clearer
+
+2017-05-08 08:35  squinney@INF.ED.AC.UK
+
+	* include/components.h: fixed spec for
+	  lcfgcomponent_set_merge_rules
+
+2017-05-08 08:34  squinney@INF.ED.AC.UK
+
+	* resources/CMakeLists.txt, resources/complist.c,
+	  resources/component.c, resources/components,
+	  resources/components/component.c, resources/components/list.c,
+	  resources/tag.c, resources/tagiter.c, resources/taglist.c,
+	  resources/tags, resources/tags/iterator.c, resources/tags/list.c,
+	  resources/tags/tag.c, specfile: Created sub-dirs for components
+	  and tags and moved source files around to make it easier to find
+	  things
+
+2017-05-05 10:55  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, include/components.h, profile/profile.c,
+	  resources/component.c, resources/diff.c, xml/components.c,
+	  xml/resource.c: Added support to components for merge rules which
+	  control how resources can be added, this works in a similar way
+	  to how package lists are handled. The
+	  lcfgcomponent_merge_resource function replaces
+	  lcfgcomponent_insert_or_replace_resource and
+	  lcfgcomponent_insert_or_merge_resource
+
+2017-05-05 10:55  squinney@INF.ED.AC.UK
+
+	* packages/list.c: tidying
+
+2017-05-05 10:41  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Fixed package merging where priority of new
+	  version of package is lower than previous version
+
+2017-05-04 11:37  squinney@INF.ED.AC.UK
+
+	* packages/list.c: When lcfgpkglist_merge_package searches current
+	  list it must not ignore inactive packages
+
+2017-05-02 14:32  squinney@INF.ED.AC.UK
+
+	* include/profile.h, lcfg.yml, profile/profile.c: Added
+	  lcfgprofile_get_components_as_taglist and
+	  lcfgprofile_ngeneric_components functions
+
+2017-05-02 14:31  squinney@INF.ED.AC.UK
+
+	* profile/profile.c: fixed setting of mtime for from_status_dir
+	  method
+
+2017-05-02 14:30  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/complist.c: Dropped unnecessary
+	  options parameter for lcfgcomplist_get_components_as_taglist and
+	  lcfgcomplist_get_components_as_string
+
+2017-05-02 14:30  squinney@INF.ED.AC.UK
+
+	* include/resources.h, resources/component.c, resources/resource.c:
+	  lcfgresource_from_env now takes an options parameter which
+	  controls how it handles the non-existence of the value env var
+
+2017-05-02 11:15  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Made it possible to ignore the lack of a
+	  env variable for a resource value in the from_env function
+
+2017-05-01 05:21  squinney@INF.ED.AC.UK
+
+	* profile/profile.c: Fixed param names in docs for some functions
+
+2017-04-29 07:44  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Converted a couple of const strings to
+	  arrays so length can be found at compile time
+
+2017-04-29 07:43  squinney@INF.ED.AC.UK
+
+	* resources/complist.c: fixed return value for
+	  lcfgcomplist_transplant_components when list is empty
+
+2017-04-29 07:42  squinney@INF.ED.AC.UK
+
+	* utils/utils.c: Added missing cast to silence compiler warning
+
+2017-04-28 15:16  squinney@INF.ED.AC.UK
+
+	* include/resources.h, lcfg.yml, resources/component.c,
+	  resources/resource.c: Reworked all the to/from env and to_export
+	  functionality so that the variable name prefixes are handled
+	  better. This improves how the code is used in the Perl layer and
+	  avoids unnecessary duplication
+
+2017-04-28 12:08  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, xml/read.c: lcfgprofile_apply_overrides is now
+	  lcfgprofile_merge
+
+2017-04-28 12:04  squinney@INF.ED.AC.UK
+
+	* include/bdb.h, include/components.h, include/differences.h,
+	  include/resources.h, include/xml.h: Standardised protection
+	  macros and added doc headers
+
+2017-04-28 11:59  squinney@INF.ED.AC.UK
+
+	* include/profile.h, profile/profile.c: Added docs
+
+2017-04-28 11:55  squinney@INF.ED.AC.UK
+
+	* resources/complist.c, resources/component.c: Minor doc fixes
+
+2017-04-28 11:55  squinney@INF.ED.AC.UK
+
+	* packages/rpm.c: Minor doc fixes
+
+2017-04-28 10:02  squinney@INF.ED.AC.UK
+
+	* profile/profile.c: Fixed has_components, has_component and
+	  find_component so that they can handle being called with a NULL
+	  value for the profile
+
+2017-04-28 08:54  squinney@INF.ED.AC.UK
+
+	* include/profile.h, profile/profile.c: Added lots of assertions.
+	  Renamed apply_overrides to merge for consistency
+
+2017-04-28 08:48  squinney@INF.ED.AC.UK
+
+	* resources/complist.c: find_node, find_component and has_component
+	  should accept a NULL list
+
+2017-04-28 08:48  squinney@INF.ED.AC.UK
+
+	* resources/component.c: find_node, find_resource and has_resource
+	  should accept a NULL list
+
+2017-04-27 13:34  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.37.0
 
 2017-04-27 13:33  squinney@INF.ED.AC.UK
 
