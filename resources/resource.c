@@ -1097,9 +1097,9 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
   /* The following characters need to be encoded to ensure they do not
      corrupt the format of status files. */
 
-  static const char cr[]  = "&#xD;";   /* +4 \r */
-  static const char lf[]  = "&#xA;";   /* +4 \n */
-  static const char amp[] = "&#x26;";  /* +5    */
+  static const char cr[]  = "&#xD;";   /* +5 \r */
+  static const char lf[]  = "&#xA;";   /* +5 \n */
+  static const char amp[] = "&#x26;";  /* +6    */
 
   static const size_t cr_len  = sizeof(cr)  - 1;
   static const size_t lf_len  = sizeof(lf)  - 1;
@@ -1111,13 +1111,13 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
     switch(*ptr)
       {
       case '\r':
-        extend += cr_len;
+        extend += ( cr_len - 1 );
         break;
       case '\n':
-	extend += lf_len;
+	extend += ( lf_len - 1 );
 	break;
       case '&':
-	extend += amp_len;
+	extend += ( amp_len - 1 );
 	break;
       }
   }
