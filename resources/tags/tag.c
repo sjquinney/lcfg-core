@@ -46,6 +46,7 @@ LCFGTag * lcfgtag_new() {
 
   tag->name      = NULL;
   tag->name_len  = 0;
+  tag->hash      = 1;
   tag->_refcount = 1;
 
   return tag;
@@ -231,6 +232,7 @@ bool lcfgtag_set_name( LCFGTag * tag, char * new_name ) {
 
     tag->name     = new_name;
     tag->name_len = strlen(new_name);
+    tag->hash     = lcfgutils_string_djbhash(new_name);
 
     ok = true;
   } else {
@@ -281,6 +283,24 @@ size_t lcfgtag_get_length( const LCFGTag * tag ) {
   assert( tag != NULL );
 
   return tag->name_len;
+}
+
+/**
+ * @brief Get the hash for the tag name
+ *
+ * This returns the integer hash value for the @e name for the @c
+ * LCFGTag. This is computed using the DJB hash algorithm.
+ *
+ * @param[in] tag Pointer to an @c LCFGTag
+ *
+ * @return The integer hash for the @e name for the tag.
+ *
+ */
+
+unsigned int lcfgtag_get_hash( const LCFGTag * tag ) {
+  assert( tag != NULL );
+
+  return tag->hash;
 }
 
 /**
@@ -372,14 +392,14 @@ int lcfgtag_compare( const LCFGTag * tag, const LCFGTag * other ) {
  *
  */
 
-bool lcfgtag_matches( const LCFGTag * tag, const char * name ) {
+bool lcfgtag_match( const LCFGTag * tag, const char * name ) {
   assert( tag != NULL );
   assert( name != NULL );
 
   size_t required_len = strlen(name);
 
   return ( required_len == tag->name_len && 
-           strncmp( tag->name, name,  tag->name_len ) == 0 ); 
+           strncmp( tag->name, name,  tag->name_len ) == 0 );
 }
 
 /* eof */

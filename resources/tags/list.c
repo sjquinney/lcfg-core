@@ -364,17 +364,19 @@ LCFGChange lcfgtaglist_remove_tag( LCFGTagList * taglist,
  * is specified.
  *
  * @param[in] taglist Pointer to @c LCFGTagList to be searched
- * @param[in] name The name of the required tag node
+ * @param[in] want_name The name of the required tag node
  *
  * @return Pointer to an @c LCFGTagNode (or the @c NULL value).
  *
  */
 
 LCFGTagNode * lcfgtaglist_find_node( const LCFGTagList * taglist,
-                                     const char * name ) {
-  assert( name != NULL );
+                                     const char * want_name ) {
+  assert( want_name != NULL );
 
   if ( lcfgtaglist_is_empty(taglist) ) return NULL;
+
+  unsigned int want_hash = lcfgutils_string_djbhash(want_name);
 
   LCFGTagNode * result = NULL;
 
@@ -384,7 +386,9 @@ LCFGTagNode * lcfgtaglist_find_node( const LCFGTagList * taglist,
         cur_node = lcfgtaglist_next(cur_node) ) {
 
     const LCFGTag * tag = lcfgtaglist_tag(cur_node);
-    if ( lcfgtag_matches( tag, name ) ) 
+
+    /* First compare hashes for speed */
+    if ( want_hash == lcfgtag_get_hash(tag) && lcfgtag_match(tag, want_name) ) 
       result = (LCFGTagNode *) cur_node;
   }
 
@@ -772,8 +776,8 @@ void lcfgtaglist_sort( LCFGTagList * taglist ) {
  * returned along with a diagnostic message.
  *
  * @param[in] taglist Pointer to @c LCFGTagList
- * @param[in] old_name The tag name which will be replaced
- * @param[in] new_name The replacement tag name
+ * @param[in] match The tag name which will be replaced
+ * @param[in] replace The replacement tag name
  * @param[in] global Boolean which controls whether to replace single or all tags.
  * @param[out] msg Pointer to any diagnostic messages.
  *
@@ -782,41 +786,57 @@ void lcfgtaglist_sort( LCFGTagList * taglist ) {
  */
 
 LCFGChange lcfgtaglist_mutate_replace( LCFGTagList * taglist,
-				       const char * old_name,
-				       const char * new_name,
+				       const char * match,
+				       const char * replace,
 				       bool global,
 				       char ** msg ) {
   assert( taglist != NULL );
-  assert( old_name != NULL );
-  assert( new_name != NULL );
+  assert( match != NULL );
+  assert( replace != NULL );
 
   if ( lcfgtaglist_is_empty(taglist) ) return LCFG_CHANGE_NONE;
+
+  if ( !lcfgresource_valid_tag(replace) ) {
+    lcfgutils_build_message( msg, "Invalid replacement tag '%s'", replace );
+    return LCFG_CHANGE_ERROR;
+  }
+
+  unsigned int match_hash = lcfgutils_string_djbhash(match);
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
   LCFGTag * new_tag = NULL;
-  LCFGStatus rc = lcfgtag_from_string( new_name, &new_tag, msg );
-  if ( rc == LCFG_STATUS_ERROR ) {
-    change = LCFG_CHANGE_ERROR;
-  } else {
 
-    LCFGTagNode * cur_node = NULL;
-    for ( cur_node = lcfgtaglist_head(taglist);
-	  cur_node != NULL && change != LCFG_CHANGE_ERROR;
-	  cur_node = lcfgtaglist_next(cur_node) ) {
+  LCFGTagNode * cur_node = NULL;
+  for ( cur_node = lcfgtaglist_head(taglist);
+        cur_node != NULL && change != LCFG_CHANGE_ERROR;
+        cur_node = lcfgtaglist_next(cur_node) ) {
 
-      LCFGTag * cur_tag = lcfgtaglist_tag(cur_node);
+    LCFGTag * cur_tag = lcfgtaglist_tag(cur_node);
 
-      if ( lcfgtag_matches( cur_tag, old_name ) ) {
+    /* First compare hashes for speed */
+    if ( match_hash == lcfgtag_get_hash(cur_tag) &&
+         lcfgtag_match( cur_tag, match ) ) {
+
+      /* Only create the tag when it is required */
+
+      if ( new_tag == NULL ) {
+        LCFGStatus rc = lcfgtag_from_string( replace, &new_tag, msg );
+        if ( rc == LCFG_STATUS_ERROR )
+          change = LCFG_CHANGE_ERROR;
+      }
+
+      if ( change != LCFG_CHANGE_ERROR ) {
 	lcfgtag_acquire(new_tag);
 	cur_node->tag = new_tag;
 
 	lcfgtag_relinquish(cur_tag);
 	change = LCFG_CHANGE_REPLACED;
-
-	if (!global) break;
       }
+
+      if (!global) break;
     }
+
   }
 
   lcfgtag_relinquish(new_tag);

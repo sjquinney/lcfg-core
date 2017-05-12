@@ -41,8 +41,9 @@
 
 struct LCFGTag {
   /*@{*/
-  char * name;     /**< The tag name */
-  size_t name_len; /**< The length of the tag name */
+  char * name;       /**< The tag name */
+  size_t name_len;   /**< The length of the tag name */
+  unsigned int hash; /**< The hash value for the tag name */
   /*@}*/
   unsigned int _refcount;
 };
@@ -66,13 +67,15 @@ char * lcfgtag_get_name( const LCFGTag * tag );
 
 size_t lcfgtag_get_length( const LCFGTag * tag );
 
+unsigned int lcfgtag_get_hash( const LCFGTag * tag );
+
 LCFGStatus lcfgtag_from_string( const char * input,
                                 LCFGTag ** result,
                                 char ** msg )
   __attribute__((warn_unused_result));
 
 int lcfgtag_compare( const LCFGTag * tag, const LCFGTag * other );
-bool lcfgtag_matches( const LCFGTag * tag, const char * name );
+bool lcfgtag_match( const LCFGTag * tag, const char * name );
 
 /* List of Tags */
 
