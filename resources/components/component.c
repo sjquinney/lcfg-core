@@ -435,9 +435,9 @@ bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name ) {
  * value is returned, if an error occurs then @c LCFG_CHANGE_ERROR is
  * returned.
  *
- * @param[in] comp Pointer to @c LCFGComponent
- * @param[in] resnode Pointer to @c LCFGResourceNode
- * @param[in] res Pointer to @c LCFGResource
+ * @param[in] list Pointer to @c LCFGComponent
+ * @param[in] node Pointer to @c LCFGResourceNode
+ * @param[in] item Pointer to @c LCFGResource
  * 
  * @return Integer value indicating type of change
  *
@@ -496,9 +496,9 @@ LCFGChange lcfgcomponent_insert_next( LCFGComponent    * list,
  * avoid memory leaks, when the struct is no longer required it should
  * be released by calling @c lcfgresource_relinquish().
  *
- * @param[in] comp Pointer to @c LCFGComponent
- * @param[in] resnode Pointer to @c LCFGResourceNode
- * @param[out] res Pointer to @c LCFGResource
+ * @param[in] list Pointer to @c LCFGComponent
+ * @param[in] node Pointer to @c LCFGResourceNode
+ * @param[out] item Pointer to @c LCFGResource
  * 
  * @return Integer value indicating type of change
  *
