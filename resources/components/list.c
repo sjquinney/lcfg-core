@@ -558,10 +558,13 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
   assert( complist != NULL );
   assert( new_comp != NULL );
 
-  LCFGChange result = LCFG_CHANGE_ERROR;
-
   /* Name for component is required */
-  if ( !lcfgcomponent_has_name(new_comp) ) return LCFG_CHANGE_ERROR;
+  if ( !lcfgcomponent_is_valid(new_comp) ) {
+    lcfgutils_build_message( msg, "Invalid component" );
+    return LCFG_CHANGE_ERROR;
+  }
+
+  LCFGChange result = LCFG_CHANGE_ERROR;
 
   LCFGComponentNode * cur_node =
     lcfgcomplist_find_node( complist, lcfgcomponent_get_name(new_comp) );
@@ -571,14 +574,17 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
   } else {
     LCFGComponent * cur_comp = lcfgcomplist_component(cur_node);
 
-    /* replace current version of resource with new one */
+    if ( cur_comp != NULL ) {
+      /* replace current version of resource with new one */
 
-    lcfgcomponent_acquire(new_comp);
-    cur_node->component = new_comp;
+      lcfgcomponent_acquire(new_comp);
+      cur_node->component = new_comp;
 
-    lcfgcomponent_relinquish(cur_comp);
+      lcfgcomponent_relinquish(cur_comp);
 
-    result = LCFG_CHANGE_REPLACED;
+      result = LCFG_CHANGE_REPLACED;
+    }
+
   }
 
   return result;
