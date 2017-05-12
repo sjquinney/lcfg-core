@@ -658,30 +658,24 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
   /* Get the value for the old resource or default to an empty string
      if nothing else is available. */
 
-  const char * old_value = NULL;
+  char * old_value = NULL;
   if ( lcfgdiffresource_has_old(resdiff) ) {
     const LCFGResource * old_res = lcfgdiffresource_get_old(resdiff);
 
     if ( lcfgresource_has_value(old_res) )
-      old_value = lcfgresource_get_value(old_res);
+      old_value = lcfgresource_enc_value(old_res);
   }
-
-  if ( old_value == NULL )
-    old_value = "";
 
   /* Get the value for the new resource or default to an empty string
      if nothing else is available. */
 
-  const char * new_value = NULL;
+  char * new_value = NULL;
   if ( lcfgdiffresource_has_new(resdiff) ) {
     const LCFGResource * new_res = lcfgdiffresource_get_new(resdiff);
 
     if ( lcfgresource_has_value(new_res) )
-      new_value = lcfgresource_get_value(new_res);
+      new_value = lcfgresource_enc_value(new_res);
   }
-
-  if ( new_value == NULL )
-    new_value = "";
 
   size_t prefix_len = 0;
   size_t name_len = 0;
@@ -689,10 +683,10 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
   size_t new_val_len = 0;
 
   static const char old_marker[] = " - ";
-  size_t old_marker_len = sizeof(old_marker);
+  static const size_t old_marker_len = sizeof(old_marker) - 1;
 
   static const char new_marker[] = " + ";
-  size_t new_marker_len = sizeof(new_marker);
+  static const size_t new_marker_len = sizeof(new_marker) - 1;
 
   /* Find the required buffer size */
 
@@ -700,8 +694,17 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
      the old resource has no value are not worth reporting so simply
      avoid that here. */
 
+  bool show_change;
+  if ( isempty(old_value) ) {
+    if ( !isempty(new_value) ) 
+      show_change = true;
+  } else {
+    if ( isempty(new_value) || strcmp(old_value, new_value ) != 0 )
+      show_change = true;
+  }
+
   size_t new_len = 0;
-  if ( strcmp( old_value, new_value ) != 0 ) {
+  if (show_change) {
 
     if ( prefix != NULL ) {
       prefix_len = strlen(prefix);
@@ -711,10 +714,14 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
     name_len = strlen(name);
     new_len += ( name_len + 2 );         /* +2 for ':' and newline */
 
-    old_val_len = strlen(old_value);
+    if ( old_value != NULL )
+      old_val_len = strlen(old_value);
+
     new_len += ( old_val_len + old_marker_len + 1 );  /* +1 newline */
 
-    new_val_len = strlen(new_value);
+    if ( new_value != NULL )
+      new_val_len = strlen(new_value);
+
     new_len +=  ( new_val_len + new_marker_len + 1 ); /* +1 for newline */
   }
 
@@ -748,14 +755,23 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
   to = stpncpy( to, ":\n", 2 );
 
   to = stpncpy( to, old_marker, old_marker_len );
-  to = stpncpy( to, old_value, old_val_len );
+
+  if ( old_val_len > 0 )
+    to = stpncpy( to, old_value, old_val_len );
+
   to = stpncpy( to, "\n",  1 );
 
   to = stpncpy( to, new_marker, new_marker_len );
-  to = stpncpy( to, new_value, new_val_len );
+
+  if ( new_val_len > 0 )
+    to = stpncpy( to, new_value, new_val_len );
+
   to = stpncpy( to, "\n",  1 );
 
   *to = '\0';
+
+  free(old_value);
+  free(new_value);
 
   assert( ( *result + new_len ) == to );
 
