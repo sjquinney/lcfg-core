@@ -210,7 +210,7 @@ bool lcfgdiffresource_set_old( LCFGDiffResource * resdiff,
  * @e new @c LCFGResource will be @c NULL and this will return a false
  * value.
  *
- * @param[in] res Pointer to an @c LCFGResource
+ * @param[in] resdiff Pointer to an @c LCFGDiffResource
  *
  * @return boolean which indicates if diff has new resource
  *
@@ -229,7 +229,7 @@ bool lcfgdiffresource_has_new( const LCFGDiffResource * resdiff ) {
  * LCFGDiffResource. Note that if the diff represents a removed
  * resource then this will return a @c NULL value.
  *
- * @param[in] res Pointer to an @c LCFGDiffResource
+ * @param[in] resdiff Pointer to an @c LCFGDiffResource
  *
  * @return Pointer to the new resource for the diff (possibly @c NULL).
  *
@@ -473,7 +473,7 @@ bool lcfgdiffresource_is_removed( const LCFGDiffResource * resdiff ) {
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
  * longer required. If an error occurs this function will return -1.
  *
- * @param[in] res Pointer to @c LCFGDiffResource
+ * @param[in] resdiff Pointer to @c LCFGDiffResource
  * @param[in] prefix Prefix, usually the component name (may be @c NULL)
  * @param[in] comments Pointer to string of comments which should be included
  * @param[in] pending Boolean which indicates whether this is a 'pending' change
@@ -639,7 +639,7 @@ ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
  * longer required. If an error occurs this function will return -1.
  *
- * @param[in] res Pointer to @c LCFGDiffResource
+ * @param[in] resdiff Pointer to @c LCFGDiffResource
  * @param[in] prefix Prefix, usually the component name (may be @c NULL)
  * @param[in,out] result Reference to the pointer to the string buffer
  * @param[in,out] size Reference to the size of the string buffer
@@ -770,7 +770,7 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
  * matches with that specified. The name for the diff is retrieved
  * using the @c lcfgdiffresource_get_name().
  *
- * @param[in] res Pointer to @c LCFGDiffResource
+ * @param[in] resdiff Pointer to @c LCFGDiffResource
  * @param[in] want_name Resource name to match
  *
  * @return Boolean which indicates if diff name matches
@@ -828,9 +828,9 @@ int lcfgdiffresource_compare( const LCFGDiffResource * resdiff1,
  * To avoid memory leaks, when it is no longer required the @c
  * lcfgdiffresource_relinquish() function should be called.
  *
- * @param[in] Pointer to the @e old @c LCFGResource (may be @c NULL)
- * @param[in] Pointer to the @e new @c LCFGResource (may be @c NULL)
- * @param[out] Reference to pointer to the new @c LCFGDiffResource
+ * @param[in] old_res Pointer to the @e old @c LCFGResource (may be @c NULL)
+ * @param[in] new_res Pointer to the @e new @c LCFGResource (may be @c NULL)
+ * @param[out] result Reference to pointer to the new @c LCFGDiffResource
  *
  * @return Status value indicating success of the process
  *
