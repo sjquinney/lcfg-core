@@ -550,22 +550,27 @@ LCFGChange lcfgprofile_merge( LCFGProfile * profile1,
 
   if ( !lcfgpkglist_is_empty(profile2->active_packages) ) {
 
+    LCFGChange merge_rc = LCFG_CHANGE_NONE;
+
     /* Create active package list for profile1 if necessary */
     if ( profile1->active_packages == NULL ) {
       profile1->active_packages = lcfgpkglist_new();
-      lcfgpkglist_set_merge_rules( profile1->active_packages,
-				   ACTIVE_PACKAGE_RULES );
+      if ( !lcfgpkglist_set_merge_rules( profile1->active_packages,
+                                         ACTIVE_PACKAGE_RULES ) ) {
+        merge_rc = LCFG_CHANGE_ERROR;
+      }
     }
 
-    LCFGChange merge_rc = lcfgpkglist_merge_list( profile1->active_packages,
-                                                  profile2->active_packages,
-                                                  msg );
+    if ( merge_rc != LCFG_CHANGE_ERROR )
+      merge_rc = lcfgpkglist_merge_list( profile1->active_packages,
+                                         profile2->active_packages,
+                                         msg );
 
-    if ( merge_rc == LCFG_CHANGE_ERROR ) {
+    if ( merge_rc == LCFG_CHANGE_ERROR )
       change = LCFG_CHANGE_ERROR;
-    } else if ( merge_rc != LCFG_CHANGE_NONE ) {
+    else if ( merge_rc != LCFG_CHANGE_NONE )
       change = merge_rc;
-    }
+
   }
 
   if ( change == LCFG_CHANGE_ERROR ) return change;
@@ -573,23 +578,27 @@ LCFGChange lcfgprofile_merge( LCFGProfile * profile1,
   /* Merge inactive packages lists */
 
   if ( !lcfgpkglist_is_empty(profile2->inactive_packages) ) {
+    LCFGChange merge_rc = LCFG_CHANGE_NONE;
 
     /* Create inactive package list for profile1 if necessary */
     if ( profile1->inactive_packages == NULL ) {
       profile1->inactive_packages = lcfgpkglist_new();
-      lcfgpkglist_set_merge_rules( profile1->inactive_packages,
-				   INACTIVE_PACKAGE_RULES );
+      if ( !lcfgpkglist_set_merge_rules( profile1->inactive_packages,
+                                         INACTIVE_PACKAGE_RULES ) ) {
+        merge_rc = LCFG_CHANGE_ERROR;
+      }
     }
 
-    LCFGChange merge_rc = lcfgpkglist_merge_list( profile1->inactive_packages,
-                                                  profile2->inactive_packages,
-                                                  msg );
+    if ( merge_rc != LCFG_CHANGE_ERROR )
+      merge_rc = lcfgpkglist_merge_list( profile1->inactive_packages,
+                                         profile2->inactive_packages,
+                                         msg );
 
-    if ( merge_rc == LCFG_CHANGE_ERROR ) {
+    if ( merge_rc == LCFG_CHANGE_ERROR )
       change = LCFG_CHANGE_ERROR;
-    } else if ( merge_rc != LCFG_CHANGE_NONE ) {
+    else if ( merge_rc != LCFG_CHANGE_NONE )
       change = merge_rc;
-    }
+
   }
 
   return change;
