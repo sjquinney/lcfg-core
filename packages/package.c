@@ -2350,11 +2350,17 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
   return new_len;
 }
 
-static char const * const meta_start     = "#ifdef INCLUDE_META\n";
-static char const * const meta_end       = "#endif\n";
-static char const * const pragma_derive  = "#pragma LCFG derive \"";
-static char const * const pragma_context = "#pragma LCFG context \"";
-static char const * const pragma_end     = "\"\n";
+static const char meta_start[]     = "#ifdef INCLUDE_META\n";
+static const char meta_end[]       = "#endif\n";
+static const char pragma_derive[]  = "#pragma LCFG derive \"";
+static const char pragma_context[] = "#pragma LCFG context \"";
+static const char pragma_end[]     = "\"\n";
+
+static const size_t meta_start_len     = sizeof(meta_start) - 1;
+static const size_t meta_end_len       = sizeof(meta_end) - 1;
+static const size_t pragma_derive_len  = sizeof(pragma_derive) - 1;
+static const size_t pragma_context_len = sizeof(pragma_context) - 1;
+static const size_t pragma_end_len     = sizeof(pragma_end) - 1;
 
 /**
  * @brief Format the package as CPP
@@ -2411,12 +2417,6 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
   if ( spec_len < 0 ) return spec_len;
 
   /* Meta-Data */
-
-  size_t meta_start_len     = strlen(meta_start);
-  size_t meta_end_len       = strlen(meta_end);
-  size_t pragma_derive_len  = strlen(pragma_derive);
-  size_t pragma_context_len = strlen(pragma_context);
-  size_t pragma_end_len     = strlen(pragma_end);
 
   size_t meta_len = 0;
 
@@ -2550,8 +2550,8 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
 
   if ( !lcfgpackage_has_name(pkg) ) return -1;
 
-  static const char * indent = "   ";
-  size_t indent_len = strlen(indent);
+  static const char indent[] = "   ";
+  static size_t indent_len = sizeof(indent) - 1;
 
   size_t new_len = indent_len + 20; /* <package></package> + newline */
 
@@ -2565,7 +2565,7 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
   /* Version - required */
 
   const char * version = lcfgpackage_has_version(pkg) ?
-                      lcfgpackage_get_version(pkg) : LCFG_PACKAGE_WILDCARD;
+                         lcfgpackage_get_version(pkg) : LCFG_PACKAGE_WILDCARD;
   size_t ver_len = strlen(version);
 
   new_len += ( ver_len + 7 ); /* <v></v> */

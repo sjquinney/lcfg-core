@@ -1097,9 +1097,13 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
   /* The following characters need to be encoded to ensure they do not
      corrupt the format of status files. */
 
-  char * cr  = "&#xD;";   /* +4 \r */
-  char * lf  = "&#xA;";   /* +4 \n */
-  char * amp = "&#x26;";  /* +5    */
+  static const char cr[]  = "&#xD;";   /* +4 \r */
+  static const char lf[]  = "&#xA;";   /* +4 \n */
+  static const char amp[] = "&#x26;";  /* +5    */
+
+  static const size_t cr_len  = sizeof(cr)  - 1;
+  static const size_t lf_len  = sizeof(lf)  - 1;
+  static const size_t amp_len = sizeof(amp) - 1;
 
   size_t extend = 0;
   char * ptr;
@@ -1107,11 +1111,13 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
     switch(*ptr)
       {
       case '\r':
+        extend += cr_len;
+        break;
       case '\n':
-	extend += 4;
+	extend += lf_len;
 	break;
       case '&':
-	extend += 5;
+	extend += amp_len;
 	break;
       }
   }
@@ -2593,10 +2599,10 @@ ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS ) {
 
   /* Optional meta-data */
 
-  char * derivation = NULL;
+  const char * derivation = NULL;
   size_t deriv_len = 0;
 
-  char * context = NULL;
+  const char * context = NULL;
   size_t ctx_len = 0;
   
   if ( options&LCFG_OPT_USE_META ) {
