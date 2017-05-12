@@ -1,3 +1,10 @@
+/**
+ * @file context/tools.c
+ * @brief Higher level functions for manipulating contexts
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date: 2017-04-25 15:04:02 +0100 (Tue, 25 Apr 2017) $
+ * $Revision: 32496 $
+ */
 
 #include <stdbool.h>
 #include <stdio.h>
