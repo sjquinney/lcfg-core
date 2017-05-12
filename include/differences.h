@@ -175,6 +175,27 @@ LCFGStatus lcfgdiffcomponent_to_holdfile( const LCFGDiffComponent * compdiff,
                                           md5_state_t * md5state )
   __attribute__((warn_unused_result));
 
+LCFGStatus lcfgdiffcomponent_names_for_type(const LCFGDiffComponent * compdiff,
+                                            LCFGChange change_type,
+                                            LCFGTagList ** result )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgdiffcomponent_changed( const LCFGDiffComponent * compdiff,
+                                      LCFGTagList ** res_names )
+ __attribute__((warn_unused_result));
+
+LCFGStatus lcfgdiffcomponent_added( const LCFGDiffComponent * compdiff,
+                                      LCFGTagList ** res_names )
+ __attribute__((warn_unused_result));
+
+LCFGStatus lcfgdiffcomponent_removed( const LCFGDiffComponent * compdiff,
+                                      LCFGTagList ** res_names )
+ __attribute__((warn_unused_result));
+
+LCFGStatus lcfgdiffcomponent_modified( const LCFGDiffComponent * compdiff,
+                                       LCFGTagList ** res_names )
+ __attribute__((warn_unused_result));
+
 LCFGChange lcfgresource_diff( LCFGResource * old_res,
                               LCFGResource * new_res,
                               LCFGDiffResource ** resdiff )
@@ -262,6 +283,29 @@ LCFGChange lcfgprofile_diff( const LCFGProfile * profile1,
                              const LCFGProfile * profile2,
                              LCFGDiffProfile ** result )
   __attribute__((warn_unused_result));
+
+
+LCFGStatus lcfgdiffprofile_names_for_type( const LCFGDiffProfile * profdiff,
+                                           LCFGChange change_type,
+                                           LCFGTagList ** result )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgdiffprofile_changed( const LCFGDiffProfile * profdiff,
+                                    LCFGTagList ** comp_names )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgdiffprofile_added( const LCFGDiffProfile * profdiff,
+                                  LCFGTagList ** comp_names )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgdiffprofile_removed( const LCFGDiffProfile * profdiff,
+                                    LCFGTagList ** comp_names )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgdiffprofile_modified( const LCFGDiffProfile * profdiff,
+                                    LCFGTagList ** comp_names )
+  __attribute__((warn_unused_result));
+
 
 #endif /* LCFG_CORE_DIFFERENCES_H */
 

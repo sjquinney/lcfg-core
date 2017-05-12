@@ -1101,4 +1101,78 @@ int lcfgdiffcomponent_compare( const LCFGDiffComponent * compdiff1,
   return strcmp( name1, name2 );
 }
 
+LCFGStatus lcfgdiffcomponent_names_for_type(const LCFGDiffComponent * compdiff,
+                                            LCFGChange change_type,
+                                            LCFGTagList ** result ) {
+
+  LCFGTagList * res_names = lcfgtaglist_new();
+
+  bool ok = true;
+
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgdiffcomponent_head(compdiff);
+	cur_node != NULL && ok;
+	cur_node = lcfgdiffcomponent_next(cur_node) ) {
+
+    const LCFGDiffResource * resdiff = lcfgdiffcomponent_resdiff(cur_node);
+
+    const char * res_name = lcfgdiffresource_get_name(resdiff);
+
+    if ( res_name != NULL && 
+         change_type & lcfgdiffresource_get_type(resdiff) ) {
+
+      char * msg = NULL;
+      LCFGChange change = lcfgtaglist_mutate_add( res_names, res_name, &msg );
+      if ( change == LCFG_CHANGE_ERROR )
+        ok = false;
+
+      free(msg); /* Just ignoring any message */
+    }
+
+  }
+
+  if (ok) {
+    lcfgtaglist_sort(res_names);
+  } else {
+    lcfgtaglist_relinquish(res_names);
+    res_names = NULL;
+  }
+
+  *result = res_names;
+
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+}
+
+LCFGStatus lcfgdiffcomponent_changed( const LCFGDiffComponent * compdiff,
+                                      LCFGTagList ** res_names ) {
+
+  return lcfgdiffcomponent_names_for_type( compdiff,
+                    LCFG_CHANGE_ADDED|LCFG_CHANGE_REMOVED|LCFG_CHANGE_MODIFIED,
+                                           res_names );
+}
+
+LCFGStatus lcfgdiffcomponent_added( const LCFGDiffComponent * compdiff,
+                                    LCFGTagList ** res_names ) {
+
+  return lcfgdiffcomponent_names_for_type( compdiff,
+                                           LCFG_CHANGE_ADDED,
+                                           res_names);
+}
+
+LCFGStatus lcfgdiffcomponent_removed( const LCFGDiffComponent * compdiff,
+                                      LCFGTagList ** res_names ) {
+
+  return lcfgdiffcomponent_names_for_type( compdiff,
+                                           LCFG_CHANGE_REMOVED,
+                                           res_names );
+}
+
+LCFGStatus lcfgdiffcomponent_modified( const LCFGDiffComponent * compdiff,
+                                       LCFGTagList ** res_names ) {
+
+  return lcfgdiffcomponent_names_for_type( compdiff,
+                                           LCFG_CHANGE_MODIFIED,
+                                           res_names );
+}
+
 /* eof */

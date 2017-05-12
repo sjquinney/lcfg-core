@@ -644,4 +644,79 @@ void lcfgdiffprofile_sort( LCFGDiffProfile * list ) {
 
 }
 
+LCFGStatus lcfgdiffprofile_names_for_type( const LCFGDiffProfile * profdiff,
+                                           LCFGChange change_type,
+                                           LCFGTagList ** result ) {
+
+  LCFGTagList * comp_names = lcfgtaglist_new();
+
+  bool ok = true;
+
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgdiffprofile_head(profdiff);
+	cur_node != NULL && ok;
+	cur_node = lcfgdiffprofile_next(cur_node) ) {
+
+    const LCFGDiffComponent * compdiff = lcfgdiffprofile_compdiff(cur_node);
+
+    const char * comp_name = lcfgdiffcomponent_get_name(compdiff);
+
+    if ( comp_name != NULL && 
+         change_type & lcfgdiffcomponent_get_type(compdiff) ) {
+
+      char * msg = NULL;
+      LCFGChange change = lcfgtaglist_mutate_add( comp_names, comp_name, &msg );
+      if ( change == LCFG_CHANGE_ERROR )
+        ok = false;
+
+      free(msg); /* Just ignoring any message */
+    }
+
+  }
+
+  if (ok) {
+    lcfgtaglist_sort(comp_names);
+  } else {
+    lcfgtaglist_relinquish(comp_names);
+    comp_names = NULL;
+  }
+
+  *result = comp_names;
+
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+}
+
+LCFGStatus lcfgdiffprofile_changed( const LCFGDiffProfile * profdiff,
+                                    LCFGTagList ** comp_names ) {
+
+  return lcfgdiffprofile_names_for_type( profdiff,
+                    LCFG_CHANGE_ADDED|LCFG_CHANGE_REMOVED|LCFG_CHANGE_MODIFIED,
+                                         comp_names );
+}
+
+LCFGStatus lcfgdiffprofile_added( const LCFGDiffProfile * profdiff,
+                                  LCFGTagList ** comp_names ) {
+
+  return lcfgdiffprofile_names_for_type( profdiff,
+                                         LCFG_CHANGE_ADDED,
+                                         comp_names);
+}
+
+LCFGStatus lcfgdiffprofile_removed( const LCFGDiffProfile * profdiff,
+                                    LCFGTagList ** comp_names ) {
+
+  return lcfgdiffprofile_names_for_type( profdiff,
+                                         LCFG_CHANGE_REMOVED,
+                                         comp_names );
+}
+
+LCFGStatus lcfgdiffprofile_modified( const LCFGDiffProfile * profdiff,
+                                     LCFGTagList ** comp_names ) {
+
+  return lcfgdiffprofile_names_for_type( profdiff,
+                                         LCFG_CHANGE_MODIFIED,
+                                         comp_names );
+}
+
+
 /* eof */
