@@ -108,11 +108,11 @@ typedef struct LCFGSListNode LCFGSListNode;
 LCFGSListNode * lcfgslistnode_new( void * data );
 void lcfgslistnode_destroy(LCFGSListNode * node);
 
-#define lcfgslist_head(list) ((list)->head)
-#define lcfgslist_tail(list) ((list)->tail)
+#define lcfgslist_head(list) ( list != NULL ? (list)->head : NULL )
+#define lcfgslist_tail(list) ( list != NULL ? (list)->tail : NULL )
 #define lcfgslist_size(list) ((list)->size)
 
-#define lcfgslist_is_empty(list) ( list != NULL && (list)->size == 0)
+#define lcfgslist_is_empty(list) ( list != NULL && (list)->size == 0 )
 
 #define lcfgslist_has_next(node) ((node)->next != NULL)
 #define lcfgslist_next(node) ((node)->next)
