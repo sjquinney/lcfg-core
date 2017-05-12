@@ -497,4 +497,14 @@ char * lcfgutils_string_replace( const char * input,
   return result;
 }
 
+unsigned int lcfgutils_string_djbhash( const char * str ) {
+
+   unsigned int hash = 5381;
+
+   unsigned char * p;
+   for ( p = (unsigned char *) str; *p != '\0'; p++ )
+     hash = ( ( hash << 5 ) + hash ) + ( *str );
+
+   return hash;
+}
 /* eof */

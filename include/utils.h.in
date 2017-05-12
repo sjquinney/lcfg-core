@@ -72,6 +72,8 @@ char * lcfgutils_string_replace( const char * input,
 				 const char * old,
 				 const char * new );
 
+unsigned int lcfgutils_string_djbhash( const char * str );
+
 /* MD5 support - for secure mode */
 
 typedef unsigned char md5_byte_t; /* 8-bit byte */
