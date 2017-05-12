@@ -174,7 +174,7 @@ LCFGResource * lcfgdiffresource_get_old( const LCFGDiffResource * resdiff ) {
 }
 
 /**
- * Set the old resource for the diff
+ * @brief Set the old resource for the diff
  *
  * Sets the @e old @c LCFGResource for the @c LCFGDiffResource. If the
  * diff represents a newly added resource then this should be set to
@@ -242,7 +242,7 @@ LCFGResource * lcfgdiffresource_get_new( const LCFGDiffResource * resdiff ) {
 }
 
 /**
- * Set the new resource for the diff
+ * @brief Set the new resource for the diff
  *
  * Sets the @e new @c LCFGResource for the @c LCFGDiffResource. If the
  * diff represents a removed resource then this should be set to the
