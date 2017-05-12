@@ -832,11 +832,11 @@ int lcfgdiffresource_compare( const LCFGDiffResource * resdiff1,
  * @param[in] new_res Pointer to the @e new @c LCFGResource (may be @c NULL)
  * @param[out] result Reference to pointer to the new @c LCFGDiffResource
  *
- * @return Status value indicating success of the process
+ * @return Integer representing the type of differences
  *
  */
 
-LCFGStatus lcfgresource_diff( LCFGResource * old_res,
+LCFGChange lcfgresource_diff( LCFGResource * old_res,
                               LCFGResource * new_res,
                               LCFGDiffResource ** result ) {
 
@@ -857,7 +857,7 @@ LCFGStatus lcfgresource_diff( LCFGResource * old_res,
 
   *result = resdiff;
 
-  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+  return ( ok ? lcfgdiffresource_get_type(resdiff) : LCFG_CHANGE_ERROR );
 }
 
 /* eof */
