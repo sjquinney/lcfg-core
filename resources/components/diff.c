@@ -465,11 +465,11 @@ LCFGChange lcfgdiffcomponent_remove_next( LCFGDiffComponent * list,
 }
 
 /**
- * @brief Sort a list of resource diffs for a component
+ * @brief Sort a list of resources for a component diff
  *
- * This sorts the nodes of the list of resource diffs for an @c
- * LCFGDiffComponent by using the @c lcfgdiffresource_compare()
- * function.
+ * This does an in-place sort of the nodes of the list of @c
+ * LCFGDiffResource for an @c LCFGDiffComponent by using the @c
+ * lcfgdiffresource_compare() function.
  *
  * @param[in] list Pointer to @c LCFGDiffComponent
  *
@@ -506,7 +506,7 @@ void lcfgdiffcomponent_sort( LCFGDiffComponent * list ) {
 }
 
 /**
- * @brief Find the node with a given name
+ * @brief Find the list node with a given name
  *
  * This can be used to search through an @c LCFGDiffComponent to find
  * the first node which has a matching name. Note that the
@@ -588,6 +588,11 @@ LCFGDiffResource * lcfgdiffcomponent_find_resource(
  * This uses the @c lcfgdiffcomponent_find_node() function to find the
  * relevant node. If a @c NULL value is specified for the list or the
  * list is empty then a false value will be returned.
+ *
+ * It is important to note that the existence of an @c
+ * LCFGDiffResource in the list is not sufficient proof that it is in
+ * any way changed. To check that for a specific resource diff use a
+ * function like @c lcfgdiffresource_is_changed().
  *
  * @param[in] list Pointer to @c LCFGDiffComponent to be searched (may be @c NULL)
  * @param[in] want_name The name of the required resource
@@ -692,7 +697,7 @@ LCFGStatus lcfgdiffcomponent_to_holdfile( const LCFGDiffComponent * compdiff,
  *
  */
 
-LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
+LCFGChange lcfgcomponent_diff( const LCFGComponent * comp1,
                                const LCFGComponent * comp2,
                                LCFGDiffComponent ** result ) {
 
@@ -706,19 +711,19 @@ LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
   else if ( comp2 != NULL && lcfgcomponent_has_name(comp2) )
     name = lcfgcomponent_get_name(comp2);
 
-  LCFGStatus status = LCFG_STATUS_OK;
+  bool ok = true;
 
   if ( name != NULL ) {
     char * new_name = strdup(name);
     if ( !lcfgdiffcomponent_set_name( compdiff, new_name ) ) {
-      status = LCFG_STATUS_ERROR;
+      ok = false;
       free(new_name);
     }
   }
 
   const LCFGResourceNode * cur_node = NULL;
   for ( cur_node = comp1 != NULL ? lcfgcomponent_head(comp1) : NULL;
-	cur_node != NULL && status != LCFG_STATUS_ERROR;
+	cur_node != NULL && ok;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
     LCFGResource * res1 = lcfgcomponent_resource(cur_node);
@@ -733,16 +738,17 @@ LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
       lcfgcomponent_find_resource( comp2, res1_name, false ) : NULL;
 
     LCFGDiffResource * resdiff = NULL;
-    status = lcfgresource_diff( res1, res2, &resdiff );
+    LCFGChange res_change = lcfgresource_diff( res1, res2, &resdiff );
 
     /* Just ignore anything where there are no differences */
 
-    if ( status != LCFG_STATUS_ERROR &&
-         !lcfgdiffresource_is_nochange(resdiff) ) {
+    if ( res_change == LCFG_CHANGE_ERROR ) {
+      ok = false;
+    } else if ( res_change != LCFG_CHANGE_NONE ) {
 
       LCFGChange append_rc = lcfgdiffcomponent_append( compdiff, resdiff );
       if ( append_rc == LCFG_CHANGE_ERROR )
-        status = LCFG_STATUS_ERROR;
+        ok = false;
 
     }
 
@@ -752,7 +758,7 @@ LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
   /* Look for resources which have been added */
 
   for ( cur_node = comp2 != NULL ? lcfgcomponent_head(comp2) : NULL;
-	cur_node != NULL && status != LCFG_STATUS_ERROR;
+	cur_node != NULL && ok;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
     LCFGResource * res2 = lcfgcomponent_resource(cur_node);
@@ -769,13 +775,15 @@ LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
 	 !lcfgcomponent_has_resource( comp1, res2_name, false ) ) {
 
       LCFGDiffResource * resdiff = NULL;
-      status = lcfgresource_diff( NULL, res2, &resdiff );
+      LCFGChange res_change = lcfgresource_diff( NULL, res2, &resdiff );
 
-      if ( status != LCFG_STATUS_ERROR ) {
+      if ( res_change == LCFG_CHANGE_ERROR ) {
+        ok = false;
+      } else if ( res_change != LCFG_CHANGE_NONE ) {
 
         LCFGChange append_rc = lcfgdiffcomponent_append( compdiff, resdiff );
         if ( append_rc == LCFG_CHANGE_ERROR )
-          status = LCFG_STATUS_ERROR;
+          ok = false;
 
       }
 
@@ -785,9 +793,10 @@ LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
 
   }
 
-  if ( status != LCFG_STATUS_ERROR ) {
+  LCFGChange change_type = LCFG_CHANGE_NONE;
 
-    LCFGChange change_type = LCFG_CHANGE_NONE;
+  if (ok) {
+
     if ( lcfgcomponent_is_empty(comp1) ) {
 
       if ( !lcfgcomponent_is_empty(comp2) )
@@ -805,13 +814,15 @@ LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
     lcfgdiffcomponent_set_type( compdiff, change_type );
 
   } else {
+    change_type = LCFG_CHANGE_ERROR;
+
     lcfgdiffcomponent_relinquish(compdiff);
     compdiff = NULL;
   }
 
   *result = compdiff;
 
-  return status;
+  return change_type;
 }
 
 /**
