@@ -42,7 +42,6 @@ LCFGDiffResource * lcfgdiffresource_new(void) {
 
   resdiff->old  = NULL;
   resdiff->new  = NULL;
-  resdiff->next = NULL;
   resdiff->_refcount = 1;
 
   return resdiff;

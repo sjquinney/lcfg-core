@@ -1,3 +1,10 @@
+/**
+ * @file differences.h
+ * @brief Functions for finding the differences between resources, components and profiles.
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * $Date$
+ * $Revision$
+ */
 
 #ifndef LCFG_CORE_DIFFERENCES_H
 #define LCFG_CORE_DIFFERENCES_H
@@ -13,10 +20,15 @@
 
 /* Differences */
 
+/**
+ * @brief A structure to represent the differences between two resources
+ */
+
 struct LCFGDiffResource {
-  LCFGResource * old;
-  LCFGResource * new;
-  struct LCFGDiffResource * next;
+  /*@{*/
+  LCFGResource * old; /**< The 'old' resource */
+  LCFGResource * new; /**< The 'new' resource */
+  /*@}*/
   unsigned int _refcount;
 };
 
@@ -68,19 +80,24 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
                                   char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
-int lcfgdiffresource_match( const LCFGDiffResource * resdiff,
-                            const char * want_name );
+bool lcfgdiffresource_match( const LCFGDiffResource * resdiff,
+                             const char * want_name );
 
 int lcfgdiffresource_compare( const LCFGDiffResource * resdiff1, 
                               const LCFGDiffResource * resdiff2 );
 
+/**
+ * @brief A structure to represent the differences between two components
+ */
+
 struct LCFGDiffComponent {
-  char * name;
-  LCFGSListNode * head;
-  LCFGSListNode * tail;
-  struct LCFGDiffComponent * next;
-  unsigned int size;
-  LCFGChange change_type;
+  /*@{*/
+  char * name;            /**< Name of component */
+  LCFGSListNode * head;   /**< The first node in the list */
+  LCFGSListNode * tail;   /**< The last node in the list */
+  unsigned int size;      /**< The length of the list */
+  LCFGChange change_type; /**< The type of differences (e.g. added, removed, modified) */
+  /*@}*/
   unsigned int _refcount;
 };
 
@@ -89,8 +106,8 @@ typedef struct LCFGDiffComponent LCFGDiffComponent;
 LCFGDiffComponent * lcfgdiffcomponent_new(void);
 
 void lcfgdiffcomponent_destroy(LCFGDiffComponent * compdiff );
-void lcfgdiffcomponent_acquire( LCFGDiffResource * compdiff );
-void lcfgdiffcomponent_relinquish( LCFGDiffResource * compdiff );
+void lcfgdiffcomponent_acquire( LCFGDiffComponent * compdiff );
+void lcfgdiffcomponent_relinquish( LCFGDiffComponent * compdiff );
 
 bool lcfgdiffcomponent_has_name(const LCFGDiffComponent * compdiff);
 
@@ -99,6 +116,11 @@ char * lcfgdiffcomponent_get_name(const LCFGDiffComponent * compdiff);
 bool lcfgdiffcomponent_set_name( LCFGDiffComponent * compdiff,
                                  char * new_name )
   __attribute__((warn_unused_result));
+
+bool lcfgdiffcomponent_match( const LCFGDiffComponent * compdiff,
+                             const char * want_name );
+int lcfgdiffcomponent_compare( const LCFGDiffComponent * compdiff1, 
+                               const LCFGDiffComponent * compdiff2 );
 
 void lcfgdiffcomponent_set_type( LCFGDiffComponent * compdiff,
                                  LCFGChange change_type );
@@ -136,6 +158,9 @@ LCFGChange lcfgdiffcomponent_remove_next( LCFGDiffComponent * list,
 
 #define lcfgdiffcomponent_append(list, item) ( lcfgdiffcomponent_insert_next( list, lcfgslist_tail(list), item ) )
 
+LCFGSListNode * lcfgdiffcomponent_find_node( const LCFGDiffComponent * list,
+                                             const char * want_name );
+
 LCFGDiffResource * lcfgdiffcomponent_find_resource(
 					  const LCFGDiffComponent * compdiff,
 					  const char * want_name );
@@ -150,7 +175,7 @@ LCFGStatus lcfgdiffcomponent_to_holdfile( const LCFGDiffComponent * compdiff,
                                           md5_state_t * md5state )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgresource_diff( LCFGResource * old_res,
+LCFGChange lcfgresource_diff( LCFGResource * old_res,
                               LCFGResource * new_res,
                               LCFGDiffResource ** resdiff )
   __attribute__((warn_unused_result));
@@ -173,10 +198,14 @@ LCFGChange lcfgprofile_quickdiff( const LCFGProfile * profile1,
                                   LCFGTagList ** removed )
   __attribute__((warn_unused_result));
 
+/**
+ * @brief A structure to represent the differences between two profiles
+ */
+
 struct LCFGDiffProfile {
-  LCFGDiffComponent * head;
-  LCFGDiffComponent * tail;
-  unsigned int size;
+  LCFGSListNode * head; /**< The first node in the list */
+  LCFGSListNode * tail; /**< The last node in the list */
+  unsigned int size;    /**< The length of the list */
 };
 
 typedef struct LCFGDiffProfile LCFGDiffProfile;
@@ -185,48 +214,53 @@ LCFGDiffProfile * lcfgdiffprofile_new(void);
 
 void lcfgdiffprofile_destroy(LCFGDiffProfile * profdiff );
 
-LCFGChange lcfgdiffprofile_insert_next( LCFGDiffProfile    * profdiff,
-                                        LCFGDiffComponent  * current,
-                                        LCFGDiffComponent  * new )
+LCFGChange lcfgdiffprofile_insert_next( LCFGDiffProfile    * list,
+                                        LCFGSListNode      * node,
+                                        LCFGDiffComponent  * item )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgdiffprofile_remove_next( LCFGDiffProfile    * profdiff,
-                                        LCFGDiffComponent  * current,
-                                        LCFGDiffComponent ** old )
+LCFGChange lcfgdiffprofile_remove_next( LCFGDiffProfile    * list,
+                                        LCFGSListNode      * node,
+                                        LCFGDiffComponent ** item )
   __attribute__((warn_unused_result));
 
-#define lcfgdiffprofile_head(profdiff) ((profdiff)->head)
-#define lcfgdiffprofile_tail(profdiff) ((profdiff)->tail)
-#define lcfgdiffprofile_size(profdiff) ((profdiff)->size)
+#define lcfgdiffprofile_head     lcfgslist_head
+#define lcfgdiffprofile_tail     lcfgslist_tail
+#define lcfgdiffprofile_size     lcfgslist_size
+#define lcfgdiffprofile_is_empty lcfgslist_is_empty
 
-#define lcfgdiffprofile_is_empty(profdiff) ( profdiff != NULL && (profdiff)->size == 0)
+#define lcfgdiffprofile_has_next lcfgslist_has_next
+#define lcfgdiffprofile_next     lcfgslist_next
+#define lcfgdiffprofile_compdiff lcfgslist_data
 
-#define lcfgdiffprofile_next(compdiff)     ((compdiff)->next)
+#define lcfgdiffprofile_append(list, item) ( lcfgdiffprofile_insert_next( list, lcfgslist_tail(list), item ) )
 
-#define lcfgdiffprofile_append(profdiff, compdiff) ( lcfgdiffprofile_insert_next( profdiff, lcfgdiffprofile_tail(profdiff), compdiff ) )
+LCFGSListNode * lcfgdiffprofile_find_node( const LCFGDiffProfile * profdiff,
+                                           const char * want_name );
 
 LCFGDiffComponent * lcfgdiffprofile_find_component(
 					    const LCFGDiffProfile * profdiff,
 					    const char * want_name );
 
 bool lcfgdiffprofile_has_component( const LCFGDiffProfile * profdiff,
-				    const char * comp_name );
+				    const char * want_name );
 
-LCFGStatus lcfgdiffprofile_to_holdfile( const LCFGDiffProfile * profdiff,
+void lcfgdiffprofile_sort( LCFGDiffProfile * list );
+
+LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
                                         const char * holdfile,
                                         char ** signature,
                                         char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomponent_diff( const LCFGComponent * comp1,
+LCFGChange lcfgcomponent_diff( const LCFGComponent * comp1,
                                const LCFGComponent * comp2,
                                LCFGDiffComponent ** compdiff )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgprofile_diff( const LCFGProfile * profile1,
+LCFGChange lcfgprofile_diff( const LCFGProfile * profile1,
                              const LCFGProfile * profile2,
-                             LCFGDiffProfile ** result,
-                             char ** msg )
+                             LCFGDiffProfile ** result )
   __attribute__((warn_unused_result));
 
 #endif /* LCFG_CORE_DIFFERENCES_H */
