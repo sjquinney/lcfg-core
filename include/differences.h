@@ -311,6 +311,9 @@ bool lcfgdiffcomponent_was_prodded( const LCFGDiffComponent * compdiff );
 bool lcfgdiffprofile_component_was_prodded( const LCFGDiffProfile * profdiff,
 					    const char * comp_name );
 
+bool lcfgdiffprofile_component_is_changed( const LCFGDiffProfile * profdiff,
+					   const char * comp_name );
+
 #endif /* LCFG_CORE_DIFFERENCES_H */
 
 /* eof */

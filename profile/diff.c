@@ -743,4 +743,25 @@ bool lcfgdiffprofile_component_was_prodded( const LCFGDiffProfile * profdiff,
   return ( compdiff != NULL && lcfgdiffcomponent_was_prodded(compdiff) );
 }
 
+/**
+ * Check if a particular component is changed
+ *
+ * Check if there are changes for the named component in the diff.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent to be checked
+ * @param[in] comp_name Name of component to be checked
+ *
+ * @return Boolean which indicates if the component is changed
+ *
+ */
+
+bool lcfgdiffprofile_component_is_changed( const LCFGDiffProfile * profdiff,
+					   const char * comp_name ) {
+
+  const LCFGDiffComponent * compdiff =
+    lcfgdiffprofile_find_component( profdiff, comp_name );
+
+  return ( compdiff != NULL && lcfgdiffcomponent_is_changed(compdiff) );
+}
+
 /* eof */
