@@ -354,7 +354,7 @@ bool lcfgresource_has_name( const LCFGResource * res ) {
  * @return The @e name for the resource (possibly @c NULL).
  */
 
-char * lcfgresource_get_name( const LCFGResource * res ) {
+const char * lcfgresource_get_name( const LCFGResource * res ) {
   assert( res != NULL );
 
   return res->name;
@@ -723,11 +723,11 @@ bool lcfgresource_is_true( const LCFGResource * res ) {
   if ( lcfgresource_has_value(res) ) {
     const char * value = lcfgresource_get_value(res);
 
-    if ( lcfgresource_is_boolean(res) ) {
+    if ( lcfgresource_is_boolean(res) )
       is_true = ( strcmp( value, "yes" ) == 0 );
-    } else {
+    else
       is_true = ( strcmp( value, "0" ) != 0 );
-    }
+
   }
 
   return is_true;
@@ -762,7 +762,7 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
 
   size_t new_len = type_len;
 
-  char * comment = NULL;
+  const char * comment = NULL;
   size_t comment_len = 0;
   if ( lcfgresource_has_comment(res) ) {
     comment = lcfgresource_get_comment(res);
@@ -1057,7 +1057,7 @@ bool lcfgresource_has_value( const LCFGResource * res ) {
  * @return The @e value string for the resource (possibly NULL).
  */
 
-char * lcfgresource_get_value( const LCFGResource * res ) {
+const char * lcfgresource_get_value( const LCFGResource * res ) {
   assert( res != NULL );
 
   return res->value;
@@ -1555,7 +1555,7 @@ bool lcfgresource_has_derivation( const LCFGResource * res ) {
  * @return The @e derivation for the resource (possibly NULL).
  */
 
-char * lcfgresource_get_derivation( const LCFGResource * res ) {
+const char * lcfgresource_get_derivation( const LCFGResource * res ) {
   assert( res != NULL );
 
   return res->derivation;
@@ -1701,7 +1701,7 @@ bool lcfgresource_has_context( const LCFGResource * res ) {
  * @return The @e context for the resource (possibly NULL).
  */
 
-char * lcfgresource_get_context( const LCFGResource * res ) {
+const char * lcfgresource_get_context( const LCFGResource * res ) {
   assert( res != NULL );
 
   return res->context;
@@ -1829,7 +1829,7 @@ bool lcfgresource_has_comment( const LCFGResource * res ) {
  * @return The @e comment for the resource (possibly NULL).
  */
 
-char * lcfgresource_get_comment( const LCFGResource * res ) {
+const char * lcfgresource_get_comment( const LCFGResource * res ) {
   assert( res != NULL );
 
   return res->comment;
@@ -2801,7 +2801,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
 
   /* Derivation */
 
-  char * derivation = NULL;
+  const char * derivation = NULL;
   size_t deriv_len = 0;
   if ( options&LCFG_OPT_USE_META && lcfgresource_has_derivation(res) ) {
     derivation = lcfgresource_get_derivation(res);

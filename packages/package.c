@@ -381,7 +381,7 @@ bool lcfgpackage_has_name( const LCFGPackage * pkg ) {
  * @return The name for the package (possibly NULL).
  */
 
-char * lcfgpackage_get_name( const LCFGPackage * pkg ) {
+const char * lcfgpackage_get_name( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
   return pkg->name;
@@ -491,7 +491,7 @@ bool lcfgpackage_has_arch( const LCFGPackage * pkg ) {
  * @return The architecture for the package (possibly @c NULL).
  */
 
-char * lcfgpackage_get_arch( const LCFGPackage * pkg ) {
+const char * lcfgpackage_get_arch( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
   return pkg->arch;
@@ -602,7 +602,7 @@ bool lcfgpackage_has_version( const LCFGPackage * pkg ) {
  * @return The version for the package (possibly @c NULL).
  */
 
-char * lcfgpackage_get_version( const LCFGPackage * pkg ) {
+const char * lcfgpackage_get_version( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
   return pkg->version;
@@ -703,7 +703,7 @@ bool lcfgpackage_has_release( const LCFGPackage * pkg ) {
  * @return The release for the package (possibly NULL).
  */
 
-char * lcfgpackage_get_release( const LCFGPackage * pkg ) {
+const char * lcfgpackage_get_release( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
   return pkg->release;
@@ -964,7 +964,7 @@ bool lcfgpackage_has_flag( const LCFGPackage * pkg, char flag ) {
  * @return The flags for the package (possibly NULL).
  */
 
-char * lcfgpackage_get_flags( const LCFGPackage * pkg ) {
+const char * lcfgpackage_get_flags( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
   return pkg->flags;
@@ -1200,7 +1200,7 @@ bool lcfgpackage_has_context( const LCFGPackage * pkg ) {
  * @return The context for the package (possibly @c NULL).
  */
 
-char * lcfgpackage_get_context( const LCFGPackage * pkg ) {
+const char * lcfgpackage_get_context( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
   return pkg->context;
@@ -1322,7 +1322,7 @@ bool lcfgpackage_has_derivation( const LCFGPackage * pkg ) {
  * @return The derivation for the package (possibly NULL).
  */
 
-char * lcfgpackage_get_derivation( const LCFGPackage * pkg ) {
+const char * lcfgpackage_get_derivation( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
   return pkg->derivation;
@@ -2263,10 +2263,10 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
 
   /* Optional meta-data */
 
-  char * derivation = NULL;
+  const char * derivation = NULL;
   size_t deriv_len = 0;
 
-  char * context = NULL;
+  const char * context = NULL;
   size_t ctx_len = 0;
   
   if ( options&LCFG_OPT_USE_META ) {
@@ -2420,10 +2420,10 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
 
   size_t meta_len = 0;
 
-  char * derivation = NULL;
+  const char * derivation = NULL;
   size_t deriv_len = 0;
 
-  char * context = NULL;
+  const char * context = NULL;
   size_t ctx_len = 0;
 
   if ( options&LCFG_OPT_USE_META ) {

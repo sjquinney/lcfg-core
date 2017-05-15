@@ -55,7 +55,7 @@ LCFGResource * lcfgdiffresource_get_new( const LCFGDiffResource * resdiff );
 bool lcfgdiffresource_set_new( LCFGDiffResource * resdiff,
                                LCFGResource * res );
 
-char * lcfgdiffresource_get_name( const LCFGDiffResource * resdiff );
+const char * lcfgdiffresource_get_name( const LCFGDiffResource * resdiff );
 
 LCFGChange lcfgdiffresource_get_type( const LCFGDiffResource * resdiff );
 

@@ -286,7 +286,7 @@ bool lcfgdiffresource_set_new( LCFGDiffResource * resdiff,
  *
  */
 
-char * lcfgdiffresource_get_name( const LCFGDiffResource * resdiff ) {
+const char * lcfgdiffresource_get_name( const LCFGDiffResource * resdiff ) {
   assert( resdiff != NULL );
   
   const LCFGResource * res = NULL;
@@ -298,7 +298,7 @@ char * lcfgdiffresource_get_name( const LCFGDiffResource * resdiff ) {
   if ( !lcfgresource_is_valid(res) )
     res = lcfgdiffresource_get_new(resdiff);
 
-  char * name = NULL;
+  const char * name = NULL;
   if ( lcfgresource_is_valid(res) )
     name = lcfgresource_get_name(res);
 

@@ -274,7 +274,7 @@ bool lcfgprofile_get_meta( const LCFGProfile * profile,
 
   if ( metares == NULL ) return false;
 
-  *metavalue = lcfgresource_get_value(metares);
+  *metavalue = (char *) lcfgresource_get_value(metares);
 
   return true;
 }

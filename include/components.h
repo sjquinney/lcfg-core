@@ -66,7 +66,7 @@ bool lcfgcomponent_is_valid( const LCFGComponent * comp );
 
 bool lcfgcomponent_has_name(const LCFGComponent * comp);
 bool lcfgcomponent_valid_name(const char * name );
-char * lcfgcomponent_get_name(const LCFGComponent * comp);
+const char * lcfgcomponent_get_name(const LCFGComponent * comp);
 bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name )
   __attribute__((warn_unused_result));
 

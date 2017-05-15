@@ -103,7 +103,7 @@ bool lcfgresource_is_valid( const LCFGResource * res );
 
 bool lcfgresource_valid_name( const char * name );
 bool lcfgresource_has_name( const LCFGResource * res );
-char * lcfgresource_get_name( const LCFGResource * res );
+const char * lcfgresource_get_name( const LCFGResource * res );
 bool lcfgresource_set_name( LCFGResource * res,
                             char * new_value )
   __attribute__((warn_unused_result));
@@ -159,7 +159,7 @@ char * lcfgresource_canon_boolean( const char * value );
 
 bool lcfgresource_has_value( const LCFGResource * res );
 
-char * lcfgresource_get_value( const LCFGResource * res );
+const char * lcfgresource_get_value( const LCFGResource * res );
 
 bool lcfgresource_set_value( LCFGResource * res,
                              char * new_value )
@@ -236,7 +236,7 @@ bool lcfgresource_value_add_tags( LCFGResource * res,
 /* Resources: Derivations */
 
 bool lcfgresource_has_derivation( const LCFGResource * res );
-char * lcfgresource_get_derivation( const LCFGResource * res );
+const char * lcfgresource_get_derivation( const LCFGResource * res );
 bool lcfgresource_set_derivation( LCFGResource * res, char * new_value )
   __attribute__((warn_unused_result));
 bool lcfgresource_add_derivation( LCFGResource * resource,
@@ -247,7 +247,7 @@ bool lcfgresource_add_derivation( LCFGResource * resource,
 
 bool lcfgresource_valid_context( const char * expr );
 bool lcfgresource_has_context( const LCFGResource * res );
-char * lcfgresource_get_context( const LCFGResource * res );
+const char * lcfgresource_get_context( const LCFGResource * res );
 bool lcfgresource_set_context( LCFGResource * res, char * new_value );
 bool lcfgresource_add_context( LCFGResource * res,
                                const char * extra_context )
@@ -256,7 +256,7 @@ bool lcfgresource_add_context( LCFGResource * res,
 /* Resources: Comments */
 
 bool lcfgresource_has_comment( const LCFGResource * res );
-char * lcfgresource_get_comment( const LCFGResource * res );
+const char * lcfgresource_get_comment( const LCFGResource * res );
 bool lcfgresource_set_comment( LCFGResource * res, char * new_value );
 
 /* Resources: priority */

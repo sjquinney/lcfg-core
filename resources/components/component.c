@@ -376,7 +376,7 @@ bool lcfgcomponent_has_name(const LCFGComponent * comp) {
  * @return The @e name for the component (possibly @c NULL).
  */
 
-char * lcfgcomponent_get_name(const LCFGComponent * comp) {
+const char * lcfgcomponent_get_name(const LCFGComponent * comp) {
   assert( comp != NULL );
 
   return comp->name;
