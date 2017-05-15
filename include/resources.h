@@ -168,6 +168,8 @@ bool lcfgresource_set_value( LCFGResource * res,
 bool lcfgresource_unset_value( LCFGResource * res )
   __attribute__((warn_unused_result));
 
+bool lcfgresource_value_needs_encode( const LCFGResource * res );
+
 char * lcfgresource_enc_value( const LCFGResource * res );
 
 /* Resources: Value Mutations */

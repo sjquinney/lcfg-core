@@ -678,7 +678,7 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
      if nothing else is available. */
 
   const char * new_value = NULL;
-  const char * new_value_enc = NULL;
+  char * new_value_enc = NULL;
   if ( lcfgdiffresource_has_new(resdiff) ) {
     const LCFGResource * new_res = lcfgdiffresource_get_new(resdiff);
 

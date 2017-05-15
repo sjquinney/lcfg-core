@@ -1080,7 +1080,7 @@ static const char unsafe_chars[] = "\r\n&";
  *
  */
 
-bool lcfgresource_value_needs_encode( const LCFGResource res ) {
+bool lcfgresource_value_needs_encode( const LCFGResource * res ) {
   assert( res != NULL );
 
   if ( !lcfgresource_has_value(res) ) return false;
