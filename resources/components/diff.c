@@ -609,6 +609,29 @@ bool lcfgdiffcomponent_has_resource( const LCFGDiffComponent * list,
 }
 
 /**
+ * Check if component was prodded
+ *
+ * The ngeneric framework has support for @e prodding the component to
+ * force a reconfiguration action to take place even when no other
+ * resources have changed. This function will check if the component
+ * diff contains a resource with the name @c ng_prod which has a
+ * changed value.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent to be checked
+ *
+ * @return Boolean which indicates if the component was prodded
+ *
+ */
+
+bool lcfgdiffcomponent_was_prodded( const LCFGDiffComponent * compdiff ) {
+  
+  const LCFGDiffResource * resdiff =
+    lcfgdiffcomponent_find_resource( compdiff, "ng_prod" );
+
+  return ( resdiff != NULL && lcfgdiffresource_is_changed(resdiff) );
+}
+
+/**
  * @brief Format the component diff for a @e hold file
  *
  * The LCFG client supports a @e secure mode which can be used to hold

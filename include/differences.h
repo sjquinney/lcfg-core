@@ -306,6 +306,10 @@ LCFGStatus lcfgdiffprofile_modified( const LCFGDiffProfile * profdiff,
                                     LCFGTagList ** comp_names )
   __attribute__((warn_unused_result));
 
+bool lcfgdiffcomponent_was_prodded( const LCFGDiffComponent * compdiff );
+
+bool lcfgdiffprofile_component_was_prodded( const LCFGDiffProfile * profdiff,
+					    const char * comp_name );
 
 #endif /* LCFG_CORE_DIFFERENCES_H */
 

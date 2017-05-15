@@ -718,5 +718,29 @@ LCFGStatus lcfgdiffprofile_modified( const LCFGDiffProfile * profdiff,
                                          comp_names );
 }
 
+/**
+ * Check if a particular component was prodded
+ *
+ * The ngeneric framework has support for @e prodding the component to
+ * force a reconfiguration action to take place even when no other
+ * resources have changed. This function will check if the profile
+ * diff contains a diff for the named component and that it contains a
+ * resource with the name @c ng_prod which has a changed value.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent to be checked
+ * @param[in] comp_name Name of component to be checked
+ *
+ * @return Boolean which indicates if the component was prodded
+ *
+ */
+
+bool lcfgdiffprofile_component_was_prodded( const LCFGDiffProfile * profdiff,
+					    const char * comp_name ) {
+
+  const LCFGDiffComponent * compdiff =
+    lcfgdiffprofile_find_component( profdiff, comp_name );
+
+  return ( compdiff != NULL && lcfgdiffcomponent_was_prodded(compdiff) );
+}
 
 /* eof */
