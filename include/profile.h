@@ -56,7 +56,7 @@ time_t lcfgprofile_get_mtime( const LCFGProfile * profile );
 
 bool lcfgprofile_get_meta( const LCFGProfile * profile,
                            const char * metakey,
-                           char ** metavalue )
+                           const char ** metavalue )
   __attribute__((warn_unused_result));
 
 char * lcfgprofile_nodename( const LCFGProfile * profile );

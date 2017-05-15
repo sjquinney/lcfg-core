@@ -466,7 +466,7 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
   /* Only use the value for profile.node when the namespace has not
      been specified */
 
-  char * node = NULL;
+  const char * node = NULL;
   if ( namespace == NULL ) {
     if ( !lcfgprofile_get_meta( profile, "node", &node ) ) {
       /* Just ignore problems with fetching profile.node value */
