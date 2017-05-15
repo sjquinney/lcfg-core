@@ -727,7 +727,7 @@ LCFGStatus lcfgdiffprofile_modified( const LCFGDiffProfile * profdiff,
  * diff contains a diff for the named component and that it contains a
  * resource with the name @c ng_prod which has a changed value.
  *
- * @param[in] compdiff Pointer to @c LCFGDiffComponent to be checked
+ * @param[in] profdiff Pointer to @c LCFGDiffProfile to be searched
  * @param[in] comp_name Name of component to be checked
  *
  * @return Boolean which indicates if the component was prodded
@@ -748,7 +748,7 @@ bool lcfgdiffprofile_component_was_prodded( const LCFGDiffProfile * profdiff,
  *
  * Check if there are changes for the named component in the diff.
  *
- * @param[in] compdiff Pointer to @c LCFGDiffComponent to be checked
+ * @param[in] profdiff Pointer to @c LCFGDiffProfile to be searched
  * @param[in] comp_name Name of component to be checked
  *
  * @return Boolean which indicates if the component is changed
