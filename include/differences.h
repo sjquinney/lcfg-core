@@ -137,6 +137,9 @@ bool lcfgdiffcomponent_is_modified( const LCFGDiffComponent * compdiff );
 
 bool lcfgdiffcomponent_is_removed( const LCFGDiffComponent * compdiff );
 
+bool lcfgdiffcomponent_resource_is_changed( const LCFGDiffProfile * compdiff,
+					    const char * res_name );
+
 LCFGChange lcfgdiffcomponent_insert_next( LCFGDiffComponent * list,
                                           LCFGSListNode     * node,
                                           LCFGDiffResource  * item )

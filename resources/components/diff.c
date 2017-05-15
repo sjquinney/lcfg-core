@@ -632,6 +632,28 @@ bool lcfgdiffcomponent_was_prodded( const LCFGDiffComponent * compdiff ) {
 }
 
 /**
+ * Check if a particular resource is changed
+ *
+ * Check if there are changes for the named resource in the diff.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent to be searched
+ * @param[in] res_name Name of resource to be checked
+ *
+ * @return Boolean which indicates if the resource is changed
+ *
+ */
+
+bool lcfgdiffcomponent_resource_is_changed( const LCFGDiffProfile * compdiff,
+					    const char * res_name ) {
+
+  const LCFGDiffResource * resdiff =
+    lcfgdiffprofile_find_resource( compdiff, res_name );
+
+  return ( resdiff != NULL && lcfgdiffresource_is_changed(resdiff) );
+}
+
+
+/**
  * @brief Format the component diff for a @e hold file
  *
  * The LCFG client supports a @e secure mode which can be used to hold
