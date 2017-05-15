@@ -1063,6 +1063,42 @@ char * lcfgresource_get_value( const LCFGResource * res ) {
   return res->value;
 }
 
+static const char unsafe_chars[] = "\r\n&";
+
+/**
+ * Test if the resource values needs encoding in status files
+ *
+ * This can be used to test if the @e value for the resource contains
+ * any characters which need to be encoded before insertion into @e
+ * status and @e hold files. This checks for significant whitespace
+ * (e.g. newlines and carriage returns) as well as the @c '&'
+ * (ampersand) character which is used when encoding characters.
+ * 
+ * @param[in] res Pointer to an @c LCFGResource
+ *
+ * @return Boolean which indicates if encoding is required
+ *
+ */
+
+bool lcfgresource_value_needs_encode( const LCFGResource res ) {
+  assert( res != NULL );
+
+  if ( !lcfgresource_has_value(res) ) return false;
+
+  bool needs_encode = false;
+
+  const char * value = lcfgresource_get_value(res);
+  char * ptr;
+  for ( ptr = (char *) value; *ptr != '\0'; ptr++ ) {
+    if ( strchr( unsafe_chars, *ptr ) ) {
+      needs_encode = true;
+      break;
+    }
+  }
+
+  return needs_encode;
+}
+
 /**
  * @brief Get an encoded version of the value for the resource
  *
@@ -1084,7 +1120,6 @@ char * lcfgresource_get_value( const LCFGResource * res ) {
  * @return The encoded @e value string for the resource (call @c free() when no longer required) or a @c NULL value
  */
 
-
 char * lcfgresource_enc_value( const LCFGResource * res ) {
   assert( res != NULL );
 
@@ -1097,9 +1132,9 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
   /* The following characters need to be encoded to ensure they do not
      corrupt the format of status files. */
 
-  static const char cr[]  = "&#xD;";   /* +5 \r */
-  static const char lf[]  = "&#xA;";   /* +5 \n */
-  static const char amp[] = "&#x26;";  /* +6    */
+  static const char cr[]  = "&#xD;";   /* \r */
+  static const char lf[]  = "&#xA;";   /* \n */
+  static const char amp[] = "&#x26;";  /* &  */
 
   static const size_t cr_len  = sizeof(cr)  - 1;
   static const size_t lf_len  = sizeof(lf)  - 1;
@@ -1140,12 +1175,12 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
     switch(*ptr)
       {
       case '\r':
-	to = stpncpy( to, cr, 5 );
+	to = stpncpy( to, cr, cr_len );
       case '\n':
-	to = stpncpy( to, lf, 5 );
+	to = stpncpy( to, lf, lf_len );
 	break;
       case '&':
-	to = stpncpy( to, amp, 6 );
+	to = stpncpy( to, amp, amp_len );
 	break;
       default:
 	*to = *ptr;
@@ -2906,12 +2941,14 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
      Normally if there is no value specified for the resource the '='
      separator is still added. */
 
-  char * value = NULL;
+  const char * value = NULL;
+  char * value_enc = NULL;
   size_t value_len = 0;
   if ( !(options&LCFG_OPT_NOVALUE) ) {
 
-    if ( options&LCFG_OPT_ENCODE ) {
-      value = lcfgresource_enc_value(res);
+    if ( options&LCFG_OPT_ENCODE && lcfgresource_value_needs_encode(res) ) {
+      value_enc = lcfgresource_enc_value(res);
+      value = value_enc;
     } else {
       value = lcfgresource_get_value(res);
     }
@@ -2923,11 +2960,10 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
 
   /* Context */
 
-  char * context = NULL;
+  const char * context = NULL;
   size_t context_len = 0;
 
-  if ( !(options&LCFG_OPT_NOCONTEXT) &&
-       lcfgresource_has_context(res) ) {
+  if ( !(options&LCFG_OPT_NOCONTEXT) && lcfgresource_has_context(res) ) {
 
     context = lcfgresource_get_context(res);
     context_len = strlen(context);
@@ -2965,8 +3001,7 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
   ssize_t write_len = lcfgresource_insert_key( res, prefix, NULL,
                                                LCFG_RESOURCE_SYMBOL_VALUE, to );
 
-  if ( write_len != key_len )
-    return -1;
+  if ( write_len != key_len ) return -1;
 
   to += write_len;
 
@@ -2991,9 +3026,9 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
     if ( value_len > 0 )
       to = stpncpy( to, value, value_len );
 
-    if ( options&LCFG_OPT_ENCODE )
-      free(value);
   }
+
+  free(value_enc);
 
   /* Optional newline at the end of the string */
 

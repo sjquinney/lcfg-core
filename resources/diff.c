@@ -658,23 +658,39 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
   /* Get the value for the old resource or default to an empty string
      if nothing else is available. */
 
-  char * old_value = NULL;
+  const char * old_value = NULL;
+  char * old_value_enc = NULL;
   if ( lcfgdiffresource_has_old(resdiff) ) {
     const LCFGResource * old_res = lcfgdiffresource_get_old(resdiff);
 
-    if ( lcfgresource_has_value(old_res) )
-      old_value = lcfgresource_enc_value(old_res);
+    if ( lcfgresource_has_value(old_res) ) {
+      if ( lcfgresource_value_needs_encode(old_res) ) {
+	old_value_enc = lcfgresource_enc_value(old_res);
+	old_value = old_value_enc;
+      } else {
+	old_value = lcfgresource_get_value(old_res);
+      }
+    }
+
   }
 
   /* Get the value for the new resource or default to an empty string
      if nothing else is available. */
 
-  char * new_value = NULL;
+  const char * new_value = NULL;
+  const char * new_value_enc = NULL;
   if ( lcfgdiffresource_has_new(resdiff) ) {
     const LCFGResource * new_res = lcfgdiffresource_get_new(resdiff);
 
-    if ( lcfgresource_has_value(new_res) )
-      new_value = lcfgresource_enc_value(new_res);
+    if ( lcfgresource_has_value(new_res) ) {
+      if ( lcfgresource_value_needs_encode(new_res) ) {
+	new_value_enc = lcfgresource_enc_value(new_res);
+	new_value = new_value_enc;
+      } else {
+	new_value = lcfgresource_get_value(new_res);
+      }
+    }
+
   }
 
   size_t prefix_len = 0;
@@ -770,8 +786,8 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
 
   *to = '\0';
 
-  free(old_value);
-  free(new_value);
+  free(old_value_enc);
+  free(new_value_enc);
 
   assert( ( *result + new_len ) == to );
 
