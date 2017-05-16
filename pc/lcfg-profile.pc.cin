@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@LIB_INSTALL_DIR@
+includedir=@INCLUDE_INSTALL_DIR@
+modules=1
+
+Name: lcfg-profile
+Version: @LCFG_VERSION@
+Description: LCFG profile handling library
+Requires: lcfg-resources = @LCFG_VERSION@, lcfg-packages = @LCFG_VERSION@
+Libs: -L${libdir} -llcfg_profile
+Cflags: -I${includedir}

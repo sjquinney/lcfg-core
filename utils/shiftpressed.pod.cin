@@ -1,0 +1,25 @@
+=head1 NAME
+
+shiftpressed - detect if shift key pressed
+
+=head1 SYNOPSIS
+
+ 
+@LCFGSBIN@/shiftpressed
+
+=head1 DESCRIPTION
+
+This command tests if the shift key is pressed on the console
+connected to the stdin. It returns an exit status of 0 if the
+key is pressed, 2 if it is not, and 1 if the stdout is not a
+console or the state cannot be determined for some other reason.
+
+=head1 PLATFORMS
+
+Redhat7, Redhat9
+
+=head1 AUTHOR
+
+@LCFG_AUTHOR@
+
+=cut

@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@LIB_INSTALL_DIR@
+includedir=@INCLUDE_INSTALL_DIR@
+modules=1
+
+Name: lcfg-context
+Version: @LCFG_VERSION@
+Description: LCFG context handling library
+Requires: lcfg-utils = @LCFG_VERSION@
+Libs: -L${libdir} -llcfg_context
+Cflags: -I${includedir}

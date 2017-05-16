@@ -1,0 +1,96 @@
+Package Merge Rules
+===================
+
+If a package spec is being "merged" into a list and an entry with the
+same name and architecture has previously been stored then a conflict
+occurs. Various rules are supported which control how the conflict is
+resolved (or not). They can be used in various combinations.
+
+1. KEEP ALL
+------------
+
+Ignore any conflicts and just keep everything.
+
+2. IDENTICAL
+------------
+
+Take latter entry if all of (name, architecture, version, release,
+flags and context) are same.
+
+The comparison deliberately ignores the prefix, priority (typically
+the same if contexts are same) and derivation.
+
+By taking the latter entry the derivation is updated.
+
+3. PRIORITY
+-----------
+
+Take the latter entry if it has a higher priority.
+
+By taking the latter entry the derivation is updated.
+
+4. PREFIX
+----------
+
+If the latter package spec has a prefix (-, ?, +) then attempt to use
+it to resolve the conflict.
+
+If the prefix is '+' the latter package spec will always be selected
+even if this results in a "downgrade" of the package version.
+
+If the prefix is '-' this package spec will not appear in the final
+list. If there is a conflict then the previous package will be
+removed from the list.
+
+If the prefix is '?' a package spec will only be "merged" if a
+previous entry is found (i.e. a conflict has occurred).
+
+Use Cases
+==========
+
+1. Reading an RPM directory
+---------------------------
+
+The most simple case - there won't be duplicates. Also context,
+priority and prefix are not significant. Keep ALL.
+
+2. Reading rpmlist
+------------------
+
+Ignore IDENTICAL entries (just used to drop accidental duplicates).
+Keep ALL.
+
+Context and prefix are not significant in this case.
+
+3. Reading rpmcfg
+------------------
+
+Ignore IDENTICAL entries (quite easy to get duplicates where some
+packages have nothing specified for the architecture and others have
+the base architecture).
+
+Context and prefix are not significant in this case.
+
+Aside: there's a weird sub-case here which is used by the rpmcache
+component. It enables an "all contexts" mode which is used to also
+cache package versions that are only applicable in particular
+contexts. In that case it becomes a "keep ALL" scenario. Altering the
+set of installed packages based on contexts is crazy and we do not
+actively use rpmcache so we shouldn't worry too much about this
+requirement...
+
+4. Reading XML profile
+----------------------
+
+Ignore IDENTICAL entries.
+Use PRIORITY to attempt to resolve any further conflicts.
+
+Prefix is not important in this case.
+
+5. Reading source profile
+-------------------------
+
+Ignore IDENTICAL entries.
+Use PREFIX to attempt to resolve any further conflicts.
+
+Priority is not important in this case.

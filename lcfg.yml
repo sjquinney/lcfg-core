@@ -1,0 +1,26 @@
+--- !!perl/hash:LCFG::Build::PkgSpec 
+abstract: LCFG Core libraries
+author: 
+  - Stephen Quinney <squinney@inf.ed.ac.uk>
+base: ~
+build: 
+  gencmake: 1
+  remove_input_after_translate: 1
+  translate_before_pack: 1
+date: 12/05/17 16:25:45
+group: LCFG
+license: GPLv2
+name: lcfg-core
+orgident: org.lcfg
+platforms: 
+  - ScientificLinux7
+release: 1
+schema: 1
+translate: 
+  - "*.cin"
+vcs: 
+  checkcommitted: 1
+  genchangelog: 1
+  logname: ChangeLog
+vendor: University of Edinburgh
+version: 1.38.1

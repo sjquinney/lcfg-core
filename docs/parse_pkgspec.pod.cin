@@ -1,0 +1,98 @@
+=head1 NAME
+
+parse_pkgspec - Parse LCFG package specifications
+
+=head1 VERSION
+
+This documentation refers to parse_pkgspec version @LCFG_VERSION@
+
+=head1 SYNOPSIS
+
+parse_pkgspec [-p|--prefix][-n|--name][-v|--version][-a|--arch][-f|--flags][-e|--eval] I<package_spec_string>
+
+=head1 DESCRIPTION
+
+This tool can be used to parse an LCFG package specification into the
+various separate fields.
+
+=head1 OPTIONS
+
+By default all package specification fields will be printed (including
+those which have no value). If any of the I<print> options are
+selected then the behaviour is changed so that by default nothing is
+printed and each required field has to be specified. This is mostly
+handy when it is necessary to get the value for a single field
+(e.g. the package I<name>).
+
+=over
+
+=item C<-e|--eval>
+
+By default each field is printed as a key and value pair separate by a
+colon and single space. Alternatively enabling this option will result
+in the output being generated in a style which is useful for
+evaluation in a shell script. For example, each line will then be like
+C<export Name='foo'>.
+
+=item C<-n|--name>
+
+Print the package name.
+
+=item C<-v|--version>
+
+Print the package version.
+
+=item C<-r|--release>
+
+Print the package release.
+
+=item C<-a|--arch>
+
+Print the package architecture.
+
+=item C<-f|--flags>
+
+Print the package flags.
+
+=item C<-p|--prefix>
+
+Print the package prefix.
+
+=item C<-c|--context>
+
+Print the package context.
+
+=back
+
+=head1 EXIT STATUS
+
+If the package specification is successfully parsed this script will
+exit with a status of zero. If a problem occurs it will exit with a
+non-zero status.
+
+=head1 PLATFORMS
+
+This is the list of platforms on which we have tested this
+software. We expect this software to work on any Unix-like platform
+which is supported by Perl.
+
+@LCFG_PLATFORMS@
+
+=head1 BUGS AND LIMITATIONS
+
+There are no known bugs in this application. Please report any
+problems to bugs@lcfg.org, feedback and patches are also always very
+welcome.
+
+=head1 AUTHOR
+
+    @LCFG_AUTHOR@
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (C) 2007-2015 University of Edinburgh. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GPL, version 2 or later.
+
+=cut
