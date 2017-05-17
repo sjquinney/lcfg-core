@@ -6,7 +6,7 @@ License:        @LCFG_LICENSE@
 Group:          LCFG/Components
 Packager:       @LCFG_AUTHOR@
 Source:         @LCFG_TARNAME@
-#Provides:       lcfg-utils
+Provides:       lcfg-utils
 BuildRequires:  cmake >= 2.6.0, pkgconfig
 BuildRequires:  libxml2-devel
 BuildRequires:  bison, flex
@@ -50,9 +50,6 @@ make -C docs/latex
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-# Removed for now to avoid conflict with old lcfg-utils package
-rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec $RPM_BUILD_ROOT/usr/sbin/daemon $RPM_BUILD_ROOT/usr/sbin/lcfgmsg $RPM_BUILD_ROOT/usr/sbin/shiftpressed
-
 
 %post -p /sbin/ldconfig
 
@@ -64,10 +61,10 @@ rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec $RPM_BUILD_ROOT/usr/sbin/daemon $RPM
 #%doc @LCFGPOD@/*.pod
 #%{_mandir}/man1/*
 #%{_mandir}/man3/*
-#%{_bindir}/parse_pkgspec
-#%{_sbindir}/daemon
-#%{_sbindir}/lcfgmsg
-#%{_sbindir}/shiftpressed
+%{_bindir}/parse_pkgspec
+%{_sbindir}/daemon
+%{_sbindir}/lcfgmsg
+%{_sbindir}/shiftpressed
 %{_bindir}/lcfg_xml_reader
 %{_libdir}/liblcfg_bdb.so.*
 %{_libdir}/liblcfg_utils.so.*
