@@ -50,6 +50,8 @@ make -C docs/latex
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+# Conflicts with lcfg-pkgtools so need to remove for now
+rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 
 %post -p /sbin/ldconfig
 
@@ -61,7 +63,7 @@ make install DESTDIR=$RPM_BUILD_ROOT
 #%doc @LCFGPOD@/*.pod
 #%{_mandir}/man1/*
 #%{_mandir}/man3/*
-%{_bindir}/parse_pkgspec
+#%{_bindir}/parse_pkgspec
 %{_sbindir}/daemon
 %{_sbindir}/lcfgmsg
 %{_sbindir}/shiftpressed
