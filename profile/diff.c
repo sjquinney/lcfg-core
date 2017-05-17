@@ -644,6 +644,33 @@ void lcfgdiffprofile_sort( LCFGDiffProfile * list ) {
 
 }
 
+/**
+ * Get the names of the components for a particular type of change
+ *
+ * This searches through the list of components for the @c
+ * LCFGDiffProfile to find those which are changed in the specified
+ * ways (.e.g. added, removed, modified). It is possible to combine
+ * change types so that a single search can match multiple change
+ * types. This is done by using a bitwise-OR of the appropriate values
+ * (e.g. @c LCFG_CHANGE_ADDED|LCFG_CHANGE_MODIFIED).
+ *
+ * If only a single type of change is required then it may be simpler
+ * to use one of @c lcfgdiffprofile_modified(), @c
+ * lcfgdiffprofile_added() or @c lcfgdiffprofile_removed(). If a
+ * list of all changed components (of any type) is required then the @c
+ * lcfgdiffprofile_changed() is most suitable.
+ *
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] profdiff Pointer to @c LCFGDiffProfile
+ * @param[in] change_type Integer indicating types of change
+ * @param[out] result Reference to pointer to @c LCFGTagList of component names
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgdiffprofile_names_for_type( const LCFGDiffProfile * profdiff,
                                            LCFGChange change_type,
                                            LCFGTagList ** result ) {
@@ -686,6 +713,25 @@ LCFGStatus lcfgdiffprofile_names_for_type( const LCFGDiffProfile * profdiff,
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
+/**
+ * Get the names of the changed components.
+ *
+ * This searches through the list of components for the @c
+ * LCFGDiffProfile and returns a list of names for those which are
+ * changed in any way (may be added, removed or modified).
+ *
+ * This uses @c lcfgdiffprofile_names_for_type() to do the search.
+ *
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] profdiff Pointer to @c LCFGDiffProfile
+ * @param[out] result Reference to pointer to @c LCFGTagList of component names
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgdiffprofile_changed( const LCFGDiffProfile * profdiff,
                                     LCFGTagList ** comp_names ) {
 
@@ -693,6 +739,25 @@ LCFGStatus lcfgdiffprofile_changed( const LCFGDiffProfile * profdiff,
                     LCFG_CHANGE_ADDED|LCFG_CHANGE_REMOVED|LCFG_CHANGE_MODIFIED,
                                          comp_names );
 }
+
+/**
+ * Get the names of the added components.
+ *
+ * This searches through the list of components for the @c
+ * LCFGDiffProfile and returns a list of names for those which are
+ * newly added.
+ *
+ * This uses @c lcfgdiffprofile_names_for_type() to do the search.
+ *
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] profdiff Pointer to @c LCFGDiffProfile
+ * @param[out] result Reference to pointer to @c LCFGTagList of component names
+ *
+ * @return Status value indicating success of the process
+ *
+ */
 
 LCFGStatus lcfgdiffprofile_added( const LCFGDiffProfile * profdiff,
                                   LCFGTagList ** comp_names ) {
@@ -702,6 +767,25 @@ LCFGStatus lcfgdiffprofile_added( const LCFGDiffProfile * profdiff,
                                          comp_names);
 }
 
+/**
+ * Get the names of the removed components.
+ *
+ * This searches through the list of components for the @c
+ * LCFGDiffProfile and returns a list of names for those which are
+ * removed.
+ *
+ * This uses @c lcfgdiffprofile_names_for_type() to do the search.
+ *
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] profdiff Pointer to @c LCFGDiffProfile
+ * @param[out] result Reference to pointer to @c LCFGTagList of component names
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgdiffprofile_removed( const LCFGDiffProfile * profdiff,
                                     LCFGTagList ** comp_names ) {
 
@@ -709,6 +793,26 @@ LCFGStatus lcfgdiffprofile_removed( const LCFGDiffProfile * profdiff,
                                          LCFG_CHANGE_REMOVED,
                                          comp_names );
 }
+
+/**
+ * Get the names of the modified components.
+ *
+ * This searches through the list of components for the @c
+ * LCFGDiffProfile and returns a list of names for those which have
+ * been modified (note that this does NOT include those which have
+ * been added or removed).
+ *
+ * This uses @c lcfgdiffprofile_names_for_type() to do the search.
+ *
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] profdiff Pointer to @c LCFGDiffProfile
+ * @param[out] result Reference to pointer to @c LCFGTagList of component names
+ *
+ * @return Status value indicating success of the process
+ *
+ */
 
 LCFGStatus lcfgdiffprofile_modified( const LCFGDiffProfile * profdiff,
                                      LCFGTagList ** comp_names ) {
