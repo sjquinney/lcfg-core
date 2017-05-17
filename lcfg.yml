@@ -7,14 +7,14 @@ build:
   gencmake: 1
   remove_input_after_translate: 1
   translate_before_pack: 1
-date: 17/05/17 09:51:45
+date: 17/05/17 10:30:20
 group: LCFG
 license: GPLv2
 name: lcfg-core
 orgident: org.lcfg
 platforms: 
   - ScientificLinux7
-release: 2
+release: 1
 schema: 1
 translate: 
   - "*.cin"
@@ -23,4 +23,4 @@ vcs:
   genchangelog: 1
   logname: ChangeLog
 vendor: University of Edinburgh
-version: 1.39.0
+version: 1.39.1

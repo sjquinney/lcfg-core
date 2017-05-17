@@ -1,6 +1,15 @@
 2017-05-17  SVN: new release
 
-	* Release: 1.39.0
+	* Release: 1.39.1
+
+2017-05-17 10:30  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, specfile: Do not install parse_pkgspec in the package
+	  to avoid conflict with lcfg-pkgtools
+
+2017-05-17 09:51  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.39.0
 
 2017-05-17 09:47  squinney@INF.ED.AC.UK
 
