@@ -22,7 +22,7 @@
 
 static LCFGStatus invalid_template( char ** msg, const char * base, ... ) {
 
-  const char * fmt = "Invalid template (%s)";
+  const char * fmt = "%s";
 
   va_list ap;
   va_start( ap, base );
@@ -287,7 +287,7 @@ LCFGStatus lcfgtemplate_from_string( const char * input,
 
     char * newtmpl = strdup(token);
     if ( !lcfgtemplate_set_tmpl( new_template, newtmpl ) ) {
-      status = invalid_template( msg, "bad value '%s'", newtmpl );
+      status = invalid_template( msg, "bad resource template '%s'", newtmpl );
       free(newtmpl);
     }
 
