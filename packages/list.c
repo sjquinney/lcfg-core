@@ -1079,13 +1079,9 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     goto cleanup;
   }
 
-  /* Temporary file for cpp output, honour any TMPDIR env variable */
+  /* Temporary file for cpp output */
 
-  char * tmpdir = getenv("TMPDIR");
-  if ( tmpdir == NULL )
-    tmpdir = "/tmp";
-
-  tmpfile = lcfgutils_catfile( tmpdir, ".lcfg.XXXXXX" );
+  tmpfile = lcfgutils_safe_tmpfile(NULL);
 
   int tmpfd = mkstemp(tmpfile);
   if ( tmpfd == -1 ) {
