@@ -726,7 +726,7 @@ LCFGStatus lcfgdiffprofile_names_for_type( const LCFGDiffProfile * profdiff,
  * the @c lcfgtaglist_relinquish() function should be called.
  *
  * @param[in] profdiff Pointer to @c LCFGDiffProfile
- * @param[out] result Reference to pointer to @c LCFGTagList of component names
+ * @param[out] comp_names Reference to pointer to @c LCFGTagList of component names
  *
  * @return Status value indicating success of the process
  *
@@ -753,7 +753,7 @@ LCFGStatus lcfgdiffprofile_changed( const LCFGDiffProfile * profdiff,
  * the @c lcfgtaglist_relinquish() function should be called.
  *
  * @param[in] profdiff Pointer to @c LCFGDiffProfile
- * @param[out] result Reference to pointer to @c LCFGTagList of component names
+ * @param[out] comp_names Reference to pointer to @c LCFGTagList of component names
  *
  * @return Status value indicating success of the process
  *
@@ -780,7 +780,7 @@ LCFGStatus lcfgdiffprofile_added( const LCFGDiffProfile * profdiff,
  * the @c lcfgtaglist_relinquish() function should be called.
  *
  * @param[in] profdiff Pointer to @c LCFGDiffProfile
- * @param[out] result Reference to pointer to @c LCFGTagList of component names
+ * @param[out] comp_names Reference to pointer to @c LCFGTagList of component names
  *
  * @return Status value indicating success of the process
  *
@@ -808,7 +808,7 @@ LCFGStatus lcfgdiffprofile_removed( const LCFGDiffProfile * profdiff,
  * the @c lcfgtaglist_relinquish() function should be called.
  *
  * @param[in] profdiff Pointer to @c LCFGDiffProfile
- * @param[out] result Reference to pointer to @c LCFGTagList of component names
+ * @param[out] comp_names Reference to pointer to @c LCFGTagList of component names
  *
  * @return Status value indicating success of the process
  *

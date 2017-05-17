@@ -1246,7 +1246,7 @@ LCFGStatus lcfgdiffcomponent_names_for_type(const LCFGDiffComponent * compdiff,
  * the @c lcfgtaglist_relinquish() function should be called.
  *
  * @param[in] compdiff Pointer to @c LCFGDiffComponent
- * @param[out] result Reference to pointer to @c LCFGTagList of resource names
+ * @param[out] res_names Reference to pointer to @c LCFGTagList of resource names
  *
  * @return Status value indicating success of the process
  *
@@ -1273,7 +1273,7 @@ LCFGStatus lcfgdiffcomponent_changed( const LCFGDiffComponent * compdiff,
  * the @c lcfgtaglist_relinquish() function should be called.
  *
  * @param[in] compdiff Pointer to @c LCFGDiffComponent
- * @param[out] result Reference to pointer to @c LCFGTagList of resource names
+ * @param[out] res_names Reference to pointer to @c LCFGTagList of resource names
  *
  * @return Status value indicating success of the process
  *
@@ -1300,7 +1300,7 @@ LCFGStatus lcfgdiffcomponent_added( const LCFGDiffComponent * compdiff,
  * the @c lcfgtaglist_relinquish() function should be called.
  *
  * @param[in] compdiff Pointer to @c LCFGDiffComponent
- * @param[out] result Reference to pointer to @c LCFGTagList of resource names
+ * @param[out] res_names Reference to pointer to @c LCFGTagList of resource names
  *
  * @return Status value indicating success of the process
  *
@@ -1328,7 +1328,7 @@ LCFGStatus lcfgdiffcomponent_removed( const LCFGDiffComponent * compdiff,
  * the @c lcfgtaglist_relinquish() function should be called.
  *
  * @param[in] compdiff Pointer to @c LCFGDiffComponent
- * @param[out] result Reference to pointer to @c LCFGTagList of resource names
+ * @param[out] res_names Reference to pointer to @c LCFGTagList of resource names
  *
  * @return Status value indicating success of the process
  *
