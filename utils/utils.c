@@ -21,7 +21,48 @@
 #include <unistd.h>
 #include <assert.h>
 
+#include "common.h"
 #include "utils.h"
+
+static char * tmp_dir_names[] = {
+  "LCFGTMP", "TMPDIR", "TEMP", "TMP", NULL
+};
+
+#ifndef LCFG_DEFAULT_TMP
+#define LCFG_DEFAULT_TMP "/tmp"
+#endif
+
+static const char tmp_default_dir[] = LCFG_DEFAULT_TMP;
+
+/**
+ * Find the directory for temporary files
+ *
+ * This will search for one of the following environment variables (in
+ * this order) @c LCFGTMP, @c TMPDIR, @c TEMP and @c TMP. The first
+ * variable to have a non-empty value will be used as the directory
+ * for temporary files. If none of those have a value then the default
+ * of @c /tmp will be used.
+ *
+ * @return Path to the directory for temporary files
+ *
+ */
+
+const char * lcfgutils_tmp_dirname(void) {
+
+  const char * tmpdir = NULL;
+
+  char ** ptr;
+  for ( ptr = tmp_dir_names; *ptr != NULL && tmpdir == NULL; ptr++ ) {
+    const char * env_val = getenv(*ptr);
+    if ( !isempty(env_val) )
+      tmpdir = env_val;
+  }
+
+  if ( tmpdir == NULL )
+    tmpdir = tmp_default_dir;
+
+  return tmpdir;
+}
 
 /**
  * @brief Generate a safe temporary file name
@@ -31,33 +72,37 @@
  * mkstemp. The particular advantage of being in the same directory as
  * the target file is that it can always be renamed atomically.
  *
- * If the target file path is @c NULL then this will return @c NULL.
+ * If the target file path is @c NULL then this will use the @c
+ * lcfgutils_tmp_dirname() function to select the appropriate
+ * directory for the temporary file.
+ *
  * If the memory allocation for the new string is not successful
  * the @c exit() function will be called with a non-zero value.
  *
- * @param[in] path Pointer to target file name
+ * @param[in] path Pointer to target file name (may be @c NULL)
  *
  * @return Pointer to a new string (call @c free(3) when no longer required)
  * 
  */
 
+static const char tmp_template[] = ".lcfg.XXXXXX";
+const size_t tmp_template_len = sizeof(tmp_template) - 1;
+
 char * lcfgutils_safe_tmpfile( const char * path ) {
 
-  if ( path == NULL ) {
-    perror("Cannot generate a temporary file name from a NULL");
-    exit(EXIT_FAILURE);
-  }
-
   size_t base_len = 0;
-  char * match = strrchr( path, '/' );
-  if ( match != NULL ) {
-    base_len = match - path + 1;
+  if ( path == NULL ) {
+    path = lcfgutils_tmp_dirname();
+    base_len = strlen(path);
+  } else {
+    const char * match = strrchr( path, '/' );
+    if ( match != NULL )
+      base_len = match - path;
   }
 
-  static const char * tmplname = ".lcfg.XXXXXX";
-  size_t tmpl_len = strlen(tmplname);
-
-  size_t new_len = base_len + tmpl_len;
+  size_t new_len = tmp_template_len;
+  if ( base_len > 0 )
+    new_len += ( base_len + 1 ); /* +1 for '/' */
 
   char * result = calloc( ( new_len + 1 ), sizeof(char) );
   if ( result == NULL ) {
@@ -67,10 +112,14 @@ char * lcfgutils_safe_tmpfile( const char * path ) {
 
   char * to = result;
 
-  if ( base_len > 0 )
+  if ( base_len > 0 ) {
     to = stpncpy( to, path, base_len );
 
-  to = stpncpy( to, tmplname, tmpl_len );
+    *to = '/';
+    to++;
+  }
+
+  to = stpncpy( to, tmp_template, tmp_template_len );
 
   *to = '\0';
 
