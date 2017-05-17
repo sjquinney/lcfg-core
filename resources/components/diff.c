@@ -613,9 +613,13 @@ bool lcfgdiffcomponent_has_resource( const LCFGDiffComponent * list,
  *
  * The ngeneric framework has support for @e prodding the component to
  * force a reconfiguration action to take place even when no other
- * resources have changed. This function will check if the component
- * diff contains a resource with the name @c ng_prod which has a
- * changed value.
+ * resources have changed. 
+ *
+ * The component is considered to have been prodded when there is an
+ * entry in the diff for the "ng_prod" resource and it is either
+ * modified or newly added and the new resource has a value. Removing
+ * the resource or setting the value to the empty string does NOT
+ * cause the component to be prodded.
  *
  * @param[in] compdiff Pointer to @c LCFGDiffComponent to be checked
  *
@@ -624,11 +628,25 @@ bool lcfgdiffcomponent_has_resource( const LCFGDiffComponent * list,
  */
 
 bool lcfgdiffcomponent_was_prodded( const LCFGDiffComponent * compdiff ) {
-  
+
+  /* Does not make much sense to prod a component when it is being
+     added or removed */
+
+  if ( lcfgdiffcomponent_get_type(compdiff) != LCFG_CHANGE_MODIFIED )
+    return false;
+
   const LCFGDiffResource * resdiff =
     lcfgdiffcomponent_find_resource( compdiff, "ng_prod" );
 
-  return ( resdiff != NULL && lcfgdiffresource_is_changed(resdiff) );
+  bool prodded = false;
+
+  if ( resdiff != NULL && lcfgdiffresource_has_new(resdiff) ) {
+    const LCFGResource * new_res = lcfgdiffresource_get_new(resdiff);
+    if ( lcfgresource_has_value(new_res) )
+      prodded = true;
+  }
+
+  return prodded;
 }
 
 /**
@@ -643,11 +661,11 @@ bool lcfgdiffcomponent_was_prodded( const LCFGDiffComponent * compdiff ) {
  *
  */
 
-bool lcfgdiffcomponent_resource_is_changed( const LCFGDiffProfile * compdiff,
+bool lcfgdiffcomponent_resource_is_changed( const LCFGDiffComponent * compdiff,
 					    const char * res_name ) {
 
   const LCFGDiffResource * resdiff =
-    lcfgdiffprofile_find_resource( compdiff, res_name );
+    lcfgdiffcomponent_find_resource( compdiff, res_name );
 
   return ( resdiff != NULL && lcfgdiffresource_is_changed(resdiff) );
 }
