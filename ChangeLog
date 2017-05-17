@@ -1,6 +1,105 @@
-2017-05-12  SVN: new release
+2017-05-17  SVN: new release
 
-	* Release: 1.38.1
+	* Release: 1.39.0
+
+2017-05-17 09:47  squinney@INF.ED.AC.UK
+
+	* specfile: Re-enabled the inclusion of various utilities which
+	  were previously provided by lcfg-utils
+
+2017-05-17 09:46  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt: Set better defaults for LCFGTMP and LCFGLOG
+
+2017-05-17 09:42  squinney@INF.ED.AC.UK
+
+	* TODO, lcfg.yml, profile/diff.c, resources/components/diff.c:
+	  Minor docs fixes
+
+2017-05-17 09:39  squinney@INF.ED.AC.UK
+
+	* utils/daemon.c: Added error checking for the chdir call
+
+2017-05-17 09:38  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: Tweaked how
+	  lcfgdiffcomponent_was_prodded decides if a component has been
+	  prodded so that it is more careful
+
+2017-05-17 09:37  squinney@INF.ED.AC.UK
+
+	* include/differences.h: Fixed spec for
+	  lcfgdiffcomponent_resource_is_changed
+
+2017-05-17 09:15  squinney@INF.ED.AC.UK
+
+	* profile/diff.c: Documented functions which return list of
+	  component names for various change types
+
+2017-05-17 09:15  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: Added note about calling
+	  lcfgtaglist_relinquish on list of names
+
+2017-05-17 09:07  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: Documented functions which return
+	  list of resource names for various change types
+
+2017-05-15 19:03  squinney@INF.ED.AC.UK
+
+	* include/differences.h, resources/components/diff.c: Added
+	  lcfgdiffcomponent_resource_is_changed to make it easier to check
+	  if a resource has been changed
+
+2017-05-15 19:02  squinney@INF.ED.AC.UK
+
+	* profile/diff.c: Fixed docs on
+	  lcfgdiffprofile_component_was_prodded and
+	  lcfgdiffprofile_component_is_changed
+
+2017-05-15 16:03  squinney@INF.ED.AC.UK
+
+	* include/differences.h, profile/diff.c: Added
+	  lcfgdiffprofile_component_is_changed to make it easier to check
+	  if a particular component was changed
+
+2017-05-15 15:46  squinney@INF.ED.AC.UK
+
+	* include/differences.h, profile/diff.c,
+	  resources/components/diff.c: Added support for checking if an
+	  ngeneric component was prodded
+
+2017-05-15 11:57  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, include/profile.h, profile/profile.c: tweaked spec
+	  for lcfgprofile_get_meta for safety
+
+2017-05-15 11:13  squinney@INF.ED.AC.UK
+
+	* include/components.h, include/differences.h, include/packages.h,
+	  include/resources.h, packages/package.c, profile/profile.c,
+	  resources/components/component.c, resources/diff.c,
+	  resources/resource.c: Marked various accessors functions as
+	  returning a pointer to 'const char' to avoid potential for
+	  accidentally altering values which are owned by
+	  resources/packages
+
+2017-05-15 10:47  squinney@INF.ED.AC.UK
+
+	* include/resources.h, resources/diff.c, resources/resource.c:
+	  Added spec for lcfgresource_value_needs_encode and fixed a couple
+	  of tiny bugs
+
+2017-05-15 10:42  squinney@INF.ED.AC.UK
+
+	* resources/diff.c, resources/resource.c: Be more efficient with
+	  memory usage when generating status and hold files by only
+	  encoding the value when truly necessary
+
+2017-05-12 16:25  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.38.1
 
 2017-05-12 16:25  squinney@INF.ED.AC.UK
 
