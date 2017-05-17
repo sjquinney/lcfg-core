@@ -1162,7 +1162,10 @@ int lcfgdiffcomponent_compare( const LCFGDiffComponent * compdiff1,
  * list of all changed resources (of any type) is required then the @c
  * lcfgdiffcomponent_changed() is most suitable.
  *
- * @param[in] compdiff1 Pointer to @c LCFGDiffComponent
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent
  * @param[in] change_type Integer indicating types of change
  * @param[out] result Reference to pointer to @c LCFGTagList of resource names
  *
@@ -1221,7 +1224,10 @@ LCFGStatus lcfgdiffcomponent_names_for_type(const LCFGDiffComponent * compdiff,
  *
  * This uses @c lcfgdiffcomponent_names_for_type() to do the search.
  *
- * @param[in] compdiff1 Pointer to @c LCFGDiffComponent
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent
  * @param[out] result Reference to pointer to @c LCFGTagList of resource names
  *
  * @return Status value indicating success of the process
@@ -1245,7 +1251,10 @@ LCFGStatus lcfgdiffcomponent_changed( const LCFGDiffComponent * compdiff,
  *
  * This uses @c lcfgdiffcomponent_names_for_type() to do the search.
  *
- * @param[in] compdiff1 Pointer to @c LCFGDiffComponent
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent
  * @param[out] result Reference to pointer to @c LCFGTagList of resource names
  *
  * @return Status value indicating success of the process
@@ -1269,7 +1278,10 @@ LCFGStatus lcfgdiffcomponent_added( const LCFGDiffComponent * compdiff,
  *
  * This uses @c lcfgdiffcomponent_names_for_type() to do the search.
  *
- * @param[in] compdiff1 Pointer to @c LCFGDiffComponent
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent
  * @param[out] result Reference to pointer to @c LCFGTagList of resource names
  *
  * @return Status value indicating success of the process
@@ -1294,7 +1306,10 @@ LCFGStatus lcfgdiffcomponent_removed( const LCFGDiffComponent * compdiff,
  *
  * This uses @c lcfgdiffcomponent_names_for_type() to do the search.
  *
- * @param[in] compdiff1 Pointer to @c LCFGDiffComponent
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent
  * @param[out] result Reference to pointer to @c LCFGTagList of resource names
  *
  * @return Status value indicating success of the process
