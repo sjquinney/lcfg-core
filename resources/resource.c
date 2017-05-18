@@ -3798,9 +3798,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
         ok = lcfgresource_set_priority( res, priority );
       }
 
-      if ( ok )
-	dispose = true;
-      else
+      if ( !ok )
         lcfgutils_build_message( msg, "Invalid priority '%s'", value );
 
       break;
