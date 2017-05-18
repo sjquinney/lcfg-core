@@ -942,7 +942,7 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
     /* The value is everything after the separator (could just be an
        empty string) */
 
-    char * status_value = sep + 1;
+    const char * status_value = sep + 1;
 
     /* Find the component name (if any) and the resource name */
 
@@ -983,8 +983,9 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
       lcfgcomponent_find_or_create_resource( comp, this_resname, true );
 
     if ( res == NULL ) {
-      lcfgutils_build_message( msg, "Failed to parse line %d of status file '%s'",
-		linenum, statusfile );
+      lcfgutils_build_message( msg,
+			       "Failed to parse line %d of status file '%s'",
+			       linenum, statusfile );
       ok = false;
       break;
     }
@@ -993,20 +994,11 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
        the status line or assume this is a simple specification of the
        resource value. */
 
-    char * this_value = strdup(status_value);
-
-    /* Value strings may be html encoded as they can contain
-       whitespace characters which would otherwise corrupt the status
-       file formatting. */
-
-    if ( this_type == LCFG_RESOURCE_SYMBOL_VALUE )
-      lcfgutils_decode_html_entities_utf8( this_value, NULL );
-
     char * set_msg = NULL;
-    bool set_ok = lcfgresource_set_attribute( res, this_type, this_value,
-                                              &set_msg );
+    ok = lcfgresource_set_attribute( res, this_type, status_value,
+				     &set_msg );
 
-    if ( !set_ok ) {
+    if ( !ok ) {
 
       if ( set_msg != NULL ) {
         lcfgutils_build_message( msg, "Failed to process line %d (%s)",
@@ -1019,9 +1011,6 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
                   linenum, status_value, this_type );
       }
 
-      free(this_value);
-
-      ok = false;
       break;
     }
 
