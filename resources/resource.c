@@ -3736,10 +3736,8 @@ bool lcfgresource_parse_key( char  * key,
  *   - priority - @c '^'
  *   - value - nul
  *
- * It is important to note that this does @b NOT take a copy of the
- * value string. Furthermore, once the value is set the resource
- * assumes "ownership", the memory will be freed when it is no longer
- * required
+ * This will take a copy of the new attribute value string where
+ * necessary.
  *
  * @param[in] res Pointer to @c LCFGResource
  * @param[in] type_symbol The symbol for the required attribute type
@@ -3752,12 +3750,11 @@ bool lcfgresource_parse_key( char  * key,
 
 bool lcfgresource_set_attribute( LCFGResource * res,
                                  char type_symbol,
-                                 char * value,
+                                 const char * value,
                                  char ** msg ) {
   assert( res != NULL );
 
   bool ok = false;
-  bool dispose = false;
 
   /* Apply the action which matches with the symbol at the start of
      the status line or assume this is a simple specification of the
@@ -3766,24 +3763,28 @@ bool lcfgresource_set_attribute( LCFGResource * res,
   switch (type_symbol)
     {
     case LCFG_RESOURCE_SYMBOL_DERIVATION:
+      char * derivation = strdup(value);
 
-      ok = lcfgresource_set_derivation( res, value );
-      if ( !ok )
-        lcfgutils_build_message( msg, "Invalid derivation '%s'", value );
+      ok = lcfgresource_set_derivation( res, derivation );
+      if ( !ok ) {
+        lcfgutils_build_message( msg, "Invalid derivation '%s'", derivation );
+	free(derivation);
+      }
 
       break;
     case LCFG_RESOURCE_SYMBOL_TYPE:
 
       ok = lcfgresource_set_type_as_string( res, value, msg );
-      if (ok)
-	dispose = true;
 
       break;
     case LCFG_RESOURCE_SYMBOL_CONTEXT:
+      char * context = strdup(value);
 
-      ok = lcfgresource_set_context( res, value );
-      if ( !ok )
-        lcfgutils_build_message( msg, "Invalid context '%s'", value );
+      ok = lcfgresource_set_context( res, context );
+      if ( !ok ) {
+        lcfgutils_build_message( msg, "Invalid context '%s'", context );
+	free(context);
+      }
 
       break;
     case LCFG_RESOURCE_SYMBOL_PRIORITY:
@@ -3801,24 +3802,24 @@ bool lcfgresource_set_attribute( LCFGResource * res,
         lcfgutils_build_message( msg, "Invalid priority '%s'", value );
 
       break;
+    case  LCFG_RESOURCE_SYMBOL_VALUE:
     default:        /* value line */
+      char * value2 = strdup(value);
 
-      ok = lcfgresource_set_value( res, value );
+      /* Value strings may be html encoded as they can contain
+	 whitespace characters which would otherwise corrupt the status
+	 file formatting. */
 
-      if (!ok)
-        lcfgutils_build_message( msg, "Invalid value '%s'", value );
+      lcfgutils_decode_html_entities_utf8( value2, NULL );
+
+      ok = lcfgresource_set_value( res, value2 );
+      if (!ok) {
+        lcfgutils_build_message( msg, "Invalid value '%s'", value2 );
+	free(value2);
+      }
 
       break;
     }
-
-  if (dispose) {
-
-  /* The original value is no longer required so it must be disposed
-     of correctly. */
-
-    free(value);
-    value = NULL;
-  }
 
   return ok;
 }
