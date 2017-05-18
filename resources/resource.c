@@ -2280,8 +2280,9 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
 
   char * val_key = lcfgutils_string_join( "", val_pfx, name );
 
-  const char * value = lcfgresource_has_value(res) ?
-                       lcfgresource_get_value(res) : "";
+  const char * value = lcfgresource_get_value(res);
+  if ( value == NULL )
+    value = "";
 
   if ( setenv( val_key, value, 1 ) != 0 )
     status = LCFG_STATUS_ERROR;
@@ -2377,6 +2378,10 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
                                 char ** result, size_t * size ) {
   assert( res != NULL );
 
+  /* Name is required */
+
+  if ( !lcfgresource_is_valid(res) ) return -1;
+
   if ( val_pfx  == NULL ) val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
   if ( type_pfx == NULL ) type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
 
@@ -2398,10 +2403,6 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
       }
     }
   }
-
-  /* Name is required */
-
-  if ( !lcfgresource_has_name(res) ) return -1;
 
   const char * name = lcfgresource_get_name(res);
   size_t name_len = strlen(name);
@@ -3117,10 +3118,13 @@ int lcfgresource_compare_names( const LCFGResource * res1,
   assert( res1 != NULL );
   assert( res2 != NULL );
 
-  const char * name1 = lcfgresource_has_name(res1) ?
-                       lcfgresource_get_name(res1) : "";
-  const char * name2 = lcfgresource_has_name(res2) ?
-                       lcfgresource_get_name(res2) : "";
+  const char * name1 = lcfgresource_get_name(res1);
+  if ( name1 == NULL )
+    name1 = "";
+
+  const char * name2 = lcfgresource_get_name(res2);
+  if ( name2 == NULL )
+    name2 = "";
 
   return strcmp( name1, name2 );
 }
@@ -3171,10 +3175,12 @@ int lcfgresource_compare_values( const LCFGResource * res1,
   assert( res1 != NULL );
   assert( res2 != NULL );
 
-  const char * value1_str = lcfgresource_has_value(res1) ?
-                          lcfgresource_get_value(res1) : LCFG_RESOURCE_NOVALUE;
-  const char * value2_str = lcfgresource_has_value(res2) ?
-                          lcfgresource_get_value(res2) : LCFG_RESOURCE_NOVALUE;
+  const char * value1_str = lcfgresource_get_value(res1);
+  if ( value1_str == NULL )
+    value1_str = "";
+  const char * value2_str = lcfgresource_get_value(res2);
+  if ( value2_str == NULL )
+    value2_str = "";
 
   int result = 0;
 
@@ -3238,10 +3244,12 @@ int lcfgresource_compare( const LCFGResource * res1,
 
   if ( result == 0 ) {
 
-    const char * value1 = lcfgresource_has_value(res1) ?
-                          lcfgresource_get_value(res1) : LCFG_RESOURCE_NOVALUE;
-    const char * value2 = lcfgresource_has_value(res2) ?
-                          lcfgresource_get_value(res2) : LCFG_RESOURCE_NOVALUE;
+    const char * value1 = lcfgresource_get_value(res1);
+    if ( value1 == NULL )
+      value1 = "";
+    const char * value2 = lcfgresource_get_value(res2);
+    if ( value2 == NULL )
+      value2 = "";
 
     result = strcmp( value1, value2 );
   }
@@ -3250,10 +3258,13 @@ int lcfgresource_compare( const LCFGResource * res1,
 
   if ( result == 0 ) {
 
-    const char * context1 = lcfgresource_has_context(res1) ?
-                         lcfgresource_get_context(res1) : LCFG_RESOURCE_NOVALUE;
-    const char * context2 = lcfgresource_has_context(res2) ?
-                         lcfgresource_get_context(res2) : LCFG_RESOURCE_NOVALUE;
+    const char * context1 = lcfgresource_get_context(res1);
+    if ( context1 == NULL )
+      context1 = "";
+
+    const char * context2 = lcfgresource_get_context(res2);
+    if ( context2 == NULL )
+      context2 = "";
 
     result = strcmp( context1, context2 );
   }
