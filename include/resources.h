@@ -101,7 +101,9 @@ bool lcfgresource_is_valid( const LCFGResource * res );
 
 /* Resources: Names */
 
-bool lcfgresource_valid_name( const char * name );
+bool lcfgresource_valid_name( const char * name )
+    __attribute__((pure));
+
 bool lcfgresource_has_name( const LCFGResource * res );
 const char * lcfgresource_get_name( const LCFGResource * res );
 bool lcfgresource_set_name( LCFGResource * res,
@@ -145,17 +147,24 @@ bool lcfgresource_set_template_as_string( LCFGResource * res,
 
 /* Resources: Values */
 
-bool lcfgresource_valid_boolean( const char * value );
-bool lcfgresource_valid_integer( const char * value );
-bool lcfgresource_valid_list(    const char * value );
+bool lcfgresource_valid_boolean( const char * value )
+    __attribute__((pure));
+
+bool lcfgresource_valid_integer( const char * value )
+    __attribute__((pure));
+
+bool lcfgresource_valid_list(    const char * value )
+  __attribute__((pure));
 
 bool lcfgresource_valid_value_for_type( LCFGResourceType type,
-                                        const char * value );
+                                        const char * value )
+  __attribute__((pure));
 
 bool lcfgresource_valid_value( const LCFGResource * res,
                                const char * value );
 
-char * lcfgresource_canon_boolean( const char * value );
+char * lcfgresource_canon_boolean( const char * value )
+  __attribute__((pure));
 
 bool lcfgresource_has_value( const LCFGResource * res );
 
@@ -245,7 +254,8 @@ bool lcfgresource_add_derivation( LCFGResource * resource,
 
 /* Resources: Contexts */
 
-bool lcfgresource_valid_context( const char * expr );
+bool lcfgresource_valid_context( const char * expr )
+    __attribute__((pure));
 bool lcfgresource_has_context( const LCFGResource * res );
 const char * lcfgresource_get_context( const LCFGResource * res );
 bool lcfgresource_set_context( LCFGResource * res, char * new_value );
