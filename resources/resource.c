@@ -461,9 +461,9 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
      requested new type is "integer" then that change is illegal. */
 
   bool ok = false;
-  if ( !lcfgresource_has_value(res) ||
-       lcfgresource_valid_value_for_type( new_type,
-                                          lcfgresource_get_value(res) ) ) {
+  const char * cur_value = lcfgresource_get_value(res);
+  if ( cur_value == NULL ||
+       lcfgresource_valid_value_for_type( new_type, cur_value ) ) {
 
     res->type = new_type;
     ok = true;
@@ -1038,7 +1038,7 @@ bool lcfgresource_set_template_as_string(  LCFGResource * res,
 bool lcfgresource_has_value( const LCFGResource * res ) {
   assert( res != NULL );
 
-  return ( res->value != NULL );
+  return !isempty(res->value);
 }
 
 /**
