@@ -2894,6 +2894,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
  *   - @c LCFG_OPT_NOVALUE - do not include any value
  *   - @c LCFG_OPT_ENCODE - encode any newline characters in the value
  *   - @c LCFG_OPT_NEWLINE - append a final newline character
+ *   - @c LCFG_OPT_NOPREFIX - do not include prefix (usually component name)
  *
  * This function uses a string buffer which may be pre-allocated if
  * nececesary to improve efficiency. This makes it possible to reuse
@@ -2922,6 +2923,9 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
 
 ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
   assert( res != NULL );
+
+  if ( options&LCFG_OPT_NOPREFIX )
+    prefix = NULL;
 
   ssize_t key_len =
     lcfgresource_compute_key_length( res, prefix, NULL, 
