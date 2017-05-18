@@ -3763,6 +3763,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
   switch (type_symbol)
     {
     case LCFG_RESOURCE_SYMBOL_DERIVATION:
+      ;
       char * derivation = strdup(value);
 
       ok = lcfgresource_set_derivation( res, derivation );
@@ -3778,6 +3779,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
 
       break;
     case LCFG_RESOURCE_SYMBOL_CONTEXT:
+      ;
       char * context = strdup(value);
 
       ok = lcfgresource_set_context( res, context );
@@ -3804,6 +3806,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
       break;
     case  LCFG_RESOURCE_SYMBOL_VALUE:
     default:        /* value line */
+      ;
       char * value2 = strdup(value);
 
       /* Value strings may be html encoded as they can contain
