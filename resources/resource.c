@@ -2274,15 +2274,13 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
 
   LCFGStatus status = LCFG_STATUS_OK;
 
-  const char * name = lcfgresource_get_name(res);
+  const char * name = res->name;
 
   /* Value */
 
   char * val_key = lcfgutils_string_join( "", val_pfx, name );
 
-  const char * value = lcfgresource_get_value(res);
-  if ( value == NULL )
-    value = "";
+  const char * value = or_default( pkg->value, "" );
 
   if ( setenv( val_key, value, 1 ) != 0 )
     status = LCFG_STATUS_ERROR;
@@ -3118,13 +3116,8 @@ int lcfgresource_compare_names( const LCFGResource * res1,
   assert( res1 != NULL );
   assert( res2 != NULL );
 
-  const char * name1 = lcfgresource_get_name(res1);
-  if ( name1 == NULL )
-    name1 = "";
-
-  const char * name2 = lcfgresource_get_name(res2);
-  if ( name2 == NULL )
-    name2 = "";
+  const char * name1 = or_default( res1->name, "" );
+  const char * name2 = or_default( res2->name, "" );
 
   return strcmp( name1, name2 );
 }
@@ -3175,12 +3168,8 @@ int lcfgresource_compare_values( const LCFGResource * res1,
   assert( res1 != NULL );
   assert( res2 != NULL );
 
-  const char * value1_str = lcfgresource_get_value(res1);
-  if ( value1_str == NULL )
-    value1_str = "";
-  const char * value2_str = lcfgresource_get_value(res2);
-  if ( value2_str == NULL )
-    value2_str = "";
+  const char * value1_str = or_default( res1->value, "" );
+  const char * value2_str = or_default( res2->value, "" );
 
   int result = 0;
 
@@ -3244,12 +3233,8 @@ int lcfgresource_compare( const LCFGResource * res1,
 
   if ( result == 0 ) {
 
-    const char * value1 = lcfgresource_get_value(res1);
-    if ( value1 == NULL )
-      value1 = "";
-    const char * value2 = lcfgresource_get_value(res2);
-    if ( value2 == NULL )
-      value2 = "";
+    const char * value1 = or_default( res1->value, "" );
+    const char * value2 = or_default( res2->value, "" );
 
     result = strcmp( value1, value2 );
   }
@@ -3258,13 +3243,8 @@ int lcfgresource_compare( const LCFGResource * res1,
 
   if ( result == 0 ) {
 
-    const char * context1 = lcfgresource_get_context(res1);
-    if ( context1 == NULL )
-      context1 = "";
-
-    const char * context2 = lcfgresource_get_context(res2);
-    if ( context2 == NULL )
-      context2 = "";
+    const char * context1 = or_default( res1->value, "" );
+    const char * context2 = or_default( res2->value, "" );
 
     result = strcmp( context1, context2 );
   }
@@ -3650,6 +3630,85 @@ ssize_t lcfgresource_build_key( const LCFGResource * res,
 }
 
 /**
+ * @brief Parse a resource specification
+ *
+ * This parses the given resource specification string into the
+ * constituent (hostname, component name, resource name and value)
+ * parts. Note that this function modifies the given string in-place
+ * and returns pointers to the various chunks of interest.
+ *
+ * @param[in] key Pointer to the resource spec (will be modified in place)
+ * @param[out] hostname Reference to a pointer to the hostname part of the key (optional)
+ * @param[out] compname Reference to a pointer to the component name part of the key (optional)
+ * @param[out] resname Reference to a pointer to the resource name
+ * @param[out] value Reference to a pointer to the resource value (might be empty)
+ * @param[out] type The key type symbol
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgresource_parse_spec( char * spec,
+                                    const char ** hostname,
+                                    const char ** compname,
+                                    const char ** resname,
+                                    const char ** value,
+                                    char  * type,
+                                    char ** msg ) {
+  assert( spec != NULL );
+
+  LCFGStatus status = LCFG_STATUS_OK;
+
+  while ( *spec != '\0' && isspace(*spec) ) spec++;
+
+  if ( isempty(spec) ) {
+    lcfgutils_build_message( msg, "empty resource specification" );
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
+  }
+
+  /* Search for the '=' which separates status keys and values */
+
+  char * sep = strchr( spec, '=' );
+  if ( sep == NULL ) {
+    lcfgutils_build_message( msg, "missing '=' character" );
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
+  }
+
+  /* Replace the '=' separator with a NULL so that can avoid
+     unnecessarily dupping the string */
+
+  *sep = '\0';
+
+  /* The value is everything after the separator (could just be an
+     empty string) */
+
+  *value = sep + 1;
+
+  if ( !lcfgresource_parse_key( spec, 
+                                hostname, compname, 
+                                resname, type ) ) {
+    lcfgutils_build_message( msg, "invalid resource key '%s'", spec );
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
+  }
+
+  /* Validation */
+
+  if ( !lcfgresource_valid_name(*resname) ) {
+    lcfgutils_build_message( msg, "invalid resource name '%s'", *resname );
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
+  }
+
+ cleanup:
+
+  return status;
+}
+
+/**
  * @brief Parse a resource key
  *
  * This parses the given resource key into the constituent (hostname,
@@ -3668,9 +3727,9 @@ ssize_t lcfgresource_build_key( const LCFGResource * res,
  */
  
 bool lcfgresource_parse_key( char  * key,
-                             char ** hostname,
-                             char ** compname,
-                             char ** resname,
+                             const char ** hostname,
+                             const char ** compname,
+                             const char ** resname,
                              char  * type ) {
 
   *hostname = NULL;
