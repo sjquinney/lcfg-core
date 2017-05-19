@@ -176,8 +176,6 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkg,
 				char ** msg )
   __attribute__((warn_unused_result));
 
-void lcfgpackage_set_defaults(LCFGPackage *pkg);
-
 char * lcfgpackage_full_version( const LCFGPackage * pkg );
 
 char * lcfgpackage_id( const LCFGPackage * pkg );
