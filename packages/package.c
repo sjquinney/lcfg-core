@@ -310,7 +310,7 @@ LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkg ) {
  */
 
 bool lcfgpackage_is_valid( const LCFGPackage * pkg ) {
-  return ( pkg != NULL && lcfgpackage_has_name(pkg) );
+  return ( pkg != NULL && !isempty(pkg->name) );
 }
 
 /* Name */
@@ -1576,10 +1576,13 @@ void lcfgpackage_set_defaults(LCFGPackage * pkg) {
 char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
-  const char * v = lcfgpackage_has_version(pkg) ?
-                   lcfgpackage_get_version(pkg) : LCFG_PACKAGE_WILDCARD;
-  const char * r = lcfgpackage_has_release(pkg) ?
-                   lcfgpackage_get_release(pkg) : LCFG_PACKAGE_WILDCARD;
+  const char * v = lcfgpackage_get_version(pkg);
+  if ( isempty(v) )
+    v = LCFG_PACKAGE_WILDCARD;
+
+  const char * r = lcfgpackage_get_release(pkg);
+  if ( isempty(r) )
+    r = LCFG_PACKAGE_WILDCARD;
 
   char * full_version = lcfgutils_string_join( "-", v, r );
 
@@ -1611,21 +1614,23 @@ char * lcfgpackage_id( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
   char * id = NULL;
-  if ( lcfgpackage_has_name(pkg) ) {
 
-    if ( lcfgpackage_has_arch(pkg) ) {
-      id = lcfgutils_string_join( ".",
-				   lcfgpackage_get_name(pkg),
-				   lcfgpackage_get_arch(pkg) );
+  const char * name = lcfgpackage_get_name(pkg);
+
+  if ( !isempty(name) ) {
+    const char * arch = lcfgpackage_get_arch(pkg);
+
+    if ( isempty(arch) ) {
+      id = strdup(name);
+    } else {
+      id = lcfgutils_string_join( ".", name, arch );
 
       if ( id == NULL ) {
 	perror( "Failed to build LCFG package ID string" );
 	exit(EXIT_FAILURE);
       }
-    } else {
-      id = strdup( lcfgpackage_get_name(pkg) );
-    }
 
+    }
   }
 
   return id;
@@ -2076,7 +2081,7 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
     new_len++;
   }
 
-  char * pkgarch = NULL;
+  const char * pkgarch = NULL;
   size_t pkgarchlen = 0;
   if ( lcfgpackage_has_arch(pkg) ) {
 
@@ -2091,7 +2096,7 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
 
   }
 
-  char * pkgflgs = NULL;
+  const char * pkgflgs = NULL;
   size_t pkgflgslen = 0;
   if ( lcfgpackage_has_flags(pkg) ) {
     pkgflgs = pkg->flags;
@@ -2099,7 +2104,7 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
     new_len += ( pkgflgslen + 1 ); /* +1 for ':' separator */
   }
 
-  char * pkgctx = NULL;
+  const char * pkgctx = NULL;
   size_t pkgctxlen = 0;
   if ( !(options&LCFG_OPT_NOCONTEXT) &&
        lcfgpackage_has_context(pkg) ) {
@@ -2578,7 +2583,7 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
 
   new_len += ( rel_len + 7 ); /* <r></r> */
 
-  char * arch = NULL;
+  const char * arch = NULL;
   size_t arch_len = 0;
   if ( lcfgpackage_has_arch(pkg) ) {
 
