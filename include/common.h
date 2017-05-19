@@ -16,6 +16,12 @@
 #define isempty(STR) ( STR == NULL || *(STR) == '\0' )
 
 /**
+ * @brief Return the string if not empty otherwise return the default
+ */
+
+#define or_default(STR,DEFAULT) isempty(STR) ? DEFAULT : STR;
+
+/**
  * @brief Test for word character
  *
  * Extends the standard alpha-numeric test to include the '_'
