@@ -247,9 +247,9 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
   memset( &key,   0, sizeof(DBT) );
   memset( &value, 0, sizeof(DBT) );
 
-  char * this_namespace = NULL;
-  char * this_compname  = NULL;
-  char * this_resname   = NULL;
+  const char * this_namespace = NULL;
+  const char * this_compname  = NULL;
+  const char * this_resname   = NULL;
   char this_type        = LCFG_RESOURCE_SYMBOL_VALUE;
 
   char * reskey = NULL;
