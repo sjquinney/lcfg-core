@@ -315,7 +315,7 @@ bool lcfgresource_valid_name( const char * name ) {
  */
 
 bool lcfgresource_is_valid( const LCFGResource * res ) {
-  return ( res != NULL && lcfgresource_has_name(res) );
+  return ( res != NULL && !isempty(res->name) );
 }
 
 /**
