@@ -901,78 +901,48 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
     goto cleanup;
   }
 
-  size_t line_len = 128;
-  char * line = malloc( line_len * sizeof(char) );
-  if ( line == NULL ) {
+  size_t line_len = 5120; /* Status files contain long derivation lines */
+  char * statusline = calloc( line_len, sizeof(char) );
+  if ( statusline == NULL ) {
     perror( "Failed to allocate memory for status parser buffer" );
     exit(EXIT_FAILURE);
   }
 
-  char * statusline = NULL;
-
   int linenum = 1;
-  while( getline( &line, &line_len, fp ) != -1 ) {
-
-    /* Need a copy of the string as it will be mangled by the parser */
-
-    free(statusline);
-    statusline = strdup(line);
-    if ( statusline == NULL ) {
-      perror( "Failed to copy status line" );
-      exit(EXIT_FAILURE);
-    }
+  while( getline( &statusline, &line_len, fp ) != -1 ) {
 
     lcfgutils_string_chomp(statusline);
 
-    /* Search for the '=' which separates status keys and values */
+    const char * this_hostname = NULL;
+    const char * this_compname = NULL;
+    const char * this_resname  = NULL;
+    const char * status_value  = NULL;
+    char this_type             = LCFG_RESOURCE_SYMBOL_VALUE;
 
-    char * sep = strchr( statusline, '=' );
-    if ( sep == NULL ) {
-      lcfgutils_build_message( msg, "Failed to parse line %d (missing '=' character)",
-                linenum );
+    char * parse_msg = NULL;
+    LCFGStatus parse_status = lcfgresource_parse_spec( statusline,
+                                                       &this_hostname,
+                                                       &this_compname,
+                                                       &this_resname, 
+                                                       &status_value,
+                                                       &this_type,
+                                                       &parse_msg );
+
+    if ( parse_status == LCFG_STATUS_ERROR ) {
+      lcfgutils_build_message( msg, "Failed to parse line %d (%s)",
+                               linenum, parse_msg );
       ok = false;
       break;
     }
-
-    /* Replace the '=' separator with a NULL so that can avoid
-       unnecessarily dupping the string */
-
-    *sep = '\0';
-
-    /* The value is everything after the separator (could just be an
-       empty string) */
-
-    const char * status_value = sep + 1;
-
-    /* Find the component name (if any) and the resource name */
-
-    char * this_hostname = NULL;
-    char * this_compname = NULL;
-    char * this_resname  = NULL;
-    char this_type       = LCFG_RESOURCE_SYMBOL_VALUE;
-
-    if ( !lcfgresource_parse_key( statusline, &this_hostname, &this_compname,
-                                  &this_resname, &this_type ) ) {
-      lcfgutils_build_message( msg, "Failed to parse line %d (invalid key '%s')",
-                linenum, statusline );
-      ok = false;
-      break;
-    }
-
-    /* Check for valid resource name */
-
-    if ( !lcfgresource_valid_name(this_resname) ) {
-      lcfgutils_build_message( msg, "Failed to parse line %d (invalid resource name '%s')",
-                linenum, this_resname );
-      ok = false;
-      break;
-    }
+    free(parse_msg);
 
     /* Insist on the component names matching */
 
-    if ( this_compname != NULL && strcmp( this_compname, compname ) != 0 ) {
+    if ( this_compname != NULL && 
+         ( !lcfgcomponent_valid_name( this_compname) ||
+           strcmp( this_compname, compname ) != 0 ) ) {
       lcfgutils_build_message( msg, "Failed to parse line %d (invalid component name '%s')",
-                linenum, this_compname );
+                               linenum, this_compname );
       ok = false;
       break;
     }
@@ -1020,8 +990,6 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
   free(statusline);
 
   fclose(fp);
-
-  free(line);
 
  cleanup:
 
