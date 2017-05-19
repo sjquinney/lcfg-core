@@ -54,7 +54,9 @@ bool lcfgpackage_is_valid( const LCFGPackage * pkg );
 
 /* Name */
 
-bool lcfgpackage_valid_name( const char * name );
+bool lcfgpackage_valid_name( const char * name )
+  __attribute__((const));
+
 bool lcfgpackage_has_name( const LCFGPackage * pkg );
 
 const char * lcfgpackage_get_name( const LCFGPackage * pkg );
@@ -64,7 +66,8 @@ bool lcfgpackage_set_name( LCFGPackage * pkg, char * new_value )
 
 /* Architecture */
 
-bool lcfgpackage_valid_arch( const char * arch );
+bool lcfgpackage_valid_arch( const char * arch )
+  __attribute__((const));
 bool lcfgpackage_has_arch( const LCFGPackage * pkg );
 
 const char * lcfgpackage_get_arch( const LCFGPackage * pkg );
@@ -74,7 +77,8 @@ bool lcfgpackage_set_arch( LCFGPackage * pkg, char * new_value )
 
 /* Version */
 
-bool lcfgpackage_valid_version( const char * version );
+bool lcfgpackage_valid_version( const char * version )
+  __attribute__((const));
 bool lcfgpackage_has_version( const LCFGPackage * pkg );
 
 const char * lcfgpackage_get_version( const LCFGPackage * pkg );
@@ -84,7 +88,8 @@ bool lcfgpackage_set_version( LCFGPackage * pkg, char * new_value )
 
 /* Release */
 
-bool lcfgpackage_valid_release( const char * release );
+bool lcfgpackage_valid_release( const char * release )
+  __attribute__((const));
 bool lcfgpackage_has_release( const LCFGPackage * pkg );
 
 const char * lcfgpackage_get_release( const LCFGPackage * pkg );
@@ -94,8 +99,8 @@ bool lcfgpackage_set_release( LCFGPackage * pkg, char * new_value )
 
 /* Prefix */
 
-bool lcfgpackage_valid_prefix( char prefix );
-
+bool lcfgpackage_valid_prefix( char prefix )
+  __attribute__((const));
 bool lcfgpackage_has_prefix( const LCFGPackage * pkg );
 
 char lcfgpackage_get_prefix( const LCFGPackage * pkg );
@@ -108,9 +113,10 @@ bool lcfgpackage_clear_prefix( LCFGPackage * pkg )
 
 /* Flags */
 
-bool lcfgpackage_valid_flag_chr( const char flag );
-
-bool lcfgpackage_valid_flags( const char * flag );
+bool lcfgpackage_valid_flag_chr( const char flag )
+  __attribute__((const));
+bool lcfgpackage_valid_flags( const char * flag )
+  __attribute__((const));
 
 bool lcfgpackage_has_flag( const LCFGPackage * pkg, char flag );
 
@@ -130,8 +136,8 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
 
 /* Context Expression */
 
-bool lcfgpackage_valid_context( const char * expr );
-
+bool lcfgpackage_valid_context( const char * expr )
+  __attribute__((const));
 bool lcfgpackage_has_context( const LCFGPackage * pkg );
 
 const char * lcfgpackage_get_context( const LCFGPackage * pkg );
@@ -175,6 +181,9 @@ void lcfgpackage_set_defaults(LCFGPackage *pkg);
 char * lcfgpackage_full_version( const LCFGPackage * pkg );
 
 char * lcfgpackage_id( const LCFGPackage * pkg );
+
+int compare_vstrings( const char * v1, const char * v2 )
+  __attribute__((const));
 
 int lcfgpackage_compare_versions( const LCFGPackage * pkg1,
                                   const LCFGPackage * pkg2 );

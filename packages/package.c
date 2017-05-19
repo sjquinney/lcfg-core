@@ -338,8 +338,8 @@ bool lcfgpackage_valid_name( const char * name ) {
 
   bool valid = ( !isempty(name) && isalnum(*name) );
 
-  char * ptr;
-  for ( ptr = (char *) ( name + 1 ); valid && *ptr != '\0'; ptr++ )
+  const char * ptr;
+  for ( ptr = name + 1; valid && *ptr != '\0'; ptr++ )
     if ( !isnamechr(*ptr) ) valid = false;
 
   return valid;
@@ -450,8 +450,8 @@ bool lcfgpackage_valid_arch( const char * arch ) {
 
   /* Permit [a-zA-Z0-9_-] characters */
 
-  char * ptr;
-  for ( ptr = (char *) arch; valid && *ptr != '\0'; ptr++ )
+  const char * ptr;
+  for ( ptr = arch; valid && *ptr != '\0'; ptr++ )
     if ( !isword(*ptr) && *ptr != '-' ) valid = false;
 
   return valid;
@@ -561,8 +561,8 @@ bool lcfgpackage_valid_version( const char * version ) {
   /* It is not entirely clear exactly which characters are allowed but
      it is necessary to forbid '-' (hyphen) and any whitespace */
 
-  char * ptr;
-  for ( ptr = (char *) version; valid && *ptr != '\0'; ptr++ )
+  const char * ptr;
+  for ( ptr = version; valid && *ptr != '\0'; ptr++ )
     if ( *ptr == '-' || isspace(*ptr) ) valid = false;
 
   return valid;
@@ -903,8 +903,8 @@ bool lcfgpackage_valid_flags( const char * flags ) {
 
   /* This only permits [a-zA-Z0-9] characters */
 
-  char * ptr;
-  for ( ptr = (char *) flags; valid && *ptr != '\0'; ptr++ )
+  const char * ptr;
+  for ( ptr = flags; valid && *ptr != '\0'; ptr++ )
     if ( !lcfgpackage_valid_flag_chr(*ptr) ) valid = false;
 
   return valid;
@@ -944,8 +944,7 @@ bool lcfgpackage_has_flags( const LCFGPackage * pkg ) {
 bool lcfgpackage_has_flag( const LCFGPackage * pkg, char flag ) {
   assert( pkg != NULL );
 
-  return ( lcfgpackage_has_flags(pkg) &&
-           strchr( pkg->flags, flag ) != NULL );
+  return ( !isempty(pkg->flags) && strchr( pkg->flags, flag ) != NULL );
 }
 
 /**
@@ -1085,7 +1084,7 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
   bool char_set[LCFG_PKG_FLAGS_MAXCHAR] = { false };
 
   size_t cur_len = 0;
-  if ( pkg->flags != NULL ) {
+  if ( !isempty(pkg->flags) ) {
     cur_len = strlen(pkg->flags);
 
     for ( i=0; i<cur_len; i++ ) {
@@ -1101,9 +1100,9 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
 
   }
 
-  size_t extra_len = strlen(extra_flags);
-  for ( i=0; i<extra_len; i++ ) {
-    int val = (extra_flags)[i] - '0';
+  const char * ptr;
+  for ( ptr = extra_flags; *ptr != '\0'; ptr++ ) {
+    int val = *ptr - '0';
     if ( val < LCFG_PKG_FLAGS_MAXCHAR ) {
       if ( !char_set[val] ) {
         new_len++;
@@ -1115,8 +1114,7 @@ bool lcfgpackage_add_flags( LCFGPackage * pkg,
   /* If the new length is the same as the current then there is
      nothing more to do so just return success */
 
-  if ( new_len == cur_len )
-    return true;
+  if ( new_len == cur_len ) return true;
 
   char * result = calloc( ( new_len + 1 ), sizeof(char) );
   if ( result == NULL ) {
@@ -1528,11 +1526,11 @@ void lcfgpackage_set_defaults(LCFGPackage * pkg) {
 
   /* This is used to set defaults for anything which is not yet defined */
 
-  const char * empty = LCFG_PACKAGE_NOVALUE;
-  const char * wild  = LCFG_PACKAGE_WILDCARD;
+  static const char empty[] = LCFG_PACKAGE_NOVALUE;
+  static const char wild[]  = LCFG_PACKAGE_WILDCARD;
 
-  const size_t empty_len = strlen(empty);
-  const size_t wild_len  = strlen(wild);
+  static const size_t empty_len = sizeof(empty) - 1;
+  static const size_t wild_len  = sizeof(wild) - 1;
 
   /* There is no default value for the name field, it is required */
 
@@ -1576,11 +1574,11 @@ void lcfgpackage_set_defaults(LCFGPackage * pkg) {
 char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
-  const char * v = lcfgpackage_get_version(pkg);
+  const char * v = pkg->version;
   if ( isempty(v) )
     v = LCFG_PACKAGE_WILDCARD;
 
-  const char * r = lcfgpackage_get_release(pkg);
+  const char * r = pkg->release;
   if ( isempty(r) )
     r = LCFG_PACKAGE_WILDCARD;
 
@@ -1615,10 +1613,10 @@ char * lcfgpackage_id( const LCFGPackage * pkg ) {
 
   char * id = NULL;
 
-  const char * name = lcfgpackage_get_name(pkg);
+  const char * name = pkg->name;
 
   if ( !isempty(name) ) {
-    const char * arch = lcfgpackage_get_arch(pkg);
+    const char * arch = pkg->arch;
 
     if ( isempty(arch) ) {
       id = strdup(name);
@@ -1636,14 +1634,14 @@ char * lcfgpackage_id( const LCFGPackage * pkg ) {
   return id;
 }
 
-static bool walk_forwards_until( char ** start,
+static bool walk_forwards_until( const char ** start,
                                  char separator, const char * stop,
                                  char ** field_value ) {
 
   *field_value = NULL;
 
-  char * begin = *start;
-  char * end = NULL;
+  const char * begin = *start;
+  const char * end   = NULL;
 
   /* Ignore leading whitespace */
 
@@ -1651,8 +1649,8 @@ static bool walk_forwards_until( char ** start,
 
  /* Walk forwards looking for the separator */
 
-  char * ptr;
-  for ( ptr = (char *) begin; *ptr != '\0'; ptr++ ) {
+  const char * ptr;
+  for ( ptr = begin; *ptr != '\0'; ptr++ ) {
     if ( *ptr == separator ) {
       end = ptr;
       break;
@@ -1698,13 +1696,13 @@ static bool walk_backwards_until( const char * input, size_t * len,
 
   while ( my_len > 0 && isspace( *( input + my_len - 1 ) ) ) my_len--;
 
-  const char * end = my_len > 0 ? input + my_len - 1 : input;
-  char * begin = NULL;
+  const char * begin = NULL;
+  const char * end   = my_len > 0 ? input + my_len - 1 : input;
 
   /* Walk backwards looking for the separator */
 
-  char * ptr;
-  for ( ptr = (char *) end; ptr - input >= 0; ptr-- ) {
+  const char * ptr;
+  for ( ptr = end; ptr - input >= 0; ptr-- ) {
     if ( *ptr == separator ) {
       begin = ptr;
       break;
@@ -1782,7 +1780,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
 
   /* Move past any leading whitespace */
 
-  char * start = (char *) input;
+  const char * start = input;
   while ( *start != '\0' && isspace(*start) ) start++;
 
   if ( *start == '\0' ) return invalid_package( msg, "empty spec string" );
@@ -1833,7 +1831,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
 
   */
 
-  char * ctx_end = len > 0 ? start + len - 1 : start;
+  const char * ctx_end = len > 0 ? start + len - 1 : start;
   if ( *ctx_end == ']' ) {
     size_t ctx_len = len - 1;
 
@@ -2556,7 +2554,7 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
   if ( !lcfgpackage_has_name(pkg) ) return -1;
 
   static const char indent[] = "   ";
-  static size_t indent_len = sizeof(indent) - 1;
+  static const size_t indent_len = sizeof(indent) - 1;
 
   size_t new_len = indent_len + 20; /* <package></package> + newline */
 
@@ -2847,10 +2845,13 @@ int lcfgpackage_compare_names( const LCFGPackage * pkg1,
   assert( pkg1 != NULL );
   assert( pkg2 != NULL );
 
-  const char * name1 = lcfgpackage_has_name(pkg1) ?
-                       lcfgpackage_get_name(pkg1) : "";
-  const char * name2 = lcfgpackage_has_name(pkg2) ?
-                       lcfgpackage_get_name(pkg2) : "";
+  const char * name1 = pkg1->name;
+  if ( isempty(name1) )
+    name1 = "";
+
+  const char * name2 = pkg2->name;
+  if ( isempty(name2) )
+    name2 = "";
 
   return strcasecmp( name1, name2 );
 }
@@ -2876,10 +2877,13 @@ int lcfgpackage_compare_archs( const LCFGPackage * pkg1,
   assert( pkg1 != NULL );
   assert( pkg2 != NULL );
 
-  const char * arch1 = lcfgpackage_has_arch(pkg1) ?
-                       lcfgpackage_get_arch(pkg1) : LCFG_PACKAGE_NOVALUE;
-  const char * arch2 = lcfgpackage_has_arch(pkg2) ?
-                       lcfgpackage_get_arch(pkg2) : LCFG_PACKAGE_NOVALUE;
+  const char * arch1 = pkg1->arch;
+  if ( isempty(arch1) )
+    arch1 = "";
+
+  const char * arch2 = pkg2->arch;
+  if ( isempty(arch2) )
+    arch2 = "";
 
   return strcmp( arch1, arch2 );
 }
@@ -2976,10 +2980,13 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
   if ( !equals ) {
     return false;
   } else {
-    const char * flags1 = lcfgpackage_has_flags(pkg1) ?
-                          pkg1->flags : LCFG_PACKAGE_NOVALUE;
-    const char * flags2 = lcfgpackage_has_flags(pkg2) ?
-                          pkg2->flags : LCFG_PACKAGE_NOVALUE;
+    const char * flags1 = pkg1->flags;
+    if ( isempty(flags1) )
+      flags1 = "";
+
+    const char * flags2 = pkg2->flags;
+    if ( isempty(flags2) )
+      flags2 = "";
 
     equals = ( strcmp( flags1, flags2 ) == 0 );
   }
@@ -2989,10 +2996,13 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
   if ( !equals ) {
     return false;
   } else {
-    const char * ctx1 = lcfgpackage_has_context(pkg1) ?
-                        pkg1->context : LCFG_PACKAGE_NOVALUE;
-    const char * ctx2 = lcfgpackage_has_context(pkg2) ?
-                        pkg2->context : LCFG_PACKAGE_NOVALUE;
+    const char * ctx1 = pkg1->context;
+    if ( isempty(ctx1) )
+      ctx1 = "";
+
+    const char * ctx2 = pkg2->context;
+    if ( isempty(ctx2) )
+      ctx2 = "";
 
     equals = ( strcmp( ctx1, ctx2 ) == 0 );
   }
