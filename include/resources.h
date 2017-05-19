@@ -366,10 +366,19 @@ char * lcfgresource_build_message( const LCFGResource * res,
                                    const char *fmt, ... );
 
 bool lcfgresource_parse_key( char  * key,
-                             char ** namespace,
-                             char ** component,
-                             char ** resource,
+                             const char ** namespace,
+                             const char ** component,
+                             const char ** resource,
                              char  * type )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgresource_parse_spec( char * spec,
+                                    const char ** hostname,
+                                    const char ** compname,
+                                    const char ** resname,
+                                    const char ** value,
+                                    char  * type,
+                                    char ** msg )
   __attribute__((warn_unused_result));
 
 ssize_t lcfgresource_compute_key_length( const LCFGResource * res,
