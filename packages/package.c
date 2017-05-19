@@ -1270,7 +1270,7 @@ bool lcfgpackage_add_context( LCFGPackage * pkg,
   if ( isempty(extra_context) ) return true;
 
   char * new_context = NULL;
-  if ( !lcfgpackage_has_context(pkg) ) {
+  if ( isempty(pkg->context) ) {
     new_context = strdup(extra_context);
   } else {
     new_context =
@@ -1380,7 +1380,7 @@ bool lcfgpackage_add_derivation( LCFGPackage * pkg,
   if ( isempty(extra_deriv) ) return true;
 
   char * new_deriv = NULL;
-  if ( !lcfgpackage_has_derivation(pkg) ) {
+  if ( isempty(pkg->derivation) ) {
     new_deriv = strdup(extra_deriv);
   } else if ( strstr( pkg->derivation, extra_deriv ) == NULL ) {
 
@@ -1482,7 +1482,7 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkg,
   bool ok = true;
 
   int priority = 0;
-  if ( lcfgpackage_has_context(pkg) ) {
+  if ( !isempty(pkg->context) ) {
 
     /* Calculate the priority using the context expression for this
        package spec. */
@@ -1521,39 +1521,6 @@ bool lcfgpackage_is_active( const LCFGPackage * pkg ) {
   return ( pkg->priority >= 0 );
 }
 
-void lcfgpackage_set_defaults(LCFGPackage * pkg) {
-  assert( pkg != NULL );
-
-  /* This is used to set defaults for anything which is not yet defined */
-
-  static const char empty[] = LCFG_PACKAGE_NOVALUE;
-  static const char wild[]  = LCFG_PACKAGE_WILDCARD;
-
-  static const size_t empty_len = sizeof(empty) - 1;
-  static const size_t wild_len  = sizeof(wild) - 1;
-
-  /* There is no default value for the name field, it is required */
-
-  if ( pkg->arch == NULL )
-    pkg->arch       = strndup(empty,empty_len);
-
-  if ( pkg->version == NULL )
-    pkg->version    = strndup(wild,wild_len);
-
-  if ( pkg->release == NULL )
-    pkg->release    = strndup(wild,wild_len);
-
-  if ( pkg->flags == NULL )
-    pkg->flags      = strndup(empty,empty_len);
-
-  if ( pkg->context == NULL )
-    pkg->context    = strndup(empty,empty_len);
-
-  if ( pkg->derivation == NULL )
-    pkg->derivation = strndup(empty,empty_len);
-
-}
-
 /* Higher-level functions */
 
 /**
@@ -1574,13 +1541,8 @@ void lcfgpackage_set_defaults(LCFGPackage * pkg) {
 char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
-  const char * v = pkg->version;
-  if ( isempty(v) )
-    v = LCFG_PACKAGE_WILDCARD;
-
-  const char * r = pkg->release;
-  if ( isempty(r) )
-    r = LCFG_PACKAGE_WILDCARD;
+  const char * v = or_default( pkg->version, LCFG_PACKAGE_WILDCARD );
+  const char * r = or_default( pkg->release, LCFG_PACKAGE_WILDCARD );
 
   char * full_version = lcfgutils_string_join( "-", v, r );
 
@@ -1614,10 +1576,9 @@ char * lcfgpackage_id( const LCFGPackage * pkg ) {
   char * id = NULL;
 
   const char * name = pkg->name;
-
   if ( !isempty(name) ) {
-    const char * arch = pkg->arch;
 
+    const char * arch = pkg->arch;
     if ( isempty(arch) ) {
       id = strdup(name);
     } else {
@@ -2045,7 +2006,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
 ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   assert( pkg != NULL );
 
-  if ( !lcfgpackage_has_name(pkg) ) return -1;
+  if ( !lcfgpackage_is_valid(pkg) ) return -1;
 
   /* This is rather long-winded but it is done this way to avoid
      multiple calls to realloc. It is actually the cheapest way to
@@ -2058,12 +2019,10 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   const char * pkgnam = pkg->name;
   size_t pkgnamlen    = strlen(pkgnam);
 
-  const char * pkgver = lcfgpackage_has_version(pkg) ?
-                          pkg->version : LCFG_PACKAGE_WILDCARD;
+  const char * pkgver = or_default( pkg->version, LCFG_PACKAGE_WILDCARD );
   size_t pkgverlen    = strlen(pkgver);
 
-  const char * pkgrel = lcfgpackage_has_release(pkg) ?
-                          pkg->release : LCFG_PACKAGE_WILDCARD;
+  const char * pkgrel = or_default( pkg->release, LCFG_PACKAGE_WILDCARD );
   size_t pkgrellen    = strlen(pkgrel);
 
   /* +2 for the two '-' separators */
@@ -2094,20 +2053,16 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
 
   }
 
-  const char * pkgflgs = NULL;
+  const char * pkgflgs = pkg->flags;
   size_t pkgflgslen = 0;
-  if ( lcfgpackage_has_flags(pkg) ) {
-    pkgflgs = pkg->flags;
+  if ( !isempty(pkgflgs) ) {
     pkgflgslen = strlen(pkgflgs);
     new_len += ( pkgflgslen + 1 ); /* +1 for ':' separator */
   }
 
-  const char * pkgctx = NULL;
+  const char * pkgctx = pkg->context;
   size_t pkgctxlen = 0;
-  if ( !(options&LCFG_OPT_NOCONTEXT) &&
-       lcfgpackage_has_context(pkg) ) {
-
-    pkgctx = pkg->context;
+  if ( !(options&LCFG_OPT_NOCONTEXT) && !isempty(pkgctx) ) {
     pkgctxlen = strlen(pkgctx);
     new_len += ( pkgctxlen + 2 ); /* +2 for '[' and ']' brackets */
   }
@@ -2165,7 +2120,7 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   }
 
   /* flags */
-  if ( pkgflgs != NULL ) {
+  if ( pkgflgslen > 0 ) {
     *to = ':';
     to++;
 
@@ -2173,7 +2128,7 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   }
 
   /* context */
-  if ( pkgctx != NULL ) {
+  if ( pkgctxlen > 0 ) {
     *to = '[';
     to++;
 
@@ -2242,7 +2197,7 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
   static const char * format = " %7s=%s\n";
   size_t base_len = 10; /* 1 for indent + 7 for key + 1 for '=' +1 for newline */
 
-  const char * pkgnam = lcfgpackage_get_name(pkg);
+  const char * pkgnam = pkg->name;
   size_t pkgnamlen    = strlen(pkgnam);
 
   size_t new_len = pkgnamlen + 2; /* +1 for ':' +1 for newline */
@@ -2255,8 +2210,7 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
 
   new_len += ( pkgverlen + base_len );
 
-  const char * pkgarch = lcfgpackage_has_arch(pkg) ?
-                         lcfgpackage_get_arch(pkg) : defarch;
+  const char * pkgarch = or_default( pkg->arch, defarch );
   size_t pkgarchlen = 0;
 
   if ( !isempty(pkgarch) ) {
@@ -2274,18 +2228,16 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
   
   if ( options&LCFG_OPT_USE_META ) {
 
-    if ( lcfgpackage_has_derivation(pkg) ) {
-      derivation = lcfgpackage_get_derivation(pkg);
-      deriv_len  = strlen(derivation);
-      if ( deriv_len > 0 )
-        new_len += ( deriv_len + base_len );
+    derivation = pkg->derivation;
+    if ( !isempty(derivation) ) {
+      deriv_len = strlen(derivation);
+      new_len += ( deriv_len + base_len );
     }
 
-    if ( lcfgpackage_has_context(pkg) ) {
-      context = lcfgpackage_get_context(pkg);
+    context = pkg->context;
+    if ( !isempty(context) ) {
       ctx_len = strlen(context);
-      if ( ctx_len > 0 )
-        new_len += ( ctx_len + base_len );
+      new_len += ( ctx_len + base_len );
     }
 
   }
@@ -2431,14 +2383,14 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
 
   if ( options&LCFG_OPT_USE_META ) {
 
-    if ( lcfgpackage_has_derivation(pkg) ) {
-      derivation = lcfgpackage_get_derivation(pkg);
-      deriv_len  = strlen(derivation);
+    derivation = pkg->derivation;
+    if ( !isempty(derivation) ) {
+      deriv_len = strlen(derivation);
       meta_len += ( pragma_derive_len + deriv_len + pragma_end_len );
     }
 
-    if ( lcfgpackage_has_context(pkg) ) {
-      context = lcfgpackage_get_context(pkg);
+    context = pkg->context;
+    if ( !isempty(context) ) {
       ctx_len = strlen(context);
       meta_len += ( pragma_context_len + ctx_len + pragma_end_len );
     }
@@ -2482,7 +2434,7 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
 
   /* Derivation */
 
-  if ( derivation != NULL ) {
+  if ( deriv_len > 0 ) {
     to = stpncpy( to, pragma_derive, pragma_derive_len );
 
     to = stpncpy( to, derivation, deriv_len );
@@ -2492,7 +2444,7 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
 
   /* Context */
 
-  if ( context != NULL ) {
+  if ( ctx_len > 0 ) {
     to = stpncpy( to, pragma_context, pragma_context_len );
 
     to = stpncpy( to, context, ctx_len );
@@ -2551,7 +2503,7 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
 ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
   assert( pkg != NULL );
 
-  if ( !lcfgpackage_has_name(pkg) ) return -1;
+  if ( !lcfgpackage_is_valid(pkg) ) return -1;
 
   static const char indent[] = "   ";
   static const size_t indent_len = sizeof(indent) - 1;
@@ -2560,30 +2512,28 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
 
   /* Name - required */
 
-  const char * name = lcfgpackage_get_name(pkg);
+  const char * name = pkg->name;
   size_t name_len = strlen(name);
 
   new_len += ( name_len + 13 ); /* <name></name> */
 
   /* Version - required */
 
-  const char * version = lcfgpackage_has_version(pkg) ?
-                         lcfgpackage_get_version(pkg) : LCFG_PACKAGE_WILDCARD;
+  const char * version = or_default( pkg->version, LCFG_PACKAGE_WILDCARD );
   size_t ver_len = strlen(version);
 
   new_len += ( ver_len + 7 ); /* <v></v> */
 
   /* Release - required (and possibly architecture) */
 
-  const char * release = lcfgpackage_has_release(pkg) ?
-                      lcfgpackage_get_release(pkg) : LCFG_PACKAGE_WILDCARD;
+  const char * release = or_default( pkg->release, LCFG_PACKAGE_WILDCARD );
   size_t rel_len = strlen(release);
 
   new_len += ( rel_len + 7 ); /* <r></r> */
 
   const char * arch = NULL;
   size_t arch_len = 0;
-  if ( lcfgpackage_has_arch(pkg) ) {
+  if ( !isempty(pkg->arch) ) {
 
     /* Not added to the spec when same as default architecture */
     if ( isempty(defarch) ||
@@ -2598,40 +2548,35 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
 
   /* Flags - optional */
 
-  const char * flags = lcfgpackage_get_flags(pkg);
+  const char * flags = pkg->flags;
   size_t flags_len = 0;
-  if ( flags != NULL ) {
+  if ( !isempty(flags) ) {
     flags_len = strlen(flags);
-
-    if ( flags_len > 0 )
-      new_len += ( flags_len + 19 ); /* <options></options> */
-
+    new_len += ( flags_len + 19 ); /* <options></options> */
   }
 
   /* Context - optional */
 
-  const char * context = lcfgpackage_get_context(pkg);
+  const char * context = NULL;
   size_t ctx_len = 0;
 
   /* Derivation - optional */
 
-  const char * derivation = lcfgpackage_get_derivation(pkg);
+  const char * derivation = NULL;
   size_t deriv_len = 0;
 
   if ( options&LCFG_OPT_USE_META ) {
 
+    context = pkg->context;
     if ( !isempty(context) ) {
       ctx_len = strlen(context);
-
-      if ( ctx_len > 0 )
-        new_len += ( ctx_len + 15 ); /* ' cfg:context=""' */
+      new_len += ( ctx_len + 15 );   /* ' cfg:context=""' */
     }
 
+    derivation = pkg->derivation;
     if ( !isempty(derivation) ) {
       deriv_len = strlen(derivation);
-
-      if ( deriv_len > 0 )
-        new_len += ( deriv_len + 18 ); /* ' cfg:derivation=""' */
+      new_len += ( deriv_len + 18 ); /* ' cfg:derivation=""' */
     }
 
   }
@@ -2845,13 +2790,8 @@ int lcfgpackage_compare_names( const LCFGPackage * pkg1,
   assert( pkg1 != NULL );
   assert( pkg2 != NULL );
 
-  const char * name1 = pkg1->name;
-  if ( isempty(name1) )
-    name1 = "";
-
-  const char * name2 = pkg2->name;
-  if ( isempty(name2) )
-    name2 = "";
+  const char * name1 = or_default( pkg1->name, "" );
+  const char * name2 = or_default( pkg2->name, "" );
 
   return strcasecmp( name1, name2 );
 }
@@ -2877,13 +2817,8 @@ int lcfgpackage_compare_archs( const LCFGPackage * pkg1,
   assert( pkg1 != NULL );
   assert( pkg2 != NULL );
 
-  const char * arch1 = pkg1->arch;
-  if ( isempty(arch1) )
-    arch1 = "";
-
-  const char * arch2 = pkg2->arch;
-  if ( isempty(arch2) )
-    arch2 = "";
+  const char * arch1 = or_default( pkg1->arch, "" );
+  const char * arch2 = or_default( pkg2->arch, "" );
 
   return strcmp( arch1, arch2 );
 }
@@ -2980,13 +2915,8 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
   if ( !equals ) {
     return false;
   } else {
-    const char * flags1 = pkg1->flags;
-    if ( isempty(flags1) )
-      flags1 = "";
-
-    const char * flags2 = pkg2->flags;
-    if ( isempty(flags2) )
-      flags2 = "";
+    const char * flags1 = or_default( pkg1->flags, "" );
+    const char * flags2 = or_default( pkg2->flags, "" );
 
     equals = ( strcmp( flags1, flags2 ) == 0 );
   }
@@ -2996,13 +2926,8 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
   if ( !equals ) {
     return false;
   } else {
-    const char * ctx1 = pkg1->context;
-    if ( isempty(ctx1) )
-      ctx1 = "";
-
-    const char * ctx2 = pkg2->context;
-    if ( isempty(ctx2) )
-      ctx2 = "";
+    const char * ctx1 = or_default( pkg1->context, "" );
+    const char * ctx2 = or_default( pkg2->context, "" );
 
     equals = ( strcmp( ctx1, ctx2 ) == 0 );
   }
@@ -3179,7 +3104,7 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
   int rc = 0;
 
   char * pkg_as_str  = NULL;
-  if ( pkg != NULL && lcfgpackage_has_name(pkg) ) {
+  if ( lcfgpackage_is_valid(pkg) ) {
     size_t buf_size = 0;
     if ( lcfgpackage_to_spec( pkg, NULL, LCFG_OPT_NONE,
 				&pkg_as_str, &buf_size ) < 0 ) {
@@ -3207,10 +3132,10 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
 
   /* Final string, possibly with derivation information */
 
-  if ( pkg != NULL && lcfgpackage_has_derivation(pkg) ) {
+  if ( pkg != NULL && !isempty(pkg->derivation) ) {
     rc = asprintf( &result, "%s %s at %s",
                    msg_base, msg_mid,
-                   lcfgpackage_get_derivation(pkg) );
+                   pkg->derivation );
   } else {
     rc = asprintf( &result, "%s %s",
                    msg_base, msg_mid );
