@@ -294,8 +294,8 @@ bool lcfgresource_valid_name( const char * name ) {
 
   /* All other characters MUST be in [A-Za-z0-9_] set */
 
-  char * ptr;
-  for ( ptr = ((char *)name) + 1; valid && *ptr != '\0'; ptr++ )
+  const char * ptr;
+  for ( ptr = name + 1; valid && *ptr != '\0'; ptr++ )
     if ( !isword(*ptr) ) valid = false;
 
   return valid;
@@ -461,9 +461,8 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
      requested new type is "integer" then that change is illegal. */
 
   bool ok = false;
-  const char * cur_value = lcfgresource_get_value(res);
-  if ( cur_value == NULL ||
-       lcfgresource_valid_value_for_type( new_type, cur_value ) ) {
+  if ( res->value == NULL ||
+       lcfgresource_valid_value_for_type( new_type, res->value ) ) {
 
     res->type = new_type;
     ok = true;
@@ -524,7 +523,7 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
  */
 
 bool lcfgresource_set_type_as_string( LCFGResource * res,
-                                      const char * new_type_str,
+                                      const char * type_str,
                                       char ** msg ) {
   assert( res != NULL );
 
@@ -534,8 +533,6 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
      to be the default string type */
 
   LCFGResourceType new_type = LCFG_RESOURCE_TYPE_STRING;
-
-  char * type_str = (char *) new_type_str;
 
   /* Spin past any leading whitespace */
   if ( !isempty(type_str) )
@@ -576,13 +573,13 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
   /* Check if there is a comment string for the resource. This would
      be after the type string and enclosed in brackets - ( ) */
 
-  char * posn = type_str;
+  const char * posn = type_str;
 
   if ( ok && !isempty(type_str) ) {
 
-    char * comment_start = strchr( type_str, '(' );
+    const char * comment_start = strchr( type_str, '(' );
     if ( comment_start != NULL ) {
-      char * comment_end = strchr( comment_start, ')' );
+      const char * comment_end = strchr( comment_start, ')' );
 
       if ( comment_end != NULL ) {
         posn = comment_end + 1;
@@ -603,7 +600,7 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
   /* List types might also have templates */
 
   if ( ok && new_type == LCFG_RESOURCE_TYPE_LIST ) {
-    char * tmpl_start = strstr( posn, ": " );
+    const char * tmpl_start = strstr( posn, ": " );
     if ( tmpl_start != NULL ) {
       tmpl_start += 2;
 
@@ -643,10 +640,9 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
 bool lcfgresource_is_string( const LCFGResource * res ) {
   assert( res != NULL );
 
-  LCFGResourceType res_type = lcfgresource_get_type(res);
-  return ( res_type == LCFG_RESOURCE_TYPE_STRING    ||
-           res_type == LCFG_RESOURCE_TYPE_SUBSCRIBE ||
-           res_type == LCFG_RESOURCE_TYPE_PUBLISH );
+  return ( res->type == LCFG_RESOURCE_TYPE_STRING    ||
+           res->type == LCFG_RESOURCE_TYPE_SUBSCRIBE ||
+           res->type == LCFG_RESOURCE_TYPE_PUBLISH );
 }
 
 /**
@@ -720,8 +716,8 @@ bool lcfgresource_is_true( const LCFGResource * res ) {
 
   bool is_true = false;
 
-  if ( lcfgresource_has_value(res) ) {
-    const char * value = lcfgresource_get_value(res);
+  const char * value = res->value;
+  if ( !isempty(value) ) {
 
     if ( lcfgresource_is_boolean(res) )
       is_true = ( strcmp( value, "yes" ) == 0 );
@@ -756,16 +752,14 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
                                         LCFGOption options ) {
   assert( res != NULL );
 
-  LCFGResourceType res_type = lcfgresource_get_type(res);
-  const char * type_string = lcfgresource_type_names[res_type];
+  const char * type_string = lcfgresource_type_names[res->type];
   size_t type_len = strlen(type_string);
 
   size_t new_len = type_len;
 
-  const char * comment = NULL;
+  const char * comment = res->comment;
   size_t comment_len = 0;
-  if ( lcfgresource_has_comment(res) ) {
-    comment = lcfgresource_get_comment(res);
+  if ( !isempty(comment) ) {
     comment_len = strlen(comment);
 
     new_len += ( comment_len + 2 ); /* + 2 for enclosing ( ) */
@@ -807,7 +801,7 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
 
   to = stpncpy( to, type_string, type_len );
 
-  if ( comment != NULL ) {
+  if ( comment_len > 0 ) {
     *to = '(';
     to++;
 
@@ -1088,8 +1082,8 @@ bool lcfgresource_value_needs_encode( const LCFGResource * res ) {
   bool needs_encode = false;
 
   const char * value = lcfgresource_get_value(res);
-  char * ptr;
-  for ( ptr = (char *) value; *ptr != '\0'; ptr++ ) {
+  const char * ptr;
+  for ( ptr = value; *ptr != '\0'; ptr++ ) {
     if ( strchr( unsafe_chars, *ptr ) ) {
       needs_encode = true;
       break;
@@ -1141,8 +1135,8 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
   static const size_t amp_len = sizeof(amp) - 1;
 
   size_t extend = 0;
-  char * ptr;
-  for ( ptr=(char *) value; *ptr!='\0'; ptr++ ) {
+  const char * ptr;
+  for ( ptr=value; *ptr!='\0'; ptr++ ) {
     switch(*ptr)
       {
       case '\r':
@@ -1171,7 +1165,7 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
 
   char * to = enc_value;
 
-  for ( ptr=(char *) value; *ptr!='\0'; ptr++ ) {
+  for ( ptr=value; *ptr!='\0'; ptr++ ) {
     switch(*ptr)
       {
       case '\r':
@@ -1332,7 +1326,7 @@ bool lcfgresource_valid_integer( const char * value ) {
 
   /* First character may be a negative-sign, if so walk past */
 
-  char * ptr = (char *) value;
+  const char * ptr = value;
   if ( *ptr == '-' )
     ptr++;
 
@@ -1373,8 +1367,8 @@ bool lcfgresource_valid_list( const char * value ) {
      Tags MUST be characters in [A-Za-z0-9_] set.
      Separators MUST be spaces */
 
-  char * ptr;
-  for ( ptr = (char *) value; valid && *ptr != '\0'; ptr++ )
+  const char * ptr;
+  for ( ptr = value; valid && *ptr != '\0'; ptr++ )
     if ( !isword(*ptr) && *ptr != ' ' ) valid = false;
 
   return valid;
@@ -2280,7 +2274,7 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
 
   char * val_key = lcfgutils_string_join( "", val_pfx, name );
 
-  const char * value = or_default( pkg->value, "" );
+  const char * value = or_default( res->value, "" );
 
   if ( setenv( val_key, value, 1 ) != 0 )
     status = LCFG_STATUS_ERROR;
@@ -2420,8 +2414,8 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
     value = lcfgresource_get_value(res);
     value_len = strlen(value);
 
-    char * ptr;
-    for ( ptr = (char *) value; *ptr != '\0'; ptr++ ) {
+    const char * ptr;
+    for ( ptr = value; *ptr != '\0'; ptr++ ) {
       if ( *ptr == '\'' )
         value_len += ( escaped_len - 1 );
     }
@@ -2450,7 +2444,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
       type_len = strlen(type_as_str);
 
-      char * ptr;
+      const char * ptr;
       for ( ptr = type_as_str; *ptr != '\0'; ptr++ ) {
         if ( *ptr == '\'' )
           type_len += ( escaped_len - 1 );
@@ -2498,7 +2492,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
     to = stpncpy( to, "='", 2 );
 
-    char * ptr;
+    const char * ptr;
     for ( ptr = type_as_str; *ptr != '\0'; ptr++ ) {
       if ( *ptr == '\'' ) {
         to = stpncpy( to, escaped, escaped_len );
@@ -2526,8 +2520,8 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   to = stpncpy( to, "='", 2 );
 
   if ( value != NULL ) {
-    char * ptr;
-    for ( ptr = (char *) value; *ptr != '\0'; ptr++ ) {
+    const char * ptr;
+    for ( ptr = value; *ptr != '\0'; ptr++ ) {
       if ( *ptr == '\'' ) {
         to = stpncpy( to, escaped, escaped_len );
       } else {
@@ -2607,12 +2601,9 @@ ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS ) {
 
   /* Value */
 
-  size_t value_len = 0;
-  const char * value = "";
-  if ( lcfgresource_has_value(res) ) {
-    value = lcfgresource_get_value(res);
-    value_len = strlen(value);
-  }
+  const char * value = or_default( res->value, "" );
+  size_t value_len = strlen(value);
+
   new_len += ( base_len + value_len );
 
   /* Type */
@@ -3739,7 +3730,7 @@ bool lcfgresource_parse_key( char  * key,
 
   if ( isempty(key) ) return false;
 
-  char * start = key;
+  const char * start = key;
 
   /* Ignore any leading whitespace */
   while ( *start != '\0' && isspace(*start) ) start++;
