@@ -956,6 +956,18 @@ char * lcfgprofile_signature( const LCFGProfile * profile ) {
   md5_state_t md5state;
   lcfgutils_md5_init(&md5state);
 
+  /* For efficiency a buffer is pre-allocated. The initial size was
+     chosen by looking at typical resource usage for Informatics. The
+     buffer will be automatically grown when necessary, the aim is to
+     minimise the number of reallocations required.  */
+
+  size_t buf_size = 5120;
+  char * buffer = calloc( buf_size, sizeof(char) );
+  if ( buffer == NULL ) {
+    perror( "Failed to allocate memory for LCFG resource buffer" );
+    exit(EXIT_FAILURE);
+  }
+
   LCFGComponentList * complist = lcfgprofile_get_components(profile);
 
   /* The '=' and '\n' characters are hashed so that the signature
@@ -968,6 +980,9 @@ char * lcfgprofile_signature( const LCFGProfile * profile ) {
         comp_node = lcfgcomplist_next(comp_node) ) {
 
     const LCFGComponent * comp = lcfgcomplist_component(comp_node);
+    if ( !lcfgcomponent_is_valid(comp) ) continue;
+
+    const char * comp_name = lcfgcomponent_get_name(comp);
 
     const LCFGResourceNode * res_node = NULL;
     for ( res_node = lcfgcomponent_head(comp);
@@ -976,26 +991,14 @@ char * lcfgprofile_signature( const LCFGProfile * profile ) {
 
       const LCFGResource * res = lcfgcomponent_resource(res_node);
 
-      if ( lcfgresource_is_valid(res) ) {
-	const char * name = lcfgresource_get_name(res);
-	int name_len = strlen(name);
+      if ( lcfgresource_is_valid(res) && lcfgresource_is_active(res) ) {
 
-	lcfgutils_md5_append( &md5state,
-			      (const md5_byte_t *) name, name_len );
-
-	lcfgutils_md5_append( &md5state,
-			      (const md5_byte_t *) "=", 1 );
-
-	const char * value = lcfgresource_get_value(res);
-	int value_len = value == NULL ? 0 : strlen(value);
-
-	if ( value_len > 0 ) {
+	ssize_t rc = lcfgresource_to_status( res, comp_name, LCFG_OPT_USE_META,
+					     &buffer, &buf_size ) ) {
+	if ( rc > 0 ) {
 	  lcfgutils_md5_append( &md5state,
-				(const md5_byte_t *) value, value_len );
+				(const md5_byte_t *) buffer, rc );
 	}
-
-	lcfgutils_md5_append( &md5state,
-			      (const md5_byte_t *) "\n", 1 );
 
       }
 
@@ -1010,6 +1013,8 @@ char * lcfgprofile_signature( const LCFGProfile * profile ) {
     free(hex_digest);
     hex_digest = NULL;
   }
+
+  free(buffer);
 
   return hex_digest;
 }
