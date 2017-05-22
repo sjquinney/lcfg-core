@@ -994,7 +994,7 @@ char * lcfgprofile_signature( const LCFGProfile * profile ) {
       if ( lcfgresource_is_valid(res) && lcfgresource_is_active(res) ) {
 
 	ssize_t rc = lcfgresource_to_status( res, comp_name, LCFG_OPT_USE_META,
-					     &buffer, &buf_size ) ) {
+					     &buffer, &buf_size );
 	if ( rc > 0 ) {
 	  lcfgutils_md5_append( &md5state,
 				(const md5_byte_t *) buffer, rc );
