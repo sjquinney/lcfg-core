@@ -13,7 +13,6 @@
 #include <assert.h>
 #include <errno.h>
 
-#include "utils.h"
 #include "differences.h"
 
 /**
@@ -682,22 +681,15 @@ bool lcfgdiffcomponent_resource_is_changed( const LCFGDiffComponent * compdiff,
  * can be used to serialise the component diff in the correct way for
  * inclusion in the @e hold file.
  *
- * If the @c md5state parameter is not @c NULL this function will call
- * @c lcfgutils_md5_append() to update the state for each line written
- * into the file. This is used to generate a signature for the entire
- * file.
- *
  * @param[in] compdiff Pointer to @c LCFGDiffComponent
  * @param[in] holdfile File stream to which diff should be written
- * @param[in] md5state MD5 state structure to which data is written
  *
  * @return Status value indicating success of the process
  *
  */
 
 LCFGStatus lcfgdiffcomponent_to_holdfile( const LCFGDiffComponent * compdiff,
-                                          FILE * holdfile,
-                                          md5_state_t * md5state ) {
+                                          FILE * holdfile ) {
 
   if ( lcfgdiffcomponent_is_empty(compdiff) ) return LCFG_STATUS_OK;
 
@@ -724,9 +716,6 @@ LCFGStatus lcfgdiffcomponent_to_holdfile( const LCFGDiffComponent * compdiff,
                                            &buffer, &buf_size );
 
     if ( rc > 0 ) {
-
-      if ( md5state != NULL )
-        lcfgutils_md5_append( md5state, (const md5_byte_t *) buffer, rc );
 
       if ( fputs( buffer, holdfile ) < 0 )
         ok = false;

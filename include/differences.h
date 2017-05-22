@@ -174,8 +174,7 @@ bool lcfgdiffcomponent_has_resource( const LCFGDiffComponent * compdiff,
 void lcfgdiffcomponent_sort( LCFGDiffComponent * compdiff );
 
 LCFGStatus lcfgdiffcomponent_to_holdfile( const LCFGDiffComponent * compdiff,
-                                          FILE * holdfile,
-                                          md5_state_t * md5state )
+                                          FILE * holdfile )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgdiffcomponent_names_for_type(const LCFGDiffComponent * compdiff,
@@ -273,7 +272,7 @@ void lcfgdiffprofile_sort( LCFGDiffProfile * list );
 
 LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
                                         const char * holdfile,
-                                        char ** signature,
+                                        const char * signature,
                                         char ** msg )
   __attribute__((warn_unused_result));
 

@@ -388,7 +388,7 @@ LCFGChange lcfgdiffprofile_remove_next( LCFGDiffProfile    * list,
  *
  * @param[in] profdiff Pointer to @c LCFGDiffProfile
  * @param[in] holdfile File name to which diff should be written
- * @param[out] signature MD5 signature for the changes
+ * @param[out] signature MD5 signature for the profile
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return Status value indicating success of the process
@@ -397,7 +397,7 @@ LCFGChange lcfgdiffprofile_remove_next( LCFGDiffProfile    * list,
 
 LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
                                         const char * holdfile,
-                                        char ** signature,
+                                        const char * signature,
                                         char ** msg ) {
 
   if ( lcfgdiffprofile_is_empty(profdiff) ) return LCFG_STATUS_OK;
@@ -419,11 +419,6 @@ LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
 
   lcfgdiffprofile_sort(profdiff);
 
-  /* Initialise the MD5 support */
-
-  md5_state_t md5state;
-  lcfgutils_md5_init(&md5state);
-
   /* Iterate through the list of components with differences */
 
   const LCFGSListNode * cur_node = NULL;
@@ -438,7 +433,7 @@ LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
 
     lcfgdiffcomponent_sort(cur_compdiff);
 
-    status = lcfgdiffcomponent_to_holdfile( cur_compdiff, out, &md5state );
+    status = lcfgdiffcomponent_to_holdfile( cur_compdiff, out );
 
     if ( status == LCFG_STATUS_ERROR ) {
       lcfgutils_build_message( msg,
@@ -448,31 +443,11 @@ LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
 
   }
 
-  /* Store the signature into the hold file and pass it back to the caller */
+  /* Store the signature into the hold file */
 
-  if ( status != LCFG_STATUS_ERROR ) {
-
-    md5_byte_t digest[16];
-    lcfgutils_md5_finish( &md5state, digest );
-
-    char * hex_output = NULL;
-    if ( lcfgutils_md5_hexdigest( digest, &hex_output ) ) {
-
-      if ( fprintf( out, "signature: %s\n", hex_output ) < 0 )
-        status = LCFG_STATUS_ERROR;
-
-    } else {
+  if ( status != LCFG_STATUS_ERROR && signature != NULL ) {
+    if ( fprintf( out, "signature: %s\n", signature ) < 0 )
       status = LCFG_STATUS_ERROR;
-    }
-
-    if ( status == LCFG_STATUS_ERROR ) {
-      lcfgutils_build_message( msg, "Failed to store MD5 signature" );
-
-      free(hex_output);
-      hex_output = NULL;
-    }
-
-    *signature = hex_output;
   }
 
   if ( fclose(out) != 0 ) {
