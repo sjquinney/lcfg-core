@@ -949,7 +949,7 @@ LCFGTagList * lcfgprofile_ngeneric_components( const LCFGProfile * profile ) {
   return comp_names;
 }
 
-char * signature( const LCFGProfile * profile ) {
+char * lcfgprofile_signature( const LCFGProfile * profile ) {
 
   /* Initialise the MD5 support */
 
