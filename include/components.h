@@ -132,7 +132,7 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
  *
  */
 
-#define lcfgcomponent_head(comp) ((comp)->head)
+#define lcfgcomponent_head(comp) ( comp == NULL ? NULL : (comp)->head )
 
 /**
  * @brief Retrieve the last resource node in the list

@@ -129,6 +129,8 @@ LCFGTagList * lcfgprofile_get_components_as_taglist(
 
 LCFGTagList * lcfgprofile_ngeneric_components( const LCFGProfile * profile );
 
+char * signature( const LCFGProfile * profile );
+
 #endif /* LCFG_CORE_PROFILE_H */
 
 /* eof */

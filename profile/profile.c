@@ -949,4 +949,62 @@ LCFGTagList * lcfgprofile_ngeneric_components( const LCFGProfile * profile ) {
   return comp_names;
 }
 
+char * signature( const LCFGProfile * profile ) {
+
+  /* Initialise the MD5 support */
+
+  md5_state_t md5state;
+  lcfgutils_md5_init(&md5state);
+
+  LCFGComponentList * complist = lcfgprofile_get_components(profile);
+
+  const LCFGComponentNode * comp_node = NULL;
+  for ( comp_node = lcfgcomplist_head(complist);
+        comp_node != NULL;
+        comp_node = lcfgcomplist_next(comp_node) ) {
+
+    const LCFGComponent * comp = lcfgcomplist_component(comp_node);
+
+    const LCFGResourceNode * res_node = NULL;
+    for ( res_node = lcfgcomponent_head(comp);
+	  res_node != NULL;
+	  res_node = lcfgcomponent_next(res_node) ) {
+
+      const LCFGResource * res = lcfgcomponent_resource(res_node);
+
+      if ( lcfgresource_is_valid(res) && lcfgresource_is_active(res) ) {
+	const char * name = lcfgresource_get_name(res);
+	int name_len = strlen(name);
+
+	lcfgutils_md5_append( &md5state,
+			      (const md5_byte_t *) name, name_len );
+
+	lcfgutils_md5_append( &md5state,
+			      (const md5_byte_t *) "=", 1 );
+
+	const char * value = lcfgresource_get_value(res);
+	int value_len = value == NULL ? 0 : strlen(value);
+
+	if ( value_len > 0 ) {
+	  lcfgutils_md5_append( &md5state,
+				(const md5_byte_t *) value, value_len );
+	}
+
+      }
+
+    }
+  }
+
+  md5_byte_t digest[16];
+  lcfgutils_md5_finish( &md5state, digest );
+
+  char * hex_digest = NULL;
+  if ( !lcfgutils_md5_hexdigest( digest, &hex_digest ) ) {
+    free(hex_digest);
+    hex_digest = NULL;
+  }
+
+  return hex_digest;
+}
+
 /* eof */
