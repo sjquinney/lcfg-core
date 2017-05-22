@@ -1,6 +1,45 @@
 2017-05-22  SVN: new release
 
-	* Release: 1.40.0
+	* Release: 1.40.1
+
+2017-05-22 13:07  squinney@INF.ED.AC.UK
+
+	* include/differences.h, profile/diff.c,
+	  resources/components/diff.c: Reworked profile diff holdfile
+	  generation to take a static profile signature rather than
+	  generating something
+
+2017-05-22 12:54  squinney@INF.ED.AC.UK
+
+	* profile/profile.c: removed unnecessary braces
+
+2017-05-22 12:50  squinney@INF.ED.AC.UK
+
+	* profile/profile.c: The signature is actually based on a 'status'
+	  style view of the resource state
+
+2017-05-22 12:38  squinney@INF.ED.AC.UK
+
+	* profile/profile.c: tweaking signature function
+
+2017-05-22 12:30  squinney@INF.ED.AC.UK
+
+	* profile/profile.c: Make signature function compatible with old
+	  client code
+
+2017-05-22 12:24  squinney@INF.ED.AC.UK
+
+	* include/profile.h, profile/profile.c: fixed lcfgprofile_signature
+	  function name
+
+2017-05-22 12:20  squinney@INF.ED.AC.UK
+
+	* include/components.h, include/profile.h, profile/profile.c: Added
+	  signature method to calculate the md5 digest for the profile
+
+2017-05-22 08:23  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.40.0
 
 2017-05-22 08:22  squinney@INF.ED.AC.UK
 
