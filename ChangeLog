@@ -1,6 +1,139 @@
-2017-05-17  SVN: new release
+2017-05-22  SVN: new release
 
-	* Release: 1.39.1
+	* Release: 1.40.0
+
+2017-05-22 08:22  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/resource.c: applied const to more strings for
+	  safety
+
+2017-05-19 15:23  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: added lcfgresource_parse_spec
+
+2017-05-19 15:23  squinney@INF.ED.AC.UK
+
+	* include/resources.h: added lcfgresource_parse_spec
+
+2017-05-19 15:22  squinney@INF.ED.AC.UK
+
+	* bdb/read.c: lcfgresource_parse_key now returns pointers to 'const
+	  char' strings
+
+2017-05-19 15:22  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: Reworked
+	  lcfgcomponent_from_status_file to use lcfgresource_parse_spec
+
+2017-05-19 13:38  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/package.c: Standardised how package struct
+	  attributes are accessed. Also switched to using or_default macro
+	  in quite a few places to tidy up handling of default values
+
+2017-05-19 13:37  squinney@INF.ED.AC.UK
+
+	* include/packages.h: dropped unnecessary lcfgpackage_set_defaults
+
+2017-05-19 13:36  squinney@INF.ED.AC.UK
+
+	* include/common.h: Added or_default macro which will return string
+	  if not empty otherwise returns default.
+
+2017-05-19 10:38  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/package.c: For safety made
+	  all strings const where possible
+
+2017-05-19 06:52  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Marked a few things as const. For efficiency,
+	  tweaked how a few values are given defaults.
+
+2017-05-19 06:52  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: for efficiency use isempty in is_valid
+	  rather than calling has_name
+
+2017-05-18 16:03  squinney@INF.ED.AC.UK
+
+	* include/resources.h: marked a few validation functions as pure
+	  since return value will always be same for same input
+
+2017-05-18 15:41  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Changed how some functions which get called
+	  a lot access the value for the resource and set a default value
+	  when it is empty
+
+2017-05-18 15:01  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/ex/status_file.c: fixed call to
+	  lcfgcomponent_from_status_file
+
+2017-05-18 14:53  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: changed lcfgresource_has_value to also
+	  check for empty string. Tweaked the way lcfgresource_set_type
+	  checks the current value to see if it is safe to change the type
+
+2017-05-18 14:25  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Added support for LCFG_OPT_NOPREFIX in
+	  lcfgresource_to_string to disable inclusion of component name in
+	  generated string
+
+2017-05-18 14:17  squinney@INF.ED.AC.UK
+
+	* include/resources.h: updated spec for lcfgresource_set_attribute
+
+2017-05-18 14:16  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: removed reference to variable which is no
+	  longer required
+
+2017-05-18 14:14  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Fixed switch in lcfgresource_set_attribute
+
+2017-05-18 14:12  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: tweaked
+	  lcfgcomponent_from_status_file for change to
+	  lcfgresource_set_attribute
+
+2017-05-18 14:11  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Altered lcfgresource_set_attribute so that
+	  it copies the attribute value only where necessary
+
+2017-05-17 18:25  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Use lcfgutils_safe_tmpfile with a NULL arg to
+	  get a standard temporary file for cpp output in
+	  lcfgpkglist_from_cpp
+
+2017-05-17 18:24  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, utils/utils.c: Added lcfgutils_tmp_dirname
+	  which returns the path to the directory for temporary files.
+	  Converted lcfgutils_safe_tmpfile to use that path if NULL is
+	  passed in
+
+2017-05-17 15:32  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, lcfg.yml: Altered sizes when writing data to DB so
+	  that the stored info matches with what we get when using the old
+	  rdxprof code
+
+2017-05-17 12:53  squinney@INF.ED.AC.UK
+
+	* resources/templates.c: Tweaked error message for invalid
+	  templates so that it's easier to pass on from caller
+
+2017-05-17 10:30  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.39.1
 
 2017-05-17 10:30  squinney@INF.ED.AC.UK
 
