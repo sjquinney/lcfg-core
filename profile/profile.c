@@ -976,7 +976,7 @@ char * lcfgprofile_signature( const LCFGProfile * profile ) {
 
       const LCFGResource * res = lcfgcomponent_resource(res_node);
 
-      if ( lcfgresource_is_valid(res) && lcfgresource_is_active(res) ) {
+      if ( lcfgresource_is_valid(res) ) {
 	const char * name = lcfgresource_get_name(res);
 	int name_len = strlen(name);
 
