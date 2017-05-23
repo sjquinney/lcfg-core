@@ -41,9 +41,9 @@
 
 struct LCFGTag {
   /*@{*/
-  char * name;       /**< The tag name */
-  size_t name_len;   /**< The length of the tag name */
-  unsigned int hash; /**< The hash value for the tag name */
+  char * name;        /**< The tag name */
+  size_t name_len;    /**< The length of the tag name */
+  unsigned long hash; /**< The hash value for the tag name */
   /*@}*/
   unsigned int _refcount;
 };

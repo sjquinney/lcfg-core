@@ -376,7 +376,7 @@ LCFGTagNode * lcfgtaglist_find_node( const LCFGTagList * taglist,
 
   if ( lcfgtaglist_is_empty(taglist) ) return NULL;
 
-  unsigned int want_hash = lcfgutils_string_djbhash(want_name);
+  unsigned long want_hash = lcfgutils_string_djbhash( want_name, NULL );
 
   LCFGTagNode * result = NULL;
 
@@ -801,7 +801,7 @@ LCFGChange lcfgtaglist_mutate_replace( LCFGTagList * taglist,
     return LCFG_CHANGE_ERROR;
   }
 
-  unsigned int match_hash = lcfgutils_string_djbhash(match);
+  unsigned long match_hash = lcfgutils_string_djbhash( match, NULL );
 
   LCFGChange change = LCFG_CHANGE_NONE;
 

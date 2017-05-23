@@ -232,7 +232,7 @@ bool lcfgtag_set_name( LCFGTag * tag, char * new_name ) {
 
     tag->name     = new_name;
     tag->name_len = strlen(new_name);
-    tag->hash     = lcfgutils_string_djbhash(new_name);
+    tag->hash     = lcfgutils_string_djbhash( new_name, NULL );
 
     ok = true;
   } else {
