@@ -257,6 +257,8 @@ LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp,
 
 void lcfgcomponent_sort( LCFGComponent * comp );
 
+unsigned long lcfgcomponent_hash( const LCFGComponent * comp );
+
 /* Component list */
 
 /**

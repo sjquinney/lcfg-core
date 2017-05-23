@@ -3890,4 +3890,9 @@ bool lcfgresource_set_attribute( LCFGResource * res,
   return ok;
 }
 
+unsigned long lcfgresource_hash( const LCFGResource * res ) {
+  return lcfgutils_string_djbhash( res->name, NULL );
+}
+
+
 /* eof */

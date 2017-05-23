@@ -257,6 +257,8 @@ bool lcfgpackage_print( const LCFGPackage * pkg,
 char * lcfgpackage_build_message( const LCFGPackage * pkg,
                                   const char *fmt, ... );
 
+unsigned long lcfgpackage_hash( const LCFGPackage * pkg );
+
 /* Package Lists */
 
 /**

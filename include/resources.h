@@ -407,6 +407,8 @@ bool lcfgresource_set_attribute( LCFGResource * res,
                                  char ** msg )
   __attribute__((warn_unused_result));
 
+unsigned long lcfgresource_hash( const LCFGResource * res );
+
 #endif /* LCFG_CORE_RESOURCES_H */
 
 /* eof */

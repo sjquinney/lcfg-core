@@ -3188,4 +3188,8 @@ const char * default_architecture(void) {
   return defarch;
 }
 
+unsigned long lcfgpackage_hash( const LCFGPackage * pkg ) {
+  return lcfgutils_string_djbhash( pkg->name, pkg->arch, NULL );
+}
+
 /* eof */

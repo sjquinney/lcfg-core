@@ -1984,4 +1984,8 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
   return status;
 }
 
+unsigned long lcfgcomponent_hash( const LCFGComponent * comp ) {
+  return lcfgutils_string_djbhash( comp->name, NULL );
+}
+
 /* eof */
