@@ -546,13 +546,26 @@ char * lcfgutils_string_replace( const char * input,
   return result;
 }
 
-unsigned int lcfgutils_string_djbhash( const char * str ) {
+unsigned long lcfgutils_string_djbhash( const char * str, ... ) {
 
-   unsigned int hash = 5381;
+  unsigned long hash = 5381;
 
-   unsigned char * p;
-   for ( p = (unsigned char *) str; *p != '\0'; p++ )
-     hash = ( ( hash << 5 ) + hash ) + ( *str );
+  const char * p;
+  for ( p = str; *p != '\0'; p++ )
+    hash = ( ( hash << 5 ) + hash ) + ( *p );
+
+  va_list ap;
+  va_start( ap, str );
+
+  const char * extra_str = NULL;
+  while ( ( extra_str = va_arg( ap, const char *) ) != NULL ) {
+
+    for ( p = extra_str; *p != '\0'; p++ )
+      hash = ( ( hash << 5 ) + hash ) + ( *p );
+
+  }
+
+   va_end(ap);
 
    return hash;
 }
