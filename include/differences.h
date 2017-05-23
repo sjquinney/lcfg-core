@@ -71,7 +71,6 @@ bool lcfgdiffresource_is_removed( const LCFGDiffResource * resdiff );
 
 ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
 				    const char * prefix,
-				    const char * comments,
 				    bool pending,
 				    char ** result, size_t * size );
 

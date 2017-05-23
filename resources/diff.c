@@ -474,7 +474,6 @@ bool lcfgdiffresource_is_removed( const LCFGDiffResource * resdiff ) {
  *
  * @param[in] resdiff Pointer to @c LCFGDiffResource
  * @param[in] prefix Prefix, usually the component name (may be @c NULL)
- * @param[in] comments Pointer to string of comments which should be included
  * @param[in] pending Boolean which indicates whether this is a 'pending' change
  * @param[in,out] result Reference to the pointer to the string buffer
  * @param[in,out] size Reference to the size of the string buffer
@@ -485,7 +484,6 @@ bool lcfgdiffresource_is_removed( const LCFGDiffResource * resdiff ) {
 
 ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
 				    const char * prefix,
-				    const char * comments,
 				    bool pending,
 				    char ** result, size_t * size ) {
   assert( resdiff != NULL );
@@ -522,7 +520,7 @@ ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
   /* base of message */
 
   static const char base[] = "resource";
-  size_t base_len = sizeof(base);
+  size_t base_len = sizeof(base) - 1;
 
   new_len += ( base_len + 1 ); /* + 1 for ' ' (space) separator */
 
@@ -543,11 +541,19 @@ ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
   size_t name_len = name != NULL ? strlen(name) : 0;
   new_len += ( name_len + 2 );    /* +2 for ": " separator */
 
-  /* Optional comments */
+  /* Comment about add of resource with empty value */
 
-  size_t comments_len = comments != NULL ? strlen(comments) : 0;
-  if ( comments_len > 0 )
-    new_len += ( comments_len + 3 ); /* +3 for brackets and ' ' separator */
+  static const char isnull_comment[] = " (null)";
+  const size_t isnull_comment_len = sizeof(isnull_comment) - 1;
+
+  bool add_is_null = false;
+  if ( difftype == LCFG_CHANGE_ADDED ) {
+    const LCFGResource * new_res = lcfgdiffresource_get_new(resdiff);
+    if ( !lcfgresource_has_value(new_res) ) {
+      add_is_null = true;
+      new_len += isnull_comment_len;
+    }
+  }
 
   /* Allocate the required space */
 
@@ -595,14 +601,8 @@ ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
   if ( name_len > 0 )
     to = stpncpy( to, name, name_len );
 
-  if ( comments_len > 0 ) {
-    to = stpncpy( to, " (", 2 );
-
-    to = stpncpy( to, comments, comments_len );
-
-    *to = ')';
-    to++;
-  }
+  if ( add_is_null )
+    to = stpncpy( to, isnull_comment, isnull_comment_len );
 
   *to = '\0';
 
