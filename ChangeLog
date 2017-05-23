@@ -1,6 +1,17 @@
-2017-05-22  SVN: new release
+2017-05-23  SVN: new release
 
-	* Release: 1.40.1
+	* Release: 1.40.2
+
+2017-05-23 09:20  squinney@INF.ED.AC.UK
+
+	* include/differences.h, lcfg.yml, resources/diff.c: Altered how
+	  the string is generated in lcfgdiffresource_to_string, the
+	  comments feature is actually just used for noting when a newly
+	  added resource has no value
+
+2017-05-22 14:06  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.40.1
 
 2017-05-22 13:07  squinney@INF.ED.AC.UK
 
