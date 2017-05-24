@@ -3890,6 +3890,19 @@ bool lcfgresource_set_attribute( LCFGResource * res,
   return ok;
 }
 
+/**
+ * @brief Calculate the hash for a resource
+ *
+ * This will calculate the hash for the resource using the value for
+ * the @e name parameter. It does this using the @c
+ * lcfgutils_string_djbhash() function.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ *
+ * @return The hash for the resource name
+ *
+ */
+
 unsigned long lcfgresource_hash( const LCFGResource * res ) {
   return lcfgutils_string_djbhash( res->name, NULL );
 }

@@ -546,6 +546,22 @@ char * lcfgutils_string_replace( const char * input,
   return result;
 }
 
+/**
+ * @brief Calculate the hash for a set of strings
+ *
+ * This will calculate the hash for a set of strings using the djb2
+ * algorithm created by Daniel Bernstein.
+ *
+ * This function supports the passing of multiple strings. There must
+ * be at least one string and there must be a final @c NULL value to
+ * indicate the end of the list of strings.
+ *
+ * @param[in] str Pointer to string to be hashed
+ *
+ * @return The hash for the strings
+ *
+ */
+
 unsigned long lcfgutils_string_djbhash( const char * str, ... ) {
 
   unsigned long hash = 5381;

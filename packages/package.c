@@ -3188,6 +3188,19 @@ const char * default_architecture(void) {
   return defarch;
 }
 
+/**
+ * @brief Calculate the hash for a package
+ *
+ * This will calculate the hash for the package using the values for
+ * the @e name and @e arch parameters. It does this using the @c
+ * lcfgutils_string_djbhash() function.
+ *
+ * @param[in] pkg Pointer to @c LCFGPackage
+ *
+ * @return The hash for the package name and architecture
+ *
+ */
+
 unsigned long lcfgpackage_hash( const LCFGPackage * pkg ) {
   return lcfgutils_string_djbhash( pkg->name, pkg->arch, NULL );
 }
