@@ -1195,7 +1195,7 @@ LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
      buffer will be automatically grown when necessary, the aim is to
      minimise the number of reallocations required.  */
 
-  size_t buf_size = 384;
+  size_t buf_size = 5120;
   char * buffer = calloc( buf_size, sizeof(char) );
   if ( buffer == NULL ) {
     perror( "Failed to allocate memory for LCFG resource buffer" );

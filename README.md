@@ -26,7 +26,7 @@ For RPM-based systems a specfile is provided which can be used to
 build the software as the RPMs: lcfg-core, lcfg-core-devel and
 lcfg-core-doc. That can be done like:
 
-   rpmbuild -ta lcfg-core.tar.gz
+    rpmbuild -ta lcfg-core.tar.gz
 
 This requires the installation of the rpm-build package.
 
