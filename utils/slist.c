@@ -1,3 +1,12 @@
+/**
+ * @file utils/utils.c
+ * @brief Generic single-linked list support
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date$
+ * $Revision$
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
