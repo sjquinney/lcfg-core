@@ -22,7 +22,7 @@ tested on Redhat Enterprise/Fedora and Debian/Ubuntu systems.
     make doc
     sudo make install
 
-Debugging can be enabled by passing the -DCMAKE_BUILD_TYPE=Debug
+Debugging can be enabled by passing the `-DCMAKE_BUILD_TYPE=Debug`
 option on the cmake command line.
 
 The libraries need to be educated as to the correct location for a
@@ -63,7 +63,7 @@ To generate the documentation the Doxygen packages are required:
 
     yum install doxygen-latex doxygen
 
-### Debian/Ubuntu
+### Debian/Ubuntu (and derivatives)
 
     apt install build-essential cmake pkg-config g++
 
