@@ -1,8 +1,11 @@
-# LCFG Core Libraries
+# Building the LCFG Core Libraries
 
 This provides all the core C libraries for the LCFG configuration
 management framework. For more information on the LCFG project see the
 website at http://www.lcfg.org/
+
+Included is support for processing LCFG package and resource data
+to/from various file formats.
 
 It is expected that these libraries will build and function correctly
 on any Unix-like system (including MacOSX) but they have only been
@@ -19,8 +22,18 @@ tested on Redhat Enterprise/Fedora and Debian/Ubuntu systems.
     make doc
     sudo make install
 
-Debugging can be enabled by passing the -DCMAKE_BUILD_TYPE=Debug
+Debugging can be enabled by passing the `-DCMAKE_BUILD_TYPE=Debug`
 option on the cmake command line.
+
+The libraries need to be educated as to the correct location for a
+couple of directories.
+
+   * `LCFGLOG` - Standard location for LCFG log files - `/var/log/lcfg`
+   * `LCFGTMP` - Standard location for LCFG temporary files - `/var/tmp/lcfg`
+
+They can be overridden by specifying them on the cmake command
+line. For example, to revert to the *legacy* locations use:
+`-DLCFGLOG:STRING=/var/lcfg/log` and `-DLCFGTMP:STRING=/var/lcfg/tmp`
 
 ## Requirements
 
@@ -30,7 +43,9 @@ code can also alternatively be compiled using clang (versions from 3.8
 through to 5.0).
 
 The build process is managed using CMake - https://cmake.org/ - which
-in turn will typically use Make.
+in turn will typically use Make. Note that, although the project only
+uses C code, you need to install the C++ compiler otherwise CMake does
+not work properly.
 
 The development packages for Berkeley DB and libxml2 are also required.
 
@@ -48,9 +63,11 @@ To generate the documentation the Doxygen packages are required:
 
     yum install doxygen-latex doxygen
 
-### Debian/Ubuntu
+### Debian/Ubuntu (and derivatives)
 
     apt install build-essential cmake pkg-config g++
+
+Install the development library packages with:
 
     apt install libdb-dev libxml2-dev
 
