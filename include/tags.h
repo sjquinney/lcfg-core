@@ -2,8 +2,9 @@
  * @file tags.h
  * @brief Functions for working with LCFG resource tags
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-23 15:39:27 +0100 (Tue, 23 May 2017) $
- * $Revision: 32891 $
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
+ * $Revision: 32923 $
  *
  * Doubly linked-list structure for ordered lists of LCFG "tags". Also
  * intended to be reasonably efficient for set-like operations.

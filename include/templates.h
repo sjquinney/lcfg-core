@@ -2,8 +2,9 @@
  * @file templates.h
  * @brief LCFG resource template handling library
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-04-26 17:34:30 +0100 (Wed, 26 Apr 2017) $
- * $Revision: 32552 $
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
+ * $Revision: 32923 $
  */
 
 #ifndef LCFG_CORE_TEMPLATES_H

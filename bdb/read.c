@@ -2,6 +2,7 @@
  * @file bdb/read.c
  * @brief Functions for reading a profile from Berkeley DB
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
  * $Date: 2017-05-02 15:30:13 +0100 (Tue, 02 May 2017) $
  * $Revision: 32603 $
  */

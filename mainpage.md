@@ -1,0 +1,3 @@
+LCFG Core API {#mainpage}
+=============
+

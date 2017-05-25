@@ -2,8 +2,9 @@
  * @file xml.h
  * @brief Functions for importing profiles from XML
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-10 12:05:34 +0100 (Wed, 10 May 2017) $
- * $Revision: 32666 $
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
+ * $Revision: 32923 $
  */
 
 #ifndef LCFG_CORE_XML_H

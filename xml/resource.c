@@ -2,6 +2,7 @@
  * @file xml/resource.c
  * @brief Functions for processing resource data in LCFG XML profiles
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
  * $Date: 2017-04-27 11:58:12 +0100 (Thu, 27 Apr 2017) $
  * $Revision: 32561 $
  */

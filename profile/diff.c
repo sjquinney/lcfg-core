@@ -2,6 +2,7 @@
  * @file profile/diff.c
  * @brief Functions for finding the differences between LCFG profiles
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
  * $Date: 2017-05-12 10:44:21 +0100 (Fri, 12 May 2017) $
  * $Revision: 32703 $
  */

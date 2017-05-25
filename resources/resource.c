@@ -2,8 +2,9 @@
  * @file resources/resource.c
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-24 10:56:48 +0100 (Wed, 24 May 2017) $
- * $Revision: 32893 $
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
+ * $Revision: 32923 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -516,7 +517,7 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
  * foo_$_$ bar_$_$`
  *
  * @param[in] res Pointer to an @c LCFGResource
- * @param[in] new_type_str The new type as a string
+ * @param[in] type_str The new type as a string
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return boolean indicating success
@@ -3628,7 +3629,7 @@ ssize_t lcfgresource_build_key( const LCFGResource * res,
  * parts. Note that this function modifies the given string in-place
  * and returns pointers to the various chunks of interest.
  *
- * @param[in] key Pointer to the resource spec (will be modified in place)
+ * @param[in] spec Pointer to the resource spec (will be modified in place)
  * @param[out] hostname Reference to a pointer to the hostname part of the key (optional)
  * @param[out] compname Reference to a pointer to the component name part of the key (optional)
  * @param[out] resname Reference to a pointer to the resource name

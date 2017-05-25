@@ -2,8 +2,9 @@
  * @file packages/list.c
  * @brief Functions for working with lists of LCFG packages
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-17 19:25:37 +0100 (Wed, 17 May 2017) $
- * $Revision: 32802 $
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
+ * $Revision: 32923 $
  */
 
 #define _WITH_GETLINE /* for BSD */

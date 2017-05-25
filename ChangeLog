@@ -1,6 +1,46 @@
-2017-05-23  SVN: new release
+2017-05-25  SVN: new release
 
-	* Release: 1.40.2
+	* Release: 1.40.3
+
+2017-05-25 11:44  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/components/component.c, resources/resource.c:
+	  Fixed minor doc issues
+
+2017-05-25 11:39  squinney@INF.ED.AC.UK
+
+	* include/components.h, include/profile.h, lcfg.yml,
+	  profile/profile.c, resources/components/component.c,
+	  resources/components/list.c: Added support for sorting lists of
+	  components
+
+2017-05-24 09:56  squinney@INF.ED.AC.UK
+
+	* packages/package.c, resources/components/component.c,
+	  resources/resource.c, utils/utils.c: Documented the hash
+	  functions
+
+2017-05-23 14:44  squinney@INF.ED.AC.UK
+
+	* include/components.h, include/packages.h, include/resources.h,
+	  packages/package.c, resources/components/component.c,
+	  resources/resource.c: Added hash functions for resources,
+	  components and packages
+
+2017-05-23 14:39  squinney@INF.ED.AC.UK
+
+	* include/tags.h, resources/tags/list.c, resources/tags/tag.c:
+	  updated for changed to lcfgutils_string_djbhash function
+
+2017-05-23 14:37  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, utils/utils.c: altered
+	  lcfgutils_string_djbhash so it will take a variable number of
+	  arguments
+
+2017-05-23 09:54  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.40.2
 
 2017-05-23 09:20  squinney@INF.ED.AC.UK
 

@@ -2,6 +2,7 @@
  * @file profile/profile.c
  * @brief Functions for working with LCFG profiles
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
  * $Date: 2017-04-26 17:35:05 +0100 (Wed, 26 Apr 2017) $
  * $Revision: 32553 $
  */
@@ -1017,6 +1018,26 @@ char * lcfgprofile_signature( const LCFGProfile * profile ) {
   free(buffer);
 
   return hex_digest;
+}
+
+/**
+ * @brief Sort a list of components by name
+ *
+ * This sorts the list of components for the @c LCFGProfile using the
+ * @c lcfgcomplist_sort() function.
+ *
+ * @param[in] profile Pointer to @c LCFGProfile
+ *
+ */
+
+
+void lcfgprofile_sort_components( const LCFGProfile * profile ) {
+  assert( profile != NULL );
+
+  LCFGComponentList * complist = profile->components;
+  if ( complist != NULL )
+    lcfgcomplist_sort(complist);
+
 }
 
 /* eof */

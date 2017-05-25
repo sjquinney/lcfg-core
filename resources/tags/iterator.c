@@ -2,8 +2,9 @@
  * @file resources/tags/iterator.c
  * @brief Functions for iterating back and forth through LCFG resource tag lists
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-08 19:02:26 +0100 (Mon, 08 May 2017) $
- * $Revision: 32646 $
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
+ * $Revision: 32923 $
  */
 
 #include <stdbool.h>

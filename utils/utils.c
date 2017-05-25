@@ -2,8 +2,9 @@
  * @file utils/utils.c
  * @brief Commonly useful functions
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-12 10:44:21 +0100 (Fri, 12 May 2017) $
- * $Revision: 32703 $
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date: 2017-05-25 14:43:13 +0100 (Thu, 25 May 2017) $
+ * $Revision: 32922 $
  */
 
 #define _GNU_SOURCE /* for asprintf */

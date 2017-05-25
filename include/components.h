@@ -2,8 +2,9 @@
  * @file components.h
  * @brief Functions for working with LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-23 15:44:59 +0100 (Tue, 23 May 2017) $
- * $Revision: 32892 $
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
+ * $Revision: 32923 $
  */
 
 #ifndef LCFG_CORE_COMPONENT_H
@@ -259,6 +260,12 @@ void lcfgcomponent_sort( LCFGComponent * comp );
 
 unsigned long lcfgcomponent_hash( const LCFGComponent * comp );
 
+int lcfgcomponent_compare( const LCFGComponent * comp1,
+                           const LCFGComponent * comp2 );
+
+bool lcfgcomponent_match( const LCFGComponent * comp,
+                          const char * name );
+
 /* Component list */
 
 /**
@@ -340,7 +347,7 @@ bool lcfgcomplist_print( const LCFGComponentList * complist,
  *
  */
 
-#define lcfgcomplist_head(complist) ((complist)->head)
+#define lcfgcomplist_head(complist) (complist == NULL ? NULL : (complist)->head)
 
 /**
  * @brief Retrieve the last component node in the list
@@ -356,7 +363,7 @@ bool lcfgcomplist_print( const LCFGComponentList * complist,
  *
  */
 
-#define lcfgcomplist_tail(complist) ((complist)->tail)
+#define lcfgcomplist_tail(complist) (complist == NULL ? NULL : (complist)->tail)
 
 /**
  * @brief Get the number of nodes in the list
@@ -486,6 +493,8 @@ LCFGTagList * lcfgcomplist_get_components_as_taglist(
 
 char * lcfgcomplist_get_components_as_string(
                                             const LCFGComponentList * complist);
+
+void lcfgcomplist_sort( LCFGComponentList * complist );
 
 /* Resource List iterator */
 /**

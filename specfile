@@ -25,15 +25,22 @@ Requires(post,postun):         /sbin/ldconfig
 
 %package devel
 Group: LCFG/Devel
-Summary: Development files for the LCFG profile library
+Summary: Development files for the LCFG core libraries
 Requires: %{name} = %{version}-%{release}
 Provides: lcfg-utils-devel
 
 %description devel
-@LCFG_ABSTRACT@
-
 This package contains the libraries and header files necessary for
-building software and linking against the LCFG profile libraries.
+building software and linking against the LCFG core libraries.
+
+%package doc
+Group: LCFG/Devel
+Summary: Documentation files for the LCFG core libraries
+
+%description doc
+This package contains the documentation for the LCFG core
+libraries. The documentation is generated using Doxygen and is
+available as a PDF file or as an HTML tree.
 
 %prep
 %setup
@@ -77,8 +84,6 @@ rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 %{_libdir}/liblcfg_xml.so.*
 
 %files devel
-%doc docs/html
-%doc docs/latex/refman.pdf
 %{_datadir}/pkgconfig/*.pc
 %{_includedir}/lcfg/*.h
 %{_libdir}/liblcfg_bdb.a
@@ -95,6 +100,10 @@ rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 %{_libdir}/liblcfg_resources.so
 %{_libdir}/liblcfg_xml.a
 %{_libdir}/liblcfg_xml.so
+
+%files doc
+%doc docs/html
+%doc docs/latex/refman.pdf
 
 %clean
 rm -rf $RPM_BUILD_ROOT
