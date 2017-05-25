@@ -61,6 +61,10 @@ tested with various versions of gcc from 4.8.5 through to 6.3.0. The
 code can also alternatively be compiled using clang (versions from 3.8
 through to 5.0).
 
+The context parser uses bison - https://www.gnu.org/software/bison/ -
+and flex - https://github.com/westes/flex - so those tools must also
+be installed when building the libraries.
+
 The build process is managed using CMake - https://cmake.org/ - which
 in turn will typically use Make. Note that, although the project only
 uses C code, you need to install the C++ compiler otherwise CMake does
@@ -72,7 +76,7 @@ The development packages for Berkeley DB and libxml2 are also required.
 
 On EL7 install the build tools with:
 
-    yum install cmake make pkg-config gcc gcc-c++
+    yum install cmake make pkg-config gcc gcc-c++ flex bison
 
 Install the development library packages with:
 
@@ -84,7 +88,7 @@ To generate the documentation the Doxygen packages are required:
 
 ### Debian/Ubuntu (and derivatives)
 
-    apt install build-essential cmake pkg-config g++
+    apt install build-essential cmake pkg-config g++ flex bison
 
 Install the development library packages with:
 
