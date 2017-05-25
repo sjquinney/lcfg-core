@@ -22,6 +22,9 @@ tested on Redhat Enterprise/Fedora and Debian/Ubuntu systems.
     make doc
     sudo make install
 
+After manually installing the libraries it might also be necessary to
+run `/sbin/ldconfig` to update the cache.
+
 For RPM-based systems a specfile is provided which can be used to
 build the software as the RPMs: lcfg-core, lcfg-core-devel and
 lcfg-core-doc. That can be done like:
