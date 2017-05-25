@@ -2,6 +2,7 @@
  * @file profile/profile.c
  * @brief Functions for working with LCFG profiles
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
  * $Date: 2017-04-26 17:35:05 +0100 (Wed, 26 Apr 2017) $
  * $Revision: 32553 $
  */

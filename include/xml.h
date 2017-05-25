@@ -2,6 +2,7 @@
  * @file xml.h
  * @brief Functions for importing profiles from XML
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
  * $Date$
  * $Revision$
  */

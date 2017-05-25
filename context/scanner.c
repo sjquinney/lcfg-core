@@ -2,6 +2,7 @@
  * @file context/scanner.c
  * @brief Functions for parsing and evaluating context expressions
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
  * $Date: 2017-04-25 15:04:02 +0100 (Tue, 25 Apr 2017) $
  * $Revision: 32496 $
  */
