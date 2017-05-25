@@ -25,6 +25,16 @@ tested on Redhat Enterprise/Fedora and Debian/Ubuntu systems.
 Debugging can be enabled by passing the -DCMAKE_BUILD_TYPE=Debug
 option on the cmake command line.
 
+The libraries need to be educated as to the correct location for a
+couple of directories.
+
+   * `LCFGLOG` - Standard location for LCFG log files - `/var/log/lcfg`
+   * `LCFGTMP` - Standard location for LCFG temporary files - `/var/tmp/lcfg`
+
+They can be overridden by specifying them on the cmake command
+line. For example, to revert to the *legacy* locations use:
+`-DLCFGLOG:STRING=/var/lcfg/log` and `-DLCFGTMP:STRING=/var/lcfg/tmp`
+
 ## Requirements
 
 To build the software a C compiler is required. The code has been
