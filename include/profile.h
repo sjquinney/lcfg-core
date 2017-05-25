@@ -131,6 +131,8 @@ LCFGTagList * lcfgprofile_ngeneric_components( const LCFGProfile * profile );
 
 char * lcfgprofile_signature( const LCFGProfile * profile );
 
+void lcfgprofile_sort_components( const LCFGProfile * profile );
+
 #endif /* LCFG_CORE_PROFILE_H */
 
 /* eof */

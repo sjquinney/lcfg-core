@@ -1019,4 +1019,24 @@ char * lcfgprofile_signature( const LCFGProfile * profile ) {
   return hex_digest;
 }
 
+/**
+ * @brief Sort a list of components by name
+ *
+ * This sorts the list of components for the @c LCFGProfile using the
+ * @c lcfgcomplist_sort() function.
+ *
+ * @param[in] profile Pointer to @c LCFGProfile
+ *
+ */
+
+
+void lcfgprofile_sort_components( const LCFGProfile * profile ) {
+  assert( profile != NULL );
+
+  LCFGComponentList * complist = profile->components;
+  if ( complist != NULL )
+    lcfgcomplist_sort(complist);
+
+}
+
 /* eof */

@@ -259,6 +259,12 @@ void lcfgcomponent_sort( LCFGComponent * comp );
 
 unsigned long lcfgcomponent_hash( const LCFGComponent * comp );
 
+int lcfgcomponent_compare( const LCFGComponent * comp1,
+                           const LCFGComponent * comp2 );
+
+bool lcfgcomponent_match( const LCFGComponent * comp,
+                          const char * name );
+
 /* Component list */
 
 /**
@@ -340,7 +346,7 @@ bool lcfgcomplist_print( const LCFGComponentList * complist,
  *
  */
 
-#define lcfgcomplist_head(complist) ((complist)->head)
+#define lcfgcomplist_head(complist) (complist == NULL ? NULL : (complist)->head)
 
 /**
  * @brief Retrieve the last component node in the list
@@ -356,7 +362,7 @@ bool lcfgcomplist_print( const LCFGComponentList * complist,
  *
  */
 
-#define lcfgcomplist_tail(complist) ((complist)->tail)
+#define lcfgcomplist_tail(complist) (complist == NULL ? NULL : (complist)->tail)
 
 /**
  * @brief Get the number of nodes in the list
@@ -486,6 +492,8 @@ LCFGTagList * lcfgcomplist_get_components_as_taglist(
 
 char * lcfgcomplist_get_components_as_string(
                                             const LCFGComponentList * complist);
+
+void lcfgcomplist_sort( LCFGComponentList * complist );
 
 /* Resource List iterator */
 /**

@@ -376,11 +376,7 @@ LCFGComponentNode * lcfgcomplist_find_node( const LCFGComponentList * complist,
 
     const LCFGComponent * comp = lcfgcomplist_component(cur_node);
 
-    if ( !lcfgcomponent_has_name(comp) ) continue;
-
-    const char * comp_name = lcfgcomponent_get_name(comp);
-
-    if ( strcmp( comp_name, want_name ) == 0 )
+    if ( lcfgcomponent_match(comp, want_name) )
       result = (LCFGComponentNode *) cur_node;
 
   }
@@ -1158,6 +1154,46 @@ char * lcfgcomplist_get_components_as_string(
   lcfgtaglist_relinquish(comp_names);
 
   return res_as_str;
+}
+
+/**
+ * @brief Sort a list of components
+ *
+ * This sorts the nodes of the list of components for an @c
+ * LCFGComponentList by using the @c lcfgcomponent_compare() function.
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ *
+ */
+
+void lcfgcomplist_sort( LCFGComponentList * complist ) {
+  assert( complist != NULL );
+
+  if ( lcfgcomplist_size(complist) < 2 ) return;
+
+  /* Oo. Oo. bubble sort .oO .oO */
+
+  bool swapped=true;
+  while (swapped) {
+    swapped=false;
+
+    LCFGComponentNode * cur_node = NULL;
+    for ( cur_node = lcfgcomplist_head(complist);
+          cur_node != NULL && cur_node->next != NULL;
+          cur_node = lcfgcomplist_next(cur_node) ) {
+
+      LCFGComponent * cur_comp  = lcfgcomplist_component(cur_node);
+      LCFGComponent * next_comp = lcfgcomplist_component(cur_node->next);
+
+      if ( lcfgcomponent_compare( cur_comp, next_comp ) > 0 ) {
+        cur_node->component       = next_comp;
+        cur_node->next->component = cur_comp;
+        swapped = true;
+      }
+
+    }
+  }
+
 }
 
 /* eof */

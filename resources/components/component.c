@@ -1998,7 +1998,56 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
  */
 
 unsigned long lcfgcomponent_hash( const LCFGComponent * comp ) {
+  assert( comp != NULL );
   return lcfgutils_string_djbhash( comp->name, NULL );
+}
+
+/**
+ * @brief Compare the component names
+ *
+ * This compares the names for two @c LCFGComponent, this is mostly
+ * useful for sorting lists of components. An integer value is
+ * returned which indicates lesser than, equal to or greater than in
+ * the same way as @c strcmp(3).
+ *
+ * @param[in] comp1 Pointer to @c LCFGComponent
+ * @param[in] comp2 Pointer to @c LCFGComponent
+ * 
+ * @return Integer (-1,0,+1) indicating lesser,equal,greater
+ *
+ */
+
+int lcfgcomponent_compare( const LCFGComponent * comp1,
+                           const LCFGComponent * comp2 ) {
+  assert( comp1 != NULL );
+  assert( comp2 != NULL );
+
+  const char * comp1_name = or_default( comp1->name, "" );
+  const char * comp2_name = or_default( comp2->name, "" );
+
+  return strcmp( comp1_name, comp2_name );
+}
+
+/**
+ * @brief Test if component name matches string
+ *
+ * This compares the name of the @c LCFGComponent with the specified string.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] name The name to check for a match
+ *
+ * @return boolean indicating equality of values
+ *
+ */
+
+bool lcfgcomponent_match( const LCFGComponent * comp,
+                          const char * name ) {
+  assert( comp != NULL );
+  assert( name != NULL );
+
+  const char * comp_name = or_default( comp->name, "" );
+
+  return ( strcmp( comp_name, name ) == 0 );
 }
 
 /* eof */
