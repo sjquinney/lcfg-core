@@ -2,8 +2,8 @@
  * @file profile.h
  * @brief Functions for working with LCFG profiles
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-15 12:57:30 +0100 (Mon, 15 May 2017) $
- * $Revision: 32743 $
+ * $Date: 2017-05-22 13:24:00 +0100 (Mon, 22 May 2017) $
+ * $Revision: 32847 $
  */
 
 #ifndef LCFG_CORE_PROFILE_H
@@ -128,6 +128,8 @@ LCFGTagList * lcfgprofile_get_components_as_taglist(
                                                const LCFGProfile * profile );
 
 LCFGTagList * lcfgprofile_ngeneric_components( const LCFGProfile * profile );
+
+char * lcfgprofile_signature( const LCFGProfile * profile );
 
 #endif /* LCFG_CORE_PROFILE_H */
 

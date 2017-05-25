@@ -2,8 +2,8 @@
  * @file packages/list.c
  * @brief Functions for working with lists of LCFG packages
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-12 12:27:35 +0100 (Fri, 12 May 2017) $
- * $Revision: 32706 $
+ * $Date: 2017-05-17 19:25:37 +0100 (Wed, 17 May 2017) $
+ * $Revision: 32802 $
  */
 
 #define _WITH_GETLINE /* for BSD */
@@ -1079,13 +1079,9 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     goto cleanup;
   }
 
-  /* Temporary file for cpp output, honour any TMPDIR env variable */
+  /* Temporary file for cpp output */
 
-  char * tmpdir = getenv("TMPDIR");
-  if ( tmpdir == NULL )
-    tmpdir = "/tmp";
-
-  tmpfile = lcfgutils_catfile( tmpdir, ".lcfg.XXXXXX" );
+  tmpfile = lcfgutils_safe_tmpfile(NULL);
 
   int tmpfd = mkstemp(tmpfile);
   if ( tmpfd == -1 ) {

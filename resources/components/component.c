@@ -2,8 +2,8 @@
  * @file resources/components/component.c
  * @brief Functions for working with LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-15 12:13:14 +0100 (Mon, 15 May 2017) $
- * $Revision: 32742 $
+ * $Date: 2017-05-24 10:56:48 +0100 (Wed, 24 May 2017) $
+ * $Revision: 32893 $
  */
 
 #include <stdbool.h>
@@ -901,78 +901,48 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
     goto cleanup;
   }
 
-  size_t line_len = 128;
-  char * line = malloc( line_len * sizeof(char) );
-  if ( line == NULL ) {
+  size_t line_len = 5120; /* Status files contain long derivation lines */
+  char * statusline = calloc( line_len, sizeof(char) );
+  if ( statusline == NULL ) {
     perror( "Failed to allocate memory for status parser buffer" );
     exit(EXIT_FAILURE);
   }
 
-  char * statusline = NULL;
-
   int linenum = 1;
-  while( getline( &line, &line_len, fp ) != -1 ) {
-
-    /* Need a copy of the string as it will be mangled by the parser */
-
-    free(statusline);
-    statusline = strdup(line);
-    if ( statusline == NULL ) {
-      perror( "Failed to copy status line" );
-      exit(EXIT_FAILURE);
-    }
+  while( getline( &statusline, &line_len, fp ) != -1 ) {
 
     lcfgutils_string_chomp(statusline);
 
-    /* Search for the '=' which separates status keys and values */
+    const char * this_hostname = NULL;
+    const char * this_compname = NULL;
+    const char * this_resname  = NULL;
+    const char * status_value  = NULL;
+    char this_type             = LCFG_RESOURCE_SYMBOL_VALUE;
 
-    char * sep = strchr( statusline, '=' );
-    if ( sep == NULL ) {
-      lcfgutils_build_message( msg, "Failed to parse line %d (missing '=' character)",
-                linenum );
+    char * parse_msg = NULL;
+    LCFGStatus parse_status = lcfgresource_parse_spec( statusline,
+                                                       &this_hostname,
+                                                       &this_compname,
+                                                       &this_resname, 
+                                                       &status_value,
+                                                       &this_type,
+                                                       &parse_msg );
+
+    if ( parse_status == LCFG_STATUS_ERROR ) {
+      lcfgutils_build_message( msg, "Failed to parse line %d (%s)",
+                               linenum, parse_msg );
       ok = false;
       break;
     }
-
-    /* Replace the '=' separator with a NULL so that can avoid
-       unnecessarily dupping the string */
-
-    *sep = '\0';
-
-    /* The value is everything after the separator (could just be an
-       empty string) */
-
-    char * status_value = sep + 1;
-
-    /* Find the component name (if any) and the resource name */
-
-    char * this_hostname = NULL;
-    char * this_compname = NULL;
-    char * this_resname  = NULL;
-    char this_type       = LCFG_RESOURCE_SYMBOL_VALUE;
-
-    if ( !lcfgresource_parse_key( statusline, &this_hostname, &this_compname,
-                                  &this_resname, &this_type ) ) {
-      lcfgutils_build_message( msg, "Failed to parse line %d (invalid key '%s')",
-                linenum, statusline );
-      ok = false;
-      break;
-    }
-
-    /* Check for valid resource name */
-
-    if ( !lcfgresource_valid_name(this_resname) ) {
-      lcfgutils_build_message( msg, "Failed to parse line %d (invalid resource name '%s')",
-                linenum, this_resname );
-      ok = false;
-      break;
-    }
+    free(parse_msg);
 
     /* Insist on the component names matching */
 
-    if ( this_compname != NULL && strcmp( this_compname, compname ) != 0 ) {
+    if ( this_compname != NULL && 
+         ( !lcfgcomponent_valid_name( this_compname) ||
+           strcmp( this_compname, compname ) != 0 ) ) {
       lcfgutils_build_message( msg, "Failed to parse line %d (invalid component name '%s')",
-                linenum, this_compname );
+                               linenum, this_compname );
       ok = false;
       break;
     }
@@ -983,8 +953,9 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
       lcfgcomponent_find_or_create_resource( comp, this_resname, true );
 
     if ( res == NULL ) {
-      lcfgutils_build_message( msg, "Failed to parse line %d of status file '%s'",
-		linenum, statusfile );
+      lcfgutils_build_message( msg,
+			       "Failed to parse line %d of status file '%s'",
+			       linenum, statusfile );
       ok = false;
       break;
     }
@@ -993,20 +964,11 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
        the status line or assume this is a simple specification of the
        resource value. */
 
-    char * this_value = strdup(status_value);
-
-    /* Value strings may be html encoded as they can contain
-       whitespace characters which would otherwise corrupt the status
-       file formatting. */
-
-    if ( this_type == LCFG_RESOURCE_SYMBOL_VALUE )
-      lcfgutils_decode_html_entities_utf8( this_value, NULL );
-
     char * set_msg = NULL;
-    bool set_ok = lcfgresource_set_attribute( res, this_type, this_value,
-                                              &set_msg );
+    ok = lcfgresource_set_attribute( res, this_type, status_value,
+				     &set_msg );
 
-    if ( !set_ok ) {
+    if ( !ok ) {
 
       if ( set_msg != NULL ) {
         lcfgutils_build_message( msg, "Failed to process line %d (%s)",
@@ -1019,9 +981,6 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
                   linenum, status_value, this_type );
       }
 
-      free(this_value);
-
-      ok = false;
       break;
     }
 
@@ -1031,8 +990,6 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
   free(statusline);
 
   fclose(fp);
-
-  free(line);
 
  cleanup:
 
@@ -1237,7 +1194,7 @@ LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
      buffer will be automatically grown when necessary, the aim is to
      minimise the number of reallocations required.  */
 
-  size_t buf_size = 384;
+  size_t buf_size = 5120;
   char * buffer = calloc( buf_size, sizeof(char) );
   if ( buffer == NULL ) {
     perror( "Failed to allocate memory for LCFG resource buffer" );
@@ -2025,6 +1982,23 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
   *result = comp;
 
   return status;
+}
+
+/**
+ * @brief Calculate the hash for a component
+ *
+ * This will calculate the hash for the component using the value for
+ * the @e name parameter. It does this using the @c
+ * lcfgutils_string_djbhash() function.
+ *
+ * @param[in] res Pointer to @c LCFGComponent
+ *
+ * @return The hash for the component name
+ *
+ */
+
+unsigned long lcfgcomponent_hash( const LCFGComponent * comp ) {
+  return lcfgutils_string_djbhash( comp->name, NULL );
 }
 
 /* eof */

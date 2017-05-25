@@ -1,9 +1,9 @@
 Resources
 =========
 
-complist - finish docs, add _from_env, _to_env, sort
-
 tags - add unique, add set functions - union, difference, intersection
+
+Merge rules support for components in perl
 
 Utils
 =======

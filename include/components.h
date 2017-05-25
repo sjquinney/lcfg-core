@@ -2,8 +2,8 @@
  * @file components.h
  * @brief Functions for working with LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-15 12:13:14 +0100 (Mon, 15 May 2017) $
- * $Revision: 32742 $
+ * $Date: 2017-05-23 15:44:59 +0100 (Tue, 23 May 2017) $
+ * $Revision: 32892 $
  */
 
 #ifndef LCFG_CORE_COMPONENT_H
@@ -132,7 +132,7 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * comp,
  *
  */
 
-#define lcfgcomponent_head(comp) ((comp)->head)
+#define lcfgcomponent_head(comp) ( comp == NULL ? NULL : (comp)->head )
 
 /**
  * @brief Retrieve the last resource node in the list
@@ -256,6 +256,8 @@ LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp,
   __attribute__((warn_unused_result));
 
 void lcfgcomponent_sort( LCFGComponent * comp );
+
+unsigned long lcfgcomponent_hash( const LCFGComponent * comp );
 
 /* Component list */
 

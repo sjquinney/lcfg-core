@@ -2,8 +2,8 @@
  * @file resources/tags/list.c
  * @brief Functions for working with lists of LCFG resource tags
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-12 15:28:46 +0100 (Fri, 12 May 2017) $
- * $Revision: 32722 $
+ * $Date: 2017-05-23 15:39:27 +0100 (Tue, 23 May 2017) $
+ * $Revision: 32891 $
  */
 
 #include <stdio.h>
@@ -376,7 +376,7 @@ LCFGTagNode * lcfgtaglist_find_node( const LCFGTagList * taglist,
 
   if ( lcfgtaglist_is_empty(taglist) ) return NULL;
 
-  unsigned int want_hash = lcfgutils_string_djbhash(want_name);
+  unsigned long want_hash = lcfgutils_string_djbhash( want_name, NULL );
 
   LCFGTagNode * result = NULL;
 
@@ -801,7 +801,7 @@ LCFGChange lcfgtaglist_mutate_replace( LCFGTagList * taglist,
     return LCFG_CHANGE_ERROR;
   }
 
-  unsigned int match_hash = lcfgutils_string_djbhash(match);
+  unsigned long match_hash = lcfgutils_string_djbhash( match, NULL );
 
   LCFGChange change = LCFG_CHANGE_NONE;
 

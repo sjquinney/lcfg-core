@@ -46,6 +46,8 @@ extern void LCFG_Ack();
 
 char * lcfgutils_safe_tmpfile( const char * path );
 
+const char * lcfgutils_tmp_dirname(void);
+
 char * lcfgutils_string_join( const char * sep,
                               const char * str1,
                               const char * str2 );
@@ -72,7 +74,7 @@ char * lcfgutils_string_replace( const char * input,
 				 const char * old,
 				 const char * new );
 
-unsigned int lcfgutils_string_djbhash( const char * str );
+unsigned long lcfgutils_string_djbhash( const char * str, ... );
 
 /* MD5 support - for secure mode */
 

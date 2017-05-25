@@ -2,8 +2,8 @@
  * @file resources/templates.c
  * @brief Functions for working with LCFG resource templates
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-04-26 17:34:30 +0100 (Wed, 26 Apr 2017) $
- * $Revision: 32552 $
+ * $Date: 2017-05-17 13:53:31 +0100 (Wed, 17 May 2017) $
+ * $Revision: 32790 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -22,7 +22,7 @@
 
 static LCFGStatus invalid_template( char ** msg, const char * base, ... ) {
 
-  const char * fmt = "Invalid template (%s)";
+  const char * fmt = "%s";
 
   va_list ap;
   va_start( ap, base );
@@ -287,7 +287,7 @@ LCFGStatus lcfgtemplate_from_string( const char * input,
 
     char * newtmpl = strdup(token);
     if ( !lcfgtemplate_set_tmpl( new_template, newtmpl ) ) {
-      status = invalid_template( msg, "bad value '%s'", newtmpl );
+      status = invalid_template( msg, "bad resource template '%s'", newtmpl );
       free(newtmpl);
     }
 

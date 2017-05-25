@@ -2,8 +2,8 @@
  * @file resources/tags/tag.c
  * @brief Functions for working with LCFG resource tags
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-12 15:28:46 +0100 (Fri, 12 May 2017) $
- * $Revision: 32722 $
+ * $Date: 2017-05-23 15:39:27 +0100 (Tue, 23 May 2017) $
+ * $Revision: 32891 $
  */
 
 #include <ctype.h>
@@ -232,7 +232,7 @@ bool lcfgtag_set_name( LCFGTag * tag, char * new_name ) {
 
     tag->name     = new_name;
     tag->name_len = strlen(new_name);
-    tag->hash     = lcfgutils_string_djbhash(new_name);
+    tag->hash     = lcfgutils_string_djbhash( new_name, NULL );
 
     ok = true;
   } else {

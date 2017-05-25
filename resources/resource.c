@@ -2,8 +2,8 @@
  * @file resources/resource.c
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-15 12:13:14 +0100 (Mon, 15 May 2017) $
- * $Revision: 32742 $
+ * $Date: 2017-05-24 10:56:48 +0100 (Wed, 24 May 2017) $
+ * $Revision: 32893 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -294,8 +294,8 @@ bool lcfgresource_valid_name( const char * name ) {
 
   /* All other characters MUST be in [A-Za-z0-9_] set */
 
-  char * ptr;
-  for ( ptr = ((char *)name) + 1; valid && *ptr != '\0'; ptr++ )
+  const char * ptr;
+  for ( ptr = name + 1; valid && *ptr != '\0'; ptr++ )
     if ( !isword(*ptr) ) valid = false;
 
   return valid;
@@ -315,7 +315,7 @@ bool lcfgresource_valid_name( const char * name ) {
  */
 
 bool lcfgresource_is_valid( const LCFGResource * res ) {
-  return ( res != NULL && lcfgresource_has_name(res) );
+  return ( res != NULL && !isempty(res->name) );
 }
 
 /**
@@ -461,9 +461,8 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
      requested new type is "integer" then that change is illegal. */
 
   bool ok = false;
-  if ( !lcfgresource_has_value(res) ||
-       lcfgresource_valid_value_for_type( new_type,
-                                          lcfgresource_get_value(res) ) ) {
+  if ( res->value == NULL ||
+       lcfgresource_valid_value_for_type( new_type, res->value ) ) {
 
     res->type = new_type;
     ok = true;
@@ -524,7 +523,7 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
  */
 
 bool lcfgresource_set_type_as_string( LCFGResource * res,
-                                      const char * new_type_str,
+                                      const char * type_str,
                                       char ** msg ) {
   assert( res != NULL );
 
@@ -534,8 +533,6 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
      to be the default string type */
 
   LCFGResourceType new_type = LCFG_RESOURCE_TYPE_STRING;
-
-  char * type_str = (char *) new_type_str;
 
   /* Spin past any leading whitespace */
   if ( !isempty(type_str) )
@@ -576,13 +573,13 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
   /* Check if there is a comment string for the resource. This would
      be after the type string and enclosed in brackets - ( ) */
 
-  char * posn = type_str;
+  const char * posn = type_str;
 
   if ( ok && !isempty(type_str) ) {
 
-    char * comment_start = strchr( type_str, '(' );
+    const char * comment_start = strchr( type_str, '(' );
     if ( comment_start != NULL ) {
-      char * comment_end = strchr( comment_start, ')' );
+      const char * comment_end = strchr( comment_start, ')' );
 
       if ( comment_end != NULL ) {
         posn = comment_end + 1;
@@ -603,7 +600,7 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
   /* List types might also have templates */
 
   if ( ok && new_type == LCFG_RESOURCE_TYPE_LIST ) {
-    char * tmpl_start = strstr( posn, ": " );
+    const char * tmpl_start = strstr( posn, ": " );
     if ( tmpl_start != NULL ) {
       tmpl_start += 2;
 
@@ -643,10 +640,9 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
 bool lcfgresource_is_string( const LCFGResource * res ) {
   assert( res != NULL );
 
-  LCFGResourceType res_type = lcfgresource_get_type(res);
-  return ( res_type == LCFG_RESOURCE_TYPE_STRING    ||
-           res_type == LCFG_RESOURCE_TYPE_SUBSCRIBE ||
-           res_type == LCFG_RESOURCE_TYPE_PUBLISH );
+  return ( res->type == LCFG_RESOURCE_TYPE_STRING    ||
+           res->type == LCFG_RESOURCE_TYPE_SUBSCRIBE ||
+           res->type == LCFG_RESOURCE_TYPE_PUBLISH );
 }
 
 /**
@@ -720,8 +716,8 @@ bool lcfgresource_is_true( const LCFGResource * res ) {
 
   bool is_true = false;
 
-  if ( lcfgresource_has_value(res) ) {
-    const char * value = lcfgresource_get_value(res);
+  const char * value = res->value;
+  if ( !isempty(value) ) {
 
     if ( lcfgresource_is_boolean(res) )
       is_true = ( strcmp( value, "yes" ) == 0 );
@@ -756,16 +752,14 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
                                         LCFGOption options ) {
   assert( res != NULL );
 
-  LCFGResourceType res_type = lcfgresource_get_type(res);
-  const char * type_string = lcfgresource_type_names[res_type];
+  const char * type_string = lcfgresource_type_names[res->type];
   size_t type_len = strlen(type_string);
 
   size_t new_len = type_len;
 
-  const char * comment = NULL;
+  const char * comment = res->comment;
   size_t comment_len = 0;
-  if ( lcfgresource_has_comment(res) ) {
-    comment = lcfgresource_get_comment(res);
+  if ( !isempty(comment) ) {
     comment_len = strlen(comment);
 
     new_len += ( comment_len + 2 ); /* + 2 for enclosing ( ) */
@@ -807,7 +801,7 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
 
   to = stpncpy( to, type_string, type_len );
 
-  if ( comment != NULL ) {
+  if ( comment_len > 0 ) {
     *to = '(';
     to++;
 
@@ -1038,7 +1032,7 @@ bool lcfgresource_set_template_as_string(  LCFGResource * res,
 bool lcfgresource_has_value( const LCFGResource * res ) {
   assert( res != NULL );
 
-  return ( res->value != NULL );
+  return !isempty(res->value);
 }
 
 /**
@@ -1088,8 +1082,8 @@ bool lcfgresource_value_needs_encode( const LCFGResource * res ) {
   bool needs_encode = false;
 
   const char * value = lcfgresource_get_value(res);
-  char * ptr;
-  for ( ptr = (char *) value; *ptr != '\0'; ptr++ ) {
+  const char * ptr;
+  for ( ptr = value; *ptr != '\0'; ptr++ ) {
     if ( strchr( unsafe_chars, *ptr ) ) {
       needs_encode = true;
       break;
@@ -1141,8 +1135,8 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
   static const size_t amp_len = sizeof(amp) - 1;
 
   size_t extend = 0;
-  char * ptr;
-  for ( ptr=(char *) value; *ptr!='\0'; ptr++ ) {
+  const char * ptr;
+  for ( ptr=value; *ptr!='\0'; ptr++ ) {
     switch(*ptr)
       {
       case '\r':
@@ -1171,7 +1165,7 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
 
   char * to = enc_value;
 
-  for ( ptr=(char *) value; *ptr!='\0'; ptr++ ) {
+  for ( ptr=value; *ptr!='\0'; ptr++ ) {
     switch(*ptr)
       {
       case '\r':
@@ -1332,7 +1326,7 @@ bool lcfgresource_valid_integer( const char * value ) {
 
   /* First character may be a negative-sign, if so walk past */
 
-  char * ptr = (char *) value;
+  const char * ptr = value;
   if ( *ptr == '-' )
     ptr++;
 
@@ -1373,8 +1367,8 @@ bool lcfgresource_valid_list( const char * value ) {
      Tags MUST be characters in [A-Za-z0-9_] set.
      Separators MUST be spaces */
 
-  char * ptr;
-  for ( ptr = (char *) value; valid && *ptr != '\0'; ptr++ )
+  const char * ptr;
+  for ( ptr = value; valid && *ptr != '\0'; ptr++ )
     if ( !isword(*ptr) && *ptr != ' ' ) valid = false;
 
   return valid;
@@ -2274,14 +2268,13 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
 
   LCFGStatus status = LCFG_STATUS_OK;
 
-  const char * name = lcfgresource_get_name(res);
+  const char * name = res->name;
 
   /* Value */
 
   char * val_key = lcfgutils_string_join( "", val_pfx, name );
 
-  const char * value = lcfgresource_has_value(res) ?
-                       lcfgresource_get_value(res) : "";
+  const char * value = or_default( res->value, "" );
 
   if ( setenv( val_key, value, 1 ) != 0 )
     status = LCFG_STATUS_ERROR;
@@ -2377,6 +2370,10 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
                                 char ** result, size_t * size ) {
   assert( res != NULL );
 
+  /* Name is required */
+
+  if ( !lcfgresource_is_valid(res) ) return -1;
+
   if ( val_pfx  == NULL ) val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
   if ( type_pfx == NULL ) type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
 
@@ -2399,10 +2396,6 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
     }
   }
 
-  /* Name is required */
-
-  if ( !lcfgresource_has_name(res) ) return -1;
-
   const char * name = lcfgresource_get_name(res);
   size_t name_len = strlen(name);
 
@@ -2421,8 +2414,8 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
     value = lcfgresource_get_value(res);
     value_len = strlen(value);
 
-    char * ptr;
-    for ( ptr = (char *) value; *ptr != '\0'; ptr++ ) {
+    const char * ptr;
+    for ( ptr = value; *ptr != '\0'; ptr++ ) {
       if ( *ptr == '\'' )
         value_len += ( escaped_len - 1 );
     }
@@ -2451,7 +2444,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
       type_len = strlen(type_as_str);
 
-      char * ptr;
+      const char * ptr;
       for ( ptr = type_as_str; *ptr != '\0'; ptr++ ) {
         if ( *ptr == '\'' )
           type_len += ( escaped_len - 1 );
@@ -2499,7 +2492,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
     to = stpncpy( to, "='", 2 );
 
-    char * ptr;
+    const char * ptr;
     for ( ptr = type_as_str; *ptr != '\0'; ptr++ ) {
       if ( *ptr == '\'' ) {
         to = stpncpy( to, escaped, escaped_len );
@@ -2527,8 +2520,8 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   to = stpncpy( to, "='", 2 );
 
   if ( value != NULL ) {
-    char * ptr;
-    for ( ptr = (char *) value; *ptr != '\0'; ptr++ ) {
+    const char * ptr;
+    for ( ptr = value; *ptr != '\0'; ptr++ ) {
       if ( *ptr == '\'' ) {
         to = stpncpy( to, escaped, escaped_len );
       } else {
@@ -2608,12 +2601,9 @@ ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS ) {
 
   /* Value */
 
-  size_t value_len = 0;
-  const char * value = "";
-  if ( lcfgresource_has_value(res) ) {
-    value = lcfgresource_get_value(res);
-    value_len = strlen(value);
-  }
+  const char * value = or_default( res->value, "" );
+  size_t value_len = strlen(value);
+
   new_len += ( base_len + value_len );
 
   /* Type */
@@ -2894,6 +2884,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
  *   - @c LCFG_OPT_NOVALUE - do not include any value
  *   - @c LCFG_OPT_ENCODE - encode any newline characters in the value
  *   - @c LCFG_OPT_NEWLINE - append a final newline character
+ *   - @c LCFG_OPT_NOPREFIX - do not include prefix (usually component name)
  *
  * This function uses a string buffer which may be pre-allocated if
  * nececesary to improve efficiency. This makes it possible to reuse
@@ -2922,6 +2913,9 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
 
 ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
   assert( res != NULL );
+
+  if ( options&LCFG_OPT_NOPREFIX )
+    prefix = NULL;
 
   ssize_t key_len =
     lcfgresource_compute_key_length( res, prefix, NULL, 
@@ -3113,10 +3107,8 @@ int lcfgresource_compare_names( const LCFGResource * res1,
   assert( res1 != NULL );
   assert( res2 != NULL );
 
-  const char * name1 = lcfgresource_has_name(res1) ?
-                       lcfgresource_get_name(res1) : "";
-  const char * name2 = lcfgresource_has_name(res2) ?
-                       lcfgresource_get_name(res2) : "";
+  const char * name1 = or_default( res1->name, "" );
+  const char * name2 = or_default( res2->name, "" );
 
   return strcmp( name1, name2 );
 }
@@ -3167,10 +3159,8 @@ int lcfgresource_compare_values( const LCFGResource * res1,
   assert( res1 != NULL );
   assert( res2 != NULL );
 
-  const char * value1_str = lcfgresource_has_value(res1) ?
-                          lcfgresource_get_value(res1) : LCFG_RESOURCE_NOVALUE;
-  const char * value2_str = lcfgresource_has_value(res2) ?
-                          lcfgresource_get_value(res2) : LCFG_RESOURCE_NOVALUE;
+  const char * value1_str = or_default( res1->value, "" );
+  const char * value2_str = or_default( res2->value, "" );
 
   int result = 0;
 
@@ -3234,10 +3224,8 @@ int lcfgresource_compare( const LCFGResource * res1,
 
   if ( result == 0 ) {
 
-    const char * value1 = lcfgresource_has_value(res1) ?
-                          lcfgresource_get_value(res1) : LCFG_RESOURCE_NOVALUE;
-    const char * value2 = lcfgresource_has_value(res2) ?
-                          lcfgresource_get_value(res2) : LCFG_RESOURCE_NOVALUE;
+    const char * value1 = or_default( res1->value, "" );
+    const char * value2 = or_default( res2->value, "" );
 
     result = strcmp( value1, value2 );
   }
@@ -3246,10 +3234,8 @@ int lcfgresource_compare( const LCFGResource * res1,
 
   if ( result == 0 ) {
 
-    const char * context1 = lcfgresource_has_context(res1) ?
-                         lcfgresource_get_context(res1) : LCFG_RESOURCE_NOVALUE;
-    const char * context2 = lcfgresource_has_context(res2) ?
-                         lcfgresource_get_context(res2) : LCFG_RESOURCE_NOVALUE;
+    const char * context1 = or_default( res1->value, "" );
+    const char * context2 = or_default( res2->value, "" );
 
     result = strcmp( context1, context2 );
   }
@@ -3635,6 +3621,85 @@ ssize_t lcfgresource_build_key( const LCFGResource * res,
 }
 
 /**
+ * @brief Parse a resource specification
+ *
+ * This parses the given resource specification string into the
+ * constituent (hostname, component name, resource name and value)
+ * parts. Note that this function modifies the given string in-place
+ * and returns pointers to the various chunks of interest.
+ *
+ * @param[in] key Pointer to the resource spec (will be modified in place)
+ * @param[out] hostname Reference to a pointer to the hostname part of the key (optional)
+ * @param[out] compname Reference to a pointer to the component name part of the key (optional)
+ * @param[out] resname Reference to a pointer to the resource name
+ * @param[out] value Reference to a pointer to the resource value (might be empty)
+ * @param[out] type The key type symbol
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgresource_parse_spec( char * spec,
+                                    const char ** hostname,
+                                    const char ** compname,
+                                    const char ** resname,
+                                    const char ** value,
+                                    char  * type,
+                                    char ** msg ) {
+  assert( spec != NULL );
+
+  LCFGStatus status = LCFG_STATUS_OK;
+
+  while ( *spec != '\0' && isspace(*spec) ) spec++;
+
+  if ( isempty(spec) ) {
+    lcfgutils_build_message( msg, "empty resource specification" );
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
+  }
+
+  /* Search for the '=' which separates status keys and values */
+
+  char * sep = strchr( spec, '=' );
+  if ( sep == NULL ) {
+    lcfgutils_build_message( msg, "missing '=' character" );
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
+  }
+
+  /* Replace the '=' separator with a NULL so that can avoid
+     unnecessarily dupping the string */
+
+  *sep = '\0';
+
+  /* The value is everything after the separator (could just be an
+     empty string) */
+
+  *value = sep + 1;
+
+  if ( !lcfgresource_parse_key( spec, 
+                                hostname, compname, 
+                                resname, type ) ) {
+    lcfgutils_build_message( msg, "invalid resource key '%s'", spec );
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
+  }
+
+  /* Validation */
+
+  if ( !lcfgresource_valid_name(*resname) ) {
+    lcfgutils_build_message( msg, "invalid resource name '%s'", *resname );
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
+  }
+
+ cleanup:
+
+  return status;
+}
+
+/**
  * @brief Parse a resource key
  *
  * This parses the given resource key into the constituent (hostname,
@@ -3653,9 +3718,9 @@ ssize_t lcfgresource_build_key( const LCFGResource * res,
  */
  
 bool lcfgresource_parse_key( char  * key,
-                             char ** hostname,
-                             char ** compname,
-                             char ** resname,
+                             const char ** hostname,
+                             const char ** compname,
+                             const char ** resname,
                              char  * type ) {
 
   *hostname = NULL;
@@ -3665,7 +3730,7 @@ bool lcfgresource_parse_key( char  * key,
 
   if ( isempty(key) ) return false;
 
-  char * start = key;
+  const char * start = key;
 
   /* Ignore any leading whitespace */
   while ( *start != '\0' && isspace(*start) ) start++;
@@ -3736,10 +3801,8 @@ bool lcfgresource_parse_key( char  * key,
  *   - priority - @c '^'
  *   - value - nul
  *
- * It is important to note that this does @b NOT take a copy of the
- * value string. Furthermore, once the value is set the resource
- * assumes "ownership", the memory will be freed when it is no longer
- * required
+ * This will take a copy of the new attribute value string where
+ * necessary.
  *
  * @param[in] res Pointer to @c LCFGResource
  * @param[in] type_symbol The symbol for the required attribute type
@@ -3752,12 +3815,11 @@ bool lcfgresource_parse_key( char  * key,
 
 bool lcfgresource_set_attribute( LCFGResource * res,
                                  char type_symbol,
-                                 char * value,
+                                 const char * value,
                                  char ** msg ) {
   assert( res != NULL );
 
   bool ok = false;
-  bool dispose = false;
 
   /* Apply the action which matches with the symbol at the start of
      the status line or assume this is a simple specification of the
@@ -3766,24 +3828,30 @@ bool lcfgresource_set_attribute( LCFGResource * res,
   switch (type_symbol)
     {
     case LCFG_RESOURCE_SYMBOL_DERIVATION:
+      ;
+      char * derivation = strdup(value);
 
-      ok = lcfgresource_set_derivation( res, value );
-      if ( !ok )
-        lcfgutils_build_message( msg, "Invalid derivation '%s'", value );
+      ok = lcfgresource_set_derivation( res, derivation );
+      if ( !ok ) {
+        lcfgutils_build_message( msg, "Invalid derivation '%s'", derivation );
+	free(derivation);
+      }
 
       break;
     case LCFG_RESOURCE_SYMBOL_TYPE:
 
       ok = lcfgresource_set_type_as_string( res, value, msg );
-      if (ok)
-	dispose = true;
 
       break;
     case LCFG_RESOURCE_SYMBOL_CONTEXT:
+      ;
+      char * context = strdup(value);
 
-      ok = lcfgresource_set_context( res, value );
-      if ( !ok )
-        lcfgutils_build_message( msg, "Invalid context '%s'", value );
+      ok = lcfgresource_set_context( res, context );
+      if ( !ok ) {
+        lcfgutils_build_message( msg, "Invalid context '%s'", context );
+	free(context);
+      }
 
       break;
     case LCFG_RESOURCE_SYMBOL_PRIORITY:
@@ -3795,32 +3863,49 @@ bool lcfgresource_set_attribute( LCFGResource * res,
         ok = lcfgresource_set_priority( res, priority );
       }
 
-      if ( ok )
-	dispose = true;
-      else
+      if ( !ok )
         lcfgutils_build_message( msg, "Invalid priority '%s'", value );
 
       break;
+    case  LCFG_RESOURCE_SYMBOL_VALUE:
     default:        /* value line */
+      ;
+      char * value2 = strdup(value);
 
-      ok = lcfgresource_set_value( res, value );
+      /* Value strings may be html encoded as they can contain
+	 whitespace characters which would otherwise corrupt the status
+	 file formatting. */
 
-      if (!ok)
-        lcfgutils_build_message( msg, "Invalid value '%s'", value );
+      lcfgutils_decode_html_entities_utf8( value2, NULL );
+
+      ok = lcfgresource_set_value( res, value2 );
+      if (!ok) {
+        lcfgutils_build_message( msg, "Invalid value '%s'", value2 );
+	free(value2);
+      }
 
       break;
     }
 
-  if (dispose) {
-
-  /* The original value is no longer required so it must be disposed
-     of correctly. */
-
-    free(value);
-    value = NULL;
-  }
-
   return ok;
 }
+
+/**
+ * @brief Calculate the hash for a resource
+ *
+ * This will calculate the hash for the resource using the value for
+ * the @e name parameter. It does this using the @c
+ * lcfgutils_string_djbhash() function.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ *
+ * @return The hash for the resource name
+ *
+ */
+
+unsigned long lcfgresource_hash( const LCFGResource * res ) {
+  return lcfgutils_string_djbhash( res->name, NULL );
+}
+
 
 /* eof */

@@ -13,7 +13,6 @@
 #include <assert.h>
 #include <errno.h>
 
-#include "utils.h"
 #include "differences.h"
 
 /**
@@ -613,9 +612,13 @@ bool lcfgdiffcomponent_has_resource( const LCFGDiffComponent * list,
  *
  * The ngeneric framework has support for @e prodding the component to
  * force a reconfiguration action to take place even when no other
- * resources have changed. This function will check if the component
- * diff contains a resource with the name @c ng_prod which has a
- * changed value.
+ * resources have changed. 
+ *
+ * The component is considered to have been prodded when there is an
+ * entry in the diff for the "ng_prod" resource and it is either
+ * modified or newly added and the new resource has a value. Removing
+ * the resource or setting the value to the empty string does NOT
+ * cause the component to be prodded.
  *
  * @param[in] compdiff Pointer to @c LCFGDiffComponent to be checked
  *
@@ -624,11 +627,25 @@ bool lcfgdiffcomponent_has_resource( const LCFGDiffComponent * list,
  */
 
 bool lcfgdiffcomponent_was_prodded( const LCFGDiffComponent * compdiff ) {
-  
+
+  /* Does not make much sense to prod a component when it is being
+     added or removed */
+
+  if ( lcfgdiffcomponent_get_type(compdiff) != LCFG_CHANGE_MODIFIED )
+    return false;
+
   const LCFGDiffResource * resdiff =
     lcfgdiffcomponent_find_resource( compdiff, "ng_prod" );
 
-  return ( resdiff != NULL && lcfgdiffresource_is_changed(resdiff) );
+  bool prodded = false;
+
+  if ( resdiff != NULL && lcfgdiffresource_has_new(resdiff) ) {
+    const LCFGResource * new_res = lcfgdiffresource_get_new(resdiff);
+    if ( lcfgresource_has_value(new_res) )
+      prodded = true;
+  }
+
+  return prodded;
 }
 
 /**
@@ -643,11 +660,11 @@ bool lcfgdiffcomponent_was_prodded( const LCFGDiffComponent * compdiff ) {
  *
  */
 
-bool lcfgdiffcomponent_resource_is_changed( const LCFGDiffProfile * compdiff,
+bool lcfgdiffcomponent_resource_is_changed( const LCFGDiffComponent * compdiff,
 					    const char * res_name ) {
 
   const LCFGDiffResource * resdiff =
-    lcfgdiffprofile_find_resource( compdiff, res_name );
+    lcfgdiffcomponent_find_resource( compdiff, res_name );
 
   return ( resdiff != NULL && lcfgdiffresource_is_changed(resdiff) );
 }
@@ -664,22 +681,15 @@ bool lcfgdiffcomponent_resource_is_changed( const LCFGDiffProfile * compdiff,
  * can be used to serialise the component diff in the correct way for
  * inclusion in the @e hold file.
  *
- * If the @c md5state parameter is not @c NULL this function will call
- * @c lcfgutils_md5_append() to update the state for each line written
- * into the file. This is used to generate a signature for the entire
- * file.
- *
  * @param[in] compdiff Pointer to @c LCFGDiffComponent
  * @param[in] holdfile File stream to which diff should be written
- * @param[in] md5state MD5 state structure to which data is written
  *
  * @return Status value indicating success of the process
  *
  */
 
 LCFGStatus lcfgdiffcomponent_to_holdfile( const LCFGDiffComponent * compdiff,
-                                          FILE * holdfile,
-                                          md5_state_t * md5state ) {
+                                          FILE * holdfile ) {
 
   if ( lcfgdiffcomponent_is_empty(compdiff) ) return LCFG_STATUS_OK;
 
@@ -706,9 +716,6 @@ LCFGStatus lcfgdiffcomponent_to_holdfile( const LCFGDiffComponent * compdiff,
                                            &buffer, &buf_size );
 
     if ( rc > 0 ) {
-
-      if ( md5state != NULL )
-        lcfgutils_md5_append( md5state, (const md5_byte_t *) buffer, rc );
 
       if ( fputs( buffer, holdfile ) < 0 )
         ok = false;
@@ -1146,6 +1153,33 @@ int lcfgdiffcomponent_compare( const LCFGDiffComponent * compdiff1,
   return strcmp( name1, name2 );
 }
 
+/**
+ * Get the names of the resources for a particular type of change
+ *
+ * This searches through the list of resources for the @c
+ * LCFGDiffComponent to find those which are changed in the specified
+ * ways (.e.g. added, removed, modified). It is possible to combine
+ * change types so that a single search can match multiple change
+ * types. This is done by using a bitwise-OR of the appropriate values
+ * (e.g. @c LCFG_CHANGE_ADDED|LCFG_CHANGE_MODIFIED).
+ *
+ * If only a single type of change is required then it may be simpler
+ * to use one of @c lcfgdiffcomponent_modified(), @c
+ * lcfgdiffcomponent_added() or @c lcfgdiffcomponent_removed(). If a
+ * list of all changed resources (of any type) is required then the @c
+ * lcfgdiffcomponent_changed() is most suitable.
+ *
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent
+ * @param[in] change_type Integer indicating types of change
+ * @param[out] result Reference to pointer to @c LCFGTagList of resource names
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgdiffcomponent_names_for_type(const LCFGDiffComponent * compdiff,
                                             LCFGChange change_type,
                                             LCFGTagList ** result ) {
@@ -1188,6 +1222,25 @@ LCFGStatus lcfgdiffcomponent_names_for_type(const LCFGDiffComponent * compdiff,
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
+/**
+ * Get the names of the changed resources.
+ *
+ * This searches through the list of resources for the @c
+ * LCFGDiffComponent and returns a list of names for those which are
+ * changed in any way (may be added, removed or modified).
+ *
+ * This uses @c lcfgdiffcomponent_names_for_type() to do the search.
+ *
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent
+ * @param[out] res_names Reference to pointer to @c LCFGTagList of resource names
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgdiffcomponent_changed( const LCFGDiffComponent * compdiff,
                                       LCFGTagList ** res_names ) {
 
@@ -1195,6 +1248,25 @@ LCFGStatus lcfgdiffcomponent_changed( const LCFGDiffComponent * compdiff,
                     LCFG_CHANGE_ADDED|LCFG_CHANGE_REMOVED|LCFG_CHANGE_MODIFIED,
                                            res_names );
 }
+
+/**
+ * Get the names of the added resources.
+ *
+ * This searches through the list of resources for the @c
+ * LCFGDiffComponent and returns a list of names for those which are
+ * newly added.
+ *
+ * This uses @c lcfgdiffcomponent_names_for_type() to do the search.
+ *
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent
+ * @param[out] res_names Reference to pointer to @c LCFGTagList of resource names
+ *
+ * @return Status value indicating success of the process
+ *
+ */
 
 LCFGStatus lcfgdiffcomponent_added( const LCFGDiffComponent * compdiff,
                                     LCFGTagList ** res_names ) {
@@ -1204,6 +1276,25 @@ LCFGStatus lcfgdiffcomponent_added( const LCFGDiffComponent * compdiff,
                                            res_names);
 }
 
+/**
+ * Get the names of the removed resources.
+ *
+ * This searches through the list of resources for the @c
+ * LCFGDiffComponent and returns a list of names for those which are
+ * removed.
+ *
+ * This uses @c lcfgdiffcomponent_names_for_type() to do the search.
+ *
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent
+ * @param[out] res_names Reference to pointer to @c LCFGTagList of resource names
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGStatus lcfgdiffcomponent_removed( const LCFGDiffComponent * compdiff,
                                       LCFGTagList ** res_names ) {
 
@@ -1211,6 +1302,26 @@ LCFGStatus lcfgdiffcomponent_removed( const LCFGDiffComponent * compdiff,
                                            LCFG_CHANGE_REMOVED,
                                            res_names );
 }
+
+/**
+ * Get the names of the modified resources.
+ *
+ * This searches through the list of resources for the @c
+ * LCFGDiffComponent and returns a list of names for those which have
+ * been modified (note that this does NOT include those which have
+ * been added or removed).
+ *
+ * This uses @c lcfgdiffcomponent_names_for_type() to do the search.
+ *
+ * To avoid memory leaks, when the list of names is no longer required
+ * the @c lcfgtaglist_relinquish() function should be called.
+ *
+ * @param[in] compdiff Pointer to @c LCFGDiffComponent
+ * @param[out] res_names Reference to pointer to @c LCFGTagList of resource names
+ *
+ * @return Status value indicating success of the process
+ *
+ */
 
 LCFGStatus lcfgdiffcomponent_modified( const LCFGDiffComponent * compdiff,
                                        LCFGTagList ** res_names ) {

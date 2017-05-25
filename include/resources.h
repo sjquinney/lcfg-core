@@ -2,8 +2,8 @@
  * @file resources.h
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-15 12:13:14 +0100 (Mon, 15 May 2017) $
- * $Revision: 32742 $
+ * $Date: 2017-05-23 15:44:59 +0100 (Tue, 23 May 2017) $
+ * $Revision: 32892 $
  */
 
 #ifndef LCFG_CORE_RESOURCES_H
@@ -101,7 +101,9 @@ bool lcfgresource_is_valid( const LCFGResource * res );
 
 /* Resources: Names */
 
-bool lcfgresource_valid_name( const char * name );
+bool lcfgresource_valid_name( const char * name )
+    __attribute__((pure));
+
 bool lcfgresource_has_name( const LCFGResource * res );
 const char * lcfgresource_get_name( const LCFGResource * res );
 bool lcfgresource_set_name( LCFGResource * res,
@@ -145,17 +147,24 @@ bool lcfgresource_set_template_as_string( LCFGResource * res,
 
 /* Resources: Values */
 
-bool lcfgresource_valid_boolean( const char * value );
-bool lcfgresource_valid_integer( const char * value );
-bool lcfgresource_valid_list(    const char * value );
+bool lcfgresource_valid_boolean( const char * value )
+    __attribute__((pure));
+
+bool lcfgresource_valid_integer( const char * value )
+    __attribute__((pure));
+
+bool lcfgresource_valid_list(    const char * value )
+  __attribute__((pure));
 
 bool lcfgresource_valid_value_for_type( LCFGResourceType type,
-                                        const char * value );
+                                        const char * value )
+  __attribute__((pure));
 
 bool lcfgresource_valid_value( const LCFGResource * res,
                                const char * value );
 
-char * lcfgresource_canon_boolean( const char * value );
+char * lcfgresource_canon_boolean( const char * value )
+  __attribute__((pure));
 
 bool lcfgresource_has_value( const LCFGResource * res );
 
@@ -245,7 +254,8 @@ bool lcfgresource_add_derivation( LCFGResource * resource,
 
 /* Resources: Contexts */
 
-bool lcfgresource_valid_context( const char * expr );
+bool lcfgresource_valid_context( const char * expr )
+    __attribute__((pure));
 bool lcfgresource_has_context( const LCFGResource * res );
 const char * lcfgresource_get_context( const LCFGResource * res );
 bool lcfgresource_set_context( LCFGResource * res, char * new_value );
@@ -356,10 +366,19 @@ char * lcfgresource_build_message( const LCFGResource * res,
                                    const char *fmt, ... );
 
 bool lcfgresource_parse_key( char  * key,
-                             char ** namespace,
-                             char ** component,
-                             char ** resource,
+                             const char ** namespace,
+                             const char ** component,
+                             const char ** resource,
                              char  * type )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgresource_parse_spec( char * spec,
+                                    const char ** hostname,
+                                    const char ** compname,
+                                    const char ** resname,
+                                    const char ** value,
+                                    char  * type,
+                                    char ** msg )
   __attribute__((warn_unused_result));
 
 ssize_t lcfgresource_compute_key_length( const LCFGResource * res,
@@ -384,9 +403,11 @@ ssize_t lcfgresource_build_key( const LCFGResource * res,
 
 bool lcfgresource_set_attribute( LCFGResource * res,
                                  char type_symbol,
-                                 char * value,
+                                 const char * value,
                                  char ** msg )
   __attribute__((warn_unused_result));
+
+unsigned long lcfgresource_hash( const LCFGResource * res );
 
 #endif /* LCFG_CORE_RESOURCES_H */
 

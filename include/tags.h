@@ -2,8 +2,8 @@
  * @file tags.h
  * @brief Functions for working with LCFG resource tags
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-12 15:28:46 +0100 (Fri, 12 May 2017) $
- * $Revision: 32722 $
+ * $Date: 2017-05-23 15:39:27 +0100 (Tue, 23 May 2017) $
+ * $Revision: 32891 $
  *
  * Doubly linked-list structure for ordered lists of LCFG "tags". Also
  * intended to be reasonably efficient for set-like operations.
@@ -41,9 +41,9 @@
 
 struct LCFGTag {
   /*@{*/
-  char * name;       /**< The tag name */
-  size_t name_len;   /**< The length of the tag name */
-  unsigned int hash; /**< The hash value for the tag name */
+  char * name;        /**< The tag name */
+  size_t name_len;    /**< The length of the tag name */
+  unsigned long hash; /**< The hash value for the tag name */
   /*@}*/
   unsigned int _refcount;
 };

@@ -2,8 +2,8 @@
  * @file differences.h
  * @brief Functions for finding the differences between resources, components and profiles.
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-15 20:03:17 +0100 (Mon, 15 May 2017) $
- * $Revision: 32758 $
+ * $Date: 2017-05-23 10:20:49 +0100 (Tue, 23 May 2017) $
+ * $Revision: 32873 $
  */
 
 #ifndef LCFG_CORE_DIFFERENCES_H
@@ -71,7 +71,6 @@ bool lcfgdiffresource_is_removed( const LCFGDiffResource * resdiff );
 
 ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
 				    const char * prefix,
-				    const char * comments,
 				    bool pending,
 				    char ** result, size_t * size );
 
@@ -137,7 +136,7 @@ bool lcfgdiffcomponent_is_modified( const LCFGDiffComponent * compdiff );
 
 bool lcfgdiffcomponent_is_removed( const LCFGDiffComponent * compdiff );
 
-bool lcfgdiffcomponent_resource_is_changed( const LCFGDiffProfile * compdiff,
+bool lcfgdiffcomponent_resource_is_changed( const LCFGDiffComponent * compdiff,
 					    const char * res_name );
 
 LCFGChange lcfgdiffcomponent_insert_next( LCFGDiffComponent * list,
@@ -174,8 +173,7 @@ bool lcfgdiffcomponent_has_resource( const LCFGDiffComponent * compdiff,
 void lcfgdiffcomponent_sort( LCFGDiffComponent * compdiff );
 
 LCFGStatus lcfgdiffcomponent_to_holdfile( const LCFGDiffComponent * compdiff,
-                                          FILE * holdfile,
-                                          md5_state_t * md5state )
+                                          FILE * holdfile )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgdiffcomponent_names_for_type(const LCFGDiffComponent * compdiff,
@@ -273,7 +271,7 @@ void lcfgdiffprofile_sort( LCFGDiffProfile * list );
 
 LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
                                         const char * holdfile,
-                                        char ** signature,
+                                        const char * signature,
                                         char ** msg )
   __attribute__((warn_unused_result));
 

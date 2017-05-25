@@ -2,8 +2,8 @@
  * @file common.h
  * @brief LCFG common constants
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
- * $Date: 2017-05-12 16:40:53 +0100 (Fri, 12 May 2017) $
- * $Revision: 32725 $
+ * $Date: 2017-05-19 14:36:57 +0100 (Fri, 19 May 2017) $
+ * $Revision: 32828 $
  */
 
 #ifndef LCFG_CORE_COMMON_H
@@ -14,6 +14,12 @@
  */
 
 #define isempty(STR) ( STR == NULL || *(STR) == '\0' )
+
+/**
+ * @brief Return the string if not empty otherwise return the default
+ */
+
+#define or_default(STR,DEFAULT) isempty(STR) ? DEFAULT : STR;
 
 /**
  * @brief Test for word character
