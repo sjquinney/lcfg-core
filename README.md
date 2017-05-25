@@ -22,6 +22,22 @@ tested on Redhat Enterprise/Fedora and Debian/Ubuntu systems.
     make doc
     sudo make install
 
+For RPM-based systems a specfile is provided which can be used to
+build the software as the RPMs: lcfg-core, lcfg-core-devel and
+lcfg-core-doc. That can be done like:
+
+   rpmbuild -ta lcfg-core.tar.gz
+
+This requires the installation of the rpm-build package.
+
+## Configuring CMake
+
+By default the libraries will be installed into `/usr/local/lib`,
+headers will be installed into `/usr/local/include/lcfg` and binaries
+will be in `/usr/local/sbin` or `/usr/local/bin`. The install
+locations can be changed from `/usr/local` to `/usr` by specifying
+`-DCMAKE_INSTALL_PREFIX:PATH=/usr` on the cmake command line.
+
 Debugging can be enabled by passing the `-DCMAKE_BUILD_TYPE=Debug`
 option on the cmake command line.
 
