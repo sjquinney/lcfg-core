@@ -516,7 +516,7 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
  * foo_$_$ bar_$_$`
  *
  * @param[in] res Pointer to an @c LCFGResource
- * @param[in] new_type_str The new type as a string
+ * @param[in] type_str The new type as a string
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return boolean indicating success
@@ -3628,7 +3628,7 @@ ssize_t lcfgresource_build_key( const LCFGResource * res,
  * parts. Note that this function modifies the given string in-place
  * and returns pointers to the various chunks of interest.
  *
- * @param[in] key Pointer to the resource spec (will be modified in place)
+ * @param[in] spec Pointer to the resource spec (will be modified in place)
  * @param[out] hostname Reference to a pointer to the hostname part of the key (optional)
  * @param[out] compname Reference to a pointer to the component name part of the key (optional)
  * @param[out] resname Reference to a pointer to the resource name

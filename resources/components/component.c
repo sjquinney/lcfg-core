@@ -1991,7 +1991,7 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
  * the @e name parameter. It does this using the @c
  * lcfgutils_string_djbhash() function.
  *
- * @param[in] res Pointer to @c LCFGComponent
+ * @param[in] comp Pointer to @c LCFGComponent
  *
  * @return The hash for the component name
  *
