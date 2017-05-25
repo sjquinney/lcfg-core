@@ -120,5 +120,5 @@ Stephen Quinney <squinney@inf.ed.ac.uk>
 Copyright (C) 2013-2017 University of Edinburgh. All rights reserved.
 
 This library is free software; you can redistribute it and/or modify
-it under the terms of the GPL, version 2 or later.
+it under the terms of the GPL, version 2.
 
