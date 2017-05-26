@@ -47,7 +47,12 @@ available as a PDF file or as an HTML tree.
 
 %prep
 %setup
+
+%if 0%{?rhel} && %{rhel} <= 7
 %cmake -DLCFGLOG:STRING=/var/lcfg/log -DLCFGTMP:STRING=/var/lcfg/tmp
+%else
+%cmake
+%endif
 
 %build
 make
