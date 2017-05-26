@@ -10,13 +10,13 @@ Provides:       lcfg-utils
 BuildRequires:  cmake >= 2.6.0, pkgconfig
 BuildRequires:  libxml2-devel
 BuildRequires:  bison, flex
-%if 0%{?rhel} && %{rhel} < 7
+%if 0%{?rhel} && 0%{?rhel} < 7
 BuildRequires:  db4-devel
 %else
 BuildRequires:  libdb-devel
 %endif
 BuildRequires:  rpm-devel
-BuildRequires:  doxygen, doxygen-latex
+BuildRequires:  doxygen
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires(post,postun):         /sbin/ldconfig
 
@@ -48,7 +48,7 @@ available as a PDF file or as an HTML tree.
 %prep
 %setup
 
-%if 0%{?rhel} && %{rhel} <= 7
+%if 0%{?rhel} && 0%{?rhel} <= 7
 %cmake -DLCFGLOG:STRING=/var/lcfg/log -DLCFGTMP:STRING=/var/lcfg/tmp
 %else
 %cmake
@@ -60,7 +60,7 @@ make
 # Documentation
 
 make doc
-make -C docs/latex
+#make -C docs/latex
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -110,7 +110,7 @@ rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 
 %files doc
 %doc docs/html
-%doc docs/latex/refman.pdf
+#%doc docs/latex/refman.pdf
 
 %clean
 rm -rf $RPM_BUILD_ROOT
