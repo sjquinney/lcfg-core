@@ -1,11 +1,11 @@
-Name:           @LCFG_NAME@
+Name:           lcfg-core
 Version:        @LCFG_VERSION@
 Release:        @LCFG_RELEASE@
-Summary:        @LCFG_ABSTRACT@
-License:        @LCFG_LICENSE@
+Summary:        LCFG Core libraries
+License:        GPLv2
 Group:          LCFG/Components
-Packager:       @LCFG_AUTHOR@
-Source:         @LCFG_TARNAME@
+Packager:       Stephen Quinney <squinney@inf.ed.ac.uk>
+Source:         %{name}-%{version}.tar.gz
 Provides:       lcfg-utils
 BuildRequires:  cmake >= 2.6.0, pkgconfig
 BuildRequires:  libxml2-devel
@@ -21,7 +21,10 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires(post,postun):         /sbin/ldconfig
 
 %description
-@LCFG_ABSTRACT@
+This provides all the core C libraries for the LCFG configuration
+management framework. For more information on the LCFG project see the
+website at http://www.lcfg.org/ Included is support for processing
+LCFG package and resource data to/from various file formats.
 
 %package devel
 Group: LCFG/Devel
@@ -67,7 +70,6 @@ rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 %files
 %defattr(-,root,root)
 %doc ChangeLog README.md
-#%doc @LCFGPOD@/*.pod
 #%{_mandir}/man1/*
 #%{_mandir}/man3/*
 #%{_bindir}/parse_pkgspec
