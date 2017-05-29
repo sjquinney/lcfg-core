@@ -240,7 +240,8 @@ void lcfgpkglist_relinquish( LCFGPackageList * pkglist ) {
  *   - LCFG_MERGE_RULE_SQUASH_IDENTICAL - ignore additional identical versions of packages
  *   - LCFG_MERGE_RULE_USE_PRIORITY - resolve conflicts using context priority value
  *   - LCFG_MERGE_RULE_USE_PREFIX - resolve conflicts using the package prefix
- * 
+ *   - LCFG_MERGE_RULE_REPLACE - replae any existing package which matches
+ *
  * Rules can be used in any combination by using a @c '|' (bitwise
  * 'or').
  *
@@ -641,32 +642,25 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
   /* Doing a search here rather than calling find_node so that the
      previous node can also be selected. That is needed for removals. */
 
-  const char * match_name = lcfgpackage_get_name(new_pkg);
-  const char * match_arch = lcfgpackage_has_arch(new_pkg) ?
-    lcfgpackage_get_arch(new_pkg) : LCFG_PACKAGE_NOVALUE;
+  const char * match_name = new_pkg->name;
+  const char * match_arch = or_default( new_pkg, "" );
 
   LCFGPackageNode * node = NULL;
   for ( node = lcfgpkglist_head(pkglist);
-        node != NULL;
+        node != NULL && cur_node == NULL;
         node = lcfgpkglist_next(node) ) {
 
     const LCFGPackage * pkg = lcfgpkglist_package(node);
 
     if ( !lcfgpackage_is_valid(pkg) ) continue;
 
-    const char * name = lcfgpackage_get_name(pkg);
-    if ( strcmp( name, match_name ) == 0 ) {
-
-      const char * arch = lcfgpackage_has_arch(pkg) ?
-	lcfgpackage_get_arch(pkg) : LCFG_PACKAGE_NOVALUE;
-
-      if ( strcmp( arch, match_arch ) == 0 ) {
-	cur_node = node;
-	break;
-      }
+    if ( lcfgpackage_match( pkg, match_name, match_arch ) ) {
+      cur_node = node;
+      break;
+    } else {
+      prev_node = node; /* used later if a removal is required */
     }
 
-    prev_node = node; /* used later if a removal is required */
   }
 
   if ( cur_node != NULL ) {
@@ -762,7 +756,16 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
     goto apply;
   }
 
-  /* 5. Use the priorities from the context evaluations */
+  /* 5. Just replace existing with new */
+
+  if ( merge_rules&LCFG_MERGE_RULE_REPLACE ) {
+      remove_old = true;
+      append_new = true;
+      accept     = true;
+      goto apply;
+  }
+
+  /* 6. Use the priorities from the context evaluations */
 
   if ( merge_rules&LCFG_MERGE_RULE_USE_PRIORITY ) {
 

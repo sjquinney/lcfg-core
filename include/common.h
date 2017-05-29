@@ -80,11 +80,12 @@ typedef enum {
  */
 
 typedef enum {
-  LCFG_MERGE_RULE_NONE             = 0, /**< Null Option */
-  LCFG_MERGE_RULE_KEEP_ALL         = 1, /**< Keep all */
-  LCFG_MERGE_RULE_SQUASH_IDENTICAL = 2, /**< Ignore extra identical */
-  LCFG_MERGE_RULE_USE_PRIORITY     = 4, /**< Merge according to context priority */
-  LCFG_MERGE_RULE_USE_PREFIX       = 8  /**< Merge/mutate according to prefix */
+  LCFG_MERGE_RULE_NONE             =  0, /**< Null Option */
+  LCFG_MERGE_RULE_KEEP_ALL         =  1, /**< Keep all */
+  LCFG_MERGE_RULE_SQUASH_IDENTICAL =  2, /**< Ignore extra identical */
+  LCFG_MERGE_RULE_USE_PRIORITY     =  4, /**< Merge according to context priority */
+  LCFG_MERGE_RULE_USE_PREFIX       =  8, /**< Merge/mutate according to prefix */
+  LCFG_MERGE_RULE_REPLACE          = 16  /**< Replace current with new */
 } LCFGMergeRule;
 
 #endif /* LCFG_CORE_COMMON_H */
