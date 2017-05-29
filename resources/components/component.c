@@ -262,7 +262,8 @@ void lcfgcomponent_relinquish(LCFGComponent * comp) {
  *   - LCFG_MERGE_RULE_SQUASH_IDENTICAL - ignore additional identical resources
  *   - LCFG_MERGE_RULE_USE_PRIORITY - resolve conflicts using context priority 
  *   - LCFG_MERGE_RULE_USE_PREFIX - mutate resource according to prefix (TODO)
- * 
+ *   - LCFG_MERGE_RULE_REPLACE - replace any existing resource which matches
+ *
  * Rules can be used in any combination by using a @c '|' (bitwise
  * 'or').
  *
@@ -1511,7 +1512,7 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
   /* Doing a search here rather than calling find_node so that the
      previous node can also be selected. That is needed for removals. */
 
-  const char * match_name = lcfgresource_get_name(new_res);
+  const char * match_name = new_res->name;
 
   const LCFGResourceNode * node = NULL;
   for ( node = lcfgcomponent_head(comp);
@@ -1522,9 +1523,7 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
 
     if ( !lcfgresource_is_valid(res) ) continue;
 
-    const char * name = lcfgresource_get_name(res);
-
-    if ( strcmp( name, match_name ) == 0 ) {
+    if ( lcfgresource_match( res, match_name ) ) {
       cur_node  = (LCFGResourceNode *) node;
       cur_res   = lcfgcomponent_resource(cur_node);
     } else {
@@ -1575,7 +1574,16 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
     goto apply;
   }
 
-  /* 5. Use the priorities from the context evaluations */
+  /* 5. Just replace existing with new */
+
+  if ( merge_rules&LCFG_MERGE_RULE_REPLACE ) {
+      remove_old = true;
+      append_new = true;
+      accept     = true;
+      goto apply;
+  }
+
+  /* 6. Use the priorities from the context evaluations */
 
   if ( merge_rules&LCFG_MERGE_RULE_USE_PRIORITY ) {
 
