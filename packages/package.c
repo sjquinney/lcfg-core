@@ -2685,6 +2685,39 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
 
 }
 
+/**
+ * @brief Test if package matches name and architecture
+ *
+ * This compares the @e name and @e arch of the @c LCFGPackage with
+ * the specified strings.
+ *
+ * @param[in] pkg Pointer to @c LCFGPackage
+ * @param[in] name The name to check for a match
+ * @param[in] arch The architecture to check for a match
+ *
+ * @return boolean indicating equality of values
+ *
+ */
+
+bool lcfgpackage_match( const LCFGPackage * pkg,
+			const char * name, const char * arch ) {
+  assert( pkg != NULL );
+  assert( name != NULL );
+
+  if ( arch == NULL )
+    arch = "";
+
+  const char * pkg_name = or_default( pkg->name, "" );
+  bool match = ( strcmp( pkg_name, name ) == 0 );
+
+  if ( match ) {
+    const char * pkg_arch = or_default( pkg->arch, "" );
+    match = ( strcmp( pkg_arch, arch ) == 0 );
+  }
+
+  return match;
+}
+
 int compare_vstrings( const char * v1, const char * v2 ) {
 
   bool v1_isempty = isempty(v1);

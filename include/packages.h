@@ -181,6 +181,9 @@ char * lcfgpackage_full_version( const LCFGPackage * pkg );
 
 char * lcfgpackage_id( const LCFGPackage * pkg );
 
+bool lcfgpackage_match( const LCFGPackage * pkg,
+			const char * name, const char * arch );
+
 int compare_vstrings( const char * v1, const char * v2 )
   __attribute__((const));
 
