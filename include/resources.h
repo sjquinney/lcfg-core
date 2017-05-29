@@ -282,6 +282,11 @@ bool lcfgresource_eval_priority( LCFGResource * res,
 				 char ** msg )
   __attribute__((warn_unused_result));
 
+LCFGStatus lcfgresource_from_spec( const char * spec, LCFGResource ** result,
+				   char ** hostname, char ** compname,
+				   char ** msg )
+  __attribute__((warn_unused_result));
+
 /* Resources: Output */
 
 bool lcfgresource_print( const LCFGResource * res,
