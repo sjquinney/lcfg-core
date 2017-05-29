@@ -346,6 +346,8 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
 /* Resources: Others */
 
+bool lcfgresource_match( const LCFGResource * res, const char * name );
+
 int lcfgresource_compare_names( const LCFGResource * res1, 
                                 const LCFGResource * res2 );
 

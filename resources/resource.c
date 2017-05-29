@@ -3296,6 +3296,27 @@ int lcfgresource_compare_values( const LCFGResource * res1,
 }
 
 /**
+ * @brief Test if resource matches name
+ *
+ * This compares the @e name for the @c LCFGResource with the
+ * specified string.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] name The name to check for a match
+ *
+ * @return boolean indicating equality of values
+ *
+ */
+
+bool lcfgresource_match( const LCFGResource * res, const char * name ) {
+  assert( res != NULL );
+  assert( name != NULL );
+
+  const char * res_name = or_default( res->name, "" );
+  return ( strcmp( res_name, name ) == 0 );
+}
+
+/**
  * @brief Compare resources
  *
  * This compares two resources using the @e name, @e value and @e
