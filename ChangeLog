@@ -1,6 +1,154 @@
-2017-05-25  SVN: new release
+2017-05-30  SVN: new release
 
-	* Release: 1.40.3
+	* Release: 1.40.4
+
+2017-05-30 12:10  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/tags/list.c: Dropped the use of the tag hash,
+	  it isn't working as required
+
+2017-05-29 13:38  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: Added new 'replace' merge rule
+	  which resolves conflicts by replacing current with new
+
+2017-05-29 13:38  squinney@INF.ED.AC.UK
+
+	* include/resources.h, resources/resource.c: Added
+	  lcfgresource_match which can be used to check if resource name
+	  matches specified string
+
+2017-05-29 13:29  squinney@INF.ED.AC.UK
+
+	* include/common.h, packages/list.c: Added new 'replace' merge rule
+	  which resolves conflicts by replacing current with new
+
+2017-05-29 13:28  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/package.c: Added lcfgpackage_match
+	  which can be used to check if package name and arch match
+	  specified strings
+
+2017-05-29 09:16  squinney@INF.ED.AC.UK
+
+	* include/resources.h, resources/resource.c: added
+	  lcfgresource_from_spec which is needed by qxprof and sxprof to
+	  parse resource specs from command line
+
+2017-05-26 16:14  squinney@INF.ED.AC.UK
+
+	* TODO.md: Noted more TODO stuff
+
+2017-05-26 16:12  squinney@INF.ED.AC.UK
+
+	* TODO, TODO.md: switched TODO to markdown
+
+2017-05-26 13:38  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec, lcfg.yml: fixed macros which limit things to
+	  rhel7. Disabled latex docs generation for now since it takes ages
+	  and doesn't always work properly
+
+2017-05-26 07:19  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec, lcfg.yml: restrict legacy directory locations to
+	  EL7 and earlier
+
+2017-05-26 07:02  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec, lcfg.yml: Removed unnecessary macros from
+	  specfile
+
+2017-05-25 19:11  squinney@INF.ED.AC.UK
+
+	* README.md: fixed license
+
+2017-05-25 18:41  squinney@INF.ED.AC.UK
+
+	* README.md: Added notes about needing flex and bison to build
+
+2017-05-25 17:35  squinney@INF.ED.AC.UK
+
+	* README.md: Added note about ldconfig
+
+2017-05-25 17:31  squinney@INF.ED.AC.UK
+
+	* README.md, resources/components/component.c: fixed markup
+
+2017-05-25 17:28  squinney@INF.ED.AC.UK
+
+	* README.md: Added more useful build info
+
+2017-05-25 17:26  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec, lcfg.yml, specfile: Renamed specfile so that
+	  rpmbuild will work with the tar file
+
+2017-05-25 15:48  squinney@INF.ED.AC.UK
+
+	* README.md, lcfg.yml: readme tweaks
+
+2017-05-25 15:46  squinney@INF.ED.AC.UK
+
+	* README.md, specfile: include new README in package
+
+2017-05-25 15:46  squinney@INF.ED.AC.UK
+
+	* README: Removed old readme
+
+2017-05-25 15:39  squinney@INF.ED.AC.UK
+
+	* README.md: readme tweaks
+
+2017-05-25 15:20  squinney@INF.ED.AC.UK
+
+	* README.md: Added basic readme
+
+2017-05-25 14:21  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, specfile: split documentation files into a separate
+	  sub-package
+
+2017-05-25 14:12  squinney@INF.ED.AC.UK
+
+	* Doxyfile.in, lcfg.yml, mainpage.md: Added basic mainpage
+
+2017-05-25 14:00  squinney@INF.ED.AC.UK
+
+	* Doxyfile.in, lcfg.yml: Enabled GENERATE_TREEVIEW for the html
+	  output
+
+2017-05-25 13:49  squinney@INF.ED.AC.UK
+
+	* utils/slist.c: Completed docs
+
+2017-05-25 13:43  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, bdb/write.c, context/context.c, context/list.c,
+	  context/scanner.c, context/tools.c, include/bdb.h,
+	  include/common.h, include/components.h, include/context.h,
+	  include/differences.h, include/packages.h, include/profile.h,
+	  include/resources.h, include/tags.h, include/templates.h,
+	  include/xml.h, lcfg.yml, packages/iterator.c, packages/list.c,
+	  packages/package.c, packages/rpm.c, profile/diff.c,
+	  profile/profile.c, resources/components/component.c,
+	  resources/components/diff.c, resources/components/list.c,
+	  resources/diff.c, resources/iterator.c, resources/resource.c,
+	  resources/tags/iterator.c, resources/tags/list.c,
+	  resources/tags/tag.c, resources/templates.c, xml/common.c,
+	  xml/components.c, xml/packages.c, xml/read.c, xml/resource.c:
+	  Added a copyright statement to each code file for clarity
+
+2017-05-25 13:43  squinney@INF.ED.AC.UK
+
+	* utils/daemon.c, utils/entities.c, utils/lcfgmsg.c,
+	  utils/libmsg.c, utils/md5.c, utils/setsid.c,
+	  utils/shiftpressed.c, utils/slist.c, utils/utils.c: Added
+	  svn:keywords for utils code
+
+2017-05-25 11:45  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.40.3
 
 2017-05-25 11:44  squinney@INF.ED.AC.UK
 
