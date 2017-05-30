@@ -255,6 +255,9 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
 
   char * reskey = NULL;
 
+  const bool check_namespace = !isempty(namespace);
+  const bool limit_comps = ! lcfgtaglist_is_empty(comps_wanted);
+
   int ret = 0;
   /* Iterate over the database, retrieving each record in turn. */
   while ( ( ret = cursor->get( cursor, &key, &value, DB_NEXT ) ) == 0 ) {
@@ -277,7 +280,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
     }
 
     /* If a namespace is specified then it must match */
-    if ( namespace != NULL ) {
+    if ( check_namespace ) {
       if ( this_namespace == NULL ||
            strcmp( namespace, this_namespace ) != 0 ) {
         status = LCFG_STATUS_ERROR;
@@ -289,7 +292,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
     }
 
     /* If not in the list of 'wanted' components just move on to next entry */
-    if ( comps_wanted != NULL &&
+    if ( limit_comps &&
          strcmp( this_compname, "profile" ) != 0 &&
          !lcfgtaglist_contains( comps_wanted, this_compname ) )
       continue;
