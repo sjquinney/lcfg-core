@@ -643,7 +643,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
      previous node can also be selected. That is needed for removals. */
 
   const char * match_name = new_pkg->name;
-  const char * match_arch = or_default( new_pkg, "" );
+  const char * match_arch = or_default( new_pkg->arch, "" );
 
   LCFGPackageNode * node = NULL;
   for ( node = lcfgpkglist_head(pkglist);
