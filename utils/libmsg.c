@@ -582,13 +582,17 @@ static char * LCFG_LogDir( const char * new_logdir ) {
 {
   /* Use this to log special events like reboot requests */
 
-  int newevent;
   char *ext = LCFG_Append(".",event,NULL); 
 
   LCFG_LogMessage( comp, msg, "== ", NULL, 1 );
-  newevent = LCFG_LogMessage( comp, msg, "", ext, 1 );
+
+  int newevent = LCFG_LogMessage( comp, msg, "", ext, 1 );
+
   LCFG_Syslog( comp, event, msg, LOG_INFO, NULL, 1 );
   LCFG_Monitor( comp, event, msg, 1 );
+
+  free(ext);
+
   if (newevent) LCFG_Ack();
 }
 
