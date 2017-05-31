@@ -494,7 +494,11 @@ void lcfgutils_build_message( char ** strp, const char *fmt, ... ) {
   va_list ap;
   va_start( ap, fmt );
 
-  if ( vasprintf( strp, fmt, ap ) < 0 ) {
+  int rc = vasprintf( strp, fmt, ap );
+
+  va_end(ap);
+
+  if ( rc < 0 ) {
     perror( "Failed to build error string" );
     exit(EXIT_FAILURE);
   }
@@ -582,8 +586,8 @@ unsigned long lcfgutils_string_djbhash( const char * str, ... ) {
 
   }
 
-   va_end(ap);
+  va_end(ap);
 
-   return hash;
+  return hash;
 }
 /* eof */

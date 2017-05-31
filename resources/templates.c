@@ -30,6 +30,8 @@ static LCFGStatus invalid_template( char ** msg, const char * base, ... ) {
 
   char * reason = NULL;
   int rc = vasprintf( &reason, base, ap );
+  va_end(ap);
+
   if ( rc < 0 ) {
     perror("Failed to allocate memory for error string");
     exit(EXIT_FAILURE);
