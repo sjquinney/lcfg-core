@@ -367,13 +367,14 @@ static char * LCFG_LogDir( const char * new_logdir ) {
 {
   /* Print message to output in standard format */
 
-  char *s = LCFG_AddNewLine(msg);
-  char *k = s;
   int first = 1;
   int fancy = LCFG_FancyStatus();
   
   FILE *fpout = LCFG_GetOutput();
   if (!fpout) return 0;
+
+  char *s = LCFG_AddNewLine(msg);
+  char *k = s;
 
   if (s==NULL) return 0;
   while (*s) {
