@@ -293,7 +293,6 @@ static char * LCFG_LogDir( const char * new_logdir ) {
 {
   /* Start progress message */
   
-  char *s = LCFG_FirstLine(msg);
   int fancy = LCFG_FancyStatus();
 
   int outfd, retval = 0;
@@ -301,6 +300,8 @@ static char * LCFG_LogDir( const char * new_logdir ) {
   if (!fpout) return 0;
 
   outfd = fileno(fpout);
+
+  char *s = LCFG_FirstLine(msg);
 
   if (s==NULL) return 0;
 
