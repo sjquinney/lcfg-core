@@ -1182,8 +1182,11 @@ LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
 
   bool ok = true;
 
+  FILE * out = NULL;
   int fd = mkstemp(tmpfile);
-  FILE * out = fdopen( fd, "w" );
+  if ( fd >= 0 )
+    out = fdopen( fd, "w" );
+
   if ( out == NULL ) {
     lcfgutils_build_message( msg, "Failed to open temporary status file '%s'",
               tmpfile );
