@@ -2059,4 +2059,72 @@ bool lcfgcomponent_match( const LCFGComponent * comp,
   return ( strcmp( comp_name, name ) == 0 );
 }
 
+LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
+                                 const LCFGTagList * res_wanted,
+                                 LCFGComponent ** result,
+                                 LCFGOption options,
+                                 char ** msg ) {
+  assert( comp != NULL );
+
+  LCFGComponent * new_comp = lcfgcomponent_new();
+
+  LCFGStatus status = LCFG_STATUS_OK;
+
+  /* Clone the name if there is one */
+
+  if ( !isempty(comp->name) ) {
+    char * new_name = strdup(comp->name);
+    if ( !lcfgcomponent_set_name( new_comp, new_name ) ) {
+      free(new_name);
+      lcfgutils_build_message( msg, "Invalid component name '%s'", new_name );
+      status = LCFG_STATUS_ERROR;
+    }
+  }
+
+  /* Also clone the merge rules */
+
+  new_comp->merge_rules = comp->merge_rules;
+
+  /* Collect the required subset of resources */
+
+  const bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
+  const bool take_all = lcfgtaglist_is_empty(res_wanted);
+
+  const LCFGResourceNode * cur_node = NULL;
+  for ( cur_node = lcfgcomponent_head(comp);
+        cur_node != NULL && status != LCFG_STATUS_ERROR;
+        cur_node = lcfgcomponent_next(cur_node) ) {
+
+    LCFGResource * res = lcfgcomponent_resource(cur_node);
+
+    if ( lcfgresource_is_valid(res) && 
+         ( all_priorities || lcfgresource_is_active(res) ) ) {
+
+      if ( take_all || 
+           lcfgtaglist_contains( res_wanted, lcfgresource_get_name(res) ) ) {
+
+        LCFGChange change = lcfgcomponent_append( new_comp, res );
+        if ( change == LCFG_CHANGE_ERROR ) {
+          status = LCFG_STATUS_ERROR;
+          lcfgutils_build_message( msg, "Failed to add resource to component" );
+        }
+
+      }
+
+    }
+
+  }
+
+ cleanup:
+
+  if ( status == LCFG_STATUS_ERROR ) {
+    lcfgcomponent_relinquish(new_comp);
+    new_comp = NULL;
+  }
+
+  *result = new_comp;
+
+  return status;
+}
+
 /* eof */

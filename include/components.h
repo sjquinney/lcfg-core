@@ -266,6 +266,13 @@ int lcfgcomponent_compare( const LCFGComponent * comp1,
 bool lcfgcomponent_match( const LCFGComponent * comp,
                           const char * name );
 
+LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
+                                 const LCFGTagList * res_wanted,
+                                 LCFGComponent ** result,
+                                 LCFGOption options,
+                                 char ** msg )
+  __attribute__((warn_unused_result));
+
 /* Component list */
 
 /**
