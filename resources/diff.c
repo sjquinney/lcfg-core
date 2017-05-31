@@ -711,7 +711,7 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
      the old resource has no value are not worth reporting so simply
      avoid that here. */
 
-  bool show_change;
+  bool show_change = false;
   if ( isempty(old_value) ) {
     if ( !isempty(new_value) ) 
       show_change = true;
