@@ -145,14 +145,15 @@ static char * LCFG_LogDir( const char * new_logdir ) {
 
   va_list ap;
   char *s, *p;
-  int len = strlen(first);
+  size_t len = strlen(first);
 
   va_start(ap,first);
   while ( (s=va_arg(ap, char*)) != NULL ) len += strlen(s);
   va_end(ap);
 
-  s = p = (char*)malloc(1+len); *p='\0';
+  s = p = calloc( 1+len, sizeof(char) );
   if (s == NULL) return NULL;
+
   (void)strcpy(p,first);
   va_start(ap,first);
   while ( (s=va_arg(ap, char*)) != NULL ) (void)strcat( p, s );
