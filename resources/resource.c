@@ -3093,7 +3093,10 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
   ssize_t write_len = lcfgresource_insert_key( res, prefix, NULL,
                                                LCFG_RESOURCE_SYMBOL_VALUE, to );
 
-  if ( write_len != key_len ) return -1;
+  if ( write_len != key_len ) {
+    free(value_enc);
+    return -1;
+  }
 
   to += write_len;
 
