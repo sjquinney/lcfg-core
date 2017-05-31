@@ -775,7 +775,7 @@ LCFGChange lcfgcomponent_diff( const LCFGComponent * comp1,
   }
 
   const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = comp1 != NULL ? lcfgcomponent_head(comp1) : NULL;
+  for ( cur_node = lcfgcomponent_head(comp1);
 	cur_node != NULL && ok;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
@@ -810,7 +810,7 @@ LCFGChange lcfgcomponent_diff( const LCFGComponent * comp1,
 
   /* Look for resources which have been added */
 
-  for ( cur_node = comp2 != NULL ? lcfgcomponent_head(comp2) : NULL;
+  for ( cur_node = lcfgcomponent_head(comp2);
 	cur_node != NULL && ok;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
@@ -1049,7 +1049,7 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
 
   /* Look for resources which have been removed or modified */
   const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = comp1 != NULL ? lcfgcomponent_head(comp1) : NULL;
+  for ( cur_node = lcfgcomponent_head(comp1);
 	cur_node != NULL;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
@@ -1075,7 +1075,7 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
 
     /* Look for resources which have been added */
 
-    for ( cur_node = comp2 != NULL ? lcfgcomponent_head(comp2) : NULL;
+    for ( cur_node = lcfgcomponent_head(comp2);
           cur_node != NULL;
           cur_node = lcfgcomponent_next(cur_node) ) {
 
