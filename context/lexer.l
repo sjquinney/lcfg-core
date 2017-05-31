@@ -220,7 +220,7 @@ static void strbuf_init( yyscan_t ctxscanner ) {
 
   if ( extra->strbuf == NULL || extra->strbufalloc == 0 ) {
     extra->strbufalloc = 8;
-    extra->strbuf = calloc( extra->strbufalloc, sizeof(char *) );
+    extra->strbuf = calloc( extra->strbufalloc, sizeof(char) );
     if ( extra->strbuf == NULL ) {
       perror("Failed to allocate memory for LCFG context string");
       exit(EXIT_FAILURE);
