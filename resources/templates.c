@@ -364,7 +364,7 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
   const char * template  = lcfgtemplate_get_tmpl(res_tmpl);
 
   unsigned int pcount = res_tmpl->pcount;
-  if ( lcfgtaglist_size(taglist) < pcount ) {
+  if ( taglist == NULL || lcfgtaglist_size(taglist) < pcount ) {
     lcfgutils_build_message( msg, "Insufficient tags for template '%s'\n",
                              template );
     return NULL;
