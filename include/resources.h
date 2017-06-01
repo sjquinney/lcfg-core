@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-05-29 14:38:31 +0100 (Mon, 29 May 2017) $
+ * $Revision: 32965 $
  */
 
 #ifndef LCFG_CORE_RESOURCES_H
@@ -282,6 +282,11 @@ bool lcfgresource_eval_priority( LCFGResource * res,
 				 char ** msg )
   __attribute__((warn_unused_result));
 
+LCFGStatus lcfgresource_from_spec( const char * spec, LCFGResource ** result,
+				   char ** hostname, char ** compname,
+				   char ** msg )
+  __attribute__((warn_unused_result));
+
 /* Resources: Output */
 
 bool lcfgresource_print( const LCFGResource * res,
@@ -340,6 +345,8 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   __attribute__((warn_unused_result));
 
 /* Resources: Others */
+
+bool lcfgresource_match( const LCFGResource * res, const char * name );
 
 int lcfgresource_compare_names( const LCFGResource * res1, 
                                 const LCFGResource * res2 );

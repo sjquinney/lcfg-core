@@ -3,8 +3,8 @@
  * @brief Functions for finding the differences between LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-05-31 15:49:27 +0100 (Wed, 31 May 2017) $
+ * $Revision: 32984 $
  */
 
 #include <stdbool.h>
@@ -711,7 +711,7 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
      the old resource has no value are not worth reporting so simply
      avoid that here. */
 
-  bool show_change;
+  bool show_change = false;
   if ( isempty(old_value) ) {
     if ( !isempty(new_value) ) 
       show_change = true;

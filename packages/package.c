@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG packages
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-05-31 18:42:00 +0100 (Wed, 31 May 2017) $
+ * $Revision: 32987 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -45,6 +45,8 @@ static LCFGStatus invalid_package( char ** msg, const char * base, ... ) {
 
   char * reason = NULL;
   int rc = vasprintf( &reason, base, ap );
+  va_end(ap);
+
   if ( rc < 0 ) {
     perror("Failed to allocate memory for error string");
     exit(EXIT_FAILURE);
@@ -2683,6 +2685,39 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
 
   return new_len;
 
+}
+
+/**
+ * @brief Test if package matches name and architecture
+ *
+ * This compares the @e name and @e arch of the @c LCFGPackage with
+ * the specified strings.
+ *
+ * @param[in] pkg Pointer to @c LCFGPackage
+ * @param[in] name The name to check for a match
+ * @param[in] arch The architecture to check for a match
+ *
+ * @return boolean indicating equality of values
+ *
+ */
+
+bool lcfgpackage_match( const LCFGPackage * pkg,
+			const char * name, const char * arch ) {
+  assert( pkg != NULL );
+  assert( name != NULL );
+
+  if ( arch == NULL )
+    arch = "";
+
+  const char * pkg_name = or_default( pkg->name, "" );
+  bool match = ( strcmp( pkg_name, name ) == 0 );
+
+  if ( match ) {
+    const char * pkg_arch = or_default( pkg->arch, "" );
+    match = ( strcmp( pkg_arch, arch ) == 0 );
+  }
+
+  return match;
 }
 
 int compare_vstrings( const char * v1, const char * v2 ) {

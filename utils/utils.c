@@ -3,8 +3,8 @@
  * @brief Commonly useful functions
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:13 +0100 (Thu, 25 May 2017) $
- * $Revision: 32922 $
+ * $Date: 2017-05-31 18:42:00 +0100 (Wed, 31 May 2017) $
+ * $Revision: 32987 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -494,7 +494,11 @@ void lcfgutils_build_message( char ** strp, const char *fmt, ... ) {
   va_list ap;
   va_start( ap, fmt );
 
-  if ( vasprintf( strp, fmt, ap ) < 0 ) {
+  int rc = vasprintf( strp, fmt, ap );
+
+  va_end(ap);
+
+  if ( rc < 0 ) {
     perror( "Failed to build error string" );
     exit(EXIT_FAILURE);
   }
@@ -582,8 +586,8 @@ unsigned long lcfgutils_string_djbhash( const char * str, ... ) {
 
   }
 
-   va_end(ap);
+  va_end(ap);
 
-   return hash;
+  return hash;
 }
 /* eof */

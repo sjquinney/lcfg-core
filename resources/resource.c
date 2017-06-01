@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-05-31 19:08:39 +0100 (Wed, 31 May 2017) $
+ * $Revision: 32991 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -564,6 +564,7 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
       new_type = LCFG_RESOURCE_TYPE_SUBSCRIBE;
     } else if ( strncmp( type_str, "string",    6 ) != 0 ) {
       errno = EINVAL;
+      lcfgutils_build_message( msg, "invalid resource type '%s'", type_str );
       ok = false;
     }
   }
@@ -2126,6 +2127,102 @@ LCFGStatus lcfgresource_from_env( const char * name,
   return status;
 }
 
+/**
+ * @brief Load resource from specification string
+ *
+ * This can be used to parse an LCFG resource specification string and
+ * create a new @c LCFGResource using the information.
+ *
+ * As well as returning the new resource if the hostname or component
+ * name are included in the key they will also be returned.
+ *
+ * All of these are valid resource specifications:
+ *
+\verbatim
+host.client.ack=yes
+client.ack=yes
+ack=yes
+\endverbatim
+ *
+ * To avoid memory leaks, when the newly created resource structure is
+ * no longer required you should call the @c lcfgresource_relinquish()
+ * function.
+ *
+ * @param[in] spec The resource specification string
+ * @param[out] result Reference to pointer to new @c LCFGResource
+ * @param[out] hostname Reference to pointer to host name string (may be @c NULL)
+ * @param[out] compname Reference to pointer to component name string (may be @c NULL)
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgresource_from_spec( const char * spec, LCFGResource ** result,
+				   char ** hostname, char ** compname,
+				   char ** msg ) {
+
+  /* The input string is mangled by the spec parser so we need to use a copy */
+
+  char * input = strdup(spec);
+
+  const char * spec_host = NULL;
+  const char * spec_comp = NULL;
+  const char * spec_res  = NULL;
+  const char * spec_val  = NULL;
+  char spec_type;
+
+  LCFGStatus status = lcfgresource_parse_spec( input, &spec_host,
+					       &spec_comp, &spec_res,
+					       &spec_val, &spec_type,
+					       msg );
+
+  LCFGResource * res = NULL;
+
+  /* Create new resource and set the name */
+
+  if ( status != LCFG_STATUS_ERROR ) {
+    res = lcfgresource_new();
+
+    if ( !lcfgresource_set_name( res, strdup(spec_res) ) ) {
+      lcfgutils_build_message( msg, "invalid resource name '%s'", spec_res );
+      status = LCFG_STATUS_ERROR;
+    }
+
+  }
+
+  /* Set the value for the attribute type */
+
+  if ( status != LCFG_STATUS_ERROR ) {
+    char * set_msg = NULL;
+    if ( !lcfgresource_set_attribute( res, spec_type, spec_val, &set_msg ) ) {
+      lcfgutils_build_message( msg, "bad value for resource attribute (%s)",
+			       set_msg );
+      status = LCFG_STATUS_ERROR;
+    }
+    free(set_msg);
+  }
+
+  /* Return the results */
+
+  if ( status != LCFG_STATUS_ERROR ) {
+
+    *hostname = isempty(spec_host) ? NULL : strdup(spec_host);
+    *compname = isempty(spec_comp) ? NULL : strdup(spec_comp);
+    *result   = res;
+
+  } else {
+    lcfgresource_relinquish(res);
+    res = NULL;
+  }
+
+  /* Free after making copies of any results from the parse */
+
+  free(input);
+
+  return status;
+}
+
 /* Output */
 
 /**
@@ -2996,7 +3093,10 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
   ssize_t write_len = lcfgresource_insert_key( res, prefix, NULL,
                                                LCFG_RESOURCE_SYMBOL_VALUE, to );
 
-  if ( write_len != key_len ) return -1;
+  if ( write_len != key_len ) {
+    free(value_enc);
+    return -1;
+  }
 
   to += write_len;
 
@@ -3196,6 +3296,27 @@ int lcfgresource_compare_values( const LCFGResource * res1,
   }
 
   return result;
+}
+
+/**
+ * @brief Test if resource matches name
+ *
+ * This compares the @e name for the @c LCFGResource with the
+ * specified string.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] name The name to check for a match
+ *
+ * @return boolean indicating equality of values
+ *
+ */
+
+bool lcfgresource_match( const LCFGResource * res, const char * name ) {
+  assert( res != NULL );
+  assert( name != NULL );
+
+  const char * res_name = or_default( res->name, "" );
+  return ( strcmp( res_name, name ) == 0 );
 }
 
 /**

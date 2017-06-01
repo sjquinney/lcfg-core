@@ -3,8 +3,8 @@
  * @brief Functions for working with lists of LCFG resource tags
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-05-30 13:10:24 +0100 (Tue, 30 May 2017) $
+ * $Revision: 32968 $
  */
 
 #include <stdio.h>
@@ -377,8 +377,6 @@ LCFGTagNode * lcfgtaglist_find_node( const LCFGTagList * taglist,
 
   if ( lcfgtaglist_is_empty(taglist) ) return NULL;
 
-  unsigned long want_hash = lcfgutils_string_djbhash( want_name, NULL );
-
   LCFGTagNode * result = NULL;
 
   const LCFGTagNode * cur_node = NULL;
@@ -388,8 +386,7 @@ LCFGTagNode * lcfgtaglist_find_node( const LCFGTagList * taglist,
 
     const LCFGTag * tag = lcfgtaglist_tag(cur_node);
 
-    /* First compare hashes for speed */
-    if ( want_hash == lcfgtag_get_hash(tag) && lcfgtag_match(tag, want_name) ) 
+    if ( lcfgtag_match(tag, want_name) ) 
       result = (LCFGTagNode *) cur_node;
   }
 
@@ -802,8 +799,6 @@ LCFGChange lcfgtaglist_mutate_replace( LCFGTagList * taglist,
     return LCFG_CHANGE_ERROR;
   }
 
-  unsigned long match_hash = lcfgutils_string_djbhash( match, NULL );
-
   LCFGChange change = LCFG_CHANGE_NONE;
 
   LCFGTag * new_tag = NULL;
@@ -815,9 +810,7 @@ LCFGChange lcfgtaglist_mutate_replace( LCFGTagList * taglist,
 
     LCFGTag * cur_tag = lcfgtaglist_tag(cur_node);
 
-    /* First compare hashes for speed */
-    if ( match_hash == lcfgtag_get_hash(cur_tag) &&
-         lcfgtag_match( cur_tag, match ) ) {
+    if ( lcfgtag_match( cur_tag, match ) ) {
 
       /* Only create the tag when it is required */
 

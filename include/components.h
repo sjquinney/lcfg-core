@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-05-31 12:10:22 +0100 (Wed, 31 May 2017) $
+ * $Revision: 32982 $
  */
 
 #ifndef LCFG_CORE_COMPONENT_H
@@ -265,6 +265,13 @@ int lcfgcomponent_compare( const LCFGComponent * comp1,
 
 bool lcfgcomponent_match( const LCFGComponent * comp,
                           const char * name );
+
+LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
+                                 const LCFGTagList * res_wanted,
+                                 LCFGComponent ** result,
+                                 LCFGOption options,
+                                 char ** msg )
+  __attribute__((warn_unused_result));
 
 /* Component list */
 

@@ -3,8 +3,8 @@
  * @brief Functions for working with RPMs
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-06-01 09:50:22 +0100 (Thu, 01 Jun 2017) $
+ * $Revision: 32996 $
  */
 
 #define _GNU_SOURCE   /* asprintf */
@@ -37,6 +37,8 @@ static LCFGStatus invalid_rpm( char ** msg, const char * base, ... ) {
 
   char * reason = NULL;
   int rc = vasprintf( &reason, base, ap );
+  va_end(ap);
+
   if ( rc < 0 ) {
     perror("Failed to allocate memory for error string");
     exit(EXIT_FAILURE);
@@ -476,6 +478,8 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
     tmpfh = fdopen( tmpfd, "w" );
 
   if ( tmpfh == NULL ) {
+    if ( tmpfd >= 0 ) close(tmpfd);
+
     lcfgutils_build_message( msg, "Failed to open temporary rpmlist file" );
     ok = false;
     goto cleanup;
@@ -880,6 +884,8 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
     out = fdopen( tmpfd, "w" );
 
   if ( out == NULL ) {
+    if ( tmpfd >= 0 ) close(tmpfd);
+
     ok = false;
     lcfgutils_build_message( msg, "Failed to open temporary rpmcfg file");
     goto cleanup;

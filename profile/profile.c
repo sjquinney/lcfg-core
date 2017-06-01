@@ -520,7 +520,7 @@ LCFGChange lcfgprofile_merge( LCFGProfile * profile1,
 			      char ** msg ) {
   assert( profile1 != NULL );
 
-  if ( profile2 != NULL ) return LCFG_CHANGE_NONE;
+  if ( profile2 == NULL ) return LCFG_CHANGE_NONE;
 
   /* Overrides are only applied to components already in target profile */
 

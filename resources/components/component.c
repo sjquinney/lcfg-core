@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 18:31:13 +0100 (Thu, 25 May 2017) $
- * $Revision: 32935 $
+ * $Date: 2017-06-01 09:50:22 +0100 (Thu, 01 Jun 2017) $
+ * $Revision: 32996 $
  */
 
 #include <stdbool.h>
@@ -262,7 +262,8 @@ void lcfgcomponent_relinquish(LCFGComponent * comp) {
  *   - LCFG_MERGE_RULE_SQUASH_IDENTICAL - ignore additional identical resources
  *   - LCFG_MERGE_RULE_USE_PRIORITY - resolve conflicts using context priority 
  *   - LCFG_MERGE_RULE_USE_PREFIX - mutate resource according to prefix (TODO)
- * 
+ *   - LCFG_MERGE_RULE_REPLACE - replace any existing resource which matches
+ *
  * Rules can be used in any combination by using a @c '|' (bitwise
  * 'or').
  *
@@ -1181,9 +1182,14 @@ LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
 
   bool ok = true;
 
+  FILE * out = NULL;
   int fd = mkstemp(tmpfile);
-  FILE * out = fdopen( fd, "w" );
+  if ( fd >= 0 )
+    out = fdopen( fd, "w" );
+
   if ( out == NULL ) {
+    if ( fd >= 0 ) close(fd);
+
     lcfgutils_build_message( msg, "Failed to open temporary status file '%s'",
               tmpfile );
     ok = false;
@@ -1511,7 +1517,7 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
   /* Doing a search here rather than calling find_node so that the
      previous node can also be selected. That is needed for removals. */
 
-  const char * match_name = lcfgresource_get_name(new_res);
+  const char * match_name = new_res->name;
 
   const LCFGResourceNode * node = NULL;
   for ( node = lcfgcomponent_head(comp);
@@ -1522,9 +1528,7 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
 
     if ( !lcfgresource_is_valid(res) ) continue;
 
-    const char * name = lcfgresource_get_name(res);
-
-    if ( strcmp( name, match_name ) == 0 ) {
+    if ( lcfgresource_match( res, match_name ) ) {
       cur_node  = (LCFGResourceNode *) node;
       cur_res   = lcfgcomponent_resource(cur_node);
     } else {
@@ -1575,7 +1579,16 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
     goto apply;
   }
 
-  /* 5. Use the priorities from the context evaluations */
+  /* 5. Just replace existing with new */
+
+  if ( merge_rules&LCFG_MERGE_RULE_REPLACE ) {
+      remove_old = true;
+      append_new = true;
+      accept     = true;
+      goto apply;
+  }
+
+  /* 6. Use the priorities from the context evaluations */
 
   if ( merge_rules&LCFG_MERGE_RULE_USE_PRIORITY ) {
 
@@ -2049,6 +2062,74 @@ bool lcfgcomponent_match( const LCFGComponent * comp,
   const char * comp_name = or_default( comp->name, "" );
 
   return ( strcmp( comp_name, name ) == 0 );
+}
+
+LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
+                                 const LCFGTagList * res_wanted,
+                                 LCFGComponent ** result,
+                                 LCFGOption options,
+                                 char ** msg ) {
+  assert( comp != NULL );
+
+  LCFGComponent * new_comp = lcfgcomponent_new();
+
+  LCFGStatus status = LCFG_STATUS_OK;
+
+  /* Clone the name if there is one */
+
+  if ( !isempty(comp->name) ) {
+    char * new_name = strdup(comp->name);
+    if ( !lcfgcomponent_set_name( new_comp, new_name ) ) {
+      free(new_name);
+      lcfgutils_build_message( msg, "Invalid component name '%s'", new_name );
+      status = LCFG_STATUS_ERROR;
+    }
+  }
+
+  /* Also clone the merge rules */
+
+  new_comp->merge_rules = comp->merge_rules;
+
+  /* Collect the required subset of resources */
+
+  const bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
+  const bool take_all = lcfgtaglist_is_empty(res_wanted);
+
+  const LCFGResourceNode * cur_node = NULL;
+  for ( cur_node = lcfgcomponent_head(comp);
+        cur_node != NULL && status != LCFG_STATUS_ERROR;
+        cur_node = lcfgcomponent_next(cur_node) ) {
+
+    LCFGResource * res = lcfgcomponent_resource(cur_node);
+
+    if ( lcfgresource_is_valid(res) && 
+         ( all_priorities || lcfgresource_is_active(res) ) ) {
+
+      if ( take_all || 
+           lcfgtaglist_contains( res_wanted, lcfgresource_get_name(res) ) ) {
+
+        LCFGChange change = lcfgcomponent_append( new_comp, res );
+        if ( change == LCFG_CHANGE_ERROR ) {
+          status = LCFG_STATUS_ERROR;
+          lcfgutils_build_message( msg, "Failed to add resource to component" );
+        }
+
+      }
+
+    }
+
+  }
+
+ cleanup:
+
+  if ( status == LCFG_STATUS_ERROR ) {
+    lcfgcomponent_relinquish(new_comp);
+    new_comp = NULL;
+  }
+
+  *result = new_comp;
+
+  return status;
 }
 
 /* eof */

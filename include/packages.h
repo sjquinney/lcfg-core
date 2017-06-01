@@ -3,8 +3,8 @@
  * @brief LCFG package handling library
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-05-29 14:28:10 +0100 (Mon, 29 May 2017) $
+ * $Revision: 32963 $
  */
 
 #ifndef LCFG_CORE_PACKAGES_H
@@ -180,6 +180,9 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkg,
 char * lcfgpackage_full_version( const LCFGPackage * pkg );
 
 char * lcfgpackage_id( const LCFGPackage * pkg );
+
+bool lcfgpackage_match( const LCFGPackage * pkg,
+			const char * name, const char * arch );
 
 int compare_vstrings( const char * v1, const char * v2 )
   __attribute__((const));

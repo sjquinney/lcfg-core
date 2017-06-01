@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG resource templates
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-05-31 18:42:00 +0100 (Wed, 31 May 2017) $
+ * $Revision: 32987 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -30,6 +30,8 @@ static LCFGStatus invalid_template( char ** msg, const char * base, ... ) {
 
   char * reason = NULL;
   int rc = vasprintf( &reason, base, ap );
+  va_end(ap);
+
   if ( rc < 0 ) {
     perror("Failed to allocate memory for error string");
     exit(EXIT_FAILURE);
@@ -364,7 +366,7 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
   const char * template  = lcfgtemplate_get_tmpl(res_tmpl);
 
   unsigned int pcount = res_tmpl->pcount;
-  if ( lcfgtaglist_size(taglist) < pcount ) {
+  if ( taglist == NULL || lcfgtaglist_size(taglist) < pcount ) {
     lcfgutils_build_message( msg, "Insufficient tags for template '%s'\n",
                              template );
     return NULL;

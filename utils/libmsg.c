@@ -145,14 +145,15 @@ static char * LCFG_LogDir( const char * new_logdir ) {
 
   va_list ap;
   char *s, *p;
-  int len = strlen(first);
+  size_t len = strlen(first);
 
   va_start(ap,first);
   while ( (s=va_arg(ap, char*)) != NULL ) len += strlen(s);
   va_end(ap);
 
-  s = p = (char*)malloc(1+len); *p='\0';
+  s = p = calloc( 1+len, sizeof(char) );
   if (s == NULL) return NULL;
+
   (void)strcpy(p,first);
   va_start(ap,first);
   while ( (s=va_arg(ap, char*)) != NULL ) (void)strcat( p, s );
@@ -293,7 +294,6 @@ static char * LCFG_LogDir( const char * new_logdir ) {
 {
   /* Start progress message */
   
-  char *s = LCFG_FirstLine(msg);
   int fancy = LCFG_FancyStatus();
 
   int outfd, retval = 0;
@@ -301,6 +301,8 @@ static char * LCFG_LogDir( const char * new_logdir ) {
   if (!fpout) return 0;
 
   outfd = fileno(fpout);
+
+  char *s = LCFG_FirstLine(msg);
 
   if (s==NULL) return 0;
 
@@ -366,13 +368,14 @@ static char * LCFG_LogDir( const char * new_logdir ) {
 {
   /* Print message to output in standard format */
 
-  char *s = LCFG_AddNewLine(msg);
-  char *k = s;
   int first = 1;
   int fancy = LCFG_FancyStatus();
   
   FILE *fpout = LCFG_GetOutput();
   if (!fpout) return 0;
+
+  char *s = LCFG_AddNewLine(msg);
+  char *k = s;
 
   if (s==NULL) return 0;
   while (*s) {
@@ -582,13 +585,17 @@ static char * LCFG_LogDir( const char * new_logdir ) {
 {
   /* Use this to log special events like reboot requests */
 
-  int newevent;
   char *ext = LCFG_Append(".",event,NULL); 
 
   LCFG_LogMessage( comp, msg, "== ", NULL, 1 );
-  newevent = LCFG_LogMessage( comp, msg, "", ext, 1 );
+
+  int newevent = LCFG_LogMessage( comp, msg, "", ext, 1 );
+
   LCFG_Syslog( comp, event, msg, LOG_INFO, NULL, 1 );
   LCFG_Monitor( comp, event, msg, 1 );
+
+  free(ext);
+
   if (newevent) LCFG_Ack();
 }
 

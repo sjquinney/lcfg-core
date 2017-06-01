@@ -192,18 +192,21 @@ void lcfgctx_yyerror( yyscan_t ctxscanner,
                       const LCFGContextList * ctxlist, int * priority,
                       const char * fmt, ... ) {
 
-  va_list ap;
-  va_start( ap, fmt );
-
   lcfgctx_yylex_extra_type * extra = lcfgctx_yyget_extra(ctxscanner);
 
   /* Avoid being called twice by both flex and bison */
-  if ( extra->errmsg == NULL ) {
-    int rc = vasprintf( &(extra->errmsg), fmt, ap );
-    if ( rc < 0 ) {
-      perror("Failed to allocate memory for error string");
-      exit(EXIT_FAILURE);
-    }
+  if ( extra->errmsg != NULL )
+    return;
+
+  va_list ap;
+  va_start( ap, fmt );
+
+  int rc = vasprintf( &(extra->errmsg), fmt, ap );
+  va_end(ap);
+
+  if ( rc < 0 ) {
+    perror("Failed to allocate memory for error string");
+    exit(EXIT_FAILURE);
   }
 
 }
@@ -217,7 +220,7 @@ static void strbuf_init( yyscan_t ctxscanner ) {
 
   if ( extra->strbuf == NULL || extra->strbufalloc == 0 ) {
     extra->strbufalloc = 8;
-    extra->strbuf = calloc( extra->strbufalloc, sizeof(char *) );
+    extra->strbuf = calloc( extra->strbufalloc, sizeof(char) );
     if ( extra->strbuf == NULL ) {
       perror("Failed to allocate memory for LCFG context string");
       exit(EXIT_FAILURE);
