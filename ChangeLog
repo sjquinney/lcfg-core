@@ -1,6 +1,92 @@
-2017-05-30  SVN: new release
+2017-06-01  SVN: new release
 
-	* Release: 1.40.5
+	* Release: 1.41.0
+
+2017-06-01 08:50  squinney@INF.ED.AC.UK
+
+	* context/tools.c, lcfg.yml, packages/rpm.c,
+	  resources/components/component.c: Standardised how mkstemp is
+	  used
+
+2017-06-01 08:50  squinney@INF.ED.AC.UK
+
+	* profile/diff.c: Made use of mkstemp safer CID#1437439
+
+2017-05-31 19:09  squinney@INF.ED.AC.UK
+
+	* utils/libmsg.c: Fixed LCFG_Append so that there is no attempt to
+	  dereference a string if malloc fails CID#1437420
+
+2017-05-31 19:07  squinney@INF.ED.AC.UK
+
+	* context/lexer.l: fixed initialisation of string buffer
+
+2017-05-31 18:21  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: Check return value of mkstemp
+	  in lcfgcomponent_to_status_file CID#1437419
+
+2017-05-31 18:08  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Ensure encoded value string is always freed
+	  CID#1437424
+
+2017-05-31 18:05  squinney@INF.ED.AC.UK
+
+	* utils/libmsg.c: Ensure string created in LCFG_Message is always
+	  freed CID#1437425
+
+2017-05-31 18:02  squinney@INF.ED.AC.UK
+
+	* utils/libmsg.c: Ensure string created in LCFG_StartProgress is
+	  always freed CID#1437431
+
+2017-05-31 17:50  squinney@INF.ED.AC.UK
+
+	* utils/libmsg.c: Free string created in LCFG_Event once no longer
+	  required CID#1437453
+
+2017-05-31 17:42  squinney@INF.ED.AC.UK
+
+	* context/lexer.l, packages/package.c, packages/rpm.c,
+	  resources/templates.c, utils/utils.c: Added missing calls to
+	  va_end CID#1437416, CID#1437435, CID#1437441, CID#1437445
+
+2017-05-31 17:29  squinney@INF.ED.AC.UK
+
+	* profile/profile.c: Fixed logic for check on profile to be merged
+	  in lcfgprofile_merge CID#1437412
+
+2017-05-31 17:25  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: Improved how lcfgcomponent_head
+	  macro is used
+
+2017-05-31 14:49  squinney@INF.ED.AC.UK
+
+	* resources/diff.c: Fixed use of uninitialised variable in
+	  lcfgdiffresource_to_hold CID#1437446
+
+2017-05-31 14:46  squinney@INF.ED.AC.UK
+
+	* resources/templates.c: Avoid attempt to dereference NULL pointer
+	  for taglist in lcfgresource_build_name CID#1437450
+
+2017-05-31 11:10  squinney@INF.ED.AC.UK
+
+	* include/components.h, lcfg.yml, resources/components/component.c:
+	  Added lcfgcomponent_subset which can be used to create a new
+	  component based on a subset of an existing one. This is needed
+	  for qxprof/sxprof
+
+2017-05-30 14:17  squinney@INF.ED.AC.UK
+
+	* bdb/read.c: minor improvements to the way the db entries are
+	  verified
+
+2017-05-30 12:13  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.40.5
 
 2017-05-30 12:13  squinney@INF.ED.AC.UK
 
