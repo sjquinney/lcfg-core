@@ -99,17 +99,14 @@ static char * lcfgcontext_lockfile(const char * contextdir) {
 FILE * lcfgcontext_tmpfile(const char * contextdir, char ** tmpfile ) {
 
   char * file = lcfgutils_catfile( contextdir, ".context.XXXXXX" );
+
+  FILE * tmpfh = NULL;
   int fd = mkstemp( file );
-  if ( fd < 0 ) {
-    free(file);
+  if ( fd >= 0 )
+    tmpfh = fdopen( fd, "w" );
 
-    perror("Failed to open temporary context file");
-    exit(EXIT_FAILURE);
-  }
-
-  FILE * tmpfh = fdopen( fd, "w" );
   if ( tmpfh == NULL ) {
-    close(fd);
+    if ( fd >= 0 ) close(fd);
     free(file);
 
     perror("Failed to open temporary context file");

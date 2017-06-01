@@ -1188,6 +1188,8 @@ LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
     out = fdopen( fd, "w" );
 
   if ( out == NULL ) {
+    if ( fd >= 0 ) close(fd);
+
     lcfgutils_build_message( msg, "Failed to open temporary status file '%s'",
               tmpfile );
     ok = false;

@@ -478,6 +478,8 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
     tmpfh = fdopen( tmpfd, "w" );
 
   if ( tmpfh == NULL ) {
+    if ( tmpfd >= 0 ) close(tmpfd);
+
     lcfgutils_build_message( msg, "Failed to open temporary rpmlist file" );
     ok = false;
     goto cleanup;
@@ -882,6 +884,8 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
     out = fdopen( tmpfd, "w" );
 
   if ( out == NULL ) {
+    if ( tmpfd >= 0 ) close(tmpfd);
+
     ok = false;
     lcfgutils_build_message( msg, "Failed to open temporary rpmcfg file");
     goto cleanup;
