@@ -758,7 +758,11 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
   /* Always initialise the characters of the full space to nul */
   memset( *result, '\0', *size );
 
-  if ( new_len == 0 ) return new_len;
+  if ( new_len == 0 ) {
+    free(old_value_enc);
+    free(new_value_enc);
+    return new_len;
+  }
 
   char * to = *result;
 
