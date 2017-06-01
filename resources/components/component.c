@@ -2080,9 +2080,10 @@ LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
   if ( !isempty(comp->name) ) {
     char * new_name = strdup(comp->name);
     if ( !lcfgcomponent_set_name( new_comp, new_name ) ) {
-      free(new_name);
-      lcfgutils_build_message( msg, "Invalid component name '%s'", new_name );
       status = LCFG_STATUS_ERROR;
+      lcfgutils_build_message( msg, "Invalid component name '%s'", comp->name );
+
+      free(new_name);
     }
   }
 
