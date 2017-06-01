@@ -407,9 +407,14 @@ LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
 
   LCFGStatus status = LCFG_STATUS_OK;
 
+  FILE * out = NULL;
   int fd = mkstemp(tmpfile);
-  FILE * out = fdopen( fd, "w" );
+  if ( fd >= 0 )
+    out = fdopen( fd, "w" );
+
   if ( out == NULL ) {
+    if ( fd >= 0 ) close(fd);
+
     lcfgutils_build_message( msg, "Failed to open temporary status file '%s'",
                              tmpfile );
     status = LCFG_STATUS_ERROR;
