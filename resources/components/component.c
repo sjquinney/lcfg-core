@@ -2064,6 +2064,17 @@ bool lcfgcomponent_match( const LCFGComponent * comp,
   return ( strcmp( comp_name, name ) == 0 );
 }
 
+bool lcfgcomponent_same_name( const LCFGComponent * comp1,
+                              const LCFGComponent * comp2 ) {
+  assert( comp1 != NULL );
+  assert( comp2 != NULL );
+
+  const char * name1 = or_default( comp1->name, "" );
+  const char * name2 = or_default( comp2->name, "" );
+
+  return ( strcmp( name1, name2 ) == 0 );
+}
+
 LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
                                  const LCFGTagList * res_wanted,
                                  LCFGComponent ** result,
