@@ -260,6 +260,9 @@ void lcfgcomponent_sort( LCFGComponent * comp );
 
 unsigned long lcfgcomponent_hash( const LCFGComponent * comp );
 
+bool lcfgcomponent_same_name( const LCFGComponent * comp1,
+                              const LCFGComponent * comp2 );
+
 int lcfgcomponent_compare( const LCFGComponent * comp1,
                            const LCFGComponent * comp2 );
 
@@ -495,8 +498,13 @@ LCFGStatus lcfgcomplist_to_env( const LCFGComponentList * complist,
                                 char ** msg )
   __attribute__((warn_unused_result));
 
+char * lcfgcomplist_signature( const LCFGComponentList * complist );
+
 LCFGTagList * lcfgcomplist_get_components_as_taglist(
 					    const LCFGComponentList * complist);
+
+LCFGTagList * lcfgcomplist_ngeneric_components(
+                                            const LCFGComponentList * complist);
 
 char * lcfgcomplist_get_components_as_string(
                                             const LCFGComponentList * complist);
