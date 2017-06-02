@@ -1776,7 +1776,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
    give up as that is likely to be the separator between name and
    version.
 
-   This vallue will get handled when the primary architecture is found.
+   This value will get handled when the primary architecture is found.
 
   */
 
@@ -1810,6 +1810,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
         if (!ok) {
           invalid_package( msg, "bad context '%s'", pkg_context );
           free(pkg_context);
+          free(pkg_arch); /* not yet stored so must be freed */
           goto failure;
         }
       }
@@ -1839,7 +1840,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
     if (!ok) {
       invalid_package( msg, "bad flags '%s'", pkg_flags );
       free(pkg_flags);
-      pkg_flags = NULL;
+      free(pkg_arch); /* not yet stored so must be freed */
       goto failure;
     }
 
