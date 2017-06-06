@@ -275,6 +275,11 @@ LCFGTag * lcfgtaglist_find_tag( const LCFGTagList * taglist,
 bool lcfgtaglist_contains( const LCFGTagList * taglist,
                            const char * name );
 
+LCFGStatus lcfgtaglist_from_array( const char ** input,
+                                   LCFGTagList ** result,
+                                   char ** msg )
+  __attribute__((warn_unused_result));
+
 LCFGStatus lcfgtaglist_from_string( const char * input,
                                     LCFGTagList ** result,
                                     char ** msg )

@@ -493,6 +493,55 @@ LCFGTagList * lcfgtaglist_clone(const LCFGTagList * taglist) {
   return new_taglist;
 }
 
+/**
+ * @brief Create a new tag list from an array of strings
+ *
+ * This will create a new @c LCFGTagList using the contents of the
+ * array of strings. The tags are added to the list in the order in
+ * which they appear in the array. If the array is empty an empty tag
+ * list will be returned. The final element of the array MUST be a @c
+ * NULL value.
+ *
+ * The tokens must be valid tag names according to the
+ * @c lcfgresource_valid_tag() function.
+ *
+ * @param[in] input The array of tag names
+ * @param[out] result Reference to pointer to the new @c LCFGTagList
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgtaglist_from_array( const char ** input,
+                                   LCFGTagList ** result,
+                                   char ** msg ) {
+
+  LCFGStatus status = LCFG_STATUS_OK;
+
+  LCFGTagList * new_taglist = lcfgtaglist_new();
+
+  int i;
+  for ( i=0; input[i] != NULL; i++ ) {
+
+    LCFGChange change = lcfgtaglist_mutate_append( new_taglist, input[i], msg );
+    if ( change == LCFG_CHANGE_ERROR ) {
+      status = LCFG_STATUS_ERROR;
+      break;
+    }
+
+  }
+
+  if ( status == LCFG_STATUS_ERROR ) {
+    lcfgtaglist_relinquish(new_taglist);
+    new_taglist = NULL;
+  }
+
+  *result = new_taglist;
+
+  return status;
+}
+
 static const char * tag_seps = " \t\r\n";
 
 /**
@@ -553,7 +602,7 @@ LCFGStatus lcfgtaglist_from_string( const char * input,
   free(remainder);
 
   if ( !ok ) {
-    lcfgtaglist_destroy(new_taglist);
+    lcfgtaglist_relinquish(new_taglist);
     new_taglist = NULL;
   }
 
