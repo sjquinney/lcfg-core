@@ -4,8 +4,6 @@
 
 #include <lcfg/components.h>
 
-#include "set.h"
-
 int main(int argc, char * argv[] ) {
 
   const char * dirname = argv[1];
