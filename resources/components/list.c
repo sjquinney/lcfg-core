@@ -7,6 +7,7 @@
  * $Revision$
  */
 
+#include <assert.h>
 #include <dirent.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -15,7 +16,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <assert.h>
 
 #include "components.h"
 #include "utils.h"
@@ -418,7 +418,7 @@ bool lcfgcomplist_has_component(  const LCFGComponentList * complist,
  * that the matching is done using strcmp(3) which is case-sensitive.
  *
  * To ensure the returned @c LCFGComponent is not destroyed when
- * the parent @c LCFGComponentList is destroyed you would need to
+ * the parent @c LCFGComponentList is destroyed it is necessary to
  * call the @c lcfgcomponent_acquire() function.
  *
  * @param[in] complist Pointer to @c LCFGComponentList to be searched
@@ -596,11 +596,10 @@ LCFGChange lcfgcomplist_insert_or_replace_component(
  * two. For each resource in the second component if it also exists in
  * the first list it will be replaced if not it is just added.
  *
- * If the component from the second profile does NOT exist in the
- * first then it will only be added when the @c take_new parameter is
- * set to true. When the @c take_new parameter is false this is
- * effectively an "override" mode which only changes existing
- * components.
+ * If the component from the second list does NOT exist in the first
+ * then it will only be added when the @c take_new parameter is set to
+ * true. When the @c take_new parameter is false this is effectively
+ * an "override-only" mode which only changes existing components.
  *
  * @param[in] list1 Pointer to @c LCFGComponentList to be merged to
  * @param[in] list2 Pointer to @c LCFGComponentList to be merged from
@@ -1064,6 +1063,69 @@ LCFGStatus lcfgcomplist_from_env( const char * val_pfx, const char * type_pfx,
 }
 
 /**
+ * @brief Get an array of component names
+ *
+ * This returns an array which contains the sorted list of names for
+ * all the @c LCFGComponent stored in the @c LCFGComponentList. To
+ * make it easy to iterate through the array there is always an
+ * additional final element which has a @c NULL value.
+ *
+ * To avoid memory leaks, when the array is no longer required the @c
+ * free() function should be called.
+ *
+ * @param[in] complist Pointer to @c LCFGComponentList
+ *
+ * @return Pointer to a new array of component names
+ *
+ */
+
+const char ** lcfgcomplist_get_components( const LCFGComponentList * complist ) {
+
+  /* Make it 1 larger than required so that final item is NULL */
+
+  const char ** result = calloc( complist->size + 1, sizeof(char *) );
+  if ( result == NULL ) {
+    perror( "Failed to allocate memory for list of components" );
+    exit(EXIT_FAILURE);
+  }
+
+  int j = 0;
+  const LCFGComponentNode * cur_node = NULL;
+  for ( cur_node = lcfgcomplist_head(complist);
+        cur_node != NULL && result == NULL;
+        cur_node = lcfgcomplist_next(cur_node) ) {
+
+    const LCFGComponent * comp = lcfgcomplist_component(cur_node);
+
+    if ( lcfgcomponent_is_valid(comp) )
+      result[j++] = lcfgcomponent_get_name(comp);
+  }
+
+  /* Sort the names so that the list has a stable order */
+
+  bool swapped=true;
+  while (swapped) {
+    swapped=false;
+
+    int i;
+    for ( i=0; i<j-1; i++ ) {
+
+      const char * comp1 = result[i];
+      const char * comp2 = result[i+1];
+
+      if ( strcmp( comp1, comp2 ) > 0 ) {
+        result[i]   = comp2;
+        result[i+1] = comp1;
+        swapped = true;
+      }
+
+    }
+  }
+
+  return result;
+}
+
+/**
  * @brief Get the list of component names as a taglist
  *
  * This generates a new @c LCFGTagList which contains a list of
@@ -1084,38 +1146,21 @@ LCFGTagList * lcfgcomplist_get_components_as_taglist(
 					  const LCFGComponentList * complist ) {
   assert( complist != NULL );
 
-  LCFGTagList * comp_names = lcfgtaglist_new();
+  const char ** names = lcfgcomplist_get_components(complist);
 
-  bool ok = true;
+  LCFGTagList * names_list = NULL;
+  char * msg = NULL;
 
-  const LCFGComponentNode * cur_node = NULL;
-  for ( cur_node = lcfgcomplist_head(complist);
-        cur_node != NULL && ok;
-        cur_node = lcfgcomplist_next(cur_node) ) {
-
-    const LCFGComponent * comp = lcfgcomplist_component(cur_node);
-
-    /* Ignore any without names */
-    if ( !lcfgcomponent_is_valid(comp) ) continue;
-
-    const char * comp_name = lcfgcomponent_get_name(comp);
-
-    char * msg = NULL;
-    LCFGChange change = lcfgtaglist_mutate_add( comp_names, comp_name, &msg );
-    if ( change == LCFG_CHANGE_ERROR )
-      ok = false;
-
-    free(msg); /* Just ignoring any message */
+  LCFGStatus rc = lcfgtaglist_from_array( names, &names_list, &msg );
+  if ( rc == LCFG_STATUS_ERROR ) {
+    lcfgtaglist_relinquish(names_list);
+    names_list = NULL;
   }
 
-  if (ok) {
-    lcfgtaglist_sort(comp_names);
-  } else {
-    lcfgtaglist_relinquish(comp_names);
-    comp_names = NULL;
-  }
+  free(msg); /* Just ignore any messages */
+  free(names);
 
-  return comp_names;
+  return names_list;
 }
 
 /**
@@ -1141,8 +1186,6 @@ char * lcfgcomplist_get_components_as_string(
     lcfgcomplist_get_components_as_taglist(complist);
 
   if ( comp_names == NULL ) return NULL;
-
-  lcfgtaglist_sort(comp_names);
 
   size_t buf_len = 0;
   char * res_as_str = NULL;
