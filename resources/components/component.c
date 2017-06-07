@@ -2144,4 +2144,27 @@ LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
   return status;
 }
 
+/**
+ * @brief Test if the component is based upon ngeneric
+ *
+ * Most LCFG components are use the ngeneric framework and thus
+ * consume the associated schema. This function can be used to check
+ * if the specified @c LCFGComponent has ngeneric resources. This is
+ * done by searching for a @c ng_schema resource and checking that it
+ * has a value.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ *
+ * @return Boolean which indicates if component uses ngeneric
+ *
+ */
+
+bool lcfgcomponent_is_ngeneric( const LCFGComponent * comp ) {
+
+  const LCFGResource * ng_schema = 
+    lcfgcomponent_find_resource( comp, "ng_schema", false );
+
+  return ( ng_schema != NULL && lcfgresource_has_value(ng_schema) );
+}
+
 /* eof */

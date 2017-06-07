@@ -1229,9 +1229,9 @@ LCFGTagList * lcfgcomplist_ngeneric_components( const LCFGComponentList * compli
 
     const LCFGComponent * cur_comp = lcfgcomplist_component(cur_node);
 
-    if ( !lcfgcomponent_is_valid(cur_comp) ) continue;
+    if ( lcfgcomponent_is_valid(cur_comp) &&
+         lcfgcomponent_is_ngeneric(cur_comp) ) {
 
-    if ( lcfgcomponent_has_resource( cur_comp, "ng_statusdisplay", false ) ) {
       const char * comp_name = lcfgcomponent_get_name(cur_comp);
 
       char * msg = NULL;

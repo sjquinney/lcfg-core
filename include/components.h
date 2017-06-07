@@ -276,6 +276,8 @@ LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
                                  char ** msg )
   __attribute__((warn_unused_result));
 
+bool lcfgcomponent_is_ngeneric( const LCFGComponent * comp );
+
 /* Component list */
 
 /**
