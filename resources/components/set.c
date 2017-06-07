@@ -3,8 +3,8 @@
  * @brief Functions for working with sets of LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-06-02 15:06:43 +0100 (Fri, 02 Jun 2017) $
- * $Revision: 33010 $
+ * $Date$
+ * $Revision$
  */
 
 #include <assert.h>
