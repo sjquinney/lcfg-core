@@ -513,6 +513,99 @@ char * lcfgcomplist_get_components_as_string(
 
 void lcfgcomplist_sort( LCFGComponentList * complist );
 
+/* Component Set */
+
+struct LCFGComponentSet {
+  LCFGComponent ** components;
+  size_t buckets;
+  size_t entries;
+  unsigned int _refcount;
+};
+
+typedef struct LCFGComponentSet LCFGComponentSet;
+
+#define lcfgcompset_is_empty(COMPSET) ( COMPSET == NULL || (COMPSET)->entries == 0 )
+
+LCFGComponentSet * lcfgcompset_new();
+void lcfgcompset_destroy(LCFGComponentSet * compset);
+
+void lcfgcompset_acquire(LCFGComponentSet * compset);
+void lcfgcompset_relinquish( LCFGComponentSet * compset );
+
+void lcfgcompset_resize(LCFGComponentSet * compset );
+
+double lcfgcompset_load_factor( const LCFGComponentSet * compset );
+
+LCFGComponent * lcfgcompset_find_component( const LCFGComponentSet * compset,
+                                            const char * want_name );
+
+bool lcfgcompset_has_component( const LCFGComponentSet * compset,
+                                const char * want_name );
+
+LCFGChange lcfgcompset_insert_component( LCFGComponentSet * compset,
+                                         LCFGComponent * comp )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgcompset_merge_components( LCFGComponentSet * compset1,
+                                         const LCFGComponentSet * compset2,
+                                         bool take_new,
+                                         char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgcompset_transplant_components( LCFGComponentSet * compset1,
+                                              const LCFGComponentSet * compset2,
+                                              char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGComponent * lcfgcompset_find_or_create_component(
+                                                     LCFGComponentSet * compset,
+                                                     const char * name )
+  __attribute__((warn_unused_result));
+
+const char ** lcfgcompset_get_components( const LCFGComponentSet * compset );
+
+LCFGTagList * lcfgcompset_get_components_as_taglist(
+                                            const LCFGComponentSet * compset );
+
+char * lcfgcompset_get_components_as_string(
+                                            const LCFGComponentSet * compset );
+
+bool lcfgcompset_print( const LCFGComponentSet * compset,
+                        LCFGResourceStyle style,
+                        LCFGOption options,
+                        FILE * out )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgcompset_from_status_dir( const char * status_dir,
+                                        LCFGComponentSet ** result,
+                                        const LCFGTagList * comps_wanted,
+                                        LCFGOption options,
+                                        char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgcompset_to_status_dir( const LCFGComponentSet * compset,
+                                      const char * status_dir,
+                                      LCFGOption options,
+                                      char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgcompset_from_env( const char * val_pfx, const char * type_pfx,
+                                 LCFGComponentSet ** result,
+                                 LCFGTagList * comps_wanted,
+                                 LCFGOption options,
+                                 char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgcompset_to_env( const LCFGComponentSet * compset,
+                               const char * val_pfx, const char * type_pfx,
+                               LCFGOption options,
+                               char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGTagList * lcfgcompset_ngeneric_components( const LCFGComponentSet * compset );
+
+char * lcfgcompset_signature( const LCFGComponentSet * compset );
+
 /* Resource List iterator */
 /**
  * @brief Simple iterator for lists of resources (i.e. a component)

@@ -4,14 +4,16 @@
 
 #include <lcfg/components.h>
 
+#include "set.h"
+
 int main(int argc, char * argv[] ) {
 
   const char * dirname = argv[1];
 
-  LCFGComponentList * complist = NULL;
+  LCFGComponentSet * compset = NULL;
   char * msg = NULL;
 
-  LCFGStatus rc = lcfgcomplist_from_status_dir( dirname, &complist, NULL, &msg );
+  LCFGStatus rc = lcfgcompset_from_status_dir( dirname, &compset, NULL, 0, &msg );
 
   bool ok = true;
   if ( rc == LCFG_STATUS_ERROR ) {
@@ -21,7 +23,7 @@ int main(int argc, char * argv[] ) {
     if ( argc > 2 ) {
       int i;
       for ( i=2;i<argc;i++ ) {
-        LCFGComponent * comp = lcfgcomplist_find_component( complist, argv[i] );
+        LCFGComponent * comp = lcfgcompset_find_component( compset, argv[i] );
         if ( comp != NULL ) {
           lcfgcomponent_sort(comp);
           if ( !lcfgcomponent_print( comp, LCFG_RESOURCE_STYLE_SPEC, 0, stdout ) ) {
@@ -32,11 +34,16 @@ int main(int argc, char * argv[] ) {
       }
 
     } else {
-      ok = lcfgcomplist_print( complist, LCFG_RESOURCE_STYLE_SPEC, 0, stdout );
+      ok = lcfgcompset_print( compset, LCFG_RESOURCE_STYLE_SPEC, 0, stdout );
     }
   }
 
-  lcfgcomplist_destroy(complist);
+  char * names = 
+    lcfgcompset_get_components_as_string(compset);
+  printf("%s\n", names );
+  free(names);
+
+  lcfgcompset_relinquish(compset);
 
   free(msg);
 
