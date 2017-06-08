@@ -550,6 +550,7 @@ LCFGChange lcfgcompset_transplant_components( LCFGComponentSet * compset1,
       LCFGChange rc = lcfgcompset_insert_component( compset1, override_comp );
 
       if ( rc == LCFG_CHANGE_ERROR ) {
+        const char * comp_name = lcfgcomponent_get_name(override_comp);
         lcfgutils_build_message( msg, "Failed to copy '%s' component",
                                  comp_name);
         change = LCFG_CHANGE_ERROR;
@@ -768,7 +769,7 @@ LCFGStatus lcfgcompset_to_status_dir( const LCFGComponentSet * compset,
     LCFGComponent * cur_comp = components[i];
     if ( !cur_comp ) continue;
 
-    const char * comp_name = lcfgcomponent_get_name(comp);
+    const char * comp_name = lcfgcomponent_get_name(cur_comp);
 
     char * statfile = lcfgutils_catfile( status_dir, comp_name );
 
@@ -1038,7 +1039,7 @@ LCFGTagList * lcfgcompset_ngeneric_components( const LCFGComponentSet * compset 
   LCFGComponent ** components = compset->components;
 
   unsigned int i;
-  for ( i = 0; change != LCFG_STATUS_ERROR && i < compset->buckets; i++ ) {
+  for ( i = 0; change != LCFG_CHANGE_ERROR && i < compset->buckets; i++ ) {
 
     const LCFGComponent * comp = components[i];
 
@@ -1089,7 +1090,7 @@ char * lcfgcompset_signature( const LCFGComponentSet * compset ) {
   LCFGComponent ** components = compset->components;
 
   unsigned int i;
-  for ( i=0; i < compset->buckets && ok; i++ ) {
+  for ( i=0; i < compset->buckets; i++ ) {
 
     const LCFGComponent * comp = components[i];
 
