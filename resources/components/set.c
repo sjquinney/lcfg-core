@@ -942,7 +942,7 @@ LCFGTagList * lcfgcompset_get_components_as_taglist(
 
   LCFGTagList * comp_names = lcfgtaglist_new();
 
-  if ( !lcfgcompset_is_empty(compset) ) return comp_names;
+  if ( lcfgcompset_is_empty(compset) ) return comp_names;
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
