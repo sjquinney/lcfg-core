@@ -67,7 +67,7 @@ LCFGProfile * lcfgprofile_new(void) {
  * When the specified @c LCFGProfile is no longer required this
  * will free all associated memory.
  *
- * This will call @c lcfgcomplist_relinquish() for the list of
+ * This will call @c lcfgcompset_relinquish() for the list of
  * components. It will also call @c lcfgpkglist_relinquish() for the
  * lists of active and inactive packages.
  *
@@ -84,7 +84,7 @@ void lcfgprofile_destroy(LCFGProfile * profile) {
 
   if ( profile == NULL ) return;
 
-  lcfgcomplist_relinquish(profile->components);
+  lcfgcompset_relinquish(profile->components);
   profile->components = NULL;
 
   lcfgpkglist_relinquish(profile->active_packages);
@@ -348,22 +348,22 @@ char * lcfgprofile_nodename( const LCFGProfile * profile ) {
  */
 
 bool lcfgprofile_has_components( const LCFGProfile * profile ) {
-  return ( profile != NULL && !lcfgcomplist_is_empty(profile->components) );
+  return ( profile != NULL && !lcfgcompset_is_empty(profile->components) );
 }
 
 /**
  * @brief Get the list of components for the profile
  *
- * This can be used to retrieve the @c LCFGComponentList for the @c
+ * This can be used to retrieve the @c LCFGComponentSet for the @c
  * LCFGProfile.
  *
  * @param[in] profile Pointer to @c LCFGProfile
  *
- * @return The @c LCFGComponentList for the profile
+ * @return The @c LCFGComponentSet for the profile
  *
  */
 
-LCFGComponentList * lcfgprofile_get_components( const LCFGProfile * profile ) {
+LCFGComponentSet * lcfgprofile_get_components( const LCFGProfile * profile ) {
   assert( profile != NULL );
 
   return profile->components;
@@ -373,7 +373,7 @@ LCFGComponentList * lcfgprofile_get_components( const LCFGProfile * profile ) {
 /**
  * @brief Check if profile contains a particular component
  *
- * This can be used to search through the @c LCFGComponentList for the
+ * This can be used to search through the @c LCFGComponentSet for the
  * @c LCFGProfile to check if it contains a component with a matching
  * name. Note that the matching is done using strcmp(3) which is
  * case-sensitive.
@@ -390,19 +390,19 @@ bool lcfgprofile_has_component( const LCFGProfile * profile,
   assert( name != NULL );
 
   return ( lcfgprofile_has_components(profile) &&
-           lcfgcomplist_has_component( profile->components, name ) );
+           lcfgcompset_has_component( profile->components, name ) );
 }
 
 /**
  * @brief Find the component for a given name
  *
- * This can be used to search through the @c LCFGComponentList for the
+ * This can be used to search through the @c LCFGComponentSet for the
  * @c LCFGProfile to find the first component which has a matching
  * name. Note that the matching is done using strcmp(3) which is
  * case-sensitive.
  *
  * To ensure the returned @c LCFGComponent is not destroyed when
- * the parent @c LCFGComponentList is destroyed you would need to
+ * the parent @c LCFGComponentSet is destroyed you would need to
  * call the @c lcfgcomponent_acquire() function.
  *
  * @param[in] profile Pointer to @c LCFGProfile to be searched
@@ -418,7 +418,7 @@ LCFGComponent * lcfgprofile_find_component( const LCFGProfile * profile,
 
   LCFGComponent * comp = NULL;
   if ( profile != NULL )
-    comp = lcfgcomplist_find_component( profile->components, name );
+    comp = lcfgcompset_find_component( profile->components, name );
 
   return comp;
 }
@@ -426,17 +426,17 @@ LCFGComponent * lcfgprofile_find_component( const LCFGProfile * profile,
 /**
  * @brief Find or create a new component
  *
- * Searches the @c LCFGComponentList for the @c LCFGProfile to find an
+ * Searches the @c LCFGComponentSet for the @c LCFGProfile to find an
  * @c LCFGComponent with the required name. If none is found then a
- * new @c LCFGComponent is created and added to the @c LCFGComponentList.
+ * new @c LCFGComponent is created and added to the @c LCFGComponentSet.
  *
- * If the @c LCFGProfile does not already have an @c LCFGComponentList
+ * If the @c LCFGProfile does not already have an @c LCFGComponentSet
  * an empty list will be created.
  *
  * If an error occurs during the creation of a new component a @c NULL
  * value will be returned.
  *
- * @param[in] profile Pointer to @c LCFGComponentList
+ * @param[in] profile Pointer to @c LCFGComponentSet
  * @param[in] name The name of the required component
  *
  * @return The required @c LCFGComponent (or @c NULL)
@@ -449,11 +449,11 @@ LCFGComponent * lcfgprofile_find_or_create_component( LCFGProfile * profile,
   assert( name != NULL );
 
   if ( profile->components == NULL )
-    profile->components = lcfgcomplist_new();
+    profile->components = lcfgcompset_new();
 
   LCFGComponent * comp = NULL;
   if ( profile->components != NULL )
-    comp = lcfgcomplist_find_or_create_component( profile->components, name );
+    comp = lcfgcompset_find_or_create_component( profile->components, name );
 
   return comp;
 }
@@ -461,35 +461,31 @@ LCFGComponent * lcfgprofile_find_or_create_component( LCFGProfile * profile,
 /**
  * @brief Insert or replace a component
  *
- * Searches the @c LCFGComponentList for the @c LCFGProfile to find a
+ * Searches the @c LCFGComponentSet for the @c LCFGProfile to find a
  * matching @c LCFGComponent with the same name. If none is found the
  * component is simply added and @c LCFG_CHANGE_ADDED is returned. If
  * there is a match then the new component will replace the current
  * and @c LCFG_CHANGE_REPLACED is returned.
  *
- * If the @c LCFGProfile does not already have an @c LCFGComponentList
+ * If the @c LCFGProfile does not already have an @c LCFGComponentSet
  * an empty list will be created.
  *
- * @param[in] profile Pointer to @c LCFGComponentList
+ * @param[in] profile Pointer to @c LCFGComponentSet
  * @param[in] new_comp Pointer to @c LCFGComponent
- * @param[out] msg Pointer to any diagnostic messages
  *
  * @return Integer value indicating type of change
  *
  */
 
 LCFGChange lcfgprofile_insert_or_replace_component( LCFGProfile   * profile,
-                                                    LCFGComponent * new_comp,
-                                                    char ** msg ) {
+                                                    LCFGComponent * new_comp ) {
   assert( profile != NULL );
   assert( new_comp != NULL );
 
   if ( profile->components == NULL )
-    profile->components = lcfgcomplist_new();
+    profile->components = lcfgcompset_new();
 
-  return lcfgcomplist_insert_or_replace_component( profile->components,
-                                                   new_comp,
-                                                   msg );
+  return lcfgcompset_insert_component( profile->components, new_comp );
 }
 
 /**
@@ -497,7 +493,7 @@ LCFGChange lcfgprofile_insert_or_replace_component( LCFGProfile   * profile,
  *
  * This will @e merge the components and packages from the second
  * profile into the first. This is done using the @c
- * lcfgcomplist_merge_components() and @c lcfgpkglist_merge_list() functions.
+ * lcfgcompset_merge_components() and @c lcfgpkglist_merge_list() functions.
  *
  * If a component from the second profile does NOT exist in the first
  * then it will only be added when the @c take_new_comps parameter is
@@ -529,11 +525,11 @@ LCFGChange lcfgprofile_merge( LCFGProfile * profile1,
   if ( lcfgprofile_has_components(profile2) &&
        ( lcfgprofile_has_components(profile1) || take_new_comps ) ) {
 
-    /* Create complist for profile1 if necessary */
+    /* Create compset for profile1 if necessary */
     if ( profile1->components == NULL && take_new_comps )
-      profile1->components = lcfgcomplist_new();
+      profile1->components = lcfgcompset_new();
 
-    LCFGChange merge_rc = lcfgcomplist_merge_components( profile1->components,
+    LCFGChange merge_rc = lcfgcompset_merge_components( profile1->components,
                                                          profile2->components,
                                                          take_new_comps,
                                                          msg );
@@ -611,9 +607,9 @@ LCFGChange lcfgprofile_merge( LCFGProfile * profile1,
  * This will copy all the components in the second profile into the
  * first. If the component already exists in the target profile it
  * will be replaced if not the component is simply added. This is done
- * using the @c lcfgcomplist_transplant_components() function.
+ * using the @c lcfgcompset_transplant_components() function.
  *
- * If the @c LCFGProfile does not already have an @c LCFGComponentList
+ * If the @c LCFGProfile does not already have an @c LCFGComponentSet
  * an empty list will be created.
  *
  * @param[in] profile1 Pointer to @c LCFGProfile to be copied to
@@ -632,11 +628,11 @@ LCFGChange lcfgprofile_transplant_components( LCFGProfile * profile1,
   if ( !lcfgprofile_has_components(profile2) ) return LCFG_CHANGE_NONE;
 
   if ( profile1->components == NULL )
-    profile1->components = lcfgcomplist_new();
+    profile1->components = lcfgcompset_new();
 
-  return lcfgcomplist_transplant_components( profile1->components,
-                                             profile2->components,
-                                             msg );
+  return lcfgcompset_transplant_components( profile1->components,
+                                            profile2->components,
+                                            msg );
 
 }
 
@@ -738,7 +734,7 @@ bool lcfgprofile_print(const LCFGProfile * profile,
       ok = false;
 
     if (ok) {
-      ok = lcfgcomplist_print( profile->components, comp_style,
+      ok = lcfgcompset_print( profile->components, comp_style,
                                LCFG_OPT_USE_META, out );
     }
 
@@ -765,7 +761,7 @@ bool lcfgprofile_print(const LCFGProfile * profile,
  *
  * This creates a new @c LCFGProfile and loads the data for the
  * components from the specified directory using the @c
- * lcfgcomplist_from_status_dir() function.
+ * lcfgcompset_from_status_dir() function.
  *
  * It is expected that the file names will be valid component names,
  * any files with invalid names will simply be ignored. Empty files
@@ -777,7 +773,7 @@ bool lcfgprofile_print(const LCFGProfile * profile,
  *
  * If the status directory does not exist an error will be returned
  * unless the @c LCFG_ALLOW_NOEXIST option is specified, in that case
- * an empty @c LCFGComponentList will be returned.
+ * an empty @c LCFGComponentSet will be returned.
 
  * @param[in] status_dir Path to directory of status files
  * @param[out] result Reference to pointer for new @c LCFGProfile
@@ -798,12 +794,12 @@ LCFGStatus lcfgprofile_from_status_dir( const char * status_dir,
 
   LCFGProfile * new_profile = NULL;
 
-  LCFGComponentList * components = NULL;
-  LCFGStatus rc = lcfgcomplist_from_status_dir( status_dir,
-                                                &components,
-                                                comps_wanted,
-						options,
-                                                msg );
+  LCFGComponentSet * components = NULL;
+  LCFGStatus rc = lcfgcompset_from_status_dir( status_dir,
+                                               &components,
+                                               comps_wanted,
+                                               options,
+                                               msg );
 
   /* It is NOT a failure if the directory does not contain any files
      thus might get an empty components list returned. */
@@ -811,7 +807,7 @@ LCFGStatus lcfgprofile_from_status_dir( const char * status_dir,
   if ( rc != LCFG_STATUS_ERROR ) {
     new_profile = lcfgprofile_new();
 
-    lcfgcomplist_acquire(components);
+    lcfgcompset_acquire(components);
     new_profile->components = components;
 
     struct stat sb;
@@ -820,7 +816,7 @@ LCFGStatus lcfgprofile_from_status_dir( const char * status_dir,
 
   }
 
-  lcfgcomplist_relinquish(components);
+  lcfgcompset_relinquish(components);
 
   *result = new_profile;
 
@@ -853,7 +849,7 @@ LCFGStatus lcfgprofile_to_status_dir( const LCFGProfile * profile,
   /* Nothing to do if there are no components for the profile */
   if ( !lcfgprofile_has_components(profile) ) return LCFG_STATUS_OK;
 
-  return lcfgcomplist_to_status_dir( profile->components,
+  return lcfgcompset_to_status_dir( profile->components,
 				     status_dir,
 				     options,
 				     msg );
@@ -866,7 +862,7 @@ LCFGStatus lcfgprofile_to_status_dir( const LCFGProfile * profile,
  * This generates a new @c LCFGTagList which contains a list of
  * component names for the @c LCFGProfile. If the list is empty
  * then an empty tag list will be returned. Will return @c NULL if an
- * error occurs. Uses @c lcfgcomplist_get_components_as_taglist() to do
+ * error occurs. Uses @c lcfgcompset_get_components_as_taglist() to do
  * the work.
  *
  * To avoid memory leaks, when the list is no longer required the 
@@ -885,7 +881,7 @@ LCFGTagList * lcfgprofile_get_components_as_taglist(
   if ( !lcfgprofile_has_components(profile) ) {
     names = lcfgtaglist_new();
   } else {
-    names = lcfgcomplist_get_components_as_taglist(profile->components);
+    names = lcfgcompset_get_components_as_taglist(profile->components);
   }
 
   return names;
@@ -911,33 +907,13 @@ LCFGTagList * lcfgprofile_get_components_as_taglist(
 LCFGTagList * lcfgprofile_ngeneric_components( const LCFGProfile * profile ) {
   assert( profile != NULL );
 
-  return lcfgcomplist_ngeneric_components( profile->components );
+  return lcfgcompset_ngeneric_components( profile->components );
 }
 
 char * lcfgprofile_signature( const LCFGProfile * profile ) {
   assert( profile != NULL );
 
-  return lcfgcomplist_signature( profile->components );
-}
-
-/**
- * @brief Sort a list of components by name
- *
- * This sorts the list of components for the @c LCFGProfile using the
- * @c lcfgcomplist_sort() function.
- *
- * @param[in] profile Pointer to @c LCFGProfile
- *
- */
-
-
-void lcfgprofile_sort_components( const LCFGProfile * profile ) {
-  assert( profile != NULL );
-
-  LCFGComponentList * complist = profile->components;
-  if ( complist != NULL )
-    lcfgcomplist_sort(complist);
-
+  return lcfgcompset_signature( profile->components );
 }
 
 /* eof */

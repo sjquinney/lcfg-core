@@ -33,7 +33,7 @@ struct LCFGProfile {
   char * last_modified_file;  /**< Name for most recently modified source file */
   LCFGPackageList   * active_packages;   /**< List of packages which are active in current contexts */
   LCFGPackageList   * inactive_packages; /**< List of packages which are inactive in current contexts */
-  LCFGComponentList * components;        /**< List of components */
+  LCFGComponentSet * components;        /**< List of components */
   time_t mtime;               /**< Modification time of input file (seconds since epoch) */
 };
 
@@ -64,7 +64,7 @@ char * lcfgprofile_nodename( const LCFGProfile * profile );
 
 bool lcfgprofile_has_components( const LCFGProfile * profile );
 
-LCFGComponentList * lcfgprofile_get_components( const LCFGProfile * profile );
+LCFGComponentSet * lcfgprofile_get_components( const LCFGProfile * profile );
 
 bool lcfgprofile_has_component( const LCFGProfile * profile,
                                 const char * name );
@@ -76,8 +76,7 @@ LCFGComponent * lcfgprofile_find_or_create_component( LCFGProfile * profile,
                                                       const char * name );
 
 LCFGChange lcfgprofile_insert_or_replace_component( LCFGProfile   * profile,
-                                                    LCFGComponent * new_comp,
-                                                    char ** msg )
+                                                    LCFGComponent * new_comp )
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgprofile_transplant_components( LCFGProfile * profile1,
@@ -131,8 +130,6 @@ LCFGTagList * lcfgprofile_get_components_as_taglist(
 LCFGTagList * lcfgprofile_ngeneric_components( const LCFGProfile * profile );
 
 char * lcfgprofile_signature( const LCFGProfile * profile );
-
-void lcfgprofile_sort_components( const LCFGProfile * profile );
 
 #endif /* LCFG_CORE_PROFILE_H */
 

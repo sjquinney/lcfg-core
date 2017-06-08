@@ -95,7 +95,7 @@ LCFGStatus lcfgxml_process_component( xmlTextReaderPtr reader,
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
-				       LCFGComponentList ** result,
+				       LCFGComponentSet ** result,
 				       const char * base_context,
 				       const char * base_derivation,
 				       const LCFGContextList * ctxlist,

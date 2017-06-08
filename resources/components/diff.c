@@ -879,9 +879,9 @@ LCFGChange lcfgcomponent_diff( const LCFGComponent * comp1,
 }
 
 /**
- * @brief Check for differences between lists of components
+ * @brief Check for differences between sets of components
  *
- * This takes two @c LCFGComponentList and returns lists of names of
+ * This takes two @c LCFGComponentSet and returns lists of names of
  * components which have been removed, added or modified. It does not
  * return any details about which resources have changed just that
  * something has changed.
@@ -889,8 +889,8 @@ LCFGChange lcfgcomponent_diff( const LCFGComponent * comp1,
  * This will return @c LCFG_CHANGE_MODIFIED if there are any
  * differences and @c LCFG_CHANGE_NONE otherwise.
  *
- * @param[in] list1 Pointer to the @e old @c LCFGComponentList (may be @c NULL)
- * @param[in] list2 Pointer to the @e new @c LCFGComponentList (may be @c NULL)
+ * @param[in] compset1 Pointer to the @e old @c LCFGComponentSet (may be @c NULL)
+ * @param[in] compset2 Pointer to the @e new @c LCFGComponentSet (may be @c NULL)
  * @param[out] modified Reference to pointer to @c LCFGTagList of components which are modified
  * @param[out] added Reference to pointer to @c LCFGTagList of components which are newly added
  * @param[out] removed Reference to pointer to @c LCFGTagList of components which are removed
@@ -899,109 +899,94 @@ LCFGChange lcfgcomponent_diff( const LCFGComponent * comp1,
  *
  */
 
-LCFGChange lcfgcomplist_quickdiff( const LCFGComponentList * list1,
-                                   const LCFGComponentList * list2,
-                                   LCFGTagList ** modified,
-                                   LCFGTagList ** added,
-                                   LCFGTagList ** removed ) {
+LCFGChange lcfgcompset_quickdiff( const LCFGComponentSet * compset1,
+                                  const LCFGComponentSet * compset2,
+                                  LCFGTagList ** modified,
+                                  LCFGTagList ** added,
+                                  LCFGTagList ** removed ) {
 
   *modified = NULL;
   *added    = NULL;
   *removed  = NULL;
 
-  LCFGChange status = LCFG_CHANGE_NONE;
+  LCFGTagList * names1;
+  if ( compset1 == NULL )
+    names1 = lcfgtaglist_new();
+  else
+    names1 = lcfgcompset_get_components_as_taglist(compset1);
 
-  /* Look for components which have been removed or modified */
-  const LCFGComponentNode * cur_node = NULL;
-  for ( cur_node = list1 != NULL ? lcfgcomplist_head(list1) : NULL;
-	cur_node != NULL && status != LCFG_CHANGE_ERROR;
-	cur_node = lcfgcomplist_next(cur_node) ) {
+  LCFGTagList * names2;
+  if ( compset1 == NULL )
+    names2 = lcfgtaglist_new();
+  else
+    names2 = lcfgcompset_get_components_as_taglist(compset2);
 
-    const LCFGComponent * comp1 = lcfgcomplist_component(cur_node);
-    if ( !lcfgcomponent_is_valid(comp1) ) continue;
+  LCFGTagList * common_comps  = lcfgtaglist_set_intersection( names1, names2 );
+  LCFGTagList * added_comps   = lcfgtaglist_set_subtract( names2, names1 );
+  LCFGTagList * removed_comps = lcfgtaglist_set_subtract( names1, names2 );
 
-    const char * comp1_name = lcfgcomponent_get_name(comp1);
+  lcfgtaglist_relinquish(names1);
+  lcfgtaglist_relinquish(names2);
 
+  LCFGChange change = LCFG_CHANGE_NONE;
+
+  /* Look for modified components */
+
+  LCFGTagList * modified_comps = lcfgtaglist_new();
+
+  LCFGTagIterator * iter = lcfgtagiter_new(common_comps);
+  LCFGTag * tag = NULL;
+  while ( change != LCFG_CHANGE_ERROR &&
+          ( tag = lcfgtagiter_next(iter) ) != NULL ) {
+
+    const char * comp_name = lcfgtag_get_name(tag);
+
+    const LCFGComponent * comp1 =
+      lcfgcompset_find_component( compset1, comp_name );
     const LCFGComponent * comp2 =
-      lcfgcomplist_find_component( list2, comp1_name );
+      lcfgcompset_find_component( compset2, comp_name );
 
     LCFGChange comp_diff = lcfgcomponent_quickdiff( comp1, comp2 );
+    if ( comp_diff == LCFG_CHANGE_MODIFIED ) {
 
-    LCFGTagList ** taglist = NULL;
-
-    switch(comp_diff)
-      {
-      case LCFG_CHANGE_ERROR:
-        status = LCFG_CHANGE_ERROR;
-        break;
-      case LCFG_CHANGE_MODIFIED:
-        status  = LCFG_CHANGE_MODIFIED;
-        taglist = &( *modified );
-        break;
-      case LCFG_CHANGE_REMOVED:
-        status  = LCFG_CHANGE_MODIFIED;
-        taglist = &( *removed );
-        break;
-      case LCFG_CHANGE_NONE:
-      case LCFG_CHANGE_ADDED:
-      case LCFG_CHANGE_REPLACED:
-        break; /* nothing to do */
-      }
-
-    if ( taglist != NULL ) { /* A component name needs storing */
-
-      if ( *taglist == NULL )
-        *taglist = lcfgtaglist_new();
-
-      char * tagmsg = NULL;
-      if ( lcfgtaglist_mutate_add( *taglist, comp1_name, &tagmsg )
-           == LCFG_CHANGE_ERROR ) {
-        status = LCFG_CHANGE_ERROR;
-      }
-      free(tagmsg);
+      LCFGChange rc = lcfgtaglist_append_tag( modified_comps, tag );
+      if ( rc == LCFG_CHANGE_ERROR )
+        change = LCFG_CHANGE_ERROR;
 
     }
 
   }
 
-  /* Look for components which have been added */
+  lcfgtagiter_destroy(iter);
 
-  for ( cur_node = list2 != NULL ? lcfgcomplist_head(list2) : NULL;
-	cur_node != NULL && status != LCFG_CHANGE_ERROR;
-	cur_node = lcfgcomplist_next(cur_node) ) {
+  lcfgtaglist_relinquish(common_comps);
 
-    const LCFGComponent * comp2 = lcfgcomplist_component(cur_node);
-    if ( !lcfgcomponent_is_valid(comp2) ) continue;
+  if ( change == LCFG_CHANGE_ERROR ) {
 
-    const char * comp2_name = lcfgcomponent_get_name(comp2);
+    lcfgtaglist_relinquish(added_comps);
+    added_comps = NULL;
+    lcfgtaglist_relinquish(removed_comps);
+    removed_comps = NULL;
+    lcfgtaglist_relinquish(modified_comps);
+    modified_comps = NULL;
 
-    if ( !lcfgcomplist_has_component( list1, comp2_name ) ) {
-      status = LCFG_CHANGE_MODIFIED;
+  } else {
 
-      if ( *added == NULL )
-        *added = lcfgtaglist_new();
-
-      char * tagmsg = NULL;
-      if ( lcfgtaglist_mutate_add( *added, comp2_name, &tagmsg )
-           == LCFG_CHANGE_ERROR ) {
-        status = LCFG_CHANGE_ERROR;
-      }
-      free(tagmsg);
-
+    if ( !lcfgtaglist_is_empty(added_comps)   ||
+         !lcfgtaglist_is_empty(removed_comps) ||
+         !lcfgtaglist_is_empty(modified_comps) ) {
+      change = LCFG_CHANGE_MODIFIED;
     }
 
   }
 
-  if ( status == LCFG_CHANGE_ERROR || status == LCFG_CHANGE_NONE ) {
-    lcfgtaglist_relinquish(*modified);
-    *modified = NULL;
-    lcfgtaglist_relinquish(*added);
-    *added    = NULL;
-    lcfgtaglist_relinquish(*removed);
-    *removed  = NULL;
-  }
+  /* return the results */
 
-  return status;
+  *added    = added_comps;
+  *removed  = removed_comps;
+  *modified = modified_comps;
+
+  return change;
 }
 
 /**

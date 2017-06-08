@@ -207,11 +207,11 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
                                     const LCFGComponent * comp2 )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgcomplist_quickdiff( const LCFGComponentList * list1,
-                                   const LCFGComponentList * list2,
-                                   LCFGTagList ** modified,
-                                   LCFGTagList ** added,
-                                   LCFGTagList ** removed )
+LCFGChange lcfgcompset_quickdiff( const LCFGComponentSet * set1,
+                                  const LCFGComponentSet * set2,
+                                  LCFGTagList ** modified,
+                                  LCFGTagList ** added,
+                                  LCFGTagList ** removed )
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgprofile_quickdiff( const LCFGProfile * profile1,
