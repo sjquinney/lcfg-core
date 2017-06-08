@@ -87,7 +87,7 @@ void lcfgcompset_resize( LCFGComponentSet * compset ) {
 
     if ( old_set != NULL && compset->entries > 0 ) {
 
-      unsigned long i;
+      unsigned int i;
       for ( i=0; i<old_buckets; i++ ) {
         LCFGComponent * comp = old_set[i];
         if (comp) {
@@ -140,7 +140,7 @@ void lcfgcompset_destroy(LCFGComponentSet * compset) {
 
   LCFGComponent ** components = compset->components;
 
-  unsigned long i;
+  unsigned int i;
   for (i=0; i < compset->buckets; i++ ) {
     if ( components[i] ) {
       lcfgcomponent_relinquish(components[i]);
@@ -239,7 +239,7 @@ LCFGChange lcfgcompset_insert_component( LCFGComponentSet * compset,
   LCFGComponent ** components = compset->components;
 
   unsigned long i;
-  for ( i = hash; change == LCFG_CHANGE_NONE && i<compset->buckets; i++ ) {
+  for ( i = hash; change == LCFG_CHANGE_NONE && i < compset->buckets; i++ ) {
     if ( !components[i] ) {
       components[i] = comp;
       change = LCFG_CHANGE_ADDED;
@@ -425,25 +425,23 @@ bool lcfgcompset_print( const LCFGComponentSet * compset,
 
   if ( lcfgcompset_is_empty(compset) ) return true;
 
-  const char ** names = lcfgcompset_get_components(compset);
+  LCFGComponent ** components = compset->components;
 
   bool ok = true;
 
-  int i;
-  for ( i=0; names[i] != NULL && ok; i++ ) {
-    const char * comp_name = names[i];
+  unsigned int i;
+  for ( i=0; i < compset->buckets && ok; i++ ) {
 
     /* Not const here since we will sort the component */
-    LCFGComponent * comp = lcfgcompset_find_component( compset, comp_name);
+    LCFGComponent * comp = components[i];
 
-    if ( !lcfgcomponent_is_valid(comp) ) continue;
+    if (comp) {
+      lcfgcomponent_sort(comp);
 
-    lcfgcomponent_sort(comp);
+      ok = lcfgcomponent_print( comp, style, options, out );
+    }
 
-    ok = lcfgcomponent_print( comp, style, options, out );
   }
-
-  free(names);
 
   return ok;
 }
@@ -486,35 +484,32 @@ LCFGChange lcfgcompset_merge_components( LCFGComponentSet * compset1,
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
-  const char ** names = lcfgcompset_get_components(compset2);
+  unsigned int i;
+  for ( i=0; i < compset2->buckets && change != LCFG_CHANGE_ERROR; i++ ) {
 
-  int i;
-  for ( i=0; names[i] != NULL && change != LCFG_CHANGE_ERROR; i++ ) {
-    const char * comp_name = names[i];
+    LCFGComponent * override_comp = (compset2->components)[i];
 
-    LCFGComponent * override_comp = lcfgcompset_find_component( compset2,
-                                                                comp_name);
-    if ( !lcfgcomponent_is_valid(override_comp) ) continue;
+    if ( override_comp ) {
+      const char * comp_name = lcfgcomponent_get_name(override_comp);
 
-    LCFGComponent * target_comp =
-      lcfgcompset_find_component( compset1, comp_name );
+      LCFGComponent * target_comp =
+        lcfgcompset_find_component( compset1, comp_name );
 
-    LCFGChange rc = LCFG_CHANGE_NONE;
-    if ( target_comp != NULL ) {
-      rc = lcfgcomponent_merge_component( target_comp, override_comp, msg );
-    } else if ( take_new ) {
-      rc = lcfgcompset_insert_component( compset1, override_comp );
-    }
+      LCFGChange rc = LCFG_CHANGE_NONE;
+      if ( target_comp != NULL ) {
+        rc = lcfgcomponent_merge_component( target_comp, override_comp, msg );
+      } else if ( take_new ) {
+        rc = lcfgcompset_insert_component( compset1, override_comp );
+      }
 
-    if ( rc == LCFG_CHANGE_ERROR ) {
-      change = LCFG_CHANGE_ERROR;
-    } else if ( rc != LCFG_CHANGE_NONE ) {
-      change = LCFG_CHANGE_MODIFIED;
+      if ( rc == LCFG_CHANGE_ERROR ) {
+        change = LCFG_CHANGE_ERROR;
+      } else if ( rc != LCFG_CHANGE_NONE ) {
+        change = LCFG_CHANGE_MODIFIED;
+      }
     }
 
   }
-
-  free(names);
 
   return change;
 }
@@ -545,28 +540,26 @@ LCFGChange lcfgcompset_transplant_components( LCFGComponentSet * compset1,
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
-  const char ** names = lcfgcompset_get_components(compset2);
+  unsigned int i;
+  for ( i=0; i < compset2->buckets && change != LCFG_CHANGE_ERROR; i++ ) {
 
-  int i;
-  for ( i=0; names[i] != NULL && change != LCFG_CHANGE_ERROR; i++ ) {
-    const char * comp_name = names[i];
+    LCFGComponent * override_comp = (compset2->components)[i];
 
-    LCFGComponent * override_comp = lcfgcompset_find_component( compset2,
-                                                                comp_name);
-    if ( !lcfgcomponent_is_valid(override_comp) ) continue;
+    if ( override_comp ) {
 
-    LCFGChange rc = lcfgcompset_insert_component( compset1, override_comp );
+      LCFGChange rc = lcfgcompset_insert_component( compset1, override_comp );
 
-    if ( rc == LCFG_CHANGE_ERROR ) {
-      lcfgutils_build_message( msg, "Failed to copy '%s' component", comp_name);
-      change = LCFG_CHANGE_ERROR;
-    } else if ( rc != LCFG_CHANGE_NONE ) {
-      change = LCFG_CHANGE_MODIFIED;
+      if ( rc == LCFG_CHANGE_ERROR ) {
+        lcfgutils_build_message( msg, "Failed to copy '%s' component",
+                                 comp_name);
+        change = LCFG_CHANGE_ERROR;
+      } else if ( rc != LCFG_CHANGE_NONE ) {
+        change = LCFG_CHANGE_MODIFIED;
+      }
+
     }
 
   }
-
-  free(names);
 
   return change;
 }
@@ -766,17 +759,16 @@ LCFGStatus lcfgcompset_to_status_dir( const LCFGComponentSet * compset,
 
   if ( rc != LCFG_STATUS_OK ) return rc;
 
-  const char ** names = lcfgcompset_get_components(compset);
+  LCFGComponent ** components = compset->components;
 
-  int i;
-  for ( i=0; names[i] != NULL && rc != LCFG_STATUS_ERROR; i++ ) {
-    const char * comp_name = names[i];
+  unsigned int i;
+  for ( i = 0; rc != LCFG_STATUS_ERROR && i < compset->buckets; i++ ) {
 
     /* Not const here since we will sort the component */
-    LCFGComponent * cur_comp = lcfgcompset_find_component( compset,
-                                                           comp_name);
+    LCFGComponent * cur_comp = components[i];
+    if ( !cur_comp ) continue;
 
-    if ( !lcfgcomponent_is_valid(cur_comp) ) continue;
+    const char * comp_name = lcfgcomponent_get_name(comp);
 
     char * statfile = lcfgutils_catfile( status_dir, comp_name );
 
@@ -798,8 +790,6 @@ LCFGStatus lcfgcompset_to_status_dir( const LCFGComponentSet * compset,
     free(statfile);
 
   }
-
-  free(names);
 
   return rc;
 }
@@ -838,21 +828,16 @@ LCFGStatus lcfgcompset_to_env( const LCFGComponentSet * compset,
 
   LCFGStatus status = LCFG_STATUS_OK;
 
-  const char ** names = lcfgcompset_get_components(compset);
+  LCFGComponent ** components = compset->components;
 
-  int i;
-  for ( i=0; names[i] != NULL && status != LCFG_STATUS_ERROR; i++ ) {
-    const char * comp_name = names[i];
+  unsigned int i;
+  for ( i = 0; status != LCFG_STATUS_ERROR && i < compset->buckets; i++ ) {
 
-    const LCFGComponent * comp = lcfgcompset_find_component( compset,
-                                                             comp_name);
+    const LCFGComponent * comp = components[i];
 
-    if ( !lcfgcomponent_is_valid(comp) ) continue;
-
-    status = lcfgcomponent_to_env( comp, val_pfx, type_pfx, options, msg );
+    if (comp)
+      status = lcfgcomponent_to_env( comp, val_pfx, type_pfx, options, msg );
   }
-
-  free(names);
 
   return status;
 }
@@ -934,65 +919,6 @@ LCFGStatus lcfgcompset_from_env( const char * val_pfx, const char * type_pfx,
 }
 
 /**
- * @brief Get an array of component names
- *
- * This returns an array which contains the sorted list of names for
- * all the @c LCFGComponent stored in the @c LCFGComponentSet. To
- * make it easy to iterate through the array there is always an
- * additional final element which has a @c NULL value.
- *
- * To avoid memory leaks, when the array is no longer required the @c
- * free() function should be called.
- *
- * @param[in] compset Pointer to @c LCFGComponentSet
- *
- * @return Pointer to a new array of component names
- *
- */
-
-const char ** lcfgcompset_get_components( const LCFGComponentSet * compset ) {
-
-  /* Make it 1 larger than required so that final item is NULL */
-
-  const char ** result = calloc( compset->entries + 1, sizeof(char *) );
-  if ( result == NULL ) {
-    perror( "Failed to allocate memory for list of components" );
-    exit(EXIT_FAILURE);
-  }
-
-  unsigned long i, j = 0;
-  for ( i=0; i<compset->buckets; i++ ) {
-
-    const LCFGComponent * comp = (compset->components)[i];
-
-    if ( lcfgcomponent_is_valid(comp) )
-      result[j++] = lcfgcomponent_get_name(comp);
-  }
-
-  /* Sort the names so that the list has a stable order */
-
-  bool swapped=true;
-  while (swapped) {
-    swapped=false;
-
-    for ( i=0; i<j-1; i++ ) {
-
-      const char * comp1 = result[i];
-      const char * comp2 = result[i+1];
-
-      if ( strcmp( comp1, comp2 ) > 0 ) {
-        result[i]   = comp2;
-        result[i+1] = comp1;
-        swapped = true;
-      }
-
-    }
-  }
-
-  return result;
-}
-
-/**
  * @brief Get the set of component names as a taglist
  *
  * This generates a new @c LCFGTagList which contains a list of
@@ -1013,21 +939,38 @@ LCFGTagList * lcfgcompset_get_components_as_taglist(
 					  const LCFGComponentSet * compset ) {
   assert( compset != NULL );
 
-  const char ** names = lcfgcompset_get_components(compset);
+  LCFGTagList * comp_names = lcfgtaglist_new();
 
-  LCFGTagList * names_list = NULL;
-  char * msg = NULL;
+  if ( !lcfgcompset_is_empty(compset) ) return comp_names;
 
-  LCFGStatus rc = lcfgtaglist_from_array( names, &names_list, &msg );
-  if ( rc == LCFG_STATUS_ERROR ) {
-    lcfgtaglist_relinquish(names_list);
-    names_list = NULL;
+  LCFGChange change = LCFG_CHANGE_NONE;
+
+  LCFGComponent ** components = compset->components;
+
+  unsigned int i;
+  for ( i = 0; change != LCFG_CHANGE_ERROR && i < compset->buckets; i++ ) {
+
+    const LCFGComponent * comp = components[i];
+
+    if (comp) {
+      const char * comp_name = lcfgcomponent_get_name(comp);
+
+      char * msg = NULL;
+
+      change = lcfgtaglist_mutate_add( comp_names, comp_name, &msg );
+
+      free(msg); /* Just ignore any messages */
+    }
   }
 
-  free(msg); /* Just ignore any messages */
-  free(names);
+  if ( change == LCFG_CHANGE_ERROR ) {
+    lcfgtaglist_relinquish(comp_names);
+    comp_names = NULL;
+  } else {
+    lcfgtaglist_sort(comp_names);
+  }
 
-  return names_list;
+  return comp_names;
 }
 
 /**
@@ -1090,38 +1033,33 @@ LCFGTagList * lcfgcompset_ngeneric_components( const LCFGComponentSet * compset 
 
   if ( !lcfgcompset_is_empty(compset) ) return comp_names;
 
-  const char ** names = lcfgcompset_get_components(compset);
+  LCFGChange change = LCFG_CHANGE_NONE;
 
-  bool ok = true;
+  LCFGComponent ** components = compset->components;
 
-  int i;
-  for ( i=0; names[i] != NULL && ok; i++ ) {
-    const char * comp_name = names[i];
+  unsigned int i;
+  for ( i = 0; change != LCFG_STATUS_ERROR && i < compset->buckets; i++ ) {
 
-    const LCFGComponent * cur_comp =
-      lcfgcompset_find_component( compset, comp_name );
+    const LCFGComponent * comp = components[i];
 
-    if ( lcfgcomponent_is_valid(cur_comp) &&
-         lcfgcomponent_is_ngeneric(cur_comp) ) {
+    if ( comp && lcfgcomponent_is_ngeneric(comp) ) {
+
+      const char * comp_name = lcfgcomponent_get_name(comp);
 
       char * msg = NULL;
 
-      LCFGChange change = lcfgtaglist_mutate_add( comp_names, comp_name, &msg );
-      if ( change == LCFG_CHANGE_ERROR )
-        ok = false;
+      change = lcfgtaglist_mutate_add( comp_names, comp_name, &msg );
 
       free(msg); /* Just ignoring any message */
     }
 
   }
 
-  free(names);
-
-  if (ok) {
-    lcfgtaglist_sort(comp_names);
-  } else {
+  if ( change == LCFG_CHANGE_ERROR ) {
     lcfgtaglist_relinquish(comp_names);
     comp_names = NULL;
+  } else {
+    lcfgtaglist_sort(comp_names);
   }
 
   return comp_names;
@@ -1148,16 +1086,16 @@ char * lcfgcompset_signature( const LCFGComponentSet * compset ) {
     exit(EXIT_FAILURE);
   }
 
-  const char ** names = lcfgcompset_get_components(compset);
+  LCFGComponent ** components = compset->components;
 
-  int i;
-  for ( i=0; names[i] != NULL; i++ ) {
-    const char * comp_name = names[i];
+  unsigned int i;
+  for ( i=0; i < compset->buckets && ok; i++ ) {
 
-    const LCFGComponent * comp =
-      lcfgcompset_find_component( compset, comp_name );
+    const LCFGComponent * comp = components[i];
 
-    if ( !lcfgcomponent_is_valid(comp) ) continue;
+    if (!comp) continue;
+
+    const char * comp_name = lcfgcomponent_get_name(comp);
 
     const LCFGResourceNode * res_node = NULL;
     for ( res_node = lcfgcomponent_head(comp);
@@ -1189,7 +1127,6 @@ char * lcfgcompset_signature( const LCFGComponentSet * compset ) {
     hex_digest = NULL;
   }
 
-  free(names);
   free(buffer);
 
   return hex_digest;

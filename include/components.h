@@ -562,8 +562,6 @@ LCFGComponent * lcfgcompset_find_or_create_component(
                                                      const char * name )
   __attribute__((warn_unused_result));
 
-const char ** lcfgcompset_get_components( const LCFGComponentSet * compset );
-
 LCFGTagList * lcfgcompset_get_components_as_taglist(
                                             const LCFGComponentSet * compset );
 
