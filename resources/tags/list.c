@@ -992,24 +992,26 @@ LCFGChange lcfgtaglist_mutate_add( LCFGTagList * taglist,
   return change;
 }
 
-LCFGTagList lcfgtaglist_set_unique( const LCFGTagList * taglist ) {
+LCFGTagList * lcfgtaglist_set_unique( const LCFGTagList * taglist ) {
+  assert( taglist1 != NULL );
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
-  LCFGTagList * result = NULL;
-  if ( lcfgtaglist_is_empty(taglist) ) {
-    result = lcfgtaglist_new();
-  } else {
+  LCFGTagList * result = lcfgtaglist_new();
 
-    const LCFGTagNode * cur_node = NULL;
-    for ( cur_node = lcfgtaglist_head(taglist);
-          cur_node != NULL && change != LCFG_CHANGE_ERROR;
-          cur_node = lcfgtaglist_next(cur_node) ) {
+  const LCFGTagNode * cur_node = NULL;
+  for ( cur_node = lcfgtaglist_head(taglist);
+        cur_node != NULL && change != LCFG_CHANGE_ERROR;
+        cur_node = lcfgtaglist_next(cur_node) ) {
 
-      LCFGTag * cur_tag = lcfgtaglist_tag(cur_node);
+    LCFGTag * cur_tag = lcfgtaglist_tag(cur_node);
 
-      change = lcfgtaglist_mutate_add( result, cur_tag );
-    }
+    const char * name = NULL;
+    if ( lcfgtag_is_valid(cur_tag) )
+      name = lcfgtag_get_name(cur_tag);
+
+    if ( name != NULL && !lcfgtaglist_contains( result, name ) )
+      change = lcfgtaglist_append_tag( result, cur_tag );
 
   }
 
@@ -1021,8 +1023,10 @@ LCFGTagList lcfgtaglist_set_unique( const LCFGTagList * taglist ) {
   return result;
 }
 
-LCFGTagList lcfgtaglist_set_union( const LCFGTagList * taglist1,
-                                   const LCFGTagList * taglist2 ) {
+LCFGTagList * lcfgtaglist_set_union( const LCFGTagList * taglist1,
+                                     const LCFGTagList * taglist2 ) {
+  assert( taglist1 != NULL );
+  assert( taglist2 != NULL );
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
@@ -1032,7 +1036,7 @@ LCFGTagList lcfgtaglist_set_union( const LCFGTagList * taglist1,
   if ( lcfgtaglist_is_empty(taglist1) )
     result = lcfgtaglist_new();
   else
-    result = lcfgtaglist_unique(taglist1);
+    result = lcfgtaglist_set_unique(taglist1);
 
   /* Copy in any tags from the second list which are not already present */
 
@@ -1041,9 +1045,15 @@ LCFGTagList lcfgtaglist_set_union( const LCFGTagList * taglist1,
         cur_node != NULL && change != LCFG_CHANGE_ERROR;
         cur_node = lcfgtaglist_next(cur_node) ) {
 
-    LCFGTag * cur_tag = lcfgtaglist_tag(cur_node);
+    const LCFGTag * cur_tag = lcfgtaglist_tag(cur_node);
 
-    change = lcfgtaglist_mutate_add( result, cur_tag );
+    const char * name = NULL;
+    if ( lcfgtag_is_valid(cur_tag) )
+      name = lcfgtag_get_name(cur_tag);
+
+    if ( name != NULL && !lcfgtaglist_contains( result, name ) )
+      change = lcfgtaglist_append_tag( result, cur_tag );
+
   }
 
   if ( change == LCFG_CHANGE_ERROR ) {
@@ -1054,8 +1064,10 @@ LCFGTagList lcfgtaglist_set_union( const LCFGTagList * taglist1,
   return result;
 }
 
-LCFGTagList lcfgtaglist_set_intersection( const LCFGTagList * taglist1,
-                                          const LCFGTagList * taglist2 ) {
+LCFGTagList * lcfgtaglist_set_intersection( const LCFGTagList * taglist1,
+                                            const LCFGTagList * taglist2 ) {
+  assert( taglist1 != NULL );
+  assert( taglist2 != NULL );
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
@@ -1072,9 +1084,10 @@ LCFGTagList lcfgtaglist_set_intersection( const LCFGTagList * taglist1,
     if ( lcfgtag_is_valid(cur_tag) )
       name = lcfgtag_get_name(cur_tag);
 
-    if ( name != NULL && lcfgtaglist_contains( taglist2, name ) )
-      change = lcfgtaglist_mutate_add( result, cur_tag );
-
+    if ( name != NULL &&
+         lcfgtaglist_contains( taglist2, name ) &&
+         !lcfgtaglist_contains( result, cur_tag ) )
+      change = lcfgtaglist_append_tag( result, cur_tag );
   }
 
   if ( change == LCFG_CHANGE_ERROR ) {
@@ -1085,8 +1098,10 @@ LCFGTagList lcfgtaglist_set_intersection( const LCFGTagList * taglist1,
   return result;
 }
 
-LCFGTagList lcfgtaglist_set_subtract( const LCFGTagList * taglist1,
-                                      const LCFGTagList * taglist2 ) {
+LCFGTagList * lcfgtaglist_set_subtract( const LCFGTagList * taglist1,
+                                        const LCFGTagList * taglist2 ) {
+  assert( taglist1 != NULL );
+  assert( taglist2 != NULL );
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
@@ -1103,8 +1118,10 @@ LCFGTagList lcfgtaglist_set_subtract( const LCFGTagList * taglist1,
     if ( lcfgtag_is_valid(cur_tag) )
       name = lcfgtag_get_name(cur_tag);
 
-    if ( name != NULL && !lcfgtaglist_contains( taglist2, name ) )
-      change = lcfgtaglist_mutate_add( result, cur_tag );
+    if ( name != NULL &&
+         !lcfgtaglist_contains( taglist2, name ) &&
+         !lcfgtaglist_contains( result, cur_tag ) )
+      change = lcfgtaglist_append_tag( result, cur_tag );
 
   }
 
