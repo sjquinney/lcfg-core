@@ -425,23 +425,34 @@ bool lcfgcompset_print( const LCFGComponentSet * compset,
 
   if ( lcfgcompset_is_empty(compset) ) return true;
 
-  LCFGComponent ** components = compset->components;
+  /* Use a taglist so the components can be printed out in name order */
+
+  LCFGTagList * names = lcfgcompset_get_components_as_taglist(compset);
+
+  lcfgtaglist_sort(names);
+
+  LCFGTagIterator * iter = lcfgtagiter_new(names);
 
   bool ok = true;
 
-  unsigned int i;
-  for ( i=0; i < compset->buckets && ok; i++ ) {
+  const LCFGTag * tag = NULL;
+  while ( ( tag = lcfgtagiter_next(iter) ) != NULL ) {
+    const char * comp_name = lcfgtag_get_name(tag);
 
-    /* Not const here since we will sort the component */
-    LCFGComponent * comp = components[i];
+    LCFGComponent * comp = NULL;
+    if ( comp_name != NULL )
+      comp = lcfgcompset_find_component( compset, comp_name );
 
-    if (comp) {
+    if ( comp != NULL ) {
       lcfgcomponent_sort(comp);
 
       ok = lcfgcomponent_print( comp, style, options, out );
     }
 
   }
+
+  lcfgtagiter_destroy(iter);
+  lcfgtaglist_relinquish(names);
 
   return ok;
 }
