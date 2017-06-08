@@ -993,7 +993,7 @@ LCFGChange lcfgtaglist_mutate_add( LCFGTagList * taglist,
 }
 
 LCFGTagList * lcfgtaglist_set_unique( const LCFGTagList * taglist ) {
-  assert( taglist1 != NULL );
+  assert( taglist != NULL );
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
@@ -1045,7 +1045,7 @@ LCFGTagList * lcfgtaglist_set_union( const LCFGTagList * taglist1,
         cur_node != NULL && change != LCFG_CHANGE_ERROR;
         cur_node = lcfgtaglist_next(cur_node) ) {
 
-    const LCFGTag * cur_tag = lcfgtaglist_tag(cur_node);
+    LCFGTag * cur_tag = lcfgtaglist_tag(cur_node);
 
     const char * name = NULL;
     if ( lcfgtag_is_valid(cur_tag) )
@@ -1086,7 +1086,7 @@ LCFGTagList * lcfgtaglist_set_intersection( const LCFGTagList * taglist1,
 
     if ( name != NULL &&
          lcfgtaglist_contains( taglist2, name ) &&
-         !lcfgtaglist_contains( result, cur_tag ) )
+         !lcfgtaglist_contains( result, name ) )
       change = lcfgtaglist_append_tag( result, cur_tag );
   }
 
@@ -1120,7 +1120,7 @@ LCFGTagList * lcfgtaglist_set_subtract( const LCFGTagList * taglist1,
 
     if ( name != NULL &&
          !lcfgtaglist_contains( taglist2, name ) &&
-         !lcfgtaglist_contains( result, cur_tag ) )
+         !lcfgtaglist_contains( result, name ) )
       change = lcfgtaglist_append_tag( result, cur_tag );
 
   }
