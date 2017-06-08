@@ -297,10 +297,6 @@ void lcfgcompset_destroy(LCFGComponentSet * compset);
 void lcfgcompset_acquire(LCFGComponentSet * compset);
 void lcfgcompset_relinquish( LCFGComponentSet * compset );
 
-void lcfgcompset_resize(LCFGComponentSet * compset );
-
-double lcfgcompset_load_factor( const LCFGComponentSet * compset );
-
 LCFGComponent * lcfgcompset_find_component( const LCFGComponentSet * compset,
                                             const char * want_name );
 

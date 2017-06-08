@@ -24,46 +24,11 @@
 #define LCFG_COMPSET_LOAD_INIT 0.5
 #define LCFG_COMPSET_LOAD_MAX  0.7
 
-/**
- * @brief Create and initialise a new empty set of components
- *
- * Creates a new @c LCFGComponentSet which represents an empty set
- * of components.
- *
- * If the memory allocation for the new structure is not successful the
- * @c exit() function will be called with a non-zero value.
- *
- * The reference count for the structure is initialised to 1. To avoid
- * memory leaks, when it is no longer required the
- * @c lcfgcompset_relinquish() function should be called.
- *
- * @return Pointer to new @c LCFGComponentSet
- *
- */
-
-LCFGComponentSet * lcfgcompset_new() {
-
-  LCFGComponentSet * compset = malloc( sizeof(LCFGComponentSet) );
-  if ( compset == NULL ) {
-    perror( "Failed to allocate memory for LCFG component set" );
-    exit(EXIT_FAILURE);
-  }
-
-  compset->components = NULL;
-  compset->entries    = 0;
-  compset->buckets    = LCFG_COMPSET_DEFAULT_SIZE;
-  compset->_refcount  = 1;
-
-  lcfgcompset_resize(compset);
-
-  return compset;
-}
-
-double lcfgcompset_load_factor( const LCFGComponentSet * compset ) {
+static double lcfgcompset_load_factor( const LCFGComponentSet * compset ) {
   return ( (double) compset->entries / (double) compset->buckets );
 }
 
-void lcfgcompset_resize( LCFGComponentSet * compset ) {
+static void lcfgcompset_resize( LCFGComponentSet * compset ) {
 
   double load_factor = lcfgcompset_load_factor(compset);
 
@@ -105,6 +70,41 @@ void lcfgcompset_resize( LCFGComponentSet * compset ) {
 
   }
 
+}
+
+/**
+ * @brief Create and initialise a new empty set of components
+ *
+ * Creates a new @c LCFGComponentSet which represents an empty set
+ * of components.
+ *
+ * If the memory allocation for the new structure is not successful the
+ * @c exit() function will be called with a non-zero value.
+ *
+ * The reference count for the structure is initialised to 1. To avoid
+ * memory leaks, when it is no longer required the
+ * @c lcfgcompset_relinquish() function should be called.
+ *
+ * @return Pointer to new @c LCFGComponentSet
+ *
+ */
+
+LCFGComponentSet * lcfgcompset_new() {
+
+  LCFGComponentSet * compset = malloc( sizeof(LCFGComponentSet) );
+  if ( compset == NULL ) {
+    perror( "Failed to allocate memory for LCFG component set" );
+    exit(EXIT_FAILURE);
+  }
+
+  compset->components = NULL;
+  compset->entries    = 0;
+  compset->buckets    = LCFG_COMPSET_DEFAULT_SIZE;
+  compset->_refcount  = 1;
+
+  lcfgcompset_resize(compset);
+
+  return compset;
 }
 
 /**
@@ -1065,6 +1065,23 @@ LCFGTagList * lcfgcompset_ngeneric_components( const LCFGComponentSet * compset 
 
   return comp_names;
 }
+
+/**
+ * @brief Compute the MD5 digest for the components
+ *
+ * This can be used to generate the hex-encoded MD5 digest signature
+ * string for the resource data held in the specified @c
+ * LCFGComponentSet. This is used by the LCFG client to identify the
+ * profile.
+ *
+ * To avoid memory leaks, call @c free(3) on the generated string when
+ * no longer required.
+ *
+ * @param[in] compset Pointer to @c LCFGComponentSet
+ *
+ * @return New string for MD5 signature (call @c free() when no longer required)
+ *
+ */
 
 char * lcfgcompset_signature( const LCFGComponentSet * compset ) {
 
