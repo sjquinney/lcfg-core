@@ -319,6 +319,19 @@ LCFGChange lcfgtaglist_mutate_replace( LCFGTagList * taglist,
 				       char ** msg )
   __attribute__((warn_unused_result));
 
+/* Set manipulation */
+
+LCFGTagList lcfgtaglist_set_unique( const LCFGTagList * taglist );
+
+LCFGTagList lcfgtaglist_set_union( const LCFGTagList * taglist1,
+                                   const LCFGTagList * taglist2 );
+
+LCFGTagList lcfgtaglist_set_intersection( const LCFGTagList * taglist1,
+                                          const LCFGTagList * taglist2 );
+
+LCFGTagList lcfgtaglist_set_subtract( const LCFGTagList * taglist1,
+                                      const LCFGTagList * taglist2 );
+
 /**
  * @brief Simple iterator for tag lists
  */
