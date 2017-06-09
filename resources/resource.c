@@ -2946,7 +2946,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
 
   /* Derivation */
 
-  if ( lcfgresource_has_derivation(res) ) {
+  if ( deriv_len > 0 ) {
 
     ssize_t write_len =
       lcfgresource_insert_key( res, prefix, NULL,
