@@ -1,6 +1,23 @@
 2017-06-09  SVN: new release
 
-	* Release: 1.42.0
+	* Release: 1.42.1
+
+2017-06-09 14:03  squinney@INF.ED.AC.UK
+
+	* include/components.h, lcfg.yml, resources/components/component.c:
+	  Extracted 'export' style handling of resources from
+	  lcfgcomponent_print into separate lcfgcomponent_to_export which
+	  can be called from perl. This makes it possible to change the
+	  variable name prefixes which is required for qxprof
+
+2017-06-09 13:00  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/resource.c: Fixed bug in handling of
+	  derivation information in lcfgresource_to_status
+
+2017-06-09 09:21  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.42.0
 
 2017-06-09 09:20  squinney@INF.ED.AC.UK
 
