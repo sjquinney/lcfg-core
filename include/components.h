@@ -77,6 +77,12 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
                           FILE * out )
   __attribute__((warn_unused_result));
 
+bool lcfgcomponent_to_export( const LCFGComponent * comp,
+                              const char * val_pfx, const char * type_pfx,
+                              LCFGOption options,
+                              FILE * out )
+  __attribute__((warn_unused_result));
+
 LCFGStatus lcfgcomponent_from_status_file( const char * filename,
 					   LCFGComponent ** result,
 					   const char * compname,

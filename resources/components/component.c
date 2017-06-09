@@ -625,9 +625,8 @@ LCFGComponent * lcfgcomponent_clone( LCFGComponent * comp, bool deep_copy ) {
  * details. The generated string is written to the specified file
  * stream which must have already been opened for writing.
  *
- * If the style is @c LCFG_RESOURCE_STYLE_EXPORT this will also
- * generate an export variable for the list of exported resource
- * names.
+ * If the style is @c LCFG_RESOURCE_STYLE_EXPORT this will use the @c
+ * lcfgcomponent_to_export() function.
  *
  * Resources which are invalid will be ignored. Resources which do not
  * have values will only be printed if the @c LCFG_OPT_ALL_VALUES
@@ -652,39 +651,16 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
 
   if ( lcfgcomponent_is_empty(comp) ) return true;
 
+  /* Use a separate function for printing in the 'export' style */
+  if ( style == LCFG_RESOURCE_STYLE_EXPORT )
+    return lcfgcomponent_to_export( comp, NULL, NULL, options, out );
+
   bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
   bool all_values     = (options&LCFG_OPT_ALL_VALUES);
 
   options |= LCFG_OPT_NEWLINE;
 
   const char * comp_name = lcfgcomponent_get_name(comp);
-
-  bool print_export = ( style == LCFG_RESOURCE_STYLE_EXPORT );
-
-  const char * val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
-  const char * type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
-
-  /* Need these to handle the copies (if any) and free them later */
-  char * val_pfx2  = NULL;
-  char * type_pfx2 = NULL;
-
-  LCFGTagList * export_res = NULL;
-  if ( print_export ) {
-    if ( lcfgresource_build_env_prefix( val_pfx, comp_name, &val_pfx2 )
-         && val_pfx2 != NULL ) {
-      val_pfx = val_pfx2;
-    }
-
-    /* No point doing this if the type data isn't required */
-    if ( options&LCFG_OPT_USE_META ) {
-      if ( lcfgresource_build_env_prefix( type_pfx, comp_name, &type_pfx2 )
-           && type_pfx2 != NULL ) {
-        type_pfx = type_pfx2;
-      }
-    }
-
-    export_res = lcfgtaglist_new();
-  }
 
   /* Preallocate string buffer for efficiency */
 
@@ -710,29 +686,8 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
     if ( ( all_values     || lcfgresource_has_value(res) ) &&
          ( all_priorities || lcfgresource_is_active(res) ) ) {
 
-      ssize_t rc;
-      if ( print_export ) {
-        rc = lcfgresource_to_export( res, NULL, val_pfx, type_pfx, options,
-                                     &buffer, &buf_size );
-
-        /* Stash the resource name so we can create an env variable
-           which holds the list of names. */
-
-        if ( rc > 0 ) {
-          const char * name = lcfgresource_get_name(res);
-          char * add_msg = NULL;
-          LCFGChange change = 
-            lcfgtaglist_mutate_add( export_res, name, &add_msg );
-          if ( change == LCFG_CHANGE_ERROR )
-            ok = false;
-
-          free(add_msg);
-        }
-
-      } else {
-        rc = lcfgresource_to_string( res, comp_name, style, options,
-                                     &buffer, &buf_size );
-      }
+      ssize_t rc = lcfgresource_to_string( res, comp_name, style, options,
+                                           &buffer, &buf_size );
 
       if ( rc < 0 )
         ok = false;
@@ -745,26 +700,145 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
     }
   }
 
+  free(buffer);
+
+  return ok;
+}
+
+/**
+ * @brief Write list of resources for shell evaluation
+ *
+ * This uses @c lcfgresource_to_export() to format each resource as a
+ * string which can be used for shell variable evaluation. See the
+ * documentation for that function for full details. The generated
+ * string is written to the specified file stream which must have
+ * already been opened for writing. This will also generate an export
+ * variable for the list of exported resource names. This function is
+ * similar to @c lcfgcomponent_print() but handles the extra
+ * complexity with formatting the list for shell evaluation.
+ *
+ * Resources which are invalid will be ignored. Resources which do not
+ * have values will only be printed if the @c LCFG_OPT_ALL_VALUES
+ * option is specified. Resources which are inactive (i.e. they have a
+ * negative priority) will also be ignored unless the
+ * @c LCFG_OPT_ALL_PRIORITIES option is specified.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] val_pfx The prefix for the value variable name
+ * @param[in] type_pfx The prefix for the type variable name
+ * @param[in] options Integer that controls formatting
+ * @param[in] out Stream to which the list of resources should be written
+ *
+ * @return Boolean indicating success
+ *
+ */
+
+bool lcfgcomponent_to_export( const LCFGComponent * comp,
+                              const char * val_pfx, const char * type_pfx,
+                              LCFGOption options,
+                              FILE * out ) {
+  assert( comp != NULL );
+
+  if ( !lcfgcomponent_is_valid(comp) ) return LCFG_STATUS_ERROR;
+  if ( lcfgcomponent_is_empty(comp) )  return LCFG_STATUS_OK;
+
+  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
+  bool all_values     = (options&LCFG_OPT_ALL_VALUES);
+
+  const char * comp_name = lcfgcomponent_get_name(comp);
+
+  if ( val_pfx  == NULL ) val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
+  if ( type_pfx == NULL ) type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
+
+  /* Need these to handle the copies (if any) and free them later */
+  char * val_pfx2  = NULL;
+  char * type_pfx2 = NULL;
+
+  if ( lcfgresource_build_env_prefix( val_pfx, comp_name, &val_pfx2 )
+       && val_pfx2 != NULL ) {
+    val_pfx = val_pfx2;
+  }
+
+  /* No point doing this if the type data isn't required */
+  if ( options&LCFG_OPT_USE_META ) {
+    if ( lcfgresource_build_env_prefix( type_pfx, comp_name, &type_pfx2 )
+         && type_pfx2 != NULL ) {
+      type_pfx = type_pfx2;
+    }
+  }
+
+  /* Preallocate string buffer for efficiency */
+
+  size_t buf_size = 256;
+  char * buffer = calloc( buf_size, sizeof(char) );
+  if ( buffer == NULL ) {
+    perror( "Failed to allocate memory for LCFG resource buffer" );
+    exit(EXIT_FAILURE);
+  }
+
+  LCFGTagList * export_res = lcfgtaglist_new();
+  bool ok = true;
+
+  const LCFGResourceNode * cur_node = NULL;
+  for ( cur_node = lcfgcomponent_head(comp);
+	cur_node != NULL && ok;
+	cur_node = lcfgcomponent_next(cur_node) ) {
+
+    const LCFGResource * res = lcfgcomponent_resource(cur_node);
+
+    /* Not interested in resources for inactive contexts. Only print
+       resources without values if the print_all option is specified */
+
+    if ( ( all_values     || lcfgresource_has_value(res) ) &&
+         ( all_priorities || lcfgresource_is_active(res) ) ) {
+
+      ssize_t rc = lcfgresource_to_export( res, NULL,
+                                           val_pfx, type_pfx,
+                                           options,
+                                           &buffer, &buf_size );
+
+      /* Stash the resource name so we can create an env variable
+         which holds the list of names. */
+
+      if ( rc < 0 ) {
+        ok = false;
+      } else {
+        const char * res_name = lcfgresource_get_name(res);
+
+        char * add_msg = NULL;
+        LCFGChange add_rc = lcfgtaglist_mutate_add( export_res, res_name,
+                                                    &add_msg );
+        if ( add_rc == LCFG_CHANGE_ERROR )
+          ok = false;
+
+        free(add_msg);
+      }
+
+      if (ok) {
+        if ( fputs( buffer, out ) < 0 )
+          ok = false;
+      }
+    }
+
+  }
+
   /* Export style also needs a list of resource names for the component */
 
-  if ( ok && print_export ) {
+  if ( ok && !lcfgtaglist_is_empty(export_res) ) {
 
     lcfgtaglist_sort(export_res);
 
-    char * reslist = NULL;
-    size_t bufsize = 0;
     ssize_t len = lcfgtaglist_to_string( export_res, LCFG_OPT_NONE,
-                                         &reslist, &bufsize );
+                                         &buffer, &buf_size );
     if ( len < 0 ) {
       ok = false;
     } else {
       int rc = fprintf( out, "export %s%s='%s'\n", val_pfx, 
-                        LCFG_RESOURCE_ENV_LISTKEY, reslist );
+                        LCFG_RESOURCE_ENV_LISTKEY, buffer );
       if ( rc < 0 )
         ok = false;
     }
 
-    free(reslist);
   }
 
   free(buffer);
