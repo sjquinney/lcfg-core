@@ -1,6 +1,149 @@
-2017-06-01  SVN: new release
+2017-06-09  SVN: new release
 
-	* Release: 1.41.0
+	* Release: 1.42.0
+
+2017-06-09 09:20  squinney@INF.ED.AC.UK
+
+	* resources/components/list.c: Dropped component list in favour of
+	  set
+
+2017-06-08 14:54  squinney@INF.ED.AC.UK
+
+	* resources/components/set.c: lcfgcompset_print now prints
+	  components in name order
+
+2017-06-08 14:39  squinney@INF.ED.AC.UK
+
+	* include/components.h, lcfg.yml, resources/components/set.c: Added
+	  docs for lcfgcompset_signature. Made a couple of functions static
+	  as they do not need to be public
+
+2017-06-08 14:38  squinney@INF.ED.AC.UK
+
+	* resources/tags/list.c: more minor fixes to set functions
+
+2017-06-08 14:16  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, bdb/write.c, include/bdb.h, include/components.h,
+	  include/differences.h, include/profile.h, include/xml.h,
+	  lcfg.yml, profile/diff.c, profile/profile.c,
+	  resources/components/diff.c, xml/components.c: Reworked to use
+	  the new LCFGComponentSet instead of LCFGComponentList
+
+2017-06-08 14:16  squinney@INF.ED.AC.UK
+
+	* resources/CMakeLists.txt: avoid including components/list.c
+
+2017-06-08 14:15  squinney@INF.ED.AC.UK
+
+	* include/tags.h: Fixed specs for set functions
+
+2017-06-08 14:15  squinney@INF.ED.AC.UK
+
+	* resources/components/set.c: Fixed
+	  lcfgcompset_get_components_as_taglist
+
+2017-06-08 14:13  squinney@INF.ED.AC.UK
+
+	* resources/tags/list.c: New set functions are now working
+
+2017-06-08 11:44  squinney@INF.ED.AC.UK
+
+	* resources/tags/list.c: Added new set functions
+
+2017-06-08 11:44  squinney@INF.ED.AC.UK
+
+	* include/tags.h: Added definitions for set functions
+
+2017-06-08 11:12  squinney@INF.ED.AC.UK
+
+	* resources/components/set.c: Fixed minor bugs from recent changes
+
+2017-06-08 11:09  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/components/set.c: Reworked how
+	  the various functions iterate through the set of components
+
+2017-06-07 11:47  squinney@INF.ED.AC.UK
+
+	* resources/CMakeLists.txt, resources/components/set.c: Set svn
+	  keywords
+
+2017-06-07 11:47  squinney@INF.ED.AC.UK
+
+	* resources/ex/status_dir.c: removed debugging stuff
+
+2017-06-07 11:46  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/components/set.c,
+	  resources/ex/status_dir.c: Added new support for sets of
+	  components which can replace the previous functionality based on
+	  linked lists. This is much nicer to work with and should be more
+	  efficient for lookups
+
+2017-06-07 11:30  squinney@INF.ED.AC.UK
+
+	* resources/components/list.c: Added lcfgcomplist_get_components
+	  which returns an array of sorted component names which can be
+	  used in the lcfgcomplist_get_components_as_taglist function and
+	  others
+
+2017-06-07 10:26  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/components/component.c,
+	  resources/components/list.c: Added new lcfgcomponent_is_ngeneric
+	  function which makes it easier to check if a component is based
+	  on ngeneric
+
+2017-06-06 10:35  squinney@INF.ED.AC.UK
+
+	* include/tags.h, resources/tags/list.c: Added
+	  lcfgtaglist_from_array which creates a new taglist from an array
+	  of strings
+
+2017-06-02 14:06  squinney@INF.ED.AC.UK
+
+	* include/components.h, profile/profile.c,
+	  resources/components/list.c: Moved functionality of
+	  lcfgprofile_signature and lcfgprofile_ngeneric_components into
+	  lcfgcomplist
+
+2017-06-02 13:48  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: Added lcfgcomponent_same_name
+	  to simplify comparing component names
+
+2017-06-02 09:05  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Need to free pkg_arch variable in some error
+	  conditions to avoid memory leak in lcfgpackage_from_spec
+	  CID#1437438
+
+2017-06-02 09:00  squinney@INF.ED.AC.UK
+
+	* xml/read.c: Avoid memory leak in lcfgprofile_overrides_xmldir
+	  when ignoring invalid files CID#1437427
+
+2017-06-02 08:55  squinney@INF.ED.AC.UK
+
+	* context/tools.c: Avoid possibility of calling fclose on a stream
+	  which has already been closed in lcfgcontext_update_pending
+	  CID#1437434
+
+2017-06-01 10:41  squinney@INF.ED.AC.UK
+
+	* resources/diff.c: Fixed memory leak in lcfgdiffresource_to_hold
+	  CID#1438640
+
+2017-06-01 10:39  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: Fixed use-after-free of
+	  component name in error handling in lcfgcomponent_subset
+	  CID#1438641
+
+2017-06-01 08:53  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.41.0
 
 2017-06-01 08:50  squinney@INF.ED.AC.UK
 
