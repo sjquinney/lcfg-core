@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-31 19:08:39 +0100 (Wed, 31 May 2017) $
- * $Revision: 32991 $
+ * $Date: 2017-06-09 14:00:12 +0100 (Fri, 09 Jun 2017) $
+ * $Revision: 33051 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -2946,7 +2946,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
 
   /* Derivation */
 
-  if ( lcfgresource_has_derivation(res) ) {
+  if ( deriv_len > 0 ) {
 
     ssize_t write_len =
       lcfgresource_insert_key( res, prefix, NULL,

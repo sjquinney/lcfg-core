@@ -388,7 +388,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
  * component in the list, see the documentation for that function for
  * full details.
  *
- * @param[in] components List of LCFG components.
+ * @param[in] compset Set of LCFG components.
  * @param[in] namespace Namespace for the DB keys (usually the nodename).
  * @param[in] dbh Database handle.
  * @param[out] msg Pointer to any diagnostic messages.
@@ -397,27 +397,28 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
  * 
  */
 
-LCFGStatus lcfgcomplist_to_bdb( const LCFGComponentList * components,
-                                const char * namespace,
-                                DB * dbh,
-                                char ** msg ) {
+LCFGStatus lcfgcompset_to_bdb( const LCFGComponentSet * compset,
+                               const char * namespace,
+                               DB * dbh,
+                               char ** msg ) {
   assert( dbh != NULL );
 
-  if ( lcfgcomplist_is_empty(components) ) return LCFG_STATUS_OK;
+  if ( lcfgcompset_is_empty(compset) ) return LCFG_STATUS_OK;
 
   LCFGStatus status = LCFG_STATUS_OK;
 
-  const LCFGComponentNode * cur_node = NULL;
-  for ( cur_node = lcfgcomplist_head(components);
-	cur_node != NULL && status != LCFG_STATUS_ERROR;
-	cur_node = lcfgcomplist_next(cur_node) ) {
+  LCFGComponent ** components = compset->components;
 
-    const LCFGComponent * component = lcfgcomplist_component(cur_node);
-    
-    status = lcfgcomponent_to_bdb( component,
-                                   namespace,
-                                   dbh,
-                                   msg );
+  unsigned int i;
+  for ( i=0; status != LCFG_STATUS_ERROR && i < compset->buckets; i++ ) {
+    const LCFGComponent * component = components[i];
+
+    if (component) {
+      status = lcfgcomponent_to_bdb( component,
+                                     namespace,
+                                     dbh,
+                                     msg );
+    }
   }
 
   return status;
@@ -427,7 +428,7 @@ LCFGStatus lcfgcomplist_to_bdb( const LCFGComponentList * components,
  * @brief Store resources for the components in a profile into a Berkeley DB
  *
  * Stores the active resources for each component in the profile into
- * the DB. This function calls lcfgcomplist_to_bdb() on the list of
+ * the DB. This function calls lcfgcompset_to_bdb() on the list of
  * components in the profile, see the documentation for that function
  * for full details.
  *
@@ -510,10 +511,10 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
   if ( status == LCFG_STATUS_ERROR ) goto cleanup;
 
   if ( lcfgprofile_has_components(profile) ) {
-    status = lcfgcomplist_to_bdb( profile->components,
-                                  ( namespace != NULL ? namespace : node ),
-                                  dbh,
-                                  msg );
+    status = lcfgcompset_to_bdb( profile->components,
+                                 ( namespace != NULL ? namespace : node ),
+                                 dbh,
+                                 msg );
   }
 
   /* even if the store fails we need to close the DB handle at this point */

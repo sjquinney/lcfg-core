@@ -162,7 +162,7 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
     }
     free(tagmsg);
 
-    LCFGComponentList * components = NULL;
+    LCFGComponentSet * components = NULL;
 
     if ( status != LCFG_STATUS_ERROR ) {
       status = lcfgbdb_process_components( dbh,
@@ -175,11 +175,11 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
     lcfgtaglist_relinquish(collect_comps);
 
     if ( status != LCFG_STATUS_ERROR ) {
-      component = lcfgcomplist_find_component( components, compname );
+      component = lcfgcompset_find_component( components, compname );
 
       if ( component != NULL ) {
 	/* If a component was found then it must not be destroyed when the
-	   complist is destroyed. */
+	   compset is destroyed. */
 
 	lcfgcomponent_acquire(component);
 
@@ -191,7 +191,7 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
       }
     }
 
-    lcfgcomplist_relinquish(components);
+    lcfgcompset_relinquish(components);
 
   }
   
@@ -216,7 +216,7 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
  * foo.lcfg.org).
  *
  * @param[in] dbh Handle for database.
- * @param[out] result Reference to the pointer for the @c LCFGComponentList struct.
+ * @param[out] result Reference to the pointer for the @c LCFGComponentSet struct.
  * @param[in] comps_wanted Whitelist for component names.
  * @param[in] namespace Namespace for the DB keys (usually the nodename).
  * @param[out] msg Pointer to any diagnostic messages.
@@ -226,7 +226,7 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
  */
 
 LCFGStatus lcfgbdb_process_components( DB * dbh,
-                                       LCFGComponentList ** result,
+                                       LCFGComponentSet ** result,
                                        const LCFGTagList * comps_wanted,
                                        const char * namespace,
                                        char ** msg ) {
@@ -236,7 +236,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
 
   LCFGStatus status = LCFG_STATUS_OK;
 
-  LCFGComponentList * complist = lcfgcomplist_new();
+  LCFGComponentSet * compset = lcfgcompset_new();
 
   DBC * cursor;
 
@@ -320,7 +320,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
     LCFGComponent * comp = NULL;
     LCFGResource * res   = NULL;
 
-    comp = lcfgcomplist_find_or_create_component( complist, this_compname ); 
+    comp = lcfgcompset_find_or_create_component( compset, this_compname ); 
     if ( comp == NULL ) {
       lcfgutils_build_message( msg, "Failed to load LCFG component '%s'",
                 this_compname );
@@ -371,11 +371,11 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
     if ( *msg == NULL )
       lcfgutils_build_message( msg, "Something bad happened whilst processing DB." );
 
-    lcfgcomplist_relinquish(complist);
-    complist = NULL;
+    lcfgcompset_relinquish(compset);
+    compset = NULL;
   }
 
-  *result = complist;
+  *result = compset;
 
   return status;
 }

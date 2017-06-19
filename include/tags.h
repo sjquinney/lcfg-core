@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG resource tags
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-06-08 15:15:27 +0100 (Thu, 08 Jun 2017) $
+ * $Revision: 33027 $
  *
  * Doubly linked-list structure for ordered lists of LCFG "tags". Also
  * intended to be reasonably efficient for set-like operations.
@@ -275,6 +275,11 @@ LCFGTag * lcfgtaglist_find_tag( const LCFGTagList * taglist,
 bool lcfgtaglist_contains( const LCFGTagList * taglist,
                            const char * name );
 
+LCFGStatus lcfgtaglist_from_array( const char ** input,
+                                   LCFGTagList ** result,
+                                   char ** msg )
+  __attribute__((warn_unused_result));
+
 LCFGStatus lcfgtaglist_from_string( const char * input,
                                     LCFGTagList ** result,
                                     char ** msg )
@@ -313,6 +318,19 @@ LCFGChange lcfgtaglist_mutate_replace( LCFGTagList * taglist,
 				       bool global,
 				       char ** msg )
   __attribute__((warn_unused_result));
+
+/* Set manipulation */
+
+LCFGTagList * lcfgtaglist_set_unique( const LCFGTagList * taglist );
+
+LCFGTagList * lcfgtaglist_set_union( const LCFGTagList * taglist1,
+                                     const LCFGTagList * taglist2 );
+
+LCFGTagList * lcfgtaglist_set_intersection( const LCFGTagList * taglist1,
+                                            const LCFGTagList * taglist2 );
+
+LCFGTagList * lcfgtaglist_set_subtract( const LCFGTagList * taglist1,
+                                        const LCFGTagList * taglist2 );
 
 /**
  * @brief Simple iterator for tag lists

@@ -399,7 +399,6 @@ LCFGChange lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
         /* ignoring files with invalid names */
 
         free(comp_name);
-        comp_name = NULL;
 
         continue;
       }
@@ -409,6 +408,7 @@ LCFGChange lcfgprofile_overrides_xmldir( LCFGProfile * main_profile,
       if ( fullpath == NULL ||
            stat( fullpath, &sb ) != 0 ||
            !S_ISREG(sb.st_mode) ) {
+        free(comp_name);
         free(fullpath);
         continue;
       }

@@ -3,8 +3,8 @@
  * @brief Functions for finding the differences between LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-31 15:49:27 +0100 (Wed, 31 May 2017) $
- * $Revision: 32984 $
+ * $Date: 2017-06-01 11:41:46 +0100 (Thu, 01 Jun 2017) $
+ * $Revision: 33004 $
  */
 
 #include <stdbool.h>
@@ -758,7 +758,11 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
   /* Always initialise the characters of the full space to nul */
   memset( *result, '\0', *size );
 
-  if ( new_len == 0 ) return new_len;
+  if ( new_len == 0 ) {
+    free(old_value_enc);
+    free(new_value_enc);
+    return new_len;
+  }
 
   char * to = *result;
 

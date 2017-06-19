@@ -154,7 +154,7 @@ LCFGStatus lcfgxml_process_component( xmlTextReaderPtr reader,
  * @brief Process XML for all components
  *
  * @param[in] reader Pointer to XML reader
- * @param[out] result Reference to pointer to new @c LCFGComponentList
+ * @param[out] result Reference to pointer to new @c LCFGComponentSet
  * @param[in] base_context A context which will be applied to all resources
  * @param[in] base_derivation A derivation which will be applied to all resources
  * @param[in] ctxlist An @c LCFGContextList which is used to evaluate priority
@@ -166,7 +166,7 @@ LCFGStatus lcfgxml_process_component( xmlTextReaderPtr reader,
  */
 
 LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
-				       LCFGComponentList ** result,
+				       LCFGComponentSet ** result,
 				       const char * base_context,
 				       const char * base_derivation,
 				       const LCFGContextList * ctxlist,
@@ -184,7 +184,7 @@ LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
 
   if (xmlTextReaderIsEmptyElement(reader)) return LCFG_STATUS_OK; /* nothing to do */
 
-  LCFGComponentList * complist = lcfgcomplist_new();
+  LCFGComponentSet * compset = lcfgcompset_new();
 
   /* Need to store the depth of the components element. */
 
@@ -246,10 +246,10 @@ LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
 		 strcmp( compname, "profile" ) == 0 ||
 		 lcfgtaglist_contains( comps_wanted, compname ) ) ) {
 
-	    if ( lcfgcomplist_append( complist, cur_comp )
+	    if ( lcfgcompset_insert_component( compset, cur_comp )
 		 == LCFG_CHANGE_ERROR ) {
 
-	      status = lcfgxml_error( msg, "Failed to append component '%s' to the list of components", lcfgcomponent_get_name(cur_comp) );
+	      status = lcfgxml_error( msg, "Failed to add component '%s' to the set of components", lcfgcomponent_get_name(cur_comp) );
 
 	    }
 
@@ -300,11 +300,11 @@ LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
     if ( *msg == NULL )
       lcfgxml_error( msg, "Something bad happened whilst processing components." );
 
-    lcfgcomplist_relinquish(complist);
-    complist = NULL;
+    lcfgcompset_relinquish(compset);
+    compset = NULL;
   }
 
-  *result = complist;
+  *result = compset;
 
   return status;
 }

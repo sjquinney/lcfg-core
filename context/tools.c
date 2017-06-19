@@ -334,12 +334,11 @@ LCFGChange lcfgcontext_update_pending( const char * contextdir,
     ok = lcfgctxlist_print( newlist, tmpfh );
 
     if (ok) {
-      if ( fclose(tmpfh) == 0 ) {
-        tmpfh = NULL; /* Avoids a further attempt to close in cleanup */
-      } else {
+      if ( fclose(tmpfh) != 0 ) {
         lcfgutils_build_message( msg, "Failed to close file '%s'", tmpfile );
         ok = false;
       }
+      tmpfh = NULL; /* Avoids a further attempt to close in cleanup */
     }
 
     /* Rename to the real pending file */

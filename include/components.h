@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-31 12:10:22 +0100 (Wed, 31 May 2017) $
- * $Revision: 32982 $
+ * $Date: 2017-06-09 15:03:56 +0100 (Fri, 09 Jun 2017) $
+ * $Revision: 33052 $
  */
 
 #ifndef LCFG_CORE_COMPONENT_H
@@ -75,6 +75,12 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
                           LCFGResourceStyle style,
                           LCFGOption options,
                           FILE * out )
+  __attribute__((warn_unused_result));
+
+bool lcfgcomponent_to_export( const LCFGComponent * comp,
+                              const char * val_pfx, const char * type_pfx,
+                              LCFGOption options,
+                              FILE * out )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomponent_from_status_file( const char * filename,
@@ -260,6 +266,9 @@ void lcfgcomponent_sort( LCFGComponent * comp );
 
 unsigned long lcfgcomponent_hash( const LCFGComponent * comp );
 
+bool lcfgcomponent_same_name( const LCFGComponent * comp1,
+                              const LCFGComponent * comp2 );
+
 int lcfgcomponent_compare( const LCFGComponent * comp1,
                            const LCFGComponent * comp2 );
 
@@ -273,235 +282,94 @@ LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
                                  char ** msg )
   __attribute__((warn_unused_result));
 
-/* Component list */
+bool lcfgcomponent_is_ngeneric( const LCFGComponent * comp );
 
-/**
- * @brief A structure to wrap an LCFG component as a single-linked list item
- */
+/* Component Set */
 
-struct LCFGComponentNode {
-  LCFGComponent * component;       /**< Pointer to the component structure */
-  struct LCFGComponentNode * next; /**< Next node in the list */
-};
-
-typedef struct LCFGComponentNode LCFGComponentNode;
-
-LCFGComponentNode * lcfgcomponentnode_new(LCFGComponent * comp);
-
-void lcfgcomponentnode_destroy(LCFGComponentNode * compnode);
-
-/**
- * @brief A structure to represent a list of LCFG components
- */
-
-struct LCFGComponentList {
-  /*@{*/
-  LCFGComponentNode * head; /**< The first resource node in the list */
-  LCFGComponentNode * tail; /**< The last resource node in the list */
-  unsigned int size;        /**< The length of the list */
-  /*@}*/
+struct LCFGComponentSet {
+  LCFGComponent ** components;
+  size_t buckets;
+  size_t entries;
   unsigned int _refcount;
 };
 
-typedef struct LCFGComponentList LCFGComponentList;
+typedef struct LCFGComponentSet LCFGComponentSet;
 
-LCFGComponentList * lcfgcomplist_new(void);
+#define lcfgcompset_is_empty(COMPSET) ( COMPSET == NULL || (COMPSET)->entries == 0 )
 
-void lcfgcomplist_destroy(LCFGComponentList * complist);
-void lcfgcomplist_acquire(LCFGComponentList * complist);
-void lcfgcomplist_relinquish(LCFGComponentList * complist);
+LCFGComponentSet * lcfgcompset_new();
+void lcfgcompset_destroy(LCFGComponentSet * compset);
 
-LCFGChange lcfgcomplist_insert_next( LCFGComponentList * complist,
-                                     LCFGComponentNode * compnode,
-                                     LCFGComponent     * comp )
+void lcfgcompset_acquire(LCFGComponentSet * compset);
+void lcfgcompset_relinquish( LCFGComponentSet * compset );
+
+LCFGComponent * lcfgcompset_find_component( const LCFGComponentSet * compset,
+                                            const char * want_name );
+
+bool lcfgcompset_has_component( const LCFGComponentSet * compset,
+                                const char * want_name );
+
+LCFGChange lcfgcompset_insert_component( LCFGComponentSet * compset,
+                                         LCFGComponent * comp )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgcomplist_remove_next( LCFGComponentList * complist,
-                                     LCFGComponentNode * compnode,
-                                     LCFGComponent    ** comp )
-  __attribute__((warn_unused_result));
-
-LCFGComponentNode * lcfgcomplist_find_node( const LCFGComponentList * complist,
-                                            const char * name );
-
-LCFGComponent * lcfgcomplist_find_component( const LCFGComponentList * complist,
-                                             const char * name );
-
-bool lcfgcomplist_has_component( const LCFGComponentList * complist,
-                                 const char * name );
-
-LCFGComponent * lcfgcomplist_find_or_create_component( 
-                                             LCFGComponentList * complist,
-                                             const char * name );
-
-bool lcfgcomplist_print( const LCFGComponentList * complist,
-                         LCFGResourceStyle style,
-                         LCFGOption options,
-                         FILE * out )
-  __attribute__((warn_unused_result));
-
-/**
- * @brief Retrieve the first component node in the list
- *
- * This is a simple macro which can be used to get the first component
- * node structure in the list. Note that if the list is empty this
- * will be the @c NULL value. To retrieve the component from this node
- * use @c lcfgcomplist_component()
- *
- * @param[in] complist Pointer to @c LCFGComponentList
- *
- * @return Pointer to first @c LCFGComponentNode structure in list
- *
- */
-
-#define lcfgcomplist_head(complist) (complist == NULL ? NULL : (complist)->head)
-
-/**
- * @brief Retrieve the last component node in the list
- *
- * This is a simple macro which can be used to get the last component
- * node structure in the list. Note that if the list is empty this
- * will be the @c NULL value. To retrieve the component from this node
- * use @c lcfgcomplist_component()
- *
- * @param[in] complist Pointer to @c LCFGComponentList
- *
- * @return Pointer to last @c LCFGComponentNode structure in list
- *
- */
-
-#define lcfgcomplist_tail(complist) (complist == NULL ? NULL : (complist)->tail)
-
-/**
- * @brief Get the number of nodes in the list
- *
- * This is a simple macro which can be used to get the length of the
- * single-linked component list.
- *
- * @param[in] complist Pointer to @c LCFGComponentList
- *
- * @return Integer length of the list of components
- *
- */
-
-#define lcfgcomplist_size(complist) ((complist)->size)
-
-/**
- * @brief Test if the list has no components
- *
- * This is a simple macro which can be used to test if the
- * single-linked list of components contains any nodes.
- *
- * @param[in] complist Pointer to @c LCFGComponentList
- *
- * @return Boolean which indicates whether the list contains any nodes
- *
- */
-
-#define lcfgcomplist_is_empty(complist) ( complist == NULL || (complist)->size == 0)
-
-/**
- * @brief Retrieve the next component node in the list
- *
- * This is a simple macro which can be used to fetch the next node in
- * the single-linked component list for a given node. If the node
- * specified is the final item in the list this will return a @c NULL
- * value.
- *
- * @param[in] compnode Pointer to current @c LCFGComponentNode
- *
- * @return Pointer to next @c LCFGComponentNode
- */
-
-#define lcfgcomplist_next(compnode)     ((compnode)->next)
-
-/**
- * @brief Retrieve the component for a list node
- *
- * This is a simple macro which can be used to get the component
- * structure from the specified node. 
- *
- * Note that this does @b NOT increment the reference count for the
- * returned component structure. To retain the component call the
- * @c lcfgcomponent_acquire() function.
- *
- * @param[in] compnode Pointer to @c LCFGComponentNode
- *
- * @return Pointer to @c LCFGComponent structure
- *
- */
-
-#define lcfgcomplist_component(compnode) ((compnode)->component)
-
-/**
- * @brief Append a component to a list
- *
- * This is a simple macro wrapper around the @c
- * lcfgcomplist_insert_next() function which can be used to simply
- * append a component structure on to the end of the specified
- * list. Depending on the situation it may be more appropriate to use
- * one of @c lcfgcomplist_insert_or_replace_component() or
- * @c lcfgcomplist_find_or_create_component()
- *
- * @param[in] complist Pointer to @c LCFGComponentList
- * @param[in] comp Pointer to @c LCFGComponent
- * 
- * @return Integer value indicating type of change
- *
- */
-
-#define lcfgcomplist_append(complist, comp) ( lcfgcomplist_insert_next( complist, lcfgcomplist_tail(complist), comp ) )
-
-LCFGChange lcfgcomplist_insert_or_replace_component(
-                                              LCFGComponentList * complist,
-                                              LCFGComponent * new_comp,
-                                              char ** msg )
-  __attribute__((warn_unused_result));
-
-LCFGChange lcfgcomplist_transplant_components( LCFGComponentList * list1,
-                                               const LCFGComponentList * list2,
-                                               char ** msg )
-  __attribute__((warn_unused_result));
-
-LCFGChange lcfgcomplist_merge_components( LCFGComponentList * list1,
-					  const LCFGComponentList * list2,
-					  bool take_new,
-					  char ** msg )
-  __attribute__((warn_unused_result));
-
-LCFGStatus lcfgcomplist_from_status_dir( const char * status_dir,
-                                         LCFGComponentList ** complist,
-                                         const LCFGTagList * comps_wanted,
-					 LCFGOption options,
+LCFGChange lcfgcompset_merge_components( LCFGComponentSet * compset1,
+                                         const LCFGComponentSet * compset2,
+                                         bool take_new,
                                          char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomplist_to_status_dir( const LCFGComponentList * complist,
-                                       const char * status_dir,
-				       LCFGOption options,
-                                       char ** msg )
+LCFGChange lcfgcompset_transplant_components( LCFGComponentSet * compset1,
+                                              const LCFGComponentSet * compset2,
+                                              char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomplist_from_env( const char * val_pfx, const char * type_pfx,
-                                  LCFGComponentList ** result,
-                                  LCFGTagList * comps_wanted,
-                                  LCFGOption options,
-                                  char ** msg )
+LCFGComponent * lcfgcompset_find_or_create_component(
+                                                     LCFGComponentSet * compset,
+                                                     const char * name )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomplist_to_env( const LCFGComponentList * complist,
-                                const char * val_pfx, const char * type_pfx,
-                                LCFGOption options,
-                                char ** msg )
+LCFGTagList * lcfgcompset_get_components_as_taglist(
+                                            const LCFGComponentSet * compset );
+
+char * lcfgcompset_get_components_as_string(
+                                            const LCFGComponentSet * compset );
+
+bool lcfgcompset_print( const LCFGComponentSet * compset,
+                        LCFGResourceStyle style,
+                        LCFGOption options,
+                        FILE * out )
   __attribute__((warn_unused_result));
 
-LCFGTagList * lcfgcomplist_get_components_as_taglist(
-					    const LCFGComponentList * complist);
+LCFGStatus lcfgcompset_from_status_dir( const char * status_dir,
+                                        LCFGComponentSet ** result,
+                                        const LCFGTagList * comps_wanted,
+                                        LCFGOption options,
+                                        char ** msg )
+  __attribute__((warn_unused_result));
 
-char * lcfgcomplist_get_components_as_string(
-                                            const LCFGComponentList * complist);
+LCFGStatus lcfgcompset_to_status_dir( const LCFGComponentSet * compset,
+                                      const char * status_dir,
+                                      LCFGOption options,
+                                      char ** msg )
+  __attribute__((warn_unused_result));
 
-void lcfgcomplist_sort( LCFGComponentList * complist );
+LCFGStatus lcfgcompset_from_env( const char * val_pfx, const char * type_pfx,
+                                 LCFGComponentSet ** result,
+                                 LCFGTagList * comps_wanted,
+                                 LCFGOption options,
+                                 char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgcompset_to_env( const LCFGComponentSet * compset,
+                               const char * val_pfx, const char * type_pfx,
+                               LCFGOption options,
+                               char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGTagList * lcfgcompset_ngeneric_components( const LCFGComponentSet * compset );
+
+char * lcfgcompset_signature( const LCFGComponentSet * compset );
 
 /* Resource List iterator */
 /**

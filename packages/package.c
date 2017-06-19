@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG packages
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-31 18:42:00 +0100 (Wed, 31 May 2017) $
- * $Revision: 32987 $
+ * $Date: 2017-06-02 10:05:48 +0100 (Fri, 02 Jun 2017) $
+ * $Revision: 33008 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -1776,7 +1776,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
    give up as that is likely to be the separator between name and
    version.
 
-   This vallue will get handled when the primary architecture is found.
+   This value will get handled when the primary architecture is found.
 
   */
 
@@ -1810,6 +1810,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
         if (!ok) {
           invalid_package( msg, "bad context '%s'", pkg_context );
           free(pkg_context);
+          free(pkg_arch); /* not yet stored so must be freed */
           goto failure;
         }
       }
@@ -1839,7 +1840,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
     if (!ok) {
       invalid_package( msg, "bad flags '%s'", pkg_flags );
       free(pkg_flags);
-      pkg_flags = NULL;
+      free(pkg_arch); /* not yet stored so must be freed */
       goto failure;
     }
 

@@ -21,11 +21,11 @@
 /**
  * @brief Check for differences between two profiles
  *
- * This compares the @c LCFGComponentList for the two profiles and
+ * This compares the @c LCFGComponentSet for the two profiles and
  * returns lists of names of components which have been removed, added
  * or modified. It does not return any details about which resources
  * have changed just that something has changed. This is done using
- * the @c lcfgcomplist_quickdiff() function.
+ * the @c lcfgcompset_quickdiff() function.
  *
  * Note that this does NOT compare the package lists.
  *
@@ -48,17 +48,17 @@ LCFGChange lcfgprofile_quickdiff( const LCFGProfile * profile1,
                                   LCFGTagList ** added,
                                   LCFGTagList ** removed ) {
 
-  const LCFGComponentList * list1 = lcfgprofile_has_components(profile1) ?
+  const LCFGComponentSet * comps1 = lcfgprofile_has_components(profile1) ?
                                     lcfgprofile_get_components(profile1) : NULL;
 
-  const LCFGComponentList * list2 = lcfgprofile_has_components(profile2) ?
+  const LCFGComponentSet * comps2 = lcfgprofile_has_components(profile2) ?
                                     lcfgprofile_get_components(profile2) : NULL;
 
-  return lcfgcomplist_quickdiff( list1,
-                                 list2,
-                                 modified,
-                                 added,
-                                 removed );
+  return lcfgcompset_quickdiff( comps1,
+                                comps2,
+                                modified,
+                                added,
+                                removed );
 
 }
 
@@ -85,97 +85,81 @@ LCFGChange lcfgprofile_diff( const LCFGProfile * profile1,
 
   LCFGDiffProfile * profdiff = lcfgdiffprofile_new();
 
-  const LCFGComponentList * list1 = lcfgprofile_has_components(profile1) ?
+  const LCFGComponentSet * comps1 = lcfgprofile_has_components(profile1) ?
                                     lcfgprofile_get_components(profile1) : NULL;
 
-  const LCFGComponentList * list2 = lcfgprofile_has_components(profile2) ?
+  const LCFGComponentSet * comps2 = lcfgprofile_has_components(profile2) ?
                                     lcfgprofile_get_components(profile2) : NULL;
 
-  bool ok = true;
-  bool modified = false;
+  LCFGTagList * modified_comps = NULL;
+  LCFGTagList * added_comps    = NULL;
+  LCFGTagList * removed_comps  = NULL;
 
-  /* Look for components which have been removed or modified */
+  LCFGChange change = lcfgcompset_quickdiff( comps1, comps2,
+                                             &modified_comps,
+                                             &added_comps,
+                                             &removed_comps );
 
-  const LCFGComponentNode * cur_node = NULL;
-  for ( cur_node = list1 != NULL ? lcfgcomplist_head(list1) : NULL;
-	cur_node != NULL && ok;
-	cur_node = lcfgcomplist_next(cur_node) ) {
+  if ( change == LCFG_CHANGE_NONE ) goto cleanup;
 
-    const LCFGComponent * comp1 = lcfgcomplist_component(cur_node);
-    if ( !lcfgcomponent_is_valid(comp1) ) continue;
+  LCFGTagList * changed[4] =
+    { modified_comps, added_comps, removed_comps, NULL };
 
-    const char * comp1_name = lcfgcomponent_get_name(comp1);
+  /* Compare components */
 
-    const LCFGComponent * comp2 =
-      lcfgcomplist_find_component( list2, comp1_name );
+  int i;
+  for ( i=0; change != LCFG_CHANGE_ERROR && i<=2; i++ ) {
+    LCFGTagList * taglist = changed[i];
 
-    LCFGDiffComponent * compdiff = NULL;
-    LCFGChange comp_change = lcfgcomponent_diff( comp1, comp2, &compdiff );
+    if ( lcfgtaglist_is_empty(taglist) ) continue;
 
-    if ( comp_change == LCFG_CHANGE_ERROR ) {
-      ok = false;
-    } else if ( comp_change != LCFG_CHANGE_NONE ) {
-      modified = true;
+    LCFGTagIterator * iter = lcfgtagiter_new(taglist);
 
-      LCFGChange append_rc = lcfgdiffprofile_append( profdiff, compdiff );
-      if ( append_rc == LCFG_CHANGE_ERROR )
-        ok = false;
+    const LCFGTag * tag = NULL;
+    while ( change != LCFG_CHANGE_ERROR &&
+            ( tag = lcfgtagiter_next(iter) ) != NULL ) {
 
-    }
-
-    lcfgdiffcomponent_relinquish(compdiff);
-
-  }
-
-  /* Look for components which have been added */
-
-  for ( cur_node = list2 != NULL ? lcfgcomplist_head(list2) : NULL;
-	cur_node != NULL && ok;
-	cur_node = lcfgcomplist_next(cur_node) ) {
-
-    const LCFGComponent * comp2 = lcfgcomplist_component(cur_node);
-    if ( !lcfgcomponent_is_valid(comp2) ) continue;
-
-    const char * comp2_name = lcfgcomponent_get_name(comp2);
-
-    /* Only interested in components which are NOT in first list */
-
-    if ( !lcfgcomplist_has_component( list1, comp2_name ) ) {
+      const char * comp_name = lcfgtag_get_name(tag);
+      fprintf( stderr, "Comparing %s components\n", comp_name );
+      const LCFGComponent * comp1 =
+        lcfgcompset_find_component( comps1, comp_name );
+      const LCFGComponent * comp2 =
+        lcfgcompset_find_component( comps2, comp_name );
 
       LCFGDiffComponent * compdiff = NULL;
-      LCFGChange comp_change = lcfgcomponent_diff( NULL, comp2, &compdiff );
+      LCFGChange comp_change = lcfgcomponent_diff( comp1, comp2, &compdiff );
 
       if ( comp_change == LCFG_CHANGE_ERROR ) {
-        ok = false;
+        change = LCFG_CHANGE_ERROR;
       } else if ( comp_change != LCFG_CHANGE_NONE ) {
-        modified = true;
+        change = LCFG_CHANGE_MODIFIED;
 
-	LCFGChange append_rc = lcfgdiffprofile_append( profdiff, compdiff );
-	if ( append_rc == LCFG_CHANGE_ERROR )
-	  ok = false;
+        LCFGChange append_rc = lcfgdiffprofile_append( profdiff, compdiff );
+        if ( append_rc == LCFG_CHANGE_ERROR )
+          change = LCFG_CHANGE_ERROR;
 
       }
 
       lcfgdiffcomponent_relinquish(compdiff);
-
     }
 
+    lcfgtagiter_destroy(iter);
   }
 
-  LCFGChange change_type = LCFG_CHANGE_NONE;
+ cleanup:
 
-  if ( ok ) {
-    if (modified)
-      change_type = LCFG_CHANGE_MODIFIED;
-  } else {
-    change_type = LCFG_CHANGE_ERROR;
+  lcfgtaglist_relinquish(modified_comps);
+  lcfgtaglist_relinquish(added_comps);
+  lcfgtaglist_relinquish(removed_comps);
+
+  if ( change == LCFG_CHANGE_ERROR ) {
     lcfgdiffprofile_destroy(profdiff);
     profdiff = NULL; 
   }
 
   *result = profdiff;
 
-  return change_type;
+  return change;
 }
 
 /**

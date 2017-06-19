@@ -3,8 +3,8 @@
  * @brief Functions for finding the differences between resources, components and profiles.
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-06-08 15:16:46 +0100 (Thu, 08 Jun 2017) $
+ * $Revision: 33029 $
  */
 
 #ifndef LCFG_CORE_DIFFERENCES_H
@@ -207,11 +207,11 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
                                     const LCFGComponent * comp2 )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgcomplist_quickdiff( const LCFGComponentList * list1,
-                                   const LCFGComponentList * list2,
-                                   LCFGTagList ** modified,
-                                   LCFGTagList ** added,
-                                   LCFGTagList ** removed )
+LCFGChange lcfgcompset_quickdiff( const LCFGComponentSet * set1,
+                                  const LCFGComponentSet * set2,
+                                  LCFGTagList ** modified,
+                                  LCFGTagList ** added,
+                                  LCFGTagList ** removed )
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgprofile_quickdiff( const LCFGProfile * profile1,
