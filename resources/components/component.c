@@ -2178,33 +2178,41 @@ LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
 
   /* Collect the required subset of resources */
 
-  const bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
-  const bool take_all = lcfgtaglist_is_empty(res_wanted);
+  bool allow_noexist = ( options & LCFG_OPT_ALLOW_NOEXIST );
 
-  const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(comp);
-        cur_node != NULL && status != LCFG_STATUS_ERROR;
-        cur_node = lcfgcomponent_next(cur_node) ) {
+  LCFGTagIterator * tagiter = lcfgtagiter_new(res_wanted);
+  const LCFGTag * restag = NULL;
 
-    LCFGResource * res = lcfgcomponent_resource(cur_node);
+  while ( status != LCFG_STATUS_ERROR &&
+          ( restag = lcfgtagiter_next(tagiter) ) != NULL ) {
 
-    if ( lcfgresource_is_valid(res) && 
-         ( all_priorities || lcfgresource_is_active(res) ) ) {
+    const char * resname = lcfgtag_get_name(restag);
+    if ( !lcfgresource_valid_name(resname) ) {
+      lcfgutils_build_message( msg, "Invalid resource name '%s'", resname );
+      status = LCFG_STATUS_ERROR;
+      break;
+    }
 
-      if ( take_all || 
-           lcfgtaglist_contains( res_wanted, lcfgresource_get_name(res) ) ) {
+    LCFGResource * res = lcfgcomponent_find_resource( comp, resname, false );
 
-        LCFGChange change = lcfgcomponent_append( new_comp, res );
-        if ( change == LCFG_CHANGE_ERROR ) {
-          status = LCFG_STATUS_ERROR;
-          lcfgutils_build_message( msg, "Failed to add resource to component" );
-        }
+    if ( lcfgresource_is_valid(res) ) {
 
+      LCFGChange append_rc = lcfgcomponent_append( new_comp, res );
+      if ( append_rc == LCFG_CHANGE_ERROR ) {
+        lcfgutils_build_message( msg, "Failed to store resource named '%s'",
+                                 resname );
+        status = LCFG_STATUS_ERROR;
       }
 
+    } else if ( !allow_noexist ) {
+      lcfgutils_build_message( msg, "Failed to find resource named '%s'",
+                               resname );
+      status = LCFG_STATUS_ERROR;
     }
 
   }
+
+  lcfgtagiter_destroy(tagiter);
 
  cleanup:
 
