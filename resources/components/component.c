@@ -2138,6 +2138,21 @@ bool lcfgcomponent_match( const LCFGComponent * comp,
   return ( strcmp( comp_name, name ) == 0 );
 }
 
+/**
+ * @brief Compare names of two components
+ *
+ * This uses @c strcmp(3) to compare the values of the @e name
+ * attribute for the two @c LCFGComponent. For simplicity, if the
+ * value of the @e name attribute for a component is @c NULL then it
+ * is treated as an empty string.
+ *
+ * @param[in] comp1 Pointer to @c LCFGComponent
+ * @param[in] comp2 Pointer to @c LCFGComponent
+ *
+ * @return boolean which indicates if the names are the same
+ *
+ */
+
 bool lcfgcomponent_same_name( const LCFGComponent * comp1,
                               const LCFGComponent * comp2 ) {
   assert( comp1 != NULL );
@@ -2149,7 +2164,32 @@ bool lcfgcomponent_same_name( const LCFGComponent * comp1,
   return ( strcmp( name1, name2 ) == 0 );
 }
 
-LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
+/**
+ * Select a subset of resources from a component
+ *
+ * This can be used to select a subset of resources from an @c
+ * LCFGComponent and return them as a new @c LCFGComponent. The @e
+ * name and the merge rules will be copied. Note that this does a
+ * shallow copy of any resources so they are shared - modifying
+ * them for the original component will affect the subset component
+ * and vice-versa.
+ *
+ * By default if a resource is not found for any name in the specified
+ * list this function will return an error. The @c
+ * LCFG_OPT_ALLOW_NOEXIST option can be specified to silently ignore
+ * this problem.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] res_wanted An @c LCFGTagList of resource names
+ * @param[out] result Reference to pointer to subset @c LCFGComponent
+ * @param[in] options Integer which controls behaviour
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgcomponent_select( const LCFGComponent * comp,
                                  const LCFGTagList * res_wanted,
                                  LCFGComponent ** result,
                                  LCFGOption options,
