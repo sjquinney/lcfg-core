@@ -2205,8 +2205,7 @@ LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
       }
 
     } else if ( !allow_noexist ) {
-      lcfgutils_build_message( msg, "Failed to find resource named '%s'",
-                               resname );
+      lcfgutils_build_message( msg, "%s resource does not exist", resname );
       status = LCFG_STATUS_ERROR;
     }
 
