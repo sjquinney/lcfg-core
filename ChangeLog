@@ -1,6 +1,31 @@
-2017-06-09  SVN: new release
+2017-06-20  SVN: new release
 
-	* Release: 1.42.1
+	* Release: 1.42.2
+
+2017-06-20 14:35  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/components/component.c: renamed
+	  lcfgcomponent_subset as lcfgcomponent_select and added docs
+
+2017-06-20 11:16  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/components/component.c: tweaked subset error
+	  message
+
+2017-06-20 09:21  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: Reworked the
+	  lcfgcomponent_subset function so that it's possible to control
+	  the strictness of the selection
+
+2017-06-19 12:18  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: Fixed copy/paste error in generation
+	  of lists of components in lcfgcompset_quickdiff. CID#1446133
+
+2017-06-09 14:04  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.42.1
 
 2017-06-09 14:03  squinney@INF.ED.AC.UK
 
