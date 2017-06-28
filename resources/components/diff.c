@@ -916,7 +916,7 @@ LCFGChange lcfgcompset_quickdiff( const LCFGComponentSet * compset1,
     names1 = lcfgcompset_get_components_as_taglist(compset1);
 
   LCFGTagList * names2;
-  if ( compset1 == NULL )
+  if ( compset2 == NULL )
     names2 = lcfgtaglist_new();
   else
     names2 = lcfgcompset_get_components_as_taglist(compset2);
