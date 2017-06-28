@@ -1,6 +1,16 @@
-2017-06-20  SVN: new release
+2017-06-28  SVN: new release
 
-	* Release: 1.42.2
+	* Release: 1.42.3
+
+2017-06-28 10:57  squinney@INF.ED.AC.UK
+
+	* xml/resource.c: tweaked how get_lcfgtagname does the unescaping
+	  of the value of the cfg:name attribute to match with the current
+	  client
+
+2017-06-20 14:38  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.42.2
 
 2017-06-20 14:35  squinney@INF.ED.AC.UK
 
