@@ -170,14 +170,13 @@ bool lcfgresource_valid_tag( const char * name ) {
 
   /* MUST NOT be a NULL.
      MUST have non-zero length.
-     MUST NOT contain whitespace characters.
-     TODO : decide if checking for !isword would be better */
+     MUST only contain word characters [a-zA-Z0-9_] */
 
   bool valid = !isempty(name);
 
   char * ptr;
   for ( ptr = (char *) name; valid && *ptr != '\0'; ptr++ )
-    if ( isspace(*ptr) ) valid = false;
+    if ( !isword(*ptr) ) valid = false;
 
   return valid;
 }
