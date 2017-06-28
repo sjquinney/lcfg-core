@@ -1,6 +1,15 @@
 2017-06-28  SVN: new release
 
-	* Release: 1.42.3
+	* Release: 1.42.4
+
+2017-06-28 14:22  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/tags/tag.c: lcfgresource_valid_tag now only
+	  permits word chars in tag name
+
+2017-06-28 12:49  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.42.3
 
 2017-06-28 10:57  squinney@INF.ED.AC.UK
 
