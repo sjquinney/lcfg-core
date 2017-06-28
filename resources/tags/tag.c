@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG resource tags
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-06-28 15:22:24 +0100 (Wed, 28 Jun 2017) $
+ * $Revision: 33233 $
  */
 
 #include <ctype.h>
@@ -170,14 +170,13 @@ bool lcfgresource_valid_tag( const char * name ) {
 
   /* MUST NOT be a NULL.
      MUST have non-zero length.
-     MUST NOT contain whitespace characters.
-     TODO : decide if checking for !isword would be better */
+     MUST only contain word characters [a-zA-Z0-9_] */
 
   bool valid = !isempty(name);
 
   char * ptr;
   for ( ptr = (char *) name; valid && *ptr != '\0'; ptr++ )
-    if ( isspace(*ptr) ) valid = false;
+    if ( !isword(*ptr) ) valid = false;
 
   return valid;
 }
