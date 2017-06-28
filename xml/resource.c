@@ -46,11 +46,12 @@ static char * get_lcfgtagname( xmlTextReaderPtr reader ) {
       tagname = (char *) attrvalue;
       size_t length = strlen(tagname);
 
-      /* A tag name which really starts with a digit will have had an
-         _ (underscore) prefix applied. In that case it must be removed. */
+      /* Due to a misunderstanding of the XML spec the LCFG server
+         prepends an underscore to the value of the name attribute
+         when the first character is one of [0-9_]. For compatibility
+         this code does the unescaping */
 
-      if ( length >= 2 &&
-           tagname[0] == '_' && isdigit(tagname[1]) ) {
+      if ( length >= 2 && tagname[0] == '_' ) {
 
         /* one character shorter but add one for null byte */
         tagname = memmove( tagname, tagname + 1, length );
