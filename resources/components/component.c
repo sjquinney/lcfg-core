@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-06-09 15:03:56 +0100 (Fri, 09 Jun 2017) $
- * $Revision: 33052 $
+ * $Date: 2017-06-20 15:35:35 +0100 (Tue, 20 Jun 2017) $
+ * $Revision: 33139 $
  */
 
 #include <stdbool.h>
@@ -2138,6 +2138,21 @@ bool lcfgcomponent_match( const LCFGComponent * comp,
   return ( strcmp( comp_name, name ) == 0 );
 }
 
+/**
+ * @brief Compare names of two components
+ *
+ * This uses @c strcmp(3) to compare the values of the @e name
+ * attribute for the two @c LCFGComponent. For simplicity, if the
+ * value of the @e name attribute for a component is @c NULL then it
+ * is treated as an empty string.
+ *
+ * @param[in] comp1 Pointer to @c LCFGComponent
+ * @param[in] comp2 Pointer to @c LCFGComponent
+ *
+ * @return boolean which indicates if the names are the same
+ *
+ */
+
 bool lcfgcomponent_same_name( const LCFGComponent * comp1,
                               const LCFGComponent * comp2 ) {
   assert( comp1 != NULL );
@@ -2149,7 +2164,32 @@ bool lcfgcomponent_same_name( const LCFGComponent * comp1,
   return ( strcmp( name1, name2 ) == 0 );
 }
 
-LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
+/**
+ * Select a subset of resources from a component
+ *
+ * This can be used to select a subset of resources from an @c
+ * LCFGComponent and return them as a new @c LCFGComponent. The @e
+ * name and the merge rules will be copied. Note that this does a
+ * shallow copy of any resources so they are shared - modifying
+ * them for the original component will affect the subset component
+ * and vice-versa.
+ *
+ * By default if a resource is not found for any name in the specified
+ * list this function will return an error. The @c
+ * LCFG_OPT_ALLOW_NOEXIST option can be specified to silently ignore
+ * this problem.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] res_wanted An @c LCFGTagList of resource names
+ * @param[out] result Reference to pointer to subset @c LCFGComponent
+ * @param[in] options Integer which controls behaviour
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgcomponent_select( const LCFGComponent * comp,
                                  const LCFGTagList * res_wanted,
                                  LCFGComponent ** result,
                                  LCFGOption options,
@@ -2178,33 +2218,40 @@ LCFGStatus lcfgcomponent_subset( const LCFGComponent * comp,
 
   /* Collect the required subset of resources */
 
-  const bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
-  const bool take_all = lcfgtaglist_is_empty(res_wanted);
+  bool allow_noexist = ( options & LCFG_OPT_ALLOW_NOEXIST );
 
-  const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(comp);
-        cur_node != NULL && status != LCFG_STATUS_ERROR;
-        cur_node = lcfgcomponent_next(cur_node) ) {
+  LCFGTagIterator * tagiter = lcfgtagiter_new(res_wanted);
+  const LCFGTag * restag = NULL;
 
-    LCFGResource * res = lcfgcomponent_resource(cur_node);
+  while ( status != LCFG_STATUS_ERROR &&
+          ( restag = lcfgtagiter_next(tagiter) ) != NULL ) {
 
-    if ( lcfgresource_is_valid(res) && 
-         ( all_priorities || lcfgresource_is_active(res) ) ) {
+    const char * resname = lcfgtag_get_name(restag);
+    if ( !lcfgresource_valid_name(resname) ) {
+      lcfgutils_build_message( msg, "Invalid resource name '%s'", resname );
+      status = LCFG_STATUS_ERROR;
+      break;
+    }
 
-      if ( take_all || 
-           lcfgtaglist_contains( res_wanted, lcfgresource_get_name(res) ) ) {
+    LCFGResource * res = lcfgcomponent_find_resource( comp, resname, false );
 
-        LCFGChange change = lcfgcomponent_append( new_comp, res );
-        if ( change == LCFG_CHANGE_ERROR ) {
-          status = LCFG_STATUS_ERROR;
-          lcfgutils_build_message( msg, "Failed to add resource to component" );
-        }
+    if ( lcfgresource_is_valid(res) ) {
 
+      LCFGChange append_rc = lcfgcomponent_append( new_comp, res );
+      if ( append_rc == LCFG_CHANGE_ERROR ) {
+        lcfgutils_build_message( msg, "Failed to store resource named '%s'",
+                                 resname );
+        status = LCFG_STATUS_ERROR;
       }
 
+    } else if ( !allow_noexist ) {
+      lcfgutils_build_message( msg, "%s resource does not exist", resname );
+      status = LCFG_STATUS_ERROR;
     }
 
   }
+
+  lcfgtagiter_destroy(tagiter);
 
  cleanup:
 
