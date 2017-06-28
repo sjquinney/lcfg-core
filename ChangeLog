@@ -1,6 +1,50 @@
-2017-06-09  SVN: new release
+2017-06-28  SVN: new release
 
-	* Release: 1.42.1
+	* Release: 1.42.4
+
+2017-06-28 14:22  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/tags/tag.c: lcfgresource_valid_tag now only
+	  permits word chars in tag name
+
+2017-06-28 12:49  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.42.3
+
+2017-06-28 10:57  squinney@INF.ED.AC.UK
+
+	* xml/resource.c: tweaked how get_lcfgtagname does the unescaping
+	  of the value of the cfg:name attribute to match with the current
+	  client
+
+2017-06-20 14:38  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.42.2
+
+2017-06-20 14:35  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/components/component.c: renamed
+	  lcfgcomponent_subset as lcfgcomponent_select and added docs
+
+2017-06-20 11:16  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/components/component.c: tweaked subset error
+	  message
+
+2017-06-20 09:21  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: Reworked the
+	  lcfgcomponent_subset function so that it's possible to control
+	  the strictness of the selection
+
+2017-06-19 12:18  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: Fixed copy/paste error in generation
+	  of lists of components in lcfgcompset_quickdiff. CID#1446133
+
+2017-06-09 14:04  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.42.1
 
 2017-06-09 14:03  squinney@INF.ED.AC.UK
 
