@@ -184,13 +184,6 @@ char * lcfgresource_enc_value( const LCFGResource * res );
 
 /* Resources: Value Mutations */
 
-typedef bool (*LCFGResourceTagFunc)( LCFGResource * res, const char * tag );
-
-bool lcfgresource_value_map_tagstring( LCFGResource * res,
-                                       const char * tags,
-                                       LCFGResourceTagFunc fn )
-  __attribute__((warn_unused_result));
-
 bool lcfgresource_value_append( LCFGResource * res,
                                 const char * extra_string )
   __attribute__((warn_unused_result));
@@ -207,9 +200,6 @@ bool lcfgresource_value_replace( LCFGResource * res,
 bool lcfgresource_value_remove( LCFGResource * res,
                                 const char * string )
   __attribute__((warn_unused_result));
-
-const char * lcfgresource_value_find_tag( const LCFGResource * res,
-                                          const char * tag );
 
 bool lcfgresource_value_has_tag( const LCFGResource * res,
                                  const char * tag );
