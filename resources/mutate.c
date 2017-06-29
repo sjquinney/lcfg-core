@@ -19,9 +19,11 @@
 
 static const char * tag_separators = " \t\r\n";
 
-bool lcfgresource_value_map_tagstring( LCFGResource * res,
-                                       const char * tagstring,
-                                       LCFGResourceTagFunc fn ) {
+typedef bool (*LCFGResourceTagFunc)( LCFGResource * res, const char * tag );
+
+static bool lcfgresource_value_map_tagstring( LCFGResource * res,
+                                              const char * tagstring,
+                                              LCFGResourceTagFunc fn ) {
 
   /* Only valid for strings and lists */
   if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) ) {
@@ -46,8 +48,8 @@ bool lcfgresource_value_map_tagstring( LCFGResource * res,
   return ok;
 }
 
-const char * lcfgresource_value_find_tag( const LCFGResource * res,
-                                          const char * tag ) {
+static const char * lcfgresource_value_find_tag( const LCFGResource * res,
+                                                 const char * tag ) {
 
   if ( !lcfgresource_has_value(res) ) return NULL;
 
@@ -79,9 +81,51 @@ const char * lcfgresource_value_find_tag( const LCFGResource * res,
   return location;
 }
 
+/**
+ * @brief Check if the value for the resource contains a tag
+ *
+ * Searches the value for the @c LCFGResource to see if it contains
+ * the specified tag.
+ *
+ * A @e tag is considered to be a sub-string which is space-separated
+ * within the resource value (e.g. "foo" is a tag in the value "foo
+ * bar baz" or "bar foo baz" or "bar baz foo"). For a string resource
+ * the @e tag may be any string, for a list resource it must be a
+ * valid LCFG tag name (see the lcfgresource_valid_tag() function docs
+ * for details).
+ *
+ * @param res Pointer to @c LCFGResource
+ * @param tag Tag to check for in the resource value
+ *
+ * @return Boolean which indicates if resource value contains tag
+ *
+ */
+
 bool lcfgresource_value_has_tag( const LCFGResource * res, const char * tag ) {
   return ( tag != NULL && lcfgresource_value_find_tag( res, tag ) != NULL );
 }
+
+/**
+ * @brief Replace the first instance of a tag in the value for the resource
+ *
+ * Finds the first instance of the specified tag in the value for the
+ * @c LCFGResource and replaces it with the new tag. If the new tag is
+ * @c NULL or the empty string then the original tag will be removed.
+ *
+ * A @e tag is considered to be a sub-string which is space-separated
+ * within the resource value (e.g. "foo" is a tag in the value "foo
+ * bar baz" or "bar foo baz" or "bar baz foo"). For a string resource
+ * the @e tag may be any string, for a list resource it must be a
+ * valid LCFG tag name (see the lcfgresource_valid_tag() function docs
+ * for details).
+ *
+ * @param res Pointer to @c LCFGResource
+ * @param old_tag Original tag to be replaced
+ * @param new_tag Tag to be inserted in place of original
+ *
+ * @return Boolean which indicates success
+ *
+ */
 
 bool lcfgresource_value_replace_tag( LCFGResource * res,
                                      const char * old_tag,
@@ -95,6 +139,8 @@ bool lcfgresource_value_replace_tag( LCFGResource * res,
 
   /* Cannot replace an empty old tag */
   if ( isempty(old_tag) ) return false;
+
+  if ( strcmp( old_tag, new_tag ) == 0 ) return true;
 
   /* Will not replace bad values into a tag list */
   if ( lcfgresource_is_list(res) && !lcfgresource_valid_list(new_tag) ) {
@@ -184,11 +230,51 @@ bool lcfgresource_value_replace_tag( LCFGResource * res,
   return ok;
 }
 
-bool lcfgresource_value_remove_tag( LCFGResource * res,
-                                    const char * tag ) {
+/**
+ * @brief Remove the first instance of a tag in the value for the resource
+ *
+ * Finds and removes the first instance of the specified tag within
+ * the value for the @c LCFGResource.
+ *
+ * A @e tag is considered to be a sub-string which is space-separated
+ * within the resource value (e.g. "foo" is a tag in the value "foo
+ * bar baz" or "bar foo baz" or "bar baz foo"). For a string resource
+ * the @e tag may be any string, for a list resource it must be a
+ * valid LCFG tag name (see the lcfgresource_valid_tag() function docs
+ * for details).
+ *
+ * @param res Pointer to @c LCFGResource
+ * @param unwanted_tag Tag to be removed
+ *
+ * @return Boolean which indicates success
+ *
+ */
 
-  return lcfgresource_value_replace_tag( res, tag, NULL );
+bool lcfgresource_value_remove_tag( LCFGResource * res,
+                                    const char * unwanted_tag ) {
+
+  return lcfgresource_value_replace_tag( res, unwanted_tag, NULL );
 }
+
+/**
+ * @brief Replace all instances of a tag in the value for the resource
+ *
+ * Finds and removes all tags in the space-separated list that are
+ * found in the value for the @c LCFGResource.
+ *
+ * A @e tag is considered to be a sub-string which is space-separated
+ * within the resource value (e.g. "foo" is a tag in the value "foo
+ * bar baz" or "bar foo baz" or "bar baz foo"). For a string resource
+ * the @e tag may be any string, for a list resource it must be a
+ * valid LCFG tag name (see the lcfgresource_valid_tag() function docs
+ * for details).
+ *
+ * @param res Pointer to @c LCFGResource
+ * @param unwanted_tags Space-separated string of tags to be removed
+ *
+ * @return Boolean which indicates success
+ *
+ */
 
 bool lcfgresource_value_remove_tags( LCFGResource * res,
                                      const char * unwanted_tags ) {
@@ -196,6 +282,18 @@ bool lcfgresource_value_remove_tags( LCFGResource * res,
   return lcfgresource_value_map_tagstring( res, unwanted_tags,
                                            &lcfgresource_value_remove_tag );
 }
+
+/**
+ * @brief Append a string to the value for the resource
+ *
+ * Appends the specified string to the value for the @c LCFGResource.
+ *
+ * @param res Pointer to @c LCFGResource
+ * @param extra_value String to be appended
+ *
+ * @return Boolean which indicates success
+ *
+ */
 
 bool lcfgresource_value_append( LCFGResource * res,
                                 const char * extra_value ) {
@@ -248,6 +346,25 @@ bool lcfgresource_value_append( LCFGResource * res,
 
   return ok;
 }
+
+/**
+ * @brief Append a tag to the value for the resource
+ *
+ * Appends the specified tag to the value for the @c LCFGResource.
+ *
+ * A @e tag is considered to be a sub-string which is space-separated
+ * within the resource value (e.g. "foo" is a tag in the value "foo
+ * bar baz" or "bar foo baz" or "bar baz foo"). For a string resource
+ * the @e tag may be any string, for a list resource it must be a
+ * valid LCFG tag name (see the lcfgresource_valid_tag() function docs
+ * for details).
+ *
+ * @param res Pointer to @c LCFGResource
+ * @param extra_tag Tag to be appended
+ *
+ * @return Boolean which indicates success
+ *
+ */
 
 bool lcfgresource_value_append_tag( LCFGResource * res,
                                     const char * extra_tag ) {
@@ -313,6 +430,18 @@ bool lcfgresource_value_append_tag( LCFGResource * res,
   return ok;
 }
 
+/**
+ * @brief Prepend a string to the value for the resource
+ *
+ * Prepends the specified string to the value for the @c LCFGResource.
+ *
+ * @param res Pointer to @c LCFGResource
+ * @param extra_value String to be prepended
+ *
+ * @return Boolean which indicates success
+ *
+ */
+
 bool lcfgresource_value_prepend( LCFGResource * res,
                                  const char * extra_value ) {
 
@@ -364,6 +493,25 @@ bool lcfgresource_value_prepend( LCFGResource * res,
 
   return ok;
 }
+
+/**
+ * @brief Prepend a tag to the value for the resource
+ *
+ * Prepends the specified tag to the value for the @c LCFGResource.
+ *
+ * A @e tag is considered to be a sub-string which is space-separated
+ * within the resource value (e.g. "foo" is a tag in the value "foo
+ * bar baz" or "bar foo baz" or "bar baz foo"). For a string resource
+ * the @e tag may be any string, for a list resource it must be a
+ * valid LCFG tag name (see the lcfgresource_valid_tag() function docs
+ * for details).
+ *
+ * @param res Pointer to @c LCFGResource
+ * @param extra_tag Tag to be prepended
+ *
+ * @return Boolean which indicates success
+ *
+ */
 
 bool lcfgresource_value_prepend_tag( LCFGResource * res,
                                      const char * extra_tag ) {
@@ -429,6 +577,26 @@ bool lcfgresource_value_prepend_tag( LCFGResource * res,
   return ok;
 }
 
+/**
+ * @brief Append a tag to a resource value if it is not already present
+ *
+ * Searches for the specified tag in the value for the @c LCFGResource
+ * and appends it if does not already exist.
+ *
+ * A @e tag is considered to be a sub-string which is space-separated
+ * within the resource value (e.g. "foo" is a tag in the value "foo
+ * bar baz" or "bar foo baz" or "bar baz foo"). For a string resource
+ * the @e tag may be any string, for a list resource it must be a
+ * valid LCFG tag name (see the lcfgresource_valid_tag() function docs
+ * for details).
+ *
+ * @param res Pointer to @c LCFGResource
+ * @param extra_tag Tag to be appended (if not present)
+ *
+ * @return Boolean which indicates success
+ *
+ */
+
 bool lcfgresource_value_add_tag( LCFGResource * res,
                                  const char * extra_tag ) {
 
@@ -448,12 +616,49 @@ bool lcfgresource_value_add_tag( LCFGResource * res,
   return ok;
 }
 
+/**
+ * @brief Append a list of tags to a resource value if not already present
+ *
+ * For each tag in the space-separated list this searches the value
+ * for the @c LCFGResource and appends the tag if does not already
+ * exist.
+ *
+ * A @e tag is considered to be a sub-string which is space-separated
+ * within the resource value (e.g. "foo" is a tag in the value "foo
+ * bar baz" or "bar foo baz" or "bar baz foo"). For a string resource
+ * the @e tag may be any string, for a list resource it must be a
+ * valid LCFG tag name (see the lcfgresource_valid_tag() function docs
+ * for details).
+ *
+ * @param res Pointer to @c LCFGResource
+ * @param extra_tags Space-separated string of tags to be appended (if not present)
+ *
+ * @return Boolean which indicates success
+ *
+ */
+
 bool lcfgresource_value_add_tags( LCFGResource * res,
                                   const char * extra_tags ) {
 
   return lcfgresource_value_map_tagstring( res, extra_tags,
                                            &lcfgresource_value_add_tag );
 }
+
+/**
+ * @brief Replace a substring within the value for the resource
+ *
+ * Searches for the specified substring and replaces the first
+ * instance found with the new substring. The new substring may be @c
+ * NULL or the empty string in which case the original substring is
+ * simply removed.
+ *
+ * @param res Pointer to @c LCFGResource
+ * @param old_string Original string to be replaced
+ * @param new_string New string to be inserted in place of original
+ *
+ * @return Boolean which indicates success
+ *
+ */
 
 bool lcfgresource_value_replace( LCFGResource * res,
                                  const char * old_string,
@@ -467,6 +672,8 @@ bool lcfgresource_value_replace( LCFGResource * res,
 
   /* Cannot replace an empty old value */
   if ( isempty(old_string) ) return false;
+
+  if ( strcmp( old_string, new_string ) == 0 ) return true;
 
   /* Will not replace bad values into a tag list */
   if ( lcfgresource_is_list(res) && !lcfgresource_valid_list(new_string) ) {
@@ -542,10 +749,23 @@ bool lcfgresource_value_replace( LCFGResource * res,
   return ok;
 }
 
-bool lcfgresource_value_remove( LCFGResource * res,
-                                const char * string ) {
+/**
+ * @brief Remove a substring from the value for the resource
+ *
+ * Searches for the specified substring and removes the first instance
+ * from the value for the @c LCFGResource.
+ *
+ * @param res Pointer to @c LCFGResource
+ * @param unwanted_string String to be removed
+ *
+ * @return Boolean which indicates success
+ *
+ */
 
-  return lcfgresource_value_replace( res, string, NULL );
+bool lcfgresource_value_remove( LCFGResource * res,
+                                const char * unwanted_string ) {
+
+  return lcfgresource_value_replace( res, unwanted_string, NULL );
 }
 
 /* eof */
