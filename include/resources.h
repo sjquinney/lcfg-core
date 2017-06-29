@@ -208,8 +208,8 @@ bool lcfgresource_value_remove( LCFGResource * res,
                                 const char * string )
   __attribute__((warn_unused_result));
 
-char * lcfgresource_value_find_tag( const LCFGResource * res,
-                                    const char * tag );
+const char * lcfgresource_value_find_tag( const LCFGResource * res,
+                                          const char * tag );
 
 bool lcfgresource_value_has_tag( const LCFGResource * res,
                                  const char * tag );
