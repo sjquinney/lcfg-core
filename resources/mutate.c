@@ -24,8 +24,10 @@ bool lcfgresource_value_map_tagstring( LCFGResource * res,
                                        LCFGResourceTagFunc fn ) {
 
   /* Only valid for strings and lists */
-  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) )
+  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) ) {
+    errno = ENOTSUP;
     return false;
+  }
 
   bool ok = true;
 
@@ -86,8 +88,10 @@ bool lcfgresource_value_replace_tag( LCFGResource * res,
                                      const char * new_tag ) {
 
   /* Only valid for strings and lists */
-  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) )
+  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) ) {
+    errno = ENOTSUP;
     return false;
+  }
 
   /* Cannot replace an empty old tag */
   if ( isempty(old_tag) ) return false;
@@ -197,8 +201,10 @@ bool lcfgresource_value_append( LCFGResource * res,
                                 const char * extra_value ) {
 
   /* Only valid for strings and lists */
-  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) )
+  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) ) {
+    errno = ENOTSUP;
     return false;
+  }
 
   /* Just ignore attempts to append empty values */
   if ( isempty(extra_value) ) return true;
@@ -247,8 +253,10 @@ bool lcfgresource_value_append_tag( LCFGResource * res,
                                     const char * extra_tag ) {
 
   /* Only valid for strings and lists */
-  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) )
+  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) ) {
+    errno = ENOTSUP;
     return false;
+  }
 
   /* Just ignore attempts to append empty tags */
   if ( isempty(extra_tag) ) return true;
@@ -309,8 +317,10 @@ bool lcfgresource_value_prepend( LCFGResource * res,
                                  const char * extra_value ) {
 
   /* Only valid for strings and lists */
-  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) )
+  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) ) {
+    errno = ENOTSUP;
     return false;
+  }
 
   /* Just ignore attempts to append empty values */
   if ( isempty(extra_value) ) return true;
@@ -360,6 +370,7 @@ bool lcfgresource_value_prepend_tag( LCFGResource * res,
 
   /* Only valid for strings and lists */
   if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) ) {
+    errno = ENOTSUP;
     return false;
   }
 
@@ -422,8 +433,10 @@ bool lcfgresource_value_add_tag( LCFGResource * res,
                                  const char * extra_tag ) {
 
   /* Only valid for strings and lists */
-  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) )
+  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) ) {
+    errno = ENOTSUP;
     return false;
+  }
 
   /* Just ignore attempts to add empty tag */
   if ( isempty(extra_tag) ) return true;
@@ -447,8 +460,10 @@ bool lcfgresource_value_replace( LCFGResource * res,
                                  const char * new_string ) {
 
   /* Only valid for strings and lists */
-  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) )
+  if ( !lcfgresource_is_string(res) && !lcfgresource_is_list(res) ) {
+    errno = ENOTSUP;
     return false;
+  }
 
   /* Cannot replace an empty old value */
   if ( isempty(old_string) ) return false;
