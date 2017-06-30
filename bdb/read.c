@@ -76,11 +76,37 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
 
   } else {
 
-    status = lcfgbdb_process_components( dbh,
-                                         &profile->components,
-                                         comps_wanted, 
-                                         namespace,
-                                         msg );
+    /* Ensure the 'profile' component is always loaded. Empty list
+       means 'load everything' */
+ 
+    LCFGTagList * comps_wanted2 = NULL;
+    if ( !lcfgtaglist_is_empty(comps_wanted) && 
+         !lcfgtaglist_contains( comps_wanted, "profile" ) ) {
+
+      comps_wanted2 = lcfgtaglist_clone(comps_wanted);
+
+      char * add_msg = NULL;
+      if ( !lcfgtaglist_mutate_add( comps_wanted, "profile", &add_msg ) ) {
+        lcfgutils_build_message( msg,
+                                 "Problems with list of components: %s",
+                                 add_msg );
+        status = LCFG_STATUS_ERROR;
+      }
+      free(add_msg);
+
+      comps_wanted = comps_wanted2;
+    }
+
+    if ( status != LCFG_STATUS_ERROR ) {
+
+      status = lcfgbdb_process_components( dbh,
+                                           &profile->components,
+                                           comps_wanted, 
+                                           namespace,
+                                           msg );
+    }
+
+    lcfgtaglist_relinquish(comps_wanted2);
   }
 
   lcfgbdb_close_db(dbh);
@@ -91,6 +117,225 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
   }
 
   *result = profile;
+
+  return status;
+}
+
+static LCFGStatus lcfgbdb_get_resource_item( DB * dbh,
+                                             LCFGResource * res,
+                                             const char * comp_name,
+                                             const char * namespace,
+                                             char type_symbol,
+                                             char ** keybuf,
+                                             size_t * keybufsize,
+                                             char ** msg ) {
+  assert( res != NULL );
+
+  ssize_t keylen = lcfgresource_build_key( res->name,
+                                           comp_name, namespace,
+                                           type_symbol,
+                                           keybuf, keybufsize );
+
+  if ( keylen < 0 ) {
+    *msg = lcfgresource_build_message( res, comp_name,
+                                       "Failed to retrieve data from DB" );
+    return LCFG_STATUS_ERROR;
+  }
+
+  LCFGStatus status = LCFG_STATUS_OK;
+
+  DBT key, data;
+
+  memset( &key,  0, sizeof(DBT) );
+  memset( &data, 0, sizeof(DBT) );
+
+  key.data = *keybuf;
+  key.size = (u_int32_t) keylen;
+
+  int ret = dbh->get( dbh, NULL, &key, &data, 0 );
+
+  if ( ret == 0 ) {
+    char * item_value = data.data;
+    item_value[data.size] = '\0';
+
+    char * set_msg = NULL;
+    if ( !lcfgresource_set_attribute( res, type_symbol,
+                                      item_value, &set_msg ) ) {
+      status = LCFG_STATUS_ERROR;
+      *msg = lcfgresource_build_message( res, comp_name,
+                                         "Failed to set attribute: %s",
+                                         set_msg );
+
+    }
+    free(set_msg);
+  }
+
+  return status;
+}
+
+static LCFGStatus lcfgbdb_process_component( DB * dbh,
+                                             const char * comp_name,
+                                             const char * namespace,
+                                             LCFGComponent ** result,
+                                             char ** msg ) {
+  assert( comp_name != NULL );
+
+  LCFGStatus status = LCFG_STATUS_OK;
+  LCFGComponent * component = NULL;
+  char * reslist = NULL;
+
+  int ret;
+  DBT key, data;
+
+  memset( &key,  0, sizeof(DBT) );
+  memset( &data, 0, sizeof(DBT) );
+
+  /* Fetch the list of resource names from the DB */
+
+  key.data = (void *) comp_name;
+  key.size = (u_int32_t) strlen(comp_name);
+
+  ret = dbh->get( dbh, NULL, &key, &data, 0 );
+
+  if ( ret != 0 ) {
+    status = LCFG_STATUS_ERROR;
+    lcfgutils_build_message( msg,
+                             "Failed to find resources for component '%s': %s",
+                             comp_name, db_strerror(ret) );
+  } else if ( data.size > 0 ) {
+
+    char * result_string = data.data;
+    result_string[data.size] = '\0';
+
+    reslist = strdup( result_string );
+
+  }
+
+  if ( reslist == NULL ) {
+    status = LCFG_STATUS_ERROR;
+    lcfgutils_build_message( msg,
+                             "Failed to find resources for component '%s'",
+                             comp_name );
+  }
+
+  if ( status == LCFG_STATUS_ERROR ) goto cleanup;
+
+  component = lcfgcomponent_new();
+  if ( !lcfgcomponent_set_name( component, strdup(comp_name) ) ) {
+    status = LCFG_STATUS_ERROR;
+    lcfgutils_build_message( msg,
+                             "Failed to set '%s' as name for component",
+                             comp_name );
+    goto cleanup;
+  }
+
+  size_t keybufsize = 256;
+  char * keybuf = calloc( keybufsize, sizeof(char) );
+  if ( keybuf == NULL ) {
+    perror("Failed to allocate memory for DB key buffer");
+    exit(EXIT_FAILURE);
+  }
+
+  char * saveptr = NULL;
+  char * resname = strtok_r( reslist, " ", &saveptr );
+  while (resname) {
+
+    if ( !lcfgresource_valid_name(resname) ) {
+      lcfgutils_build_message( msg, "Invalid resource name '%s.%s'",
+                               comp_name, resname );
+      break;
+    }
+
+    LCFGResource * res = lcfgresource_new();
+
+    if ( !lcfgresource_set_name( res, strdup(resname) ) ) {
+      status = LCFG_STATUS_ERROR;
+      lcfgutils_build_message( msg, "Failed to set resource name '%s.%s'",
+                               comp_name, resname );
+      goto local_cleanup;
+    }
+
+    /* Derivation */
+
+    status = lcfgbdb_get_resource_item( dbh, res, 
+                                        comp_name, namespace,
+                                        LCFG_RESOURCE_SYMBOL_DERIVATION,
+                                        &keybuf, &keybufsize, msg );
+
+    if ( status == LCFG_STATUS_ERROR ) goto local_cleanup;
+
+    /* Type */
+
+    status = lcfgbdb_get_resource_item( dbh, res, 
+                                        comp_name, namespace,
+                                        LCFG_RESOURCE_SYMBOL_TYPE,
+                                        &keybuf, &keybufsize, msg );
+
+    if ( status == LCFG_STATUS_ERROR ) goto local_cleanup;
+
+    /* Context */
+
+    status = lcfgbdb_get_resource_item( dbh, res, 
+                                        comp_name, namespace,
+                                        LCFG_RESOURCE_SYMBOL_CONTEXT,
+                                        &keybuf, &keybufsize, msg );
+
+    if ( status == LCFG_STATUS_ERROR ) goto local_cleanup;
+
+    /* Priority */
+
+    status = lcfgbdb_get_resource_item( dbh, res, 
+                                        comp_name, namespace,
+                                        LCFG_RESOURCE_SYMBOL_PRIORITY,
+                                        &keybuf, &keybufsize, msg );
+
+    if ( status == LCFG_STATUS_ERROR ) goto local_cleanup;
+
+    /* Value */
+
+    status = lcfgbdb_get_resource_item( dbh, res, 
+                                        comp_name, namespace,
+                                        LCFG_RESOURCE_SYMBOL_VALUE,
+                                        &keybuf, &keybufsize, msg );
+
+    if ( status == LCFG_STATUS_ERROR ) goto local_cleanup;
+
+    /* Store the resource into the component */
+
+    char * merge_msg = NULL;
+    LCFGChange merge_rc = 
+      lcfgcomponent_merge_resource( component, res, &merge_msg );
+
+    if ( merge_rc == LCFG_CHANGE_ERROR ) {
+      status = LCFG_STATUS_ERROR;
+      lcfgutils_build_message( msg,
+                               "Failed to merge resource into component: %s",
+                               merge_msg );
+    }
+    free(merge_msg);
+
+  local_cleanup:
+
+    lcfgresource_relinquish(res);
+
+    if ( status != LCFG_STATUS_ERROR ) {
+      resname = strtok_r( NULL, " ", &saveptr );
+    } else {
+      break;
+    }
+
+  }
+
+ cleanup:
+
+  free(reslist);
+
+  if ( status == LCFG_STATUS_ERROR ) {
+    lcfgcomponent_relinquish(component);
+    component = NULL;
+  }
+
+  *result = component;
 
   return status;
 }
@@ -124,80 +369,48 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
 
 LCFGStatus lcfgcomponent_from_bdb( const char * filename,
                                    LCFGComponent ** result,
-                                   const char * compname,
+                                   const char * comp_name,
                                    const char * namespace,
 				   LCFGOption options,
                                    char ** msg ) {
   assert( filename != NULL );
-  assert( compname != NULL );
+  assert( comp_name != NULL );
 
-  if ( !lcfgcomponent_valid_name(compname) ) {
-    lcfgutils_build_message( msg, "Invalid component name '%s'", compname );
+  *result = NULL;
+
+  if ( !lcfgcomponent_valid_name(comp_name) ) {
+    lcfgutils_build_message( msg, "Invalid component name '%s'", comp_name );
     return LCFG_STATUS_ERROR;
   }
 
-  /* Any failures after this point should go via the 'cleanup' phase */
-
   LCFGStatus status = LCFG_STATUS_OK;
-  LCFGComponent * component = NULL;
 
   DB * dbh = lcfgbdb_init_reader( filename, msg );
 
-  if ( dbh == NULL ) {
-    if ( errno != ENOENT || !(options&LCFG_OPT_ALLOW_NOEXIST) )
-      status = LCFG_STATUS_ERROR;
+  if ( dbh != NULL ) {
+    status = lcfgbdb_process_component( dbh, comp_name, namespace,
+                                        result, msg );
 
+    lcfgbdb_close_db(dbh);
   } else {
 
-    /* Create a new tag list containing the component name. */
-  
-    LCFGTagList * collect_comps = lcfgtaglist_new();
-
-    char * tagmsg = NULL;
-    if ( lcfgtaglist_mutate_add( collect_comps, compname, &tagmsg ) 
-         == LCFG_CHANGE_ERROR ) {
+    if ( errno != ENOENT || !(options&LCFG_OPT_ALLOW_NOEXIST) ) {
       status = LCFG_STATUS_ERROR;
-      lcfgutils_build_message( msg, "Invalid component name '%s': %s",
-			       compname, tagmsg );
-    }
-    free(tagmsg);
+    } else {
 
-    LCFGComponentSet * components = NULL;
+      /* Create an empty component with the required name */
 
-    if ( status != LCFG_STATUS_ERROR ) {
-      status = lcfgbdb_process_components( dbh,
-					   &components,
-					   collect_comps,
-					   namespace,
-					   msg );
-    }
-
-    lcfgtaglist_relinquish(collect_comps);
-
-    if ( status != LCFG_STATUS_ERROR ) {
-      component = lcfgcompset_find_component( components, compname );
-
-      if ( component != NULL ) {
-	/* If a component was found then it must not be destroyed when the
-	   compset is destroyed. */
-
-	lcfgcomponent_acquire(component);
-
+      LCFGComponent * comp = lcfgcomponent_new();
+      if ( lcfgcomponent_set_name( comp, strdup(comp_name) ) ) {
+        *result = comp;
       } else {
-	status = LCFG_STATUS_ERROR;
-	lcfgutils_build_message( msg,
-				 "Failed to load resources for component '%s'",
-				 compname );
+        status = LCFG_STATUS_ERROR;
+        lcfgcomponent_relinquish(comp);
       }
-    }
 
-    lcfgcompset_relinquish(components);
+    }
 
   }
-  
-  lcfgbdb_close_db(dbh);
-
-  *result = component;
 
   return status;
 }
@@ -238,133 +451,95 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
 
   LCFGComponentSet * compset = lcfgcompset_new();
 
-  DBC * cursor;
+  /* If the list of required components is empty then just load
+     everything. In which case it is necessary to make a list of all
+     available components. */
 
-  /* Get a cursor */
-  dbh->cursor( dbh, NULL, &cursor, 0 ); 
+  LCFGTagList * all_comps = NULL;
 
-  DBT key, value;
-  /* Initialize our DBTs. */
-  memset( &key,   0, sizeof(DBT) );
-  memset( &value, 0, sizeof(DBT) );
+  if ( lcfgtaglist_is_empty(comps_wanted) ) {
 
-  const char * this_namespace = NULL;
-  const char * this_compname  = NULL;
-  const char * this_resname   = NULL;
-  char this_type        = LCFG_RESOURCE_SYMBOL_VALUE;
+    all_comps = lcfgtaglist_new();
+    comps_wanted = all_comps;
 
-  char * reskey = NULL;
+    /* Get a cursor */
 
-  const bool check_namespace = !isempty(namespace);
-  const bool limit_comps = ! lcfgtaglist_is_empty(comps_wanted);
+    DBC * cursor;
+    dbh->cursor( dbh, NULL, &cursor, 0 ); 
 
-  int ret = 0;
-  /* Iterate over the database, retrieving each record in turn. */
-  while ( ( ret = cursor->get( cursor, &key, &value, DB_NEXT ) ) == 0 ) {
+    DBT key, value;
+    /* Initialize our DBTs. */
+    memset( &key,   0, sizeof(DBT) );
+    memset( &value, 0, sizeof(DBT) );
 
-    free(reskey);
-    reskey = NULL;
+    int ret = 0;
+    /* Iterate over the database, retrieving each record in turn. */
+    while ( status != LCFG_STATUS_ERROR &&
+            ( ret = cursor->get( cursor, &key, &value, DB_NEXT ) ) == 0 ) {
 
-    if ( (size_t) key.size > 0 )
-      reskey = strndup( (char *) key.data, (size_t) key.size );
+      if ( (size_t) key.size == 0 ) continue;
 
-    /* Ignore unnecessary 'resource list' entries for components */
-    if ( reskey == NULL || strchr( reskey, '.' ) == NULL )
-      continue;
+      char * keyname = key.data;
+      keyname[key.size] = '\0';
 
-    if ( !lcfgresource_parse_key( reskey, &this_namespace, &this_compname,
-                                  &this_resname, &this_type ) ) {
-      status = LCFG_STATUS_ERROR;
-      lcfgutils_build_message( msg, "Invalid DB entry '%s'", reskey );
-      break;
-    }
+      /* 'resource list' entry for a component */
+      if ( strchr( keyname, '.' ) == NULL &&
+           lcfgcomponent_valid_name(keyname) ) {
 
-    /* If a namespace is specified then it must match */
-    if ( check_namespace ) {
-      if ( this_namespace == NULL ||
-           strcmp( namespace, this_namespace ) != 0 ) {
-        status = LCFG_STATUS_ERROR;
-        lcfgutils_build_message( msg,
-			       "Invalid DB entry '%s' (invalid namespace '%s')",
-				 reskey, this_namespace );
-        break;
-      }
-    }
-
-    /* If not in the list of 'wanted' components just move on to next entry */
-    if ( limit_comps &&
-         strcmp( this_compname, "profile" ) != 0 &&
-         !lcfgtaglist_contains( comps_wanted, this_compname ) )
-      continue;
-
-    /* Validate both the component and resource names here to avoid
-       the possibility of creating unnecessary data structures which
-       would then have to be thrown away. */
-
-    if ( !lcfgcomponent_valid_name(this_compname) ) {
-      status = LCFG_STATUS_ERROR;
-      lcfgutils_build_message( msg,
-			 "Invalid DB entry '%s' (invalid component name '%s')",
-			       reskey, this_compname );
-      break;
-    }
-
-    if ( !lcfgresource_valid_name(this_resname) ) {
-      status = LCFG_STATUS_ERROR;
-      lcfgutils_build_message( msg,
-			  "Invalid DB entry '%s' (invalid resource name '%s')",
-			       reskey, this_resname );
-      break;
-    }
-
-    LCFGComponent * comp = NULL;
-    LCFGResource * res   = NULL;
-
-    comp = lcfgcompset_find_or_create_component( compset, this_compname ); 
-    if ( comp == NULL ) {
-      lcfgutils_build_message( msg, "Failed to load LCFG component '%s'",
-                this_compname );
-      status = LCFG_STATUS_ERROR;
-      break;
-    }
-
-    res = lcfgcomponent_find_or_create_resource( comp, this_resname, true );
-    if ( res == NULL ) {
-      lcfgutils_build_message( msg, "Failed to load LCFG resource '%s.%s'",
-                this_compname, this_resname );
-      status = LCFG_STATUS_ERROR;
-      break;
-    }
-
-    char * this_value = strndup( (char *) value.data, (size_t) value.size );
-    char * set_msg = NULL;
-    if ( !lcfgresource_set_attribute( res, this_type, this_value,
-                                      &set_msg ) ) {
-
-      status = LCFG_STATUS_ERROR;
-      if ( set_msg != NULL ) {
-        *msg = lcfgresource_build_message( res, this_compname,
-                                           set_msg );
-
-        free(set_msg);
-      } else {
-        *msg = lcfgresource_build_message( res, this_compname,
-                                  "Failed to set '%s' for attribute type '%c'",
-                                           this_value, this_type );
+        char * add_msg = NULL;
+        if ( lcfgtaglist_mutate_add( all_comps, keyname, &add_msg )
+             == LCFG_CHANGE_ERROR ) {
+          lcfgutils_build_message( msg, 
+                  "Failed to add '%s' to list of available components: %s",
+                                   keyname, add_msg );
+          status = LCFG_STATUS_ERROR;
+        }
+        free(add_msg);
       }
 
-      free(this_value);
-
-      break;
     }
+
+    /* Cursors must be closed */
+    if ( cursor != NULL ) 
+      cursor->close(cursor);
 
   }
 
-  free(reskey);
+  /* Load the components */
 
-  /* Cursors must be closed */
-  if ( cursor != NULL ) 
-    cursor->close(cursor);
+  LCFGTagIterator * tagiter = lcfgtagiter_new(comps_wanted);
+  const LCFGTag * tag = NULL;
+
+  while ( status != LCFG_STATUS_ERROR &&
+          ( tag = lcfgtagiter_next(tagiter) ) != NULL ) {
+
+    const char * comp_name = lcfgtag_get_name(tag);
+    if ( isempty(comp_name) ) continue;
+
+    LCFGComponent * comp = NULL;
+
+    status = lcfgbdb_process_component( dbh, comp_name, namespace,
+                                        &comp, msg );
+
+    if ( status != LCFG_STATUS_ERROR ) {
+
+      LCFGChange rc = lcfgcompset_insert_component( compset, comp );
+      if ( rc == LCFG_CHANGE_ERROR ) {
+        lcfgutils_build_message( msg,
+                                 "Failed to load resources for '%s' component",
+                                 comp_name );
+        status = LCFG_STATUS_ERROR;
+      }
+
+    }
+
+    lcfgcomponent_relinquish(comp);
+
+  }
+
+  lcfgtagiter_destroy(tagiter);
+
+  lcfgtaglist_relinquish(all_comps);
 
   if ( status != LCFG_STATUS_OK ) {
 
