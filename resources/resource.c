@@ -2880,7 +2880,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
       type_len = strlen(type_as_str);
 
       ssize_t key_len =
-        lcfgresource_compute_key_length( res, prefix, NULL,
+        lcfgresource_compute_key_length( res->name, prefix, NULL,
                                          LCFG_RESOURCE_SYMBOL_TYPE );
 
       new_len += ( key_len + type_len + 2 ); /* +2 for '=' and newline */
@@ -2897,7 +2897,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
 
     if ( deriv_len > 0 ) {
       ssize_t key_len =
-	lcfgresource_compute_key_length( res, prefix, NULL,
+	lcfgresource_compute_key_length( res->name, prefix, NULL,
 					 LCFG_RESOURCE_SYMBOL_DERIVATION );
 
       new_len += ( key_len + deriv_len + 2 ); /* +2 for '=' and newline */
@@ -2927,7 +2927,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
   if ( type_as_str != NULL ) {
 
     ssize_t write_len =
-      lcfgresource_insert_key( res, prefix, NULL,
+      lcfgresource_insert_key( res->name, prefix, NULL,
                                LCFG_RESOURCE_SYMBOL_TYPE, to );
 
     if ( write_len > 0 ) {
@@ -2949,7 +2949,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
   if ( deriv_len > 0 ) {
 
     ssize_t write_len =
-      lcfgresource_insert_key( res, prefix, NULL,
+      lcfgresource_insert_key( res->name, prefix, NULL,
                                LCFG_RESOURCE_SYMBOL_DERIVATION, to );
 
     if ( write_len > 0 ) {
@@ -3016,7 +3016,7 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
     prefix = NULL;
 
   ssize_t key_len =
-    lcfgresource_compute_key_length( res, prefix, NULL, 
+    lcfgresource_compute_key_length( res->name, prefix, NULL, 
                                      LCFG_RESOURCE_SYMBOL_VALUE );
 
   if ( key_len < 0 ) return key_len;
@@ -3090,7 +3090,7 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
 
   char * to = *result;
 
-  ssize_t write_len = lcfgresource_insert_key( res, prefix, NULL,
+  ssize_t write_len = lcfgresource_insert_key( res->name, prefix, NULL,
                                                LCFG_RESOURCE_SYMBOL_VALUE, to );
 
   if ( write_len != key_len ) {
@@ -3572,21 +3572,21 @@ char * lcfgresource_build_message( const LCFGResource * res,
  * the key size has been calculated prior to allocating the space for
  * the key.
  *
- * @param[in] res Pointer to @c LCFGResource
- * @param[in] component Optional name of component
- * @param[in] namespace Optional namespace (typically a hostname)
+ * @param[in] resource Name of resource (required)
+ * @param[in] component Name of component (optional)
+ * @param[in] namespace Namespace, typically a hostname (optional)
  * @param[in] type_symbol The symbol for the particular key type
  *
  * @return Size of required key
  *
  */
  
-ssize_t lcfgresource_compute_key_length( const LCFGResource * res,
+ssize_t lcfgresource_compute_key_length( const char * resource,
                                          const char * component,
                                          const char * namespace,
                                          char type_symbol ) {
 
-  if ( !lcfgresource_has_name(res) ) return -1;
+  if ( isempty(resource) ) return -1;
 
   size_t length = 0;
 
@@ -3599,7 +3599,7 @@ ssize_t lcfgresource_compute_key_length( const LCFGResource * res,
   if ( !isempty(component) )
     length += ( strlen(component) + 1 ); /* +1 for '.' (period) separator */
 
-  length += strlen( lcfgresource_get_name(res) );
+  length += strlen(resource);
 
   return length;
 }
@@ -3619,9 +3619,9 @@ ssize_t lcfgresource_compute_key_length( const LCFGResource * res,
  *
  * If an error occurs this function will return -1.
  *
- * @param[in] res Pointer to @c LCFGResource
- * @param[in] component Optional name of component
- * @param[in] namespace Optional namespace (typically a hostname)
+ * @param[in] resource Name of resource (required)
+ * @param[in] component Name of component (optional)
+ * @param[in] namespace Namespace, typically a hostname (optional)
  * @param[in] type_symbol The symbol for the particular key type
  * @param[out] result The string into which the key should be written
  *
@@ -3629,13 +3629,13 @@ ssize_t lcfgresource_compute_key_length( const LCFGResource * res,
  *
  */
 
-ssize_t lcfgresource_insert_key( const LCFGResource * res,
+ssize_t lcfgresource_insert_key( const char * resource,
                                  const char * component,
                                  const char * namespace,
                                  char type_symbol,
                                  char * result ) {
 
-  if ( !lcfgresource_has_name(res) ) return -1;
+  if ( isempty(resource) ) return -1;
 
   char * to = result;
 
@@ -3658,7 +3658,7 @@ ssize_t lcfgresource_insert_key( const LCFGResource * res,
     to++;
   }
 
-  to = stpcpy( to, lcfgresource_get_name(res) );
+  to = stpcpy( to, resource );
 
   *to = '\0';
 
@@ -3692,9 +3692,9 @@ ssize_t lcfgresource_insert_key( const LCFGResource * res,
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
  * longer required. If an error occurs this function will return -1.
  *
- * @param[in] res Pointer to @c LCFGResource
- * @param[in] component Optional name of component
- * @param[in] namespace Optional namespace (typically a hostname)
+ * @param[in] resource Name of resource (required)
+ * @param[in] component Name of component (optional)
+ * @param[in] namespace Namespace, typically a hostname (optional)
  * @param[in] type_symbol The symbol for the particular key type
  * @param[in,out] result Reference to the pointer to the string buffer
  * @param[in,out] size Reference to the size of the string buffer
@@ -3703,14 +3703,16 @@ ssize_t lcfgresource_insert_key( const LCFGResource * res,
  *
  */
 
-ssize_t lcfgresource_build_key( const LCFGResource * res,
+ssize_t lcfgresource_build_key( const char * resource,
                                 const char * component,
                                 const char * namespace,
                                 char type_symbol,
                                 char ** result,
                                 size_t * size ) {
 
-  ssize_t need_len = lcfgresource_compute_key_length( res,
+  if ( isempty(resource) ) return -1;
+
+  ssize_t need_len = lcfgresource_compute_key_length( resource,
                                                       component,
                                                       namespace,
                                                       type_symbol );
@@ -3733,7 +3735,7 @@ ssize_t lcfgresource_build_key( const LCFGResource * res,
   /* Always initialise the characters of the full space to nul */
   memset( *result, '\0', *size );
 
-  ssize_t write_len = lcfgresource_insert_key( res,
+  ssize_t write_len = lcfgresource_insert_key( resource,
                                                component,
                                                namespace,
                                                type_symbol,

@@ -379,19 +379,19 @@ LCFGStatus lcfgresource_parse_spec( char * spec,
                                     char ** msg )
   __attribute__((warn_unused_result));
 
-ssize_t lcfgresource_compute_key_length( const LCFGResource * res,
+ssize_t lcfgresource_compute_key_length( const char * resource,
                                          const char * component,
                                          const char * namespace,
                                          char type_symbol );
 
-ssize_t lcfgresource_insert_key( const LCFGResource * res,
+ssize_t lcfgresource_insert_key( const char * resource,
                                  const char * component,
                                  const char * namespace,
                                  char type_symbol,
                                  char * result )
   __attribute__((warn_unused_result));
 
-ssize_t lcfgresource_build_key( const LCFGResource * res,
+ssize_t lcfgresource_build_key( const char * resource,
                                 const char * component,
                                 const char * namespace,
                                 char type_symbol,
