@@ -1,6 +1,27 @@
-2017-06-29  SVN: new release
+2017-07-03  SVN: new release
 
-	* Release: 1.42.5
+	* Release: 1.43.0
+
+2017-07-03 09:33  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, lcfg.yml: Fixed a couple of memory leaks
+
+2017-06-30 14:45  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, lcfg.yml: Completely reworked how components are
+	  loaded from the DB. The previous version was somewhat inefficient
+	  and leaked memory
+
+2017-06-30 13:00  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, include/resources.h, resources/resource.c:
+	  lcfgresource_insert_key, lcfgresource_build_key and
+	  lcfgresource_compute_key_length now take a resource name rather
+	  than the resource itself to allow wider reuse
+
+2017-06-29 13:04  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.42.5
 
 2017-06-29 13:04  squinney@INF.ED.AC.UK
 
