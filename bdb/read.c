@@ -183,6 +183,7 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
   LCFGStatus status = LCFG_STATUS_OK;
   LCFGComponent * component = NULL;
   char * reslist = NULL;
+  char * keybuf  = NULL;
 
   int ret;
   DBT key, data;
@@ -204,10 +205,7 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
                              comp_name, db_strerror(ret) );
   } else if ( data.size > 0 ) {
 
-    char * result_string = data.data;
-    result_string[data.size] = '\0';
-
-    reslist = strdup( result_string );
+    reslist = strndup( (char *) data.data, data.size );
 
   }
 
@@ -229,8 +227,8 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
     goto cleanup;
   }
 
-  size_t keybufsize = 256;
-  char * keybuf = calloc( keybufsize, sizeof(char) );
+  size_t keybufsize = 512;
+  keybuf = calloc( keybufsize, sizeof(char) );
   if ( keybuf == NULL ) {
     perror("Failed to allocate memory for DB key buffer");
     exit(EXIT_FAILURE);
@@ -329,6 +327,7 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
  cleanup:
 
   free(reslist);
+  free(keybuf);
 
   if ( status == LCFG_STATUS_ERROR ) {
     lcfgcomponent_relinquish(component);
@@ -479,12 +478,10 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
 
       if ( (size_t) key.size == 0 ) continue;
 
-      char * keyname = key.data;
-      keyname[key.size] = '\0';
+      char * keyname = strndup( (char *) key.data, key.size );
 
       /* 'resource list' entry for a component */
-      if ( strchr( keyname, '.' ) == NULL &&
-           lcfgcomponent_valid_name(keyname) ) {
+      if ( lcfgcomponent_valid_name(keyname) ) {
 
         char * add_msg = NULL;
         if ( lcfgtaglist_mutate_add( all_comps, keyname, &add_msg )
@@ -497,6 +494,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
         free(add_msg);
       }
 
+      free(keyname);
     }
 
     /* Cursors must be closed */
