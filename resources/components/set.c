@@ -45,6 +45,10 @@ static void lcfgcompset_resize( LCFGComponentSet * compset ) {
 
     LCFGComponent ** new_set = calloc( (size_t) want_buckets,
                                        sizeof(LCFGComponent *) );
+    if ( new_set == NULL ) {
+      perror( "Failed to allocate memory for LCFG component set" );
+      exit(EXIT_FAILURE);
+    }
 
     compset->components = new_set;
     compset->entries    = 0;
@@ -61,6 +65,8 @@ static void lcfgcompset_resize( LCFGComponentSet * compset ) {
             fprintf( stderr, "Failed to resize component set\n" );
             exit(EXIT_FAILURE);
           }
+
+          /* Remove reference to comp from old_set */
           lcfgcomponent_relinquish(comp);
         }
       }
@@ -1043,7 +1049,7 @@ LCFGTagList * lcfgcompset_ngeneric_components( const LCFGComponentSet * compset 
 
   LCFGTagList * comp_names = lcfgtaglist_new();
 
-  if ( !lcfgcompset_is_empty(compset) ) return comp_names;
+  if ( lcfgcompset_is_empty(compset) ) return comp_names;
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
