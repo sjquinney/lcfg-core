@@ -3120,6 +3120,22 @@ bool lcfgpackage_print( const LCFGPackage * pkg,
 char * lcfgpackage_build_message( const LCFGPackage * pkg,
                                   const char *fmt, ... ) {
 
+  assert( fmt != NULL );
+
+  /* hacky... If message stub ends with a newline character that
+     indicates that a newline should be appended to the end of the
+     final message (and removed from the format string) */
+
+  size_t fmt_len = strlen(fmt);
+  bool add_newline = false;
+  char * new_fmt = NULL;
+  if ( fmt[fmt_len-1] == '\n' ) {
+    add_newline = true;
+
+    new_fmt = strndup( fmt, fmt_len - 1 );
+    fmt = new_fmt;
+  }
+
   /* This is rather messy and probably somewhat inefficient. It is
      intended to be used primarily for generating error messages,
      usually just before failing entirely. */
@@ -3170,11 +3186,13 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
   /* Final string, possibly with derivation information */
 
   if ( pkg != NULL && !isempty(pkg->derivation) ) {
-    rc = asprintf( &result, "%s %s at %s",
+    const char * final_fmt = add_newline ? "%s %s at %s\n" : "%s %s at %s"; 
+    rc = asprintf( &result, final_fmt,
                    msg_base, msg_mid,
                    pkg->derivation );
   } else {
-    rc = asprintf( &result, "%s %s",
+    const char * final_fmt = add_newline ? "%s %s\n" : "%s %s";
+    rc = asprintf( &result, final_fmt,
                    msg_base, msg_mid );
   }
 
@@ -3188,6 +3206,7 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
   free(msg_base);
   free(msg_mid);
   free(pkg_as_str);
+  free(new_fmt);
 
   return result;
 }
