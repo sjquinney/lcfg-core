@@ -25,7 +25,7 @@
 #include "common.h"
 #include "utils.h"
 
-static char * tmp_dir_names[] = {
+static const char * tmp_dir_names[] = {
   "LCFGTMP", "TMPDIR", "TEMP", "TMP", NULL
 };
 
@@ -52,7 +52,7 @@ const char * lcfgutils_tmp_dirname(void) {
 
   const char * tmpdir = NULL;
 
-  char ** ptr;
+  const char ** ptr;
   for ( ptr = tmp_dir_names; *ptr != NULL && tmpdir == NULL; ptr++ ) {
     const char * env_val = getenv(*ptr);
     if ( !isempty(env_val) )
@@ -196,8 +196,7 @@ char * lcfgutils_string_join( const char * sep,
 
 void lcfgutils_string_chomp( char * str ) {
 
-  if ( str == NULL || *str == '\0' )
-    return;
+  if ( isempty(str) ) return;
 
   char * ptr = str + strlen(str) - 1; /* start on final character */
   while ( ptr != str ) {
@@ -224,12 +223,9 @@ void lcfgutils_string_chomp( char * str ) {
 
 void lcfgutils_string_trim( char * str ) {
 
-  if ( str == NULL )
-    return;
+  if ( isempty(str) ) return;
 
   size_t len = strlen(str);
-  if ( len == 0 )
-    return;
 
   /* trim from left */
 
@@ -273,8 +269,7 @@ void lcfgutils_string_trim( char * str ) {
 
 char * lcfgutils_catfile( const char * dir, const char * file ) {
 
-  if ( file == NULL )
-    return NULL;
+  if ( file == NULL ) return NULL;
 
   size_t file_len = strlen(file);
   size_t new_len = file_len;
@@ -345,8 +340,7 @@ char * lcfgutils_catfile( const char * dir, const char * file ) {
 
 bool lcfgutils_string_endswith( const char * str, const char * suffix ) {
 
-  if ( str == NULL || suffix == NULL )
-    return false;
+  if ( isempty(str) || isempty(suffix) ) return false;
 
   size_t str_len    = strlen(str);
   size_t suffix_len = strlen(suffix);
@@ -371,11 +365,10 @@ bool lcfgutils_string_endswith( const char * str, const char * suffix ) {
 
 char * lcfgutils_basename( const char * path, const char * suffix ) {
 
-  if ( path == NULL )
-    return NULL;
+  if ( isempty(path) ) return NULL;
 
-  char * start = (char *) path;
-  char * end   = start + strlen(path) - 1;
+  const char * start = path;
+  const char * end   = start + strlen(path) - 1;
 
   /* This removes all trailing '/' characters */
   while ( end != start && *end == '/' ) end--;
@@ -383,7 +376,7 @@ char * lcfgutils_basename( const char * path, const char * suffix ) {
   /* Find the start of the base which is after the final '/' (if any) */
   if ( start != end ) {
 
-    char * ptr = end;
+    const char * ptr = end;
     while ( ptr != start && *ptr != '/') ptr--;
 
     start = *ptr == '/' ? ptr + 1 : ptr;
@@ -415,11 +408,10 @@ char * lcfgutils_basename( const char * path, const char * suffix ) {
 
 char * lcfgutils_dirname( const char * path ) {
 
-  if ( path == NULL )
-    return NULL;
+  if ( isempty(path) ) return NULL;
 
-  char * start = (char *) path;
-  char * end   = start + strlen(path) - 1;
+  const char * start = path;
+  const char * end   = start + strlen(path) - 1;
 
   /* This removes all trailing '/' characters */
   while ( end != start && *end == '/' ) end--;
@@ -428,8 +420,7 @@ char * lcfgutils_dirname( const char * path ) {
   while ( end != start && *end != '/') end--;
 
   /* end is character before / (if there is one) */
-  if ( end != start )
-    end--;
+  if ( end != start ) end--;
 
   char * dir;
   if ( end == start && *start != '/' ) {
@@ -518,7 +509,7 @@ char * lcfgutils_string_replace( const char * input,
 
   size_t new_len = input_len;
 
-  char * p = (char *) input;
+  const char * p = input;
   while ( ( p = strstr( p, match ) ) != NULL ) {
       p += match_len;
       new_len += len_diff;
@@ -532,7 +523,7 @@ char * lcfgutils_string_replace( const char * input,
 
   char * to = result;
 
-  char * start = (char *) input;
+  const char * start = input;
   bool done = false;
   while ( !done ) {
     p = strstr( start, match );
