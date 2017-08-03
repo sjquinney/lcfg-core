@@ -198,18 +198,16 @@ LCFGContextList * lcfgctxlist_clone( const LCFGContextList * ctxlist ) {
   /* Note that this does NOT clone the contexts themselves only the nodes. */
   bool ok = true;
 
-  LCFGContextNode * cur_node = NULL;
+  const LCFGContextNode * cur_node = NULL;
   for ( cur_node = lcfgctxlist_head(ctxlist);
-        cur_node != NULL;
+        cur_node != NULL && ok;
         cur_node = lcfgctxlist_next(cur_node) ) {
 
     LCFGContext * ctx = lcfgctxlist_context(cur_node);
 
     LCFGChange rc = lcfgctxlist_append( clone, ctx );
-    if ( rc != LCFG_CHANGE_ADDED ) {
+    if ( rc != LCFG_CHANGE_ADDED )
       ok = false;
-      break;
-    }
 
   }
 
@@ -355,34 +353,31 @@ LCFGChange lcfgctxlist_remove_next( LCFGContextList * ctxlist,
  * specified.
  *
  * @param[in] ctxlist Pointer to @c LCFGContextList to be searched
- * @param[in] name The name of the required context node
+ * @param[in] want_name The name of the required context node
  *
  * @return Pointer to an @c LCFGContextNode (or the @c NULL value).
  *
  */
 
 LCFGContextNode * lcfgctxlist_find_node( const LCFGContextList * ctxlist,
-                                         const char * name ) {
-  assert( name != NULL );
+                                         const char * want_name ) {
+  assert( want_name != NULL );
 
-  if ( ctxlist == NULL || lcfgctxlist_is_empty(ctxlist) )
-    return NULL;
+  if ( lcfgctxlist_is_empty(ctxlist) ) return NULL;
 
   LCFGContextNode * result = NULL;
 
   LCFGContextNode * cur_node = NULL;
   for ( cur_node = lcfgctxlist_head(ctxlist);
-        cur_node != NULL;
+        cur_node != NULL && result == NULL;
         cur_node = lcfgctxlist_next(cur_node) ) {
 
-    LCFGContext * ctx = lcfgctxlist_context(cur_node);
+    const LCFGContext * ctx = lcfgctxlist_context(cur_node);
 
-    if ( !lcfgcontext_has_name(ctx) ) continue;
+    if ( !lcfgcontext_is_valid(ctx) ) continue;
 
-    if ( strcmp( lcfgcontext_get_name(ctx), name ) == 0 ) {
+    if ( lcfgcontext_match( ctx, want_name ) )
       result = cur_node;
-      break;
-    }
 
   }
 
@@ -418,7 +413,7 @@ LCFGContext * lcfgctxlist_find_context( const LCFGContextList * ctxlist,
 
   LCFGContext * context = NULL;
 
-  LCFGContextNode * node = lcfgctxlist_find_node( ctxlist, name );
+  const LCFGContextNode * node = lcfgctxlist_find_node( ctxlist, name );
   if ( node != NULL )
     context = lcfgctxlist_context(node);
 
@@ -477,8 +472,7 @@ LCFGChange lcfgctxlist_update( LCFGContextList * ctxlist,
   assert( ctxlist != NULL );
   assert( new_ctx != NULL );
 
-  if ( !lcfgcontext_has_name(new_ctx) )
-    return LCFG_CHANGE_ERROR;
+  if ( !lcfgcontext_is_valid(new_ctx) ) return LCFG_CHANGE_ERROR;
 
   LCFGContextNode * cur_node =
     lcfgctxlist_find_node( ctxlist, lcfgcontext_get_name(new_ctx) );
@@ -589,7 +583,7 @@ LCFGStatus lcfgctxlist_from_file( const char * filename,
   while( getline( &line, &line_len, file ) != -1 ) {
     linenum++;
 
-    char * ctx_str = line;
+    const char * ctx_str = line;
 
     /* skip past any leading whitespace */
     while ( isspace(*ctx_str) ) ctx_str++;
@@ -660,13 +654,12 @@ bool lcfgctxlist_print( const LCFGContextList * ctxlist,
                         FILE * out ) {
   assert( ctxlist != NULL );
 
-  if ( lcfgctxlist_is_empty(ctxlist) )
-    return true;
+  if ( lcfgctxlist_is_empty(ctxlist) ) return true;
 
   /* Allocate a reasonable buffer which will be reused for each
      context. Note that if necessary it will be resized automatically. */
 
-  size_t buf_size = 32;
+  size_t buf_size = 64;
   char * str_buf  = calloc( buf_size, sizeof(char) );
   if ( str_buf == NULL ) {
     perror("Failed to allocate memory for LCFG context string");
@@ -675,7 +668,7 @@ bool lcfgctxlist_print( const LCFGContextList * ctxlist,
 
   bool ok = true;
 
-  LCFGContextNode * cur_node = NULL;
+  const LCFGContextNode * cur_node = NULL;
   for ( cur_node = lcfgctxlist_head(ctxlist);
         cur_node != NULL;
         cur_node = lcfgctxlist_next(cur_node) ) {
@@ -683,7 +676,7 @@ bool lcfgctxlist_print( const LCFGContextList * ctxlist,
     const LCFGContext * ctx = lcfgctxlist_context(cur_node);
 
     /* Ignore any contexts which do not have a name or value */
-    if ( !lcfgcontext_has_name(ctx) || !lcfgcontext_has_value(ctx) )
+    if ( !lcfgcontext_is_valid(ctx) || !lcfgcontext_has_value(ctx) )
       continue;
 
     if ( lcfgcontext_to_string( ctx, LCFG_OPT_NEWLINE,
@@ -776,7 +769,7 @@ int lcfgctxlist_max_priority( const LCFGContextList * ctxlist ) {
 
   int max_priority = 0;
 
-  LCFGContextNode * cur_node = NULL;
+  const LCFGContextNode * cur_node = NULL;
   for ( cur_node = lcfgctxlist_head(ctxlist);
         cur_node != NULL;
         cur_node = lcfgctxlist_next(cur_node) ) {
@@ -859,7 +852,7 @@ bool lcfgctxlist_diff( const LCFGContextList * ctxlist1,
                        time_t prevtime ) {
 
   bool changed = false;
-  LCFGContextNode * cur_node;
+  const LCFGContextNode * cur_node;
 
   /* Check for missing nodes and also compare values for common nodes */
 
@@ -870,7 +863,7 @@ bool lcfgctxlist_diff( const LCFGContextList * ctxlist1,
     const LCFGContext * cur_ctx = lcfgctxlist_context(cur_node);
 
     /* Ignore nodes without a name */
-    if ( !lcfgcontext_has_name(cur_ctx) ) continue;
+    if ( !lcfgcontext_is_valid(cur_ctx) ) continue;
 
     const LCFGContext * other_ctx =
       lcfgctxlist_find_context( ctxlist2, lcfgcontext_get_name(cur_ctx) );
@@ -917,7 +910,7 @@ bool lcfgctxlist_diff( const LCFGContextList * ctxlist1,
     const LCFGContext * cur_ctx = lcfgctxlist_context(cur_node);
 
     /* Ignore nodes without a name */
-    if ( !lcfgcontext_has_name(cur_ctx) ) continue;
+    if ( !lcfgcontext_is_valid(cur_ctx) ) continue;
 
     const LCFGContext * other_ctx =
       lcfgctxlist_find_context( ctxlist1, lcfgcontext_get_name(cur_ctx) );
@@ -974,10 +967,10 @@ int lcfgctxlist_simple_query( const LCFGContextList * ctxlist,
   /* NOTE: May be called with a NULL ctxlist */
   assert( ctxq_name != NULL );
 
-  LCFGContext * ctx = lcfgctxlist_find_context( ctxlist, ctxq_name );
+  const LCFGContext * ctx = lcfgctxlist_find_context( ctxlist, ctxq_name );
 
   int priority = 1;
-  char * ctx_value = NULL;
+  const char * ctx_value = NULL;
 
   if ( ctx != NULL ) {
     priority  = lcfgcontext_get_priority(ctx);
@@ -997,8 +990,8 @@ int lcfgctxlist_simple_query( const LCFGContextList * ctxlist,
     case LCFG_TEST_ISNE:
       ;
 
-      bool ctxq_val_empty  = ( ctxq_val  == NULL || *ctxq_val  == '\0' );
-      bool ctx_value_empty = ( ctx_value == NULL || *ctx_value == '\0' );
+      bool ctxq_val_empty  = isempty(ctxq_val);
+      bool ctx_value_empty = isempty(ctx_value);
 
       bool same_value = false;
       if ( ctxq_val_empty || ctx_value_empty )

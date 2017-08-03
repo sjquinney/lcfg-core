@@ -122,6 +122,8 @@ bool lcfgcontext_equals( const LCFGContext * ctx1,
 bool lcfgcontext_identical( const LCFGContext * ctx1,
                             const LCFGContext * ctx2 );
 
+bool lcfgcontext_match( const LCFGContext * ctx, const char * want_name );
+
 /* Expressions */
 
 bool lcfgcontext_valid_expression( const char * expr, char ** msg );
