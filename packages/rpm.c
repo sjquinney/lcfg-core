@@ -338,7 +338,7 @@ ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_TOSTR_ARGS ) {
 
   /* Name, version, release and architecture are required */
 
-  if ( !lcfgpackage_has_name(pkg) ||
+  if ( !lcfgpackage_is_valid(pkg)    ||
        !lcfgpackage_has_version(pkg) ||
        !lcfgpackage_has_release(pkg) )
     return -1;
@@ -636,11 +636,15 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
       } else {
 
-        if ( lcfgpkglist_append( *result, pkg )
-             != LCFG_CHANGE_ADDED ) {
+        char * merge_msg = NULL;
+        if ( lcfgpkglist_merge_package( *result, pkg, &merge_msg )
+             == LCFG_CHANGE_ERROR ) {
           ok = false;
+          *msg = lcfgpackage_build_message( pkg,
+                           "Failed to merge into package list: %s",
+                         ( merge_msg != NULL ? merge_msg : "unknown error" ) );
         }
-
+        free(merge_msg);
       }
 
       free(parse_msg);
@@ -903,18 +907,17 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
   /* The sort is not just cosmetic - there needs to be a deterministic
      order so that we can compare the RPM list for changes using cmp */
 
-  if ( !lcfgpkglist_is_empty(active) ) {
+  if ( !lcfgslist_is_empty(active) ) {
     lcfgpkglist_sort(active);
 
-    LCFGPackageNode * cur_node = NULL;
-    for ( cur_node = lcfgpkglist_head(active);
-	  cur_node != NULL;
-	  cur_node = lcfgpkglist_next(cur_node) ) {
+    const LCFGSListNode * cur_node = NULL;
+    for ( cur_node = lcfgslist_head(active);
+	  cur_node != NULL && ok;
+	  cur_node = lcfgslist_next(cur_node) ) {
 
-      const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
+      const LCFGPackage * pkg = lcfgslist_data(cur_node);
 
-      if ( !lcfgpackage_is_valid(pkg) || !lcfgpackage_is_active(pkg) )
-        continue;
+      if ( !lcfgpackage_is_valid(pkg) ) continue;
 
       ssize_t rc = lcfgpackage_to_cpp( pkg,
                                        defarch,
@@ -946,15 +949,15 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
   if ( fprintf( out, "#ifdef ALL_CONTEXTS\n" ) < 0 )
     ok = false;
 
-  if ( ok && !lcfgpkglist_is_empty(inactive) ) {
+  if ( ok && !lcfgslist_is_empty(inactive) ) {
     lcfgpkglist_sort(inactive);
 
-    LCFGPackageNode * cur_node = NULL;
-    for ( cur_node = lcfgpkglist_head(inactive);
-	  cur_node != NULL;
-	  cur_node = lcfgpkglist_next(cur_node) ) {
+    const LCFGSListNode * cur_node = NULL;
+    for ( cur_node = lcfgslist_head(inactive);
+	  cur_node != NULL && ok;
+	  cur_node = lcfgslist_next(cur_node) ) {
 
-      const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
+      const LCFGPackage * pkg = lcfgslist_data(cur_node);
 
       if ( !lcfgpackage_is_valid(pkg) ) continue;
 

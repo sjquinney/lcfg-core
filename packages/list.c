@@ -22,79 +22,17 @@
 #include "packages.h"
 #include "utils.h"
 
-/**
- * @brief Create and initialise a new package list node
- *
- * This creates a simple wrapper @c LCFGPackageNode node which
- * is used to hold a pointer to an @c LCFGPackage as an item in a
- * singly-linked @c LCFGPackageList data structure.
- *
- * It is typically not necessary to call this function. The usual
- * approach is to use the @c lcfgpkglist_insert_next() or @c
- * lcfgpkglist_append() functions to add @c LCFGPackage structures to
- * the list.
- *
- * If the memory allocation for the new structure is not successful
- * the @c exit() function will be called with a non-zero value.
- *
- * To avoid memory leaks, when the new structure is no longer required
- * the @c lcfgpkgnode_destroy() function should be called.
- *
- * @param[in] pkg Pointer to @c LCFGPackage
- *
- * @return Pointer to new @c LCFGPackageNode
- *
- */
+#define lcfgpkglist_append(list, item) ( lcfgpkglist_insert_next( list, lcfgslist_tail(list), item ) )
 
-LCFGPackageNode * lcfgpkgnode_new(LCFGPackage * pkg) {
+static LCFGChange lcfgpkglist_remove_next( LCFGPackageList * list,
+                                           LCFGSListNode   * node,
+                                           LCFGPackage    ** item )
+   __attribute__((warn_unused_result));
 
-  LCFGPackageNode * pkgnode = malloc( sizeof(LCFGPackageNode) );
-  if ( pkgnode == NULL ) {
-    perror( "Failed to allocate memory for LCFG package node" );
-    exit(EXIT_FAILURE);
-  }
-
-  pkgnode->pkg  = pkg;
-  pkgnode->next = NULL;
-
-  return pkgnode;
-}
-
-/**
- * @brief Destroy a package list node
- *
- * When the specified @c LCFGPackageNode is no longer required this
- * can be used to free all associated memory. This will call
- * @c free(3) on each parameter of the struct and then set each value to
- * be @c NULL.
- *
- * Note that destroying an @c LCFGPackageNode does not destroy the
- * associated @c LCFGPackage, that must be done separately.
- *
- * It is typically not necessary to call this function. The usual
- * approach is to use the @c lcfgpkglist_remove_next() function to
- * remove a @c LCFGPackage from the list.
- *
- * If the value of the pointer passed in is @c NULL then the function
- * has no affect. This means it is safe to call with a pointer to a
- * package node which has already been destroyed (or potentially was
- * never created).
- *
- * @param[in] pkgnode Pointer to @c LCFGPackageNode to be destroyed.
- *
- */
-
-void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode) {
-
-  if ( pkgnode == NULL ) return;
-
-  pkgnode->pkg  = NULL;
-  pkgnode->next = NULL;
-
-  free(pkgnode);
-  pkgnode = NULL;
-
-}
+static LCFGChange lcfgpkglist_insert_next( LCFGPackageList * list,
+                                           LCFGSListNode   * node,
+                                           LCFGPackage     * item )
+   __attribute__((warn_unused_result));
 
 /**
  * @brief Create and initialise a new empty package list
@@ -122,6 +60,7 @@ LCFGPackageList * lcfgpkglist_new(void) {
   }
 
   pkglist->merge_rules = LCFG_MERGE_RULE_NONE;
+  pkglist->primary_key = LCFG_PKGLIST_PK_NAME | LCFG_PKGLIST_PK_ARCH;
   pkglist->head        = NULL;
   pkglist->tail        = NULL;
   pkglist->size        = 0;
@@ -145,7 +84,7 @@ LCFGPackageList * lcfgpkglist_new(void) {
  * for details.
  *
  * This will iterate through the list to remove and destroy each
- * @c LCFGPackageNode item, it also calls @c lcfgpackage_relinquish()
+ * @c LCFGSListNode item, it also calls @c lcfgpackage_relinquish()
  * for each package. Note that if the reference count on the package
  * reaches zero then the @c LCFGPackage will also be destroyed.
  *
@@ -162,7 +101,7 @@ void lcfgpkglist_destroy(LCFGPackageList * pkglist) {
 
   if ( pkglist == NULL ) return;
 
-  while ( lcfgpkglist_size(pkglist) > 0 ) {
+  while ( lcfgslist_size(pkglist) > 0 ) {
     LCFGPackage * pkg = NULL;
     if ( lcfgpkglist_remove_next( pkglist, NULL, &pkg )
          == LCFG_CHANGE_REMOVED ) {
@@ -287,10 +226,10 @@ LCFGMergeRule lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist ) {
  *
  * This can be used to insert an @c LCFGPackage into the
  * specified package list. The package will be wrapped into an
- * @c LCFGPackageNode using the @c lcfgpkgnode_new() function.
+ * @c LCFGSListNode using the @c lcfgpkgnode_new() function.
  *
  * The package will be inserted into the list immediately after the
- * specified @c LCFGPackageNode. To insert the package at the
+ * specified @c LCFGSListNode. To insert the package at the
  * head of the list the @c NULL value should be passed for the node.
  *
  * If the package is successfully inserted into the list the
@@ -298,44 +237,43 @@ LCFGMergeRule lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist ) {
  * @c LCFG_CHANGE_ERROR is returned.
  *
  * @param[in] pkglist Pointer to @c LCFGPackageList
- * @param[in] pkgnode Pointer to @c LCFGPackageNode
+ * @param[in] pkgnode Pointer to @c LCFGSListNode
  * @param[in] pkg Pointer to @c LCFGPackage
  * 
  * @return Integer value indicating type of change
  *
  */
 
-LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
-                                    LCFGPackageNode * pkgnode,
-                                    LCFGPackage * pkg ) {
-  assert( pkglist != NULL );
+static LCFGChange lcfgpkglist_insert_next( LCFGPackageList * list,
+                                           LCFGSListNode   * node,
+                                           LCFGPackage     * item ) {
+  assert( list != NULL );
+  assert( item != NULL );
 
-  if ( !lcfgpackage_is_valid(pkg) ) return LCFG_CHANGE_ERROR;
-
-  LCFGPackageNode * new_node = lcfgpkgnode_new(pkg);
+  LCFGSListNode * new_node = lcfgslistnode_new(item);
   if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
 
-  lcfgpackage_acquire(pkg);
+  lcfgpackage_acquire(item);
 
-  if ( pkgnode == NULL ) { /* HEAD */
+  if ( node == NULL ) { /* HEAD */
 
-    if ( lcfgpkglist_is_empty(pkglist) )
-      pkglist->tail = new_node;
+    if ( lcfgslist_is_empty(list) )
+      list->tail = new_node;
 
-    new_node->next = pkglist->head;
-    pkglist->head  = new_node;
+    new_node->next = list->head;
+    list->head     = new_node;
 
   } else {
-    
-    if ( pkgnode->next == NULL ) /* TAIL */
-      pkglist->tail = new_node;
 
-    new_node->next = pkgnode->next;
-    pkgnode->next  = new_node;
+    if ( node->next == NULL )
+      list->tail = new_node;
+
+    new_node->next = node->next;
+    node->next     = new_node;
 
   }
 
-  pkglist->size++;
+  list->size++;
 
   return LCFG_CHANGE_ADDED;
 }
@@ -347,7 +285,7 @@ LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
  * package list.
  *
  * The package removed from the list is immediately after the
- * specified @c LCFGPackageNode. To remove the package from the
+ * specified @c LCFGSListNode. To remove the package from the
  * head of the list the @c NULL value should be passed for the node.
  *
  * If the package is successfully removed from the list the
@@ -361,47 +299,47 @@ LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
  * be released by calling @c lcfgpackage_relinquish().
  *
  * @param[in] pkglist Pointer to @c LCFGPackageList
- * @param[in] pkgnode Pointer to @c LCFGPackageNode
+ * @param[in] pkgnode Pointer to @c LCFGSListNode
  * @param[out] pkg Pointer to @c LCFGPackage
  * 
  * @return Integer value indicating type of change
  *
  */
 
-LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
-                                    LCFGPackageNode * pkgnode,
-                                    LCFGPackage ** pkg ) {
-  assert( pkglist != NULL );
+static LCFGChange lcfgpkglist_remove_next( LCFGPackageList * list,
+                                           LCFGSListNode   * node,
+                                           LCFGPackage    ** item ) {
+  assert( list != NULL );
 
-  if ( lcfgpkglist_is_empty(pkglist) ) return LCFG_CHANGE_NONE;
+  if ( lcfgslist_is_empty(list) ) return LCFG_CHANGE_NONE;
 
-  LCFGPackageNode * old_node = NULL;
+  LCFGSListNode * old_node = NULL;
 
-  if ( pkgnode == NULL ) { /* HEAD */
+  if ( node == NULL ) { /* HEAD */
 
-    old_node = pkglist->head;
-    pkglist->head = pkglist->head->next;
+    old_node   = list->head;
+    list->head = list->head->next;
 
-    if ( lcfgpkglist_size(pkglist) == 1 )
-      pkglist->tail = NULL;
+    if ( lcfgslist_size(list) == 1 )
+      list->tail = NULL;
 
   } else {
 
-    if ( pkgnode->next == NULL ) return LCFG_CHANGE_ERROR;
+    if ( node->next == NULL ) return LCFG_CHANGE_ERROR;
 
-    old_node = pkgnode->next;
-    pkgnode->next = pkgnode->next->next;
+    old_node   = node->next;
+    node->next = node->next->next;
 
-    if ( pkgnode->next == NULL )
-      pkglist->tail = pkgnode;
+    if ( node->next == NULL )
+      list->tail = node;
 
   }
 
-  pkglist->size--;
+  list->size--;
 
-  *pkg = lcfgpkglist_package(old_node);
+  *item = lcfgslist_data(old_node);
 
-  lcfgpkgnode_destroy(old_node);
+  lcfgslistnode_destroy(old_node);
 
   return LCFG_CHANGE_REMOVED;
 }
@@ -424,54 +362,39 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
  * @c NULL value is returned if a @c NULL value or an empty list is
  * specified.
  *
- * @param[in] pkglist Pointer to @c LCFGPackageList to be searched
+ * @param[in] list Pointer to @c LCFGPackageList to be searched
  * @param[in] name The name of the required package node
  * @param[in] arch The architecture of the required package node
  *
- * @return Pointer to an @c LCFGPackageNode (or the @c NULL value).
+ * @return Pointer to an @c LCFGSListNode (or the @c NULL value).
  *
  */
 
-LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
-                                         const char * name,
-                                         const char * arch ) {
+LCFGSListNode * lcfgpkglist_find_node( const LCFGPackageList * list,
+                                       const char * name,
+                                       const char * arch ) {
 
   assert( name != NULL );
 
-  if ( lcfgpkglist_is_empty(pkglist) ) return NULL;
+  if ( lcfgslist_is_empty(list) ) return NULL;
 
-  const char * match_arch = arch != NULL ? arch : LCFG_PACKAGE_NOVALUE;
-  bool arch_match_iswild = 
-    ( strcmp( LCFG_PACKAGE_WILDCARD, match_arch ) == 0 );
+  LCFGSListNode * result = NULL;
 
-  LCFGPackageNode * result = NULL;
-
-  const LCFGPackageNode * cur_node = NULL;
-  for ( cur_node = lcfgpkglist_head(pkglist);
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(list);
         cur_node != NULL && result == NULL;
-        cur_node = lcfgpkglist_next(cur_node) ) {
+        cur_node = lcfgslist_next(cur_node) ) {
         
-    const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
+    const LCFGPackage * item = lcfgslist_data(cur_node);
 
-    if ( !lcfgpackage_is_valid(pkg) || !lcfgpackage_is_active(pkg) )
-      continue;
+    if ( !lcfgpackage_is_valid(item) ) continue;
 
-    const char * pkg_name = lcfgpackage_get_name(pkg);
-
-    if ( strcmp( pkg_name, name ) == 0 ) {
-
-      const char * pkg_arch = lcfgpackage_has_arch(pkg) ?
-                   lcfgpackage_get_arch(pkg) : LCFG_PACKAGE_NOVALUE;
-
-      if ( arch_match_iswild || strcmp( pkg_arch, match_arch ) == 0 )
-        result = (LCFGPackageNode *) cur_node;
-
-    }
+    if ( lcfgpackage_match( item, name, arch ) )
+      result = (LCFGSListNode *) cur_node;
 
   }
 
   return result;
-
 }
 
 /**
@@ -490,7 +413,7 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
  * the parent @c LCFGPackageList list is destroyed you would need to
  * call the @c lcfgpackage_acquire() function.
  *
- * @param[in] pkglist Pointer to @c LCFGPackageList to be searched
+ * @param[in] list Pointer to @c LCFGPackageList to be searched
  * @param[in] name The name of the required package
  * @param[in] arch The architecture of the required package node
  *
@@ -498,18 +421,18 @@ LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
  *
  */
 
-LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * pkglist,
+LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * list,
                                         const char * name,
                                         const char * arch ) {
   assert( name != NULL );
 
-  LCFGPackage * pkg = NULL;
+  LCFGPackage * item = NULL;
 
-  LCFGPackageNode * pkgnode = lcfgpkglist_find_node( pkglist, name, arch );
-  if ( pkgnode != NULL )
-    pkg = lcfgpkglist_package(pkgnode);
+  const LCFGSListNode * node = lcfgpkglist_find_node( list, name, arch );
+  if ( node != NULL )
+    item = lcfgslist_data(node);
 
-  return pkg;
+  return item;
 }
 
 /**
@@ -524,7 +447,7 @@ LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * pkglist,
  * relevant node. If a @c NULL value is specified for the list or the
  * list is empty then a false value will be returned.
  *
- * @param[in] pkglist Pointer to @c LCFGPackageList to be searched
+ * @param[in] list Pointer to @c LCFGPackageList to be searched
  * @param[in] name The name of the required package
  * @param[in] arch The architecture of the required package node
  *
@@ -532,12 +455,20 @@ LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * pkglist,
  *
  */
 
-bool lcfgpkglist_contains( const LCFGPackageList * pkglist,
-			   const char * name,
-                           const char * arch ) {
+bool lcfgpkglist_has_package( const LCFGPackageList * list,
+                              const char * name,
+                              const char * arch ) {
   assert( name != NULL );
 
-  return ( lcfgpkglist_find_node( pkglist, name, arch ) != NULL );
+  return ( lcfgpkglist_find_node( list, name, arch ) != NULL );
+}
+
+static bool same_context( const LCFGPackage * pkg1, const LCFGPackage * pkg2 ) {
+
+  const char * ctx1 = or_default( pkg1->context, "" );
+  const char * ctx2 = or_default( pkg2->context, "" );
+
+  return ( strcmp( ctx1, ctx2 ) == 0 );
 }
 
 /**
@@ -618,43 +549,35 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
                                       LCFGPackage * new_pkg,
                                       char ** msg ) {
   assert( pkglist != NULL );
-  assert( new_pkg != NULL );
 
-  LCFGMergeRule merge_rules = lcfgpkglist_get_merge_rules(pkglist);
+  if ( !lcfgpackage_is_valid(new_pkg) ) return LCFG_CHANGE_ERROR;
 
   /* Define these ahead of any jumps to the "apply" label */
 
-  LCFGPackageNode * prev_node = NULL;
-  LCFGPackageNode * cur_node  = NULL;
+  LCFGSListNode * prev_node = NULL;
+  LCFGSListNode * cur_node  = NULL;
   LCFGPackage * cur_pkg  = NULL;
-
-  /* Actions */
-
-  bool remove_old = false;
-  bool append_new = false;
-  bool accept     = false;
-
-  if ( !lcfgpackage_is_valid(new_pkg) ) {
-    lcfgutils_build_message( msg, "Package is invalid" );
-    goto apply;
-  }
 
   /* Doing a search here rather than calling find_node so that the
      previous node can also be selected. That is needed for removals. */
 
   const char * match_name = new_pkg->name;
-  const char * match_arch = or_default( new_pkg->arch, "" );
+  const char * match_arch = LCFG_PACKAGE_WILDCARD;
+  if ( pkglist->primary_key&LCFG_PKGLIST_PK_ARCH )
+    match_arch = or_default( new_pkg->arch, "" );
 
-  LCFGPackageNode * node = NULL;
-  for ( node = lcfgpkglist_head(pkglist);
+  LCFGSListNode * node = NULL;
+  for ( node = lcfgslist_head(pkglist);
         node != NULL && cur_node == NULL;
-        node = lcfgpkglist_next(node) ) {
+        node = lcfgslist_next(node) ) {
 
-    const LCFGPackage * pkg = lcfgpkglist_package(node);
+    const LCFGPackage * pkg = lcfgslist_data(node);
 
     if ( !lcfgpackage_is_valid(pkg) ) continue;
 
-    if ( lcfgpackage_match( pkg, match_name, match_arch ) ) {
+    if ( lcfgpackage_match( pkg, match_name, match_arch ) &&
+         ( !(pkglist->primary_key&LCFG_PKGLIST_PK_CTX) ||
+           same_context( pkg, new_pkg ) ) ) {
       cur_node = node;
       break;
     } else {
@@ -663,8 +586,18 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   }
 
+  LCFGMergeRule merge_rules = lcfgpkglist_get_merge_rules(pkglist);
+
+  /* Actions */
+
+  bool remove_old = false;
+  bool append_new = false;
+  bool accept     = false;
+
+  /* 0. Avoid genuine duplicates */
+
   if ( cur_node != NULL ) {
-    cur_pkg = lcfgpkglist_package(cur_node);
+    cur_pkg = lcfgslist_data(cur_node);
 
     /* Merging a struct which is already in the list is a no-op. Note
        that this does not prevent the same spec appearing multiple
@@ -680,15 +613,14 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   if ( merge_rules&LCFG_MERGE_RULE_USE_PREFIX ) {
 
-    char cur_prefix = cur_pkg != NULL ?
-                      lcfgpackage_get_prefix(cur_pkg) : '\0';
+    char cur_prefix = cur_pkg != NULL ? cur_pkg->prefix : '\0';
 
     if ( cur_prefix == '=' ) {
       *msg = lcfgpackage_build_message( cur_pkg, "Version is pinned" );
       goto apply;
     }
 
-    char new_prefix = lcfgpackage_get_prefix(new_pkg);
+    char new_prefix = new_pkg->prefix;
     if ( new_prefix != '\0' ) {
 
       switch(new_prefix)
@@ -706,7 +638,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 	case '~':
 	  if ( cur_pkg == NULL ) {
 	    append_new = true;
-	  }
+          }
 	  accept = true;
 	  break;
 	case '?':
@@ -769,8 +701,8 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   if ( merge_rules&LCFG_MERGE_RULE_USE_PRIORITY ) {
 
-    int priority  = lcfgpackage_get_priority(new_pkg);
-    int opriority = lcfgpackage_get_priority(cur_pkg);
+    int priority  = new_pkg->priority;
+    int opriority = cur_pkg->priority;
 
     /* same priority for both is a conflict */
 
@@ -867,16 +799,16 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
                                    char ** msg ) {
   assert( pkglist1 != NULL );
 
-  if ( lcfgpkglist_is_empty(pkglist2) ) return LCFG_CHANGE_NONE;
+  if ( lcfgslist_is_empty(pkglist2) ) return LCFG_CHANGE_NONE;
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
-  const LCFGPackageNode * cur_node = NULL;
-  for ( cur_node = lcfgpkglist_head(pkglist2);
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(pkglist2);
         cur_node != NULL && change != LCFG_CHANGE_ERROR;
-        cur_node = lcfgpkglist_next(cur_node) ) {
+        cur_node = lcfgslist_next(cur_node) ) {
 
-    LCFGPackage * pkg = lcfgpkglist_package(cur_node);
+    LCFGPackage * pkg = lcfgslist_data(cur_node);
 
     /* Just ignore any invalid packages */
     if ( !lcfgpackage_is_valid(pkg) ) continue;
@@ -915,7 +847,7 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
 
 void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
 
-  if ( lcfgpkglist_size(pkglist) < 2 ) return;
+  if ( lcfgslist_size(pkglist) < 2 ) return;
 
   /* Oo. Oo. bubble sort .oO .oO */
 
@@ -923,17 +855,17 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
   while (swapped) {
     swapped=false;
 
-    LCFGPackageNode * cur_node = NULL;
-    for ( cur_node = lcfgpkglist_head(pkglist);
+    LCFGSListNode * cur_node = NULL;
+    for ( cur_node = lcfgslist_head(pkglist);
           cur_node != NULL && cur_node->next != NULL;
-          cur_node = lcfgpkglist_next(cur_node) ) {
+          cur_node = lcfgslist_next(cur_node) ) {
 
-      LCFGPackage * cur_pkg  = lcfgpkglist_package(cur_node);
-      LCFGPackage * next_pkg = lcfgpkglist_package(cur_node->next);
+      LCFGPackage * cur_pkg  = lcfgslist_data(cur_node);
+      LCFGPackage * next_pkg = lcfgslist_data(cur_node->next);
 
       if ( lcfgpackage_compare( cur_pkg, next_pkg ) > 0 ) {
-        cur_node->pkg       = next_pkg;
-        cur_node->next->pkg = cur_pkg;
+        cur_node->data       = next_pkg;
+        cur_node->next->data = cur_pkg;
         swapped = true;
       }
 
@@ -971,8 +903,6 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         FILE * out ) {
   assert( pkglist != NULL );
 
-  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
-
   /* For RPMs the default architecture is often required. For
      efficiency, look up the default architecture only once */
 
@@ -991,15 +921,14 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
     exit(EXIT_FAILURE);
   }
 
-  const LCFGPackageNode * cur_node = NULL;
-  for ( cur_node = lcfgpkglist_head(pkglist);
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(pkglist);
         cur_node != NULL && ok;
-        cur_node = lcfgpkglist_next(cur_node) ) {
+        cur_node = lcfgslist_next(cur_node) ) {
 
-    const LCFGPackage * pkg = lcfgpkglist_package(cur_node);
+    const LCFGPackage * pkg = lcfgslist_data(cur_node);
 
-    if ( lcfgpackage_is_valid(pkg) &&
-         ( all_priorities || lcfgpackage_is_active(pkg) ) ) {
+    if ( lcfgpackage_is_valid(pkg) ) {
 
       ssize_t rc = lcfgpackage_to_string( pkg, defarch, style, options,
                                           &buffer, &buf_size );
@@ -1326,18 +1255,18 @@ LCFGPackageList * lcfgpkglist_match( const LCFGPackageList * pkglist,
 
   LCFGPackageList * result = lcfgpkglist_new();
 
-  if ( lcfgpkglist_size(pkglist) == 0 ) return result;
+  if ( lcfgslist_is_empty(pkglist) ) return result;
 
   /* Run the search */
 
   bool ok = true;
 
-  LCFGPackageNode * cur_node = NULL;
-  for ( cur_node = lcfgpkglist_head(pkglist);
+  LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(pkglist);
         cur_node != NULL && ok;
-        cur_node = lcfgpkglist_next(cur_node) ) {
+        cur_node = lcfgslist_next(cur_node) ) {
 
-    LCFGPackage * pkg = lcfgpkglist_package(cur_node);
+    LCFGPackage * pkg = lcfgslist_data(cur_node);
 
     bool matched = true;
 
