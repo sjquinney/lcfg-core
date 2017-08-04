@@ -21,78 +21,15 @@
 #include "context.h"
 #include "utils.h"
 
-/**
- * @brief Create and initialise a new context list node
- *
- * This creates a simple wrapper @c LCFGContextNode node which
- * is used to hold a pointer to an @c LCFGContext as an item in a
- * singly-linked @c LCFGContextList data structure.
- *
- * It is typically not necessary to call this function. The usual
- * approach is to use the @c lcfgctxlist_insert_next() or @c
- * lcfgctxlist_append() functions to add @c LCFGContext structures to
- * the list.
- *
- * If the memory allocation for the new structure is not successful
- * the @c exit() function will be called with a non-zero value.
- *
- * To avoid memory leaks, when the new structure is no longer required
- * the @c lcfgctxnode_destroy() function should be called.
- *
- * @param[in] ctx Pointer to @c LCFGContext
- *
- * @return Pointer to new @c LCFGContextNode
- *
- */
+static LCFGChange lcfgctxlist_insert_next( LCFGContextList * list,
+                                           LCFGSListNode   * node,
+                                           LCFGContext     * item )
+  __attribute__((warn_unused_result));
 
-LCFGContextNode * lcfgctxnode_new(LCFGContext * ctx) {
-  assert( ctx != NULL );
-
-  LCFGContextNode * ctxnode = malloc( sizeof(LCFGContextNode) );
-  if ( ctxnode == NULL ) {
-    perror( "Failed to allocate memory for LCFG context node" );
-    exit(EXIT_FAILURE);
-  }
-
-  ctxnode->context = ctx;
-  ctxnode->next    = NULL;
-
-  return ctxnode;
-}
-
-/**
- * @brief Destroy a context list node
- *
- * When the specified @c LCFGContextNode is no longer required
- * this can be used to free all associated memory.
- * This will call @c free(3) on each parameter of the struct and then
- * set each value to be @c NULL.
- *
- * It is typically not necessary to call this function. The usual
- * approach is to use the @c lcfgctxlist_remove_next() function to
- * remove a @c LCFGContext from the list.
- *
- * If the value of the pointer passed in is @c NULL then the function
- * has no affect. This means it is safe to call with a pointer to a
- * context node which has already been destroyed (or potentially was
- * never created).
- *
- * @param[in] ctxnode Pointer to @c LCFGContextNode to be destroyed.
- *
- */
-
-void lcfgctxnode_destroy(LCFGContextNode * ctxnode) {
-
-  if ( ctxnode == NULL ) return;
-
-  ctxnode->context = NULL;
-  ctxnode->next    = NULL;
-
-  free(ctxnode);
-  ctxnode = NULL;
-
-}
-
+static LCFGChange lcfgctxlist_remove_next( LCFGContextList * list,
+                                           LCFGSListNode   * node,
+                                           LCFGContext    ** item )
+  __attribute__((warn_unused_result));
 
 /**
  * @brief Create and initialise a new context list
@@ -134,7 +71,7 @@ LCFGContextList * lcfgctxlist_new(void) {
  * this can be used to free all associated memory.
  *
  * This will iterate through the list to remove and destroy each @c
- * LCFGContextNode item, it also calls @c lcfgcontext_relinquish() for
+ * LCFGSListNode item, it also calls @c lcfgcontext_relinquish() for
  * each context. Note that if the reference count on the context
  * reaches zero then the @c LCFGContext will also be destroyed.
  *
@@ -151,7 +88,7 @@ void lcfgctxlist_destroy(LCFGContextList * ctxlist) {
 
   if ( ctxlist == NULL ) return;
 
-  while ( lcfgctxlist_size(ctxlist) > 0 ) {
+  while ( lcfgslist_size(ctxlist) > 0 ) {
     LCFGContext * ctx = NULL;
     if ( lcfgctxlist_remove_next( ctxlist, NULL,
                                    &ctx ) == LCFG_CHANGE_REMOVED ) {
@@ -198,12 +135,12 @@ LCFGContextList * lcfgctxlist_clone( const LCFGContextList * ctxlist ) {
   /* Note that this does NOT clone the contexts themselves only the nodes. */
   bool ok = true;
 
-  const LCFGContextNode * cur_node = NULL;
-  for ( cur_node = lcfgctxlist_head(ctxlist);
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(ctxlist);
         cur_node != NULL && ok;
-        cur_node = lcfgctxlist_next(cur_node) ) {
+        cur_node = lcfgslist_next(cur_node) ) {
 
-    LCFGContext * ctx = lcfgctxlist_context(cur_node);
+    LCFGContext * ctx = lcfgslist_data(cur_node);
 
     LCFGChange rc = lcfgctxlist_append( clone, ctx );
     if ( rc != LCFG_CHANGE_ADDED )
@@ -224,10 +161,10 @@ LCFGContextList * lcfgctxlist_clone( const LCFGContextList * ctxlist ) {
  *
  * This can be used to insert an @c LCFGContext into the
  * specified context list. The context will be wrapped into an
- * @c LCFGContextNode using the @c lcfgctxnode_new() function.
+ * @c LCFGSListNode using the @c lcfgctxnode_new() function.
  *
  * The context will be inserted into the list immediately after the
- * specified @c LCFGContextNode. To insert the context at the
+ * specified @c LCFGSListNode. To insert the context at the
  * head of the list the @c NULL value should be passed for the node.
  *
  * If the context is successfully inserted into the list the
@@ -235,43 +172,44 @@ LCFGContextList * lcfgctxlist_clone( const LCFGContextList * ctxlist ) {
  * @c LCFG_CHANGE_ERROR is returned.
  *
  * @param[in] ctxlist Pointer to @c LCFGContextList
- * @param[in] ctxnode Pointer to @c LCFGContextNode
+ * @param[in] ctxnode Pointer to @c LCFGSListNode
  * @param[in] ctx Pointer to @c LCFGContext
  * 
  * @return Integer value indicating type of change
  */
 
-LCFGChange lcfgctxlist_insert_next( LCFGContextList * ctxlist,
-                                    LCFGContextNode * ctxnode,
-                                    LCFGContext     * ctx ) {
-  assert( ctxlist != NULL );
+LCFGChange lcfgctxlist_insert_next( LCFGContextList * list,
+                                    LCFGSListNode   * node,
+                                    LCFGContext     * item ) {
+  assert( list != NULL );
+  assert( item != NULL );
 
-  if ( !lcfgcontext_is_valid(ctx) ) return LCFG_CHANGE_ERROR;
+  if ( !lcfgcontext_is_valid(item) ) return LCFG_CHANGE_ERROR;
 
-  LCFGContextNode * new_node = lcfgctxnode_new(ctx);
+  LCFGSListNode * new_node = lcfgslistnode_new(item);
   if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
 
-  lcfgcontext_acquire(ctx);
+  lcfgcontext_acquire(item);
 
-  if ( ctxnode == NULL ) { /* New HEAD */
+  if ( node == NULL ) { /* HEAD */
 
-    if ( lcfgctxlist_is_empty(ctxlist) )
-      ctxlist->tail = new_node;
+    if ( lcfgslist_is_empty(list) )
+      list->tail = new_node;
 
-    new_node->next = ctxlist->head;
-    ctxlist->head  = new_node;
+    new_node->next = list->head;
+    list->head     = new_node;
 
   } else {
 
-    if ( ctxnode->next == NULL ) /* New TAIL */
-      ctxlist->tail = new_node;
+    if ( node->next == NULL )
+      list->tail = new_node;
 
-    new_node->next = ctxnode->next;
-    ctxnode->next  = new_node;
+    new_node->next = node->next;
+    node->next     = new_node;
 
   }
 
-  ctxlist->size++;
+  list->size++;
 
   return LCFG_CHANGE_ADDED;
 }
@@ -283,7 +221,7 @@ LCFGChange lcfgctxlist_insert_next( LCFGContextList * ctxlist,
  * specified context list.
  *
  * The context removed from the list is immediately after the
- * specified @c LCFGContextNode. To remove the context from the
+ * specified @c LCFGSListNode. To remove the context from the
  * head of the list the @c NULL value should be passed for the node.
  *
  * If the context is successfully removed from the list the
@@ -297,46 +235,46 @@ LCFGChange lcfgctxlist_insert_next( LCFGContextList * ctxlist,
  * be released by calling @c lcfgcontext_relinquish().
  *
  * @param[in] ctxlist Pointer to @c LCFGContextList
- * @param[in] ctxnode Pointer to @c LCFGContextNode
+ * @param[in] ctxnode Pointer to @c LCFGSListNode
  * @param[out] ctx Pointer to @c LCFGContext
  * 
  * @return Integer value indicating type of change
  */
 
-LCFGChange lcfgctxlist_remove_next( LCFGContextList * ctxlist,
-                                     LCFGContextNode * ctxnode,
-                                     LCFGContext    ** ctx ) {
-  assert( ctxlist != NULL );
+LCFGChange lcfgctxlist_remove_next( LCFGContextList * list,
+                                    LCFGSListNode   * node,
+                                    LCFGContext    ** item ) {
+  assert( list != NULL );
 
-  if ( lcfgctxlist_is_empty(ctxlist) ) return LCFG_CHANGE_NONE;
+  if ( lcfgslist_is_empty(list) ) return LCFG_CHANGE_NONE;
 
-  LCFGContextNode * old_node;
+  LCFGSListNode * old_node = NULL;
 
-  if ( ctxnode == NULL ) { /* HEAD */
+  if ( node == NULL ) { /* HEAD */
 
-    old_node      = ctxlist->head;
-    ctxlist->head = ctxlist->head->next;
+    old_node   = list->head;
+    list->head = list->head->next;
 
-    if ( lcfgctxlist_size(ctxlist) == 1 )
-      ctxlist->tail = NULL;
+    if ( lcfgslist_size(list) == 1 )
+      list->tail = NULL;
 
   } else {
 
-    if ( ctxnode->next == NULL ) return LCFG_CHANGE_ERROR;
+    if ( node->next == NULL ) return LCFG_CHANGE_ERROR;
 
-    old_node      = ctxnode->next;
-    ctxnode->next = ctxnode->next->next;
+    old_node   = node->next;
+    node->next = node->next->next;
 
-    if ( ctxnode->next == NULL )
-      ctxlist->tail = ctxnode;
+    if ( node->next == NULL )
+      list->tail = node;
 
   }
 
-  ctxlist->size--;
+  list->size--;
 
-  *ctx = old_node->context;
+  *item = lcfgslist_data(old_node);
 
-  lcfgctxnode_destroy(old_node);
+  lcfgslistnode_destroy(old_node);
 
   return LCFG_CHANGE_REMOVED;
 }
@@ -355,24 +293,24 @@ LCFGChange lcfgctxlist_remove_next( LCFGContextList * ctxlist,
  * @param[in] ctxlist Pointer to @c LCFGContextList to be searched
  * @param[in] want_name The name of the required context node
  *
- * @return Pointer to an @c LCFGContextNode (or the @c NULL value).
+ * @return Pointer to an @c LCFGSListNode (or the @c NULL value).
  *
  */
 
-LCFGContextNode * lcfgctxlist_find_node( const LCFGContextList * ctxlist,
-                                         const char * want_name ) {
+LCFGSListNode * lcfgctxlist_find_node( const LCFGContextList * ctxlist,
+                                       const char * want_name ) {
   assert( want_name != NULL );
 
-  if ( lcfgctxlist_is_empty(ctxlist) ) return NULL;
+  if ( lcfgslist_is_empty(ctxlist) ) return NULL;
 
-  LCFGContextNode * result = NULL;
+  LCFGSListNode * result = NULL;
 
-  LCFGContextNode * cur_node = NULL;
-  for ( cur_node = lcfgctxlist_head(ctxlist);
+  LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(ctxlist);
         cur_node != NULL && result == NULL;
-        cur_node = lcfgctxlist_next(cur_node) ) {
+        cur_node = lcfgslist_next(cur_node) ) {
 
-    const LCFGContext * ctx = lcfgctxlist_context(cur_node);
+    const LCFGContext * ctx = lcfgslist_data(cur_node);
 
     if ( !lcfgcontext_is_valid(ctx) ) continue;
 
@@ -413,9 +351,9 @@ LCFGContext * lcfgctxlist_find_context( const LCFGContextList * ctxlist,
 
   LCFGContext * context = NULL;
 
-  const LCFGContextNode * node = lcfgctxlist_find_node( ctxlist, name );
+  const LCFGSListNode * node = lcfgctxlist_find_node( ctxlist, name );
   if ( node != NULL )
-    context = lcfgctxlist_context(node);
+    context = lcfgslist_data(node);
 
   return context;
 }
@@ -474,7 +412,7 @@ LCFGChange lcfgctxlist_update( LCFGContextList * ctxlist,
 
   if ( !lcfgcontext_is_valid(new_ctx) ) return LCFG_CHANGE_ERROR;
 
-  LCFGContextNode * cur_node =
+  LCFGSListNode * cur_node =
     lcfgctxlist_find_node( ctxlist, lcfgcontext_get_name(new_ctx) );
 
   LCFGChange result = LCFG_CHANGE_ERROR;
@@ -482,7 +420,7 @@ LCFGChange lcfgctxlist_update( LCFGContextList * ctxlist,
     result = lcfgctxlist_append( ctxlist, new_ctx );
   } else {
 
-    LCFGContext * cur_ctx = lcfgctxlist_context(cur_node);
+    LCFGContext * cur_ctx = lcfgslist_data(cur_node);
     if ( lcfgcontext_equals( cur_ctx, new_ctx ) ) {
       result = LCFG_CHANGE_NONE;
     } else {
@@ -494,7 +432,7 @@ LCFGChange lcfgctxlist_update( LCFGContextList * ctxlist,
 	 list. */
 
       lcfgcontext_acquire(new_ctx);
-      cur_node->context = new_ctx;
+      cur_node->data = new_ctx;
 
       lcfgcontext_relinquish(cur_ctx);
 
@@ -654,7 +592,7 @@ bool lcfgctxlist_print( const LCFGContextList * ctxlist,
                         FILE * out ) {
   assert( ctxlist != NULL );
 
-  if ( lcfgctxlist_is_empty(ctxlist) ) return true;
+  if ( lcfgslist_is_empty(ctxlist) ) return true;
 
   /* Allocate a reasonable buffer which will be reused for each
      context. Note that if necessary it will be resized automatically. */
@@ -668,12 +606,12 @@ bool lcfgctxlist_print( const LCFGContextList * ctxlist,
 
   bool ok = true;
 
-  const LCFGContextNode * cur_node = NULL;
-  for ( cur_node = lcfgctxlist_head(ctxlist);
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(ctxlist);
         cur_node != NULL;
-        cur_node = lcfgctxlist_next(cur_node) ) {
+        cur_node = lcfgslist_next(cur_node) ) {
 
-    const LCFGContext * ctx = lcfgctxlist_context(cur_node);
+    const LCFGContext * ctx = lcfgslist_data(cur_node);
 
     /* Ignore any contexts which do not have a name or value */
     if ( !lcfgcontext_is_valid(ctx) || !lcfgcontext_has_value(ctx) )
@@ -769,12 +707,12 @@ int lcfgctxlist_max_priority( const LCFGContextList * ctxlist ) {
 
   int max_priority = 0;
 
-  const LCFGContextNode * cur_node = NULL;
-  for ( cur_node = lcfgctxlist_head(ctxlist);
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(ctxlist);
         cur_node != NULL;
-        cur_node = lcfgctxlist_next(cur_node) ) {
+        cur_node = lcfgslist_next(cur_node) ) {
 
-    int priority = lcfgcontext_get_priority(lcfgctxlist_context(cur_node));
+    int priority = lcfgcontext_get_priority(lcfgslist_data(cur_node));
     if ( priority > max_priority )
       max_priority = priority;
 
@@ -796,7 +734,7 @@ int lcfgctxlist_max_priority( const LCFGContextList * ctxlist ) {
 
 void lcfgctxlist_sort_by_priority( LCFGContextList * ctxlist ) {
 
-  if ( lcfgctxlist_size(ctxlist) < 2 ) return;
+  if ( lcfgslist_size(ctxlist) < 2 ) return;
 
   /* bubble sort since this should be a very short list */
 
@@ -804,18 +742,18 @@ void lcfgctxlist_sort_by_priority( LCFGContextList * ctxlist ) {
   while (swapped) {
     swapped=false;
 
-    LCFGContextNode * cur_node = NULL;
-    for ( cur_node = lcfgctxlist_head(ctxlist);
+    LCFGSListNode * cur_node = NULL;
+    for ( cur_node = lcfgslist_head(ctxlist);
           cur_node != NULL && cur_node->next != NULL;
-          cur_node = lcfgctxlist_next(cur_node) ) {
+          cur_node = lcfgslist_next(cur_node) ) {
 
-      LCFGContext * cur_ctx  = lcfgctxlist_context(cur_node);
-      LCFGContext * next_ctx = lcfgctxlist_context(cur_node->next);
+      LCFGContext * cur_ctx  = lcfgslist_data(cur_node);
+      LCFGContext * next_ctx = lcfgslist_data(cur_node->next);
 
       if ( lcfgcontext_get_priority(cur_ctx) >
            lcfgcontext_get_priority(next_ctx) ) {
-        cur_node->context       = next_ctx;
-        cur_node->next->context = cur_ctx;
+        cur_node->data       = next_ctx;
+        cur_node->next->data = cur_ctx;
         swapped = true;
       }
 
@@ -852,15 +790,15 @@ bool lcfgctxlist_diff( const LCFGContextList * ctxlist1,
                        time_t prevtime ) {
 
   bool changed = false;
-  const LCFGContextNode * cur_node;
+  const LCFGSListNode * cur_node;
 
   /* Check for missing nodes and also compare values for common nodes */
 
-  for ( cur_node = lcfgctxlist_head(ctxlist1);
+  for ( cur_node = lcfgslist_head(ctxlist1);
         cur_node != NULL && !changed;
-        cur_node = lcfgctxlist_next(cur_node) ) {
+        cur_node = lcfgslist_next(cur_node) ) {
 
-    const LCFGContext * cur_ctx = lcfgctxlist_context(cur_node);
+    const LCFGContext * cur_ctx = lcfgslist_data(cur_node);
 
     /* Ignore nodes without a name */
     if ( !lcfgcontext_is_valid(cur_ctx) ) continue;
@@ -903,11 +841,11 @@ bool lcfgctxlist_diff( const LCFGContextList * ctxlist1,
 
   /* If nothing changed so far then check for missing nodes the other way */
 
-  for ( cur_node = lcfgctxlist_head(ctxlist2);
+  for ( cur_node = lcfgslist_head(ctxlist2);
         cur_node != NULL && !changed;
-        cur_node = lcfgctxlist_next(cur_node) ) {
+        cur_node = lcfgslist_next(cur_node) ) {
 
-    const LCFGContext * cur_ctx = lcfgctxlist_context(cur_node);
+    const LCFGContext * cur_ctx = lcfgslist_data(cur_node);
 
     /* Ignore nodes without a name */
     if ( !lcfgcontext_is_valid(cur_ctx) ) continue;
