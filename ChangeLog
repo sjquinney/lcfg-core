@@ -1,6 +1,44 @@
-2017-07-07  SVN: new release
+2017-08-04  SVN: new release
 
-	* Release: 1.43.1
+	* Release: 1.44.0
+
+2017-08-04 12:42  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/iterator.c,
+	  packages/list.c, packages/rpm.c: Reworked package list to use the
+	  generic LCFGSListNode structure. Also added support for
+	  incorporating the context string into the primary key (along with
+	  the standard name and arch).
+
+2017-08-04 10:38  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: Added assertion to check that the
+	  LCFGDiffResource being inserted into the list is not NULL
+
+2017-08-04 10:37  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Added support for wildcard matching on the
+	  architecture in lcfgpackage_match
+
+2017-08-03 14:28  squinney@INF.ED.AC.UK
+
+	* utils/utils.c: Use const on more char * variables
+
+2017-08-03 10:28  squinney@INF.ED.AC.UK
+
+	* context/context.c, context/list.c, include/context.h, lcfg.yml:
+	  Minor tweaks, added 'const' to a few more things
+
+2017-07-27 13:25  squinney@INF.ED.AC.UK
+
+	* packages/package.c: lcfgpackage_build_message can now append a
+	  final newline when required. This is useful for generating error
+	  messages in perl where the final newline is significant for
+	  die/croak
+
+2017-07-07 11:32  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.43.1
 
 2017-07-07 11:31  squinney@INF.ED.AC.UK
 
