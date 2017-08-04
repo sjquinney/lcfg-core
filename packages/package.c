@@ -2713,7 +2713,9 @@ bool lcfgpackage_match( const LCFGPackage * pkg,
   const char * pkg_name = or_default( pkg->name, "" );
   bool match = ( strcmp( pkg_name, name ) == 0 );
 
-  if ( match ) {
+  /* Allows wildcard matching on the architecture */
+
+  if ( match && strcmp( arch, LCFG_PACKAGE_WILDCARD ) != 0 ) {
     const char * pkg_arch = or_default( pkg->arch, "" );
     match = ( strcmp( pkg_arch, arch ) == 0 );
   }
