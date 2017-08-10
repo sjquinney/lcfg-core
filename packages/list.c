@@ -822,7 +822,7 @@ LCFGChange lcfgpkglist_merge_list( LCFGPackageList * pkglist1,
       change = LCFG_CHANGE_ERROR;
 
       *msg = lcfgpackage_build_message( pkg,
-                                        "Failed to merge package lists: %s",
+                                        "Failed to merge package: %s",
                                         merge_msg );
 
     } else if ( merge_rc != LCFG_CHANGE_NONE ) {
@@ -906,8 +906,22 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
   /* For RPMs the default architecture is often required. For
      efficiency, look up the default architecture only once */
 
-  if ( defarch == NULL && style == LCFG_PKG_STYLE_RPM )
-    defarch = default_architecture();
+  switch (style)
+    {
+    case LCFG_PKG_STYLE_RPM:
+      options |= LCFG_OPT_NEWLINE;
+      if ( defarch == NULL ) defarch = default_architecture();
+      break;
+    case LCFG_PKG_STYLE_SPEC:
+      options |= LCFG_OPT_NEWLINE;
+      break;
+    case LCFG_PKG_STYLE_XML:
+    case LCFG_PKG_STYLE_CPP:
+    case LCFG_PKG_STYLE_SUMMARY:
+    case LCFG_PKG_STYLE_EVAL:
+      /* nothing to do */
+      break;
+    }
 
   bool ok = true;
 
@@ -1304,6 +1318,30 @@ LCFGPackageList * lcfgpkglist_match( const LCFGPackageList * pkglist,
   }
 
   return result;
+}
+
+/**
+ * @brief Retrieve first package in list
+ *
+ * Provides easy access to the first @c LCFGPackage in the @c
+ * LCFGPackageList. If the list is empty this will return a @c NULL
+ * value.
+ *
+ * @param[in] pkglist Pointer to @c LCFGPackageList
+ *
+ * @return Pointer to first @c LCFGPackage in list
+ *
+ */
+
+LCFGPackage * lcfgpkglist_first_package( const LCFGPackageList * pkglist ) {
+
+  const LCFGSListNode * first_node = lcfgslist_head(pkglist);
+
+  LCFGPackage * first = NULL;
+  if ( first_node != NULL )
+    first = lcfgslist_data(first_node);
+
+  return first;
 }
 
 /* eof */
