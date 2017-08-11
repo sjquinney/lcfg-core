@@ -121,7 +121,7 @@ void lcfgpkglist_destroy(LCFGPackageList * pkglist) {
  * does this by simply incrementing the reference count.
  *
  * To avoid memory leaks, once the reference to the structure is no
- * longer required the @c lcfgpkglist_release() function should be
+ * longer required the @c lcfgpkglist_relinquish() function should be
  * called.
  *
  * @param[in] pkglist Pointer to @c LCFGPackageList
@@ -449,7 +449,7 @@ LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * list,
  *
  * @param[in] list Pointer to @c LCFGPackageList to be searched
  * @param[in] name The name of the required package
- * @param[in] arch The architecture of the required package node
+ * @param[in] arch The architecture of the required package
  *
  * @return Boolean value which indicates presence of package in list
  *
@@ -882,9 +882,7 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
  * details. The generated string is written to the specified file
  * stream which must have already been opened for writing.
  *
- * Packages which are invalid will be ignored. Packages which are
- * inactive (i.e. they have a negative priority) will also be ignored
- * unless the @c LCFG_OPT_ALL_PRIORITIES option is specified.
+ * Packages which are invalid will be ignored.
  *
  * @param[in] pkglist Pointer to @c LCFGPackageList
  * @param[in] defarch Default architecture string (may be @c NULL)
