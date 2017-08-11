@@ -1,6 +1,55 @@
-2017-08-04  SVN: new release
+2017-08-11  SVN: new release
 
-	* Release: 1.44.0
+	* Release: 1.45.0
+
+2017-08-11 14:33  squinney@INF.ED.AC.UK
+
+	* include/profile.h, include/xml.h, lcfg.yml, profile/profile.c,
+	  xml/packages.c: Switched from LCFGPackageList to LCFGPackageSet
+
+2017-08-11 14:32  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/CMakeLists.txt, packages/rpm.c,
+	  packages/set.c: Added a new hash-based package collection. This
+	  uses a bit more memory than the LCFGPackageList interface but is
+	  MUCH faster for most operations
+
+2017-08-11 14:09  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Minor tweaks to docs
+
+2017-08-11 13:55  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c, resources/components/set.c,
+	  resources/tags/list.c: corrected various docs regarding
+	  lcfgcompset_relinquish
+
+2017-08-11 13:43  squinney@INF.ED.AC.UK
+
+	* resources/components/set.c: Tweaked how the resize function works
+	  to be consistent with package sets
+
+2017-08-11 10:51  squinney@INF.ED.AC.UK
+
+	* packages/list.c: use a huge buffer when printing out packages
+	  with derivations
+
+2017-08-10 13:34  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Added a lcfgpkglist_first_package to simplify
+	  fetching the first package in a list. Altered lcfgpkglist_print
+	  so it behaves like lcfgpackage_print and adds newlines for RPM
+	  and SPEC styles, without that the default output format is pretty
+	  much useless
+
+2017-08-04 14:57  squinney@INF.ED.AC.UK
+
+	* context/list.c, include/context.h, xml/read.c: Converted context
+	  list code over to using LCFGSListNode
+
+2017-08-04 12:42  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.44.0
 
 2017-08-04 12:42  squinney@INF.ED.AC.UK
 
