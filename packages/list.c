@@ -928,7 +928,11 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
   if ( style == LCFG_PKG_STYLE_XML )
     ok = ( fputs( "  <packages>\n", out ) >= 0 );
 
-  size_t buf_size = 256;
+  /* Derivation information is often enormous so initialise a much
+     larger buffer when that option is enabled */
+
+  size_t buf_size = options&LCFG_OPT_USE_META ? 8192 : 512;
+
   char * buffer = calloc( buf_size, sizeof(char) );
   if ( buffer == NULL ) {
     perror( "Failed to allocate memory for LCFG resource buffer" );
