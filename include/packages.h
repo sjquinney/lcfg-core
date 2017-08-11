@@ -341,6 +341,8 @@ bool lcfgpkglist_has_package( const LCFGPackageList * pkglist,
                               const char * name,
                               const char * arch );
 
+LCFGPackage * lcfgpkglist_first_package( const LCFGPackageList * pkglist );
+
 LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
                                       LCFGPackage * pkg,
                                       char ** msg )
@@ -427,6 +429,113 @@ void lcfgpkgiter_reset( LCFGPackageIterator * iterator );
 bool lcfgpkgiter_has_next( LCFGPackageIterator * iterator );
 
 LCFGPackage * lcfgpkgiter_next(LCFGPackageIterator * iterator);
+
+/* Set */
+
+#define LCFG_PKGSET_DEFAULT_SIZE 113
+#define LCFG_PKGSET_LOAD_INIT 0.5
+#define LCFG_PKGSET_LOAD_MAX  0.7
+
+struct LCFGPackageSet {
+  /*@{*/
+  LCFGPackageList ** packages;
+  size_t buckets;
+  size_t entries;
+  LCFGPkgListPK primary_key; /**< Controls which package fields are used as primary key */
+  LCFGMergeRule merge_rules; /**< Rules which control how packages are merged */
+  /*@}*/
+  unsigned int _refcount;
+};
+
+typedef struct LCFGPackageSet LCFGPackageSet;
+
+#define lcfgpkgset_is_empty(pkgset) (pkgset == NULL || (pkgset)->entries == 0)
+#define lcfgpkgset_size(pkgset) ((pkgset)->entries)
+
+LCFGPackageSet * lcfgpkgset_new();
+void lcfgpkgset_destroy(LCFGPackageSet * pkgset);
+
+void lcfgpkgset_acquire(LCFGPackageSet * pkgset);
+void lcfgpkgset_relinquish( LCFGPackageSet * pkgset );
+
+bool lcfgpkgset_set_merge_rules( LCFGPackageSet * pkgset,
+                                 LCFGMergeRule new_rules )
+  __attribute__((warn_unused_result));
+
+LCFGMergeRule lcfgpkgset_get_merge_rules( const LCFGPackageSet * pkgset );
+
+LCFGChange lcfgpkgset_merge_package( LCFGPackageSet * pkgset,
+                                     LCFGPackage * new_pkg,
+                                     char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgpkgset_merge_list( LCFGPackageSet * pkgset,
+                                  const LCFGPackageList * pkglist,
+                                  char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgpkgset_merge_set( LCFGPackageSet * pkgset1,
+                                 const LCFGPackageSet * pkgset2,
+                                 char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGPackageList * lcfgpkgset_find_list( const LCFGPackageSet * pkgset,
+                                        const char * want_name );
+
+LCFGPackage * lcfgpkgset_find_package( const LCFGPackageSet * pkgset,
+                                       const char * want_name,
+                                       const char * want_arch );
+
+bool lcfgpkgset_has_package( const LCFGPackageSet * pkgset,
+                             const char * want_name,
+                             const char * want_arch );
+
+bool lcfgpkgset_print( const LCFGPackageSet * pkgset,
+                       const char * defarch,
+                       LCFGPkgStyle style,
+                       LCFGOption options,
+                       FILE * out )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgpkgset_from_rpmlist( const char * filename,
+                                     LCFGPackageSet ** result,
+                                     LCFGOption options,
+                                     char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgpkgset_from_rpm_dir( const char * rpmdir,
+                                    LCFGPackageSet ** result,
+                                    char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
+                                  const char * defarch,
+                                  const char * filename,
+                                  time_t mtime,
+                                  char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgpkgset_from_cpp( const char * filename,
+                                LCFGPackageSet ** result,
+                                const char * defarch,
+                                LCFGOption options,
+                                char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
+                                 LCFGPackageSet * inactive,
+                                 const char * defarch,
+                                 const char * filename,
+                                 const char * rpminc,
+                                 time_t mtime,
+                                 char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGPackageSet * lcfgpkgset_match( const LCFGPackageSet * pkgset,
+                                   const char * want_name,
+                                   const char * want_arch,
+                                   const char * want_ver,
+                                   const char * want_rel );
 
 #endif /* LCFG_CORE_PACKAGES_H */
 

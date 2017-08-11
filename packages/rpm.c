@@ -558,6 +558,131 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
 }
 
 /**
+ * @brief Write a package set to an RPM file
+ *
+ * This can be used to create an rpmlist file which is used as input
+ * by the updaterpms tool.
+ *
+ * Each package in the set is formatted as an RPM filename using the
+ * @c lcfgpackage_to_rpm_filename() function.
+ *
+ * If the default architecture is not specified (i.e. it is set to 
+ * @c NULL) then the value returned by the @c default_architecture
+ * function will be used.
+ *
+ * The package set will be sorted so that the file is generated
+ * consistently.
+ *
+ * The file is securely created using a temporary file and it is only
+ * renamed to the target name if the contents differ. If the
+ * modification time is specified (i.e. non-zero) the mtime for the
+ * file will always be updated. If the package list is empty then an
+ * empty file will be created.
+ *
+ * @param[in] pkgset Pointer to @c LCFGPackageSet
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] filename Path file to be created
+ * @param[in] mtime Modification time to set on file (or zero)
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Integer value indicating type of change
+ *
+ */
+
+LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
+                                  const char * defarch,
+                                  const char * filename,
+                                  time_t mtime,
+                                  char ** msg ) {
+  assert( pkgset  != NULL );
+  assert( filename != NULL );
+
+  char * tmpfile = lcfgutils_safe_tmpfile(filename);
+
+  bool ok = true;
+  LCFGChange change = LCFG_CHANGE_ERROR;
+
+  FILE * tmpfh = NULL;
+  int tmpfd = mkstemp(tmpfile);
+  if ( tmpfd >= 0 )
+    tmpfh = fdopen( tmpfd, "w" );
+
+  if ( tmpfh == NULL ) {
+    if ( tmpfd >= 0 ) close(tmpfd);
+
+    lcfgutils_build_message( msg, "Failed to open temporary rpmlist file" );
+    ok = false;
+    goto cleanup;
+  }
+
+  /* For efficiency, ensure we have a default architecture */
+  if ( defarch == NULL )
+    defarch = default_architecture();
+
+  ok = lcfgpkgset_print( pkgset,
+                         defarch,
+                         LCFG_PKG_STYLE_RPM,
+                         LCFG_OPT_NEWLINE,
+                         tmpfh );
+
+  if (!ok) {
+    lcfgutils_build_message( msg, "Failed to write rpmlist file" );
+    goto cleanup;
+  } else {
+
+    if ( fclose(tmpfh) == 0 ) {
+      tmpfh = NULL; /* Avoids a further attempt to close in cleanup */
+    } else {
+      lcfgutils_build_message( msg, "Failed to close rpmlist file" );
+      ok = false;
+    }
+
+  }
+
+  /* rename tmpfile to target if different */
+
+  if ( ok ) {
+
+    if ( file_needs_update( filename, tmpfile ) ) {
+
+      if ( rename( tmpfile, filename ) == 0 ) {
+        change = LCFG_CHANGE_MODIFIED;
+      } else {
+        ok = false;
+      }
+
+    } else {
+      change = LCFG_CHANGE_NONE;
+    }
+
+  }
+
+  /* Even when the file is not changed the mtime might need to be updated */
+
+  if ( ok && mtime != 0 ) {
+    struct utimbuf times;
+    times.actime  = mtime;
+    times.modtime = mtime;
+    utime( filename, &times );
+  }
+
+ cleanup:
+
+  /* This might have already gone but call fclose and unlink to ensure
+     tidiness. Do not care about the result */
+
+  if ( tmpfh != NULL )
+    fclose(tmpfh);
+
+  if ( tmpfile != NULL ) {
+    unlink(tmpfile);
+    free(tmpfile);
+  }
+
+  return ( ok ? change : LCFG_CHANGE_ERROR );
+}
+
+/**
  * @brief Read package list from RPM directory
  *
  * This reads the contents of a directory and generates a new
@@ -569,6 +694,9 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
  *
  * An error will be returned if the directory does not exist or is
  * inaccessible.
+ *
+ * To avoid memory leaks, when the package list is no longer required
+ * the @c lcfgpkglist_relinquish() function should be called.
  *
  * @param[in] rpmdir Path to RPM directory
  * @param[out] result Reference to pointer for new @c LCFGPackageList
@@ -640,8 +768,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
         if ( lcfgpkglist_merge_package( *result, pkg, &merge_msg )
              == LCFG_CHANGE_ERROR ) {
           ok = false;
-          *msg = lcfgpackage_build_message( pkg,
-                           "Failed to merge into package list: %s",
+          *msg = lcfgpackage_build_message( pkg, "Merge failure: %s",
                          ( merge_msg != NULL ? merge_msg : "unknown error" ) );
         }
         free(merge_msg);
@@ -668,6 +795,126 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
     if ( *result != NULL ) {
       lcfgpkglist_destroy(*result);
+      *result = NULL;
+    }
+  }
+
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+}
+
+/**
+ * @brief Read package set from RPM directory
+ *
+ * This reads the contents of a directory and generates a new
+ * @c LCFGPackageSet using the names of files with the @c .rpm
+ * suffix. Note that it does not make any attempt to inspect the
+ * contents of the files to ensure that they really are valid
+ * RPMs. Dot files (starting with a '.') and any other files without
+ * the @c .rpm suffix will be ignored.
+ *
+ * An error will be returned if the directory does not exist or is
+ * inaccessible.
+ *
+ * To avoid memory leaks, when the package list is no longer required
+ * the @c lcfgpkgset_relinquish() function should be called.
+ *
+ * @param[in] rpmdir Path to RPM directory
+ * @param[out] result Reference to pointer for new @c LCFGPackageSet
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgpkgset_from_rpm_dir( const char * rpmdir,
+                                    LCFGPackageSet ** result,
+                                    char ** msg ) {
+
+  *result = NULL;
+
+  if ( isempty(rpmdir) ) {
+    lcfgutils_build_message( msg, "Invalid RPM directory" );
+    return LCFG_STATUS_ERROR;
+  }
+
+  DIR * dir;
+  if ( ( dir = opendir(rpmdir) ) == NULL ) {
+
+    if (errno == ENOENT) {
+      lcfgutils_build_message( msg, "Directory does not exist" );
+    } else {
+      lcfgutils_build_message( msg, "Directory is not readable" );
+    }
+
+    return LCFG_STATUS_ERROR;
+  }
+
+  /* Results */
+
+  bool ok = true;
+  *result = lcfgpkgset_new();
+  ok = lcfgpkgset_set_merge_rules( *result, LCFG_MERGE_RULE_KEEP_ALL );
+
+  /* Scan the directory for any non-hidden files with .rpm suffix */
+
+  struct dirent * dp;
+  struct stat sb;
+
+  while ( ok && ( dp = readdir(dir) ) != NULL ) {
+
+    char * filename = dp->d_name;
+    if ( *filename == '.' ) continue;
+
+    /* Just ignore anything which does not have a .rpm suffix */
+    if ( !lcfgutils_string_endswith( filename, rpm_file_suffix ) ) continue;
+
+    /* Only interested in files */
+    char * fullpath  = lcfgutils_catfile( rpmdir, filename );
+    if ( stat( fullpath, &sb ) == 0 && S_ISREG(sb.st_mode) ) {
+
+      LCFGPackage * pkg = NULL;
+      char * parse_msg = NULL;
+      LCFGStatus parse_rc = lcfgpackage_from_rpm_filename( filename, &pkg,
+                                                           &parse_msg );
+
+      if ( parse_rc == LCFG_STATUS_ERROR ) {
+
+        lcfgutils_build_message( msg, "Failed to parse '%s': %s", filename,
+                  ( parse_msg != NULL ? parse_msg : "unknown error" ) );
+
+      } else {
+
+        char * merge_msg = NULL;
+        if ( lcfgpkgset_merge_package( *result, pkg, &merge_msg )
+             == LCFG_CHANGE_ERROR ) {
+          ok = false;
+          *msg = lcfgpackage_build_message( pkg, "Merge failure: %s",
+                         ( merge_msg != NULL ? merge_msg : "unknown error" ) );
+        }
+        free(merge_msg);
+      }
+
+      free(parse_msg);
+
+      lcfgpackage_relinquish(pkg);
+
+    }
+
+    free(fullpath);
+
+  }
+
+  closedir(dir);
+
+  /* Finishing off */
+
+  if ( !ok ) {
+
+    if ( *msg == NULL )
+      lcfgutils_build_message( msg, "Failed to read RPM directory" );
+
+    if ( *result != NULL ) {
+      lcfgpkgset_destroy(*result);
       *result = NULL;
     }
   }
@@ -805,7 +1052,7 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
       if ( merge_rc == LCFG_CHANGE_ERROR ) {
         ok = false;
 	lcfgutils_build_message( msg,
-		  "Error at line %u: Failed to merge package into list: %s",
+		  "Error at line %u: Merge failure: %s",
 		  linenum, merge_msg );
 
       }
@@ -828,6 +1075,166 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 
     if ( *result != NULL ) {
       lcfgpkglist_destroy(*result);
+      *result = NULL;
+    }
+  }
+
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+}
+
+/**
+ * @brief Read package set from file
+ *
+ * This reads the contents of an rpmlist file and generates a new
+ * @c LCFGPackageSet. Blank lines and those beginning with a '#' (hash)
+ * character will be ignored. All other lines will be parsed as RPM
+ * filenames using the @c lcfgpackage_from_rpm_filename()
+ * function. The RPM filenames may have leading directories, they will
+ * be ignored.
+ *
+ * An error is returned if the file does not exist unless the
+ * @c LCFG_OPT_ALLOW_NOEXIST option is specified. If the file exists
+ * but is empty then an empty @c LCFGPackageSet is returned.
+ *
+ * If the @c LCFG_OPT_USE_META option is specified then derivation
+ * information will be set for each package which is based on the
+ * filename and line number.
+ *
+ * To avoid memory leaks, when the package list is no longer required
+ * the @c lcfgpkgset_relinquish() function should be called.
+ *
+ * @param[in] filename Path to rpmlist file
+ * @param[out] result Reference to pointer for new @c LCFGPackageSet
+ * @param[in] options Controls the behaviour of the process.
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgpkgset_from_rpmlist( const char * filename,
+                                     LCFGPackageSet ** result,
+                                     LCFGOption options,
+                                     char ** msg ) {
+
+  *result = NULL;
+
+  if ( isempty(filename) ) {
+    lcfgutils_build_message( msg, "Invalid filename" );
+    return LCFG_STATUS_ERROR;
+  }
+
+  FILE * fp;
+  if ( (fp = fopen(filename, "r")) == NULL ) {
+    LCFGStatus status = LCFG_STATUS_ERROR;
+
+    if (errno == ENOENT) {
+      if ( options&LCFG_OPT_ALLOW_NOEXIST ) {
+        /* No file so just create an empty list */
+        *result = lcfgpkgset_new();
+      } else {
+        lcfgutils_build_message( msg, "File does not exist" );
+      }
+    } else {
+      lcfgutils_build_message( msg, "File is not readable" );
+    }
+
+    return status;
+  }
+
+  /* Setup the getline buffer */
+
+  size_t line_len = 128;
+  char * line = malloc( line_len * sizeof(char) );
+  if ( line == NULL ) {
+    perror( "Failed to allocate memory whilst processing RPM list file" );
+    exit(EXIT_FAILURE);
+  }
+
+  /* Results */
+
+  bool include_meta = options & LCFG_OPT_USE_META;
+
+  bool ok = true;
+
+  *result = lcfgpkgset_new();
+  ok = lcfgpkgset_set_merge_rules( *result,
+                    LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_KEEP_ALL );
+
+  unsigned int linenum = 0;
+  while( ok && getline( &line, &line_len, fp ) != -1 ) {
+    linenum++;
+
+    char * trimmed = strdup(line);
+    lcfgutils_string_trim(trimmed);
+
+    /* Ignore empty lines */
+    if ( *trimmed == '\0' || *trimmed == '#' ) {
+      free(trimmed);
+      continue;
+    }
+
+    LCFGPackage * pkg = NULL;
+    char * parse_errmsg = NULL;
+    LCFGStatus parse_rc = lcfgpackage_from_rpm_filename( trimmed, &pkg,
+                                                         &parse_errmsg );
+
+    if ( parse_rc == LCFG_STATUS_ERROR ) {
+
+      if ( parse_errmsg == NULL ) {
+        lcfgutils_build_message( msg, "Error at line %u", linenum );
+      } else {
+        lcfgutils_build_message( msg, "Error at line %u: %s",
+				 linenum, parse_errmsg );
+        free(parse_errmsg);
+      }
+
+    } else {
+
+      if ( include_meta ) {
+        /* Simplest to use asprintf here since we have an unsigned int */
+        char * derivation = NULL;
+        int rc = asprintf( &derivation, "%s:%u", filename, linenum );
+        if ( rc < 0 || derivation == NULL ) {
+          perror( "Failed to build LCFG derivation string" );
+          exit(EXIT_FAILURE);
+        }
+
+        /* Ignore any problem with setting the derivation */
+        if ( !lcfgpackage_set_derivation( pkg, derivation ) )
+          free(derivation);
+      }
+
+      char * merge_msg = NULL;
+      LCFGChange merge_rc =
+        lcfgpkgset_merge_package( *result, pkg, &merge_msg );
+
+      if ( merge_rc == LCFG_CHANGE_ERROR ) {
+        ok = false;
+	lcfgutils_build_message( msg,
+		  "Error at line %u: Merge failure: %s",
+		  linenum, merge_msg );
+
+      }
+      free(merge_msg);
+
+    }
+    lcfgpackage_relinquish(pkg);
+
+    free(trimmed);
+  }
+  fclose(fp);
+  free(line);
+
+  /* Finishing off */
+
+  if ( !ok ) {
+
+    if ( *msg == NULL )
+      lcfgutils_build_message( msg, "Failed to parse RPM list file" );
+
+    if ( *result != NULL ) {
+      lcfgpkgset_destroy(*result);
       *result = NULL;
     }
   }
@@ -985,6 +1392,141 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
   }
 
   free(buffer);
+
+  if (ok) {
+    if ( fprintf( out, "#endif\n\n" ) < 0 )
+      ok = false;
+  }
+
+  if ( ok && rpminc != NULL ) {
+    if ( fprintf( out, "#include \"%s\"\n", rpminc ) < 0 )
+      ok = false;
+  }
+
+  /* Attempt to close the temporary file whatever happens */
+  if ( fclose(out) != 0 ) {
+    lcfgutils_build_message( msg, "Failed to close rpmcfg file" );
+    ok = false;
+  }
+
+  /* rename tmpfile to target if different */
+
+  if ( ok ) {
+
+    if ( file_needs_update( filename, tmpfile ) ) {
+
+      if ( rename( tmpfile, filename ) == 0 ) {
+        change = LCFG_CHANGE_MODIFIED;
+      } else {
+        ok = false;
+      }
+
+    } else {
+      change = LCFG_CHANGE_NONE;
+    }
+
+  }
+
+  /* Even when the file is not changed the mtime might need to be updated */
+
+  if ( ok && mtime != 0 ) {
+    struct utimbuf times;
+    times.actime  = mtime;
+    times.modtime = mtime;
+    utime( filename, &times );
+  }
+
+ cleanup:
+
+  if ( tmpfile != NULL ) {
+    unlink(tmpfile);
+    free(tmpfile);
+  }
+
+  return ( ok ? change : LCFG_CHANGE_ERROR );
+}
+
+/**
+ * @brief Write a package set to an rpmcfg file
+ *
+ * This can be used to create an rpmcfg file which is used as input by
+ * the updaterpms tool. The file is intended to be passed through the
+ * C Preprocessor (cpp), the packages are formatted using the
+ * @c lcfgpackage_to_cpp() function. The packages which are @e active for
+ * the current contexts are listed first. All other @e inactive
+ * packages are listed afterwards in an @c ALL_CONTEXTS block. They
+ * are used by the rpm cache stuff which needs to be able to cache all
+ * the packages, regardless of context.
+ *
+ * The package set will be sorted so that the file is generated
+ * consistently.
+ *
+ * The file is securely created using a temporary file and it is only
+ * renamed to the target name if the contents differ. If the
+ * modification time is specified (i.e. non-zero) the mtime for the
+ * file will always be updated. If the package list is empty then an
+ * empty file will be created.
+ *
+ * @param[in] active Pointer to active @c LCFGPackageSet
+ * @param[in] inactive Pointer to inactive @c LCFGPackageSet
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] filename Path of file to be created
+ * @param[in] rpminc Extra file to be included by cpp
+ * @param[in] mtime Modification time to set on file (or zero)
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Integer value indicating type of change for file
+ *
+ */
+
+LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
+                                 LCFGPackageSet * inactive,
+                                 const char * defarch,
+                                 const char * filename,
+                                 const char * rpminc,
+                                 time_t mtime,
+                                 char ** msg ) {
+
+  *msg = NULL;
+  LCFGChange change = LCFG_CHANGE_ERROR;
+  bool ok = true;
+
+  char * tmpfile = lcfgutils_safe_tmpfile(filename);
+
+  FILE * out = NULL;
+  int tmpfd = mkstemp(tmpfile);
+  if ( tmpfd >= 0 )
+    out = fdopen( tmpfd, "w" );
+
+  if ( out == NULL ) {
+    if ( tmpfd >= 0 ) close(tmpfd);
+
+    ok = false;
+    lcfgutils_build_message( msg, "Failed to open temporary rpmcfg file");
+    goto cleanup;
+  }
+
+  /* The sort is not just cosmetic - there needs to be a deterministic
+     order so that we can compare the RPM list for changes using cmp */
+
+  if ( !lcfgpkgset_is_empty(active) ) {
+    ok = lcfgpkgset_print( active, defarch, 
+                           LCFG_PKG_STYLE_CPP, LCFG_OPT_USE_META,
+                           out );
+  }
+
+  /* List the RPMs that would be present in other contexts. This is
+    used by the rpm cache stuff because we need to cache all the RPMs,
+    regardless of context. */
+
+  if ( fprintf( out, "#ifdef ALL_CONTEXTS\n" ) < 0 )
+    ok = false;
+
+  if ( ok && !lcfgpkgset_is_empty(inactive) ) {
+    ok = lcfgpkgset_print( active, defarch, 
+                           LCFG_PKG_STYLE_CPP, LCFG_OPT_USE_META,
+                           out );
+  }
 
   if (ok) {
     if ( fprintf( out, "#endif\n\n" ) < 0 )
