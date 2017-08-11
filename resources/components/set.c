@@ -171,7 +171,7 @@ void lcfgcompset_destroy(LCFGComponentSet * compset) {
  * does this by simply incrementing the reference count.
  *
  * To avoid memory leaks, once the reference to the structure is no
- * longer required the @c lcfgcompset_release() function should be
+ * longer required the @c lcfgcompset_relinquish() function should be
  * called.
  *
  * @param[in] compset Pointer to @c LCFGComponentSet

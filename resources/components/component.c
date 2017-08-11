@@ -205,7 +205,7 @@ void lcfgcomponent_destroy(LCFGComponent * comp) {
  * does this by simply incrementing the reference count.
  *
  * To avoid memory leaks, once the reference to the structure is no
- * longer required the @c lcfgcomponent_release() function should be
+ * longer required the @c lcfgcomponent_relinquish() function should be
  * called.
  *
  * @param[in] comp Pointer to @c LCFGComponent
