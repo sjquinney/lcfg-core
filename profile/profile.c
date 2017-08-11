@@ -68,7 +68,7 @@ LCFGProfile * lcfgprofile_new(void) {
  * will free all associated memory.
  *
  * This will call @c lcfgcompset_relinquish() for the list of
- * components. It will also call @c lcfgpkglist_relinquish() for the
+ * components. It will also call @c lcfgpkgset_relinquish() for the
  * lists of active and inactive packages.
  *
  * If the value of the pointer passed in is @c NULL then the function
@@ -87,10 +87,10 @@ void lcfgprofile_destroy(LCFGProfile * profile) {
   lcfgcompset_relinquish(profile->components);
   profile->components = NULL;
 
-  lcfgpkglist_relinquish(profile->active_packages);
+  lcfgpkgset_relinquish(profile->active_packages);
   profile->active_packages = NULL;
 
-  lcfgpkglist_relinquish(profile->inactive_packages);
+  lcfgpkgset_relinquish(profile->inactive_packages);
   profile->inactive_packages = NULL;
 
   free(profile->published_by);
@@ -493,7 +493,7 @@ LCFGChange lcfgprofile_insert_or_replace_component( LCFGProfile   * profile,
  *
  * This will @e merge the components and packages from the second
  * profile into the first. This is done using the @c
- * lcfgcompset_merge_components() and @c lcfgpkglist_merge_list() functions.
+ * lcfgcompset_merge_components() and @c lcfgpkgset_merge_list() functions.
  *
  * If a component from the second profile does NOT exist in the first
  * then it will only be added when the @c take_new_comps parameter is
@@ -545,23 +545,23 @@ LCFGChange lcfgprofile_merge( LCFGProfile * profile1,
 
   /* Merge active packages lists */
 
-  if ( !lcfgpkglist_is_empty(profile2->active_packages) ) {
+  if ( !lcfgpkgset_is_empty(profile2->active_packages) ) {
 
     LCFGChange merge_rc = LCFG_CHANGE_NONE;
 
     /* Create active package list for profile1 if necessary */
     if ( profile1->active_packages == NULL ) {
-      profile1->active_packages = lcfgpkglist_new();
-      if ( !lcfgpkglist_set_merge_rules( profile1->active_packages,
-                                         ACTIVE_PACKAGE_RULES ) ) {
+      profile1->active_packages = lcfgpkgset_new();
+      if ( !lcfgpkgset_set_merge_rules( profile1->active_packages,
+                                        ACTIVE_PACKAGE_RULES ) ) {
         merge_rc = LCFG_CHANGE_ERROR;
       }
     }
 
     if ( merge_rc != LCFG_CHANGE_ERROR )
-      merge_rc = lcfgpkglist_merge_list( profile1->active_packages,
-                                         profile2->active_packages,
-                                         msg );
+      merge_rc = lcfgpkgset_merge_set( profile1->active_packages,
+                                       profile2->active_packages,
+                                       msg );
 
     if ( merge_rc == LCFG_CHANGE_ERROR )
       change = LCFG_CHANGE_ERROR;
@@ -574,22 +574,22 @@ LCFGChange lcfgprofile_merge( LCFGProfile * profile1,
 
   /* Merge inactive packages lists */
 
-  if ( !lcfgpkglist_is_empty(profile2->inactive_packages) ) {
+  if ( !lcfgpkgset_is_empty(profile2->inactive_packages) ) {
     LCFGChange merge_rc = LCFG_CHANGE_NONE;
 
     /* Create inactive package list for profile1 if necessary */
     if ( profile1->inactive_packages == NULL ) {
-      profile1->inactive_packages = lcfgpkglist_new();
-      if ( !lcfgpkglist_set_merge_rules( profile1->inactive_packages,
+      profile1->inactive_packages = lcfgpkgset_new();
+      if ( !lcfgpkgset_set_merge_rules( profile1->inactive_packages,
                                          INACTIVE_PACKAGE_RULES ) ) {
         merge_rc = LCFG_CHANGE_ERROR;
       }
     }
 
     if ( merge_rc != LCFG_CHANGE_ERROR )
-      merge_rc = lcfgpkglist_merge_list( profile1->inactive_packages,
-                                         profile2->inactive_packages,
-                                         msg );
+      merge_rc = lcfgpkgset_merge_set( profile1->inactive_packages,
+                                       profile2->inactive_packages,
+                                       msg );
 
     if ( merge_rc == LCFG_CHANGE_ERROR )
       change = LCFG_CHANGE_ERROR;
@@ -668,7 +668,7 @@ bool lcfgprofile_print_metadata( const LCFGProfile * profile, FILE * out ) {
  * This can be used to create an rpmcfg file which is used as input by
  * the updaterpms tool. The file is intended to be passed through the
  * C Preprocessor (cpp). The file is generated using the @c
- * lcfgpkglist_to_rpmcfg() function.
+ * lcfgpkgset_to_rpmcfg() function.
  *
  * @param[in] profile Pointer to @c LCFGProfile
  * @param[in] defarch Default architecture string (may be @c NULL)
@@ -688,7 +688,7 @@ LCFGChange lcfgprofile_write_rpmcfg( const LCFGProfile * profile,
   assert( profile != NULL );
   assert( filename != NULL );
 
-  return lcfgpkglist_to_rpmcfg( profile->active_packages,
+  return lcfgpkgset_to_rpmcfg( profile->active_packages,
                                 profile->inactive_packages,
                                 defarch,
                                 filename,
@@ -740,15 +740,15 @@ bool lcfgprofile_print(const LCFGProfile * profile,
 
   }
 
-  if ( ok && show_pkgs && !lcfgpkglist_is_empty(profile->active_packages) ) {
+  if ( ok && show_pkgs && !lcfgpkgset_is_empty(profile->active_packages) ) {
 
     if ( fputs( "\n", out ) < 0 )
       ok = false;
 
     if (ok) {
-      ok = lcfgpkglist_print( profile->active_packages,
-                              defarch, pkg_style,
-			      LCFG_OPT_NONE, out );
+      ok = lcfgpkgset_print( profile->active_packages,
+                             defarch, pkg_style,
+                             LCFG_OPT_NONE, out );
     }
 
   }

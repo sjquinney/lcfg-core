@@ -111,8 +111,8 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
-				     LCFGPackageList ** active,
-				     LCFGPackageList ** inactive,
+				     LCFGPackageSet ** active,
+				     LCFGPackageSet ** inactive,
 				     const char * base_context,
 				     const char * base_derivation,
 				     const LCFGContextList * ctxlist,

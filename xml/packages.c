@@ -396,8 +396,8 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
  * @brief Process XML for all packages
  *
  * @param[in] reader Pointer to XML reader
- * @param[out] active Reference to pointer to new @c LCFGPackageList for active packages
- * @param[out] inactive  Reference to pointer to new @c LCFGPackageList for inactive packages
+ * @param[out] active Reference to pointer to new @c LCFGPackageSet for active packages
+ * @param[out] inactive  Reference to pointer to new @c LCFGPackageSet for inactive packages
  * @param[in] base_context A context which will be applied to each package
  * @param[in] base_derivation A derivation which will be applied to each package
  * @param[in] ctxlist An @c LCFGContextList which is used to evaluate priority
@@ -408,8 +408,8 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
  */
 
 LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
-                                     LCFGPackageList ** active,
-                                     LCFGPackageList ** inactive,
+                                     LCFGPackageSet ** active,
+                                     LCFGPackageSet ** inactive,
                                      const char * base_context,
                                      const char * base_derivation,
                                      const LCFGContextList * ctxlist,
@@ -429,15 +429,15 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
 
   /* Declare variables here which are used in the 'cleanup' section */
 
-  *active   = lcfgpkglist_new();
-  *inactive = lcfgpkglist_new();
+  *active   = lcfgpkgset_new();
+  *inactive = lcfgpkgset_new();
 
   LCFGStatus status = LCFG_STATUS_OK;
   int linenum = 0;
 
   /* Any conflicts for "active" packages are resolved according to priority */
 
-  if ( !lcfgpkglist_set_merge_rules( *active, ACTIVE_PACKAGE_RULES ) ) {
+  if ( !lcfgpkgset_set_merge_rules( *active, ACTIVE_PACKAGE_RULES ) ) {
     status = lcfgxml_error( msg,
                    "Failed to set merge rules for active packages list" );
     goto cleanup;
@@ -445,7 +445,7 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
 
   /* All other "inactive" packages are stored separately */
 
-  if ( !lcfgpkglist_set_merge_rules( *inactive, INACTIVE_PACKAGE_RULES ) ) {
+  if ( !lcfgpkgset_set_merge_rules( *inactive, INACTIVE_PACKAGE_RULES ) ) {
     status = lcfgxml_error( msg,
                    "Failed to set merge rules for inactive packages list" );
     goto cleanup;
@@ -484,10 +484,10 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
           LCFGChange rc;
           char * merge_msg = NULL;
           if ( lcfgpackage_is_active(pkg) ) {
-            rc = lcfgpkglist_merge_package( *active, pkg,
+            rc = lcfgpkgset_merge_package( *active, pkg,
                                             &merge_msg );
           } else {
-            rc = lcfgpkglist_merge_package( *inactive, pkg,
+            rc = lcfgpkgset_merge_package( *inactive, pkg,
 					    &merge_msg );
           }
 
@@ -549,10 +549,10 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
     if ( *msg == NULL )
       lcfgxml_error( msg, "Something bad happened whilst processing packages at line %d.", linenum );
 
-    lcfgpkglist_relinquish(*active);
+    lcfgpkgset_relinquish(*active);
     *active = NULL;
 
-    lcfgpkglist_relinquish(*inactive);
+    lcfgpkgset_relinquish(*inactive);
     *inactive = NULL;
 
   }

@@ -31,8 +31,8 @@ struct LCFGProfile {
   char * server_version;      /**< Version of server which generated profile */
   char * last_modified;       /**< Timestamp for most recently modified source file */
   char * last_modified_file;  /**< Name for most recently modified source file */
-  LCFGPackageList   * active_packages;   /**< List of packages which are active in current contexts */
-  LCFGPackageList   * inactive_packages; /**< List of packages which are inactive in current contexts */
+  LCFGPackageSet   * active_packages;   /**< List of packages which are active in current contexts */
+  LCFGPackageSet   * inactive_packages; /**< List of packages which are inactive in current contexts */
   LCFGComponentSet * components;        /**< List of components */
   time_t mtime;               /**< Modification time of input file (seconds since epoch) */
 };
