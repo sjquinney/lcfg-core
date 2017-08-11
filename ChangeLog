@@ -1,6 +1,14 @@
 2017-08-11  SVN: new release
 
-	* Release: 1.45.0
+	* Release: 1.45.1
+
+2017-08-11 14:37  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, lcfg.yml, packages/set.c: Minor docs fixes
+
+2017-08-11 14:33  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.45.0
 
 2017-08-11 14:33  squinney@INF.ED.AC.UK
 
