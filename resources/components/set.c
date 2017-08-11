@@ -38,42 +38,45 @@ static void lcfgcompset_resize( LCFGComponentSet * compset ) {
       ( (double) compset->entries / LCFG_COMPSET_LOAD_INIT ) + 1;
   }
 
-  if ( want_buckets > compset->buckets || compset->components == NULL ) {
+  LCFGComponent ** cur_set = compset->components;
+  size_t cur_buckets = compset->buckets;
 
-    LCFGComponent ** old_set = compset->components;
-    size_t old_buckets = compset->buckets;
+  /* Decide if a resize is actually required */
 
-    LCFGComponent ** new_set = calloc( (size_t) want_buckets,
-                                       sizeof(LCFGComponent *) );
-    if ( new_set == NULL ) {
-      perror( "Failed to allocate memory for LCFG component set" );
-      exit(EXIT_FAILURE);
-    }
+  if ( cur_set != NULL && want_buckets <= cur_buckets ) return;
 
-    compset->components = new_set;
-    compset->entries    = 0;
-    compset->buckets    = want_buckets;
+  LCFGComponent ** new_set = calloc( (size_t) want_buckets,
+                                     sizeof(LCFGComponent *) );
+  if ( new_set == NULL ) {
+    perror( "Failed to allocate memory for LCFG component set" );
+    exit(EXIT_FAILURE);
+  }
 
-    if ( old_set != NULL && compset->entries > 0 ) {
+  compset->components = new_set;
+  compset->entries    = 0;
+  compset->buckets    = want_buckets;
 
-      unsigned int i;
-      for ( i=0; i<old_buckets; i++ ) {
-        LCFGComponent * comp = old_set[i];
-        if (comp) {
-          LCFGChange rc = lcfgcompset_insert_component( compset, comp );
-          if ( rc == LCFG_CHANGE_ERROR ) {
-            fprintf( stderr, "Failed to resize component set\n" );
-            exit(EXIT_FAILURE);
-          }
+  if ( cur_set != NULL ) {
 
-          /* Remove reference to comp from old_set */
-          lcfgcomponent_relinquish(comp);
+    unsigned int i;
+    for ( i=0; i<cur_buckets; i++ ) {
+      LCFGComponent * comp = cur_set[i];
+
+      if (comp) {
+        LCFGChange rc = lcfgcompset_insert_component( compset, comp );
+        if ( rc == LCFG_CHANGE_ERROR ) {
+          fprintf( stderr, "Failed to resize component set\n" );
+          exit(EXIT_FAILURE);
         }
+
+        /* Remove reference to comp from cur_set */
+        lcfgcomponent_relinquish(comp);
+        cur_set[i] = NULL;
       }
 
-      free(old_set);
     }
 
+    free(cur_set);
   }
 
 }
