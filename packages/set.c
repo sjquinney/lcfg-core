@@ -694,8 +694,8 @@ LCFGPackage * lcfgpkgset_find_package( const LCFGPackageSet * pkgset,
  * set is empty then a false value will be returned.
  *
  * @param[in] pkgset Pointer to @c LCFGPackageSet to be searched
- * @param[in] name The name of the required package
- * @param[in] arch The architecture of the required package
+ * @param[in] want_name The name of the required package
+ * @param[in] want_arch The architecture of the required package
  *
  * @return Boolean value which indicates presence of package in set
  *
@@ -1154,10 +1154,10 @@ LCFGStatus lcfgpkgset_from_cpp( const char * filename,
  * required the @c lcfgpkgset_relinquish() function should be called.
  *
  * @param[in] pkgset Pointer to @c LCFGPackageSet
- * @param[in] name Package name to match (or @c NULL)
- * @param[in] arch Package architecture to match (or @c NULL)
- * @param[in] ver Package version to match (or @c NULL)
- * @param[in] rel Package release to match (or @c NULL)
+ * @param[in] want_name Package name to match (or @c NULL)
+ * @param[in] want_arch Package architecture to match (or @c NULL)
+ * @param[in] want_ver Package version to match (or @c NULL)
+ * @param[in] want_rel Package release to match (or @c NULL)
  *
  * @return Pointer to new @c LCFGPackageSet of matches
  *

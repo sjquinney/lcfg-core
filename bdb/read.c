@@ -357,7 +357,7 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
  *
  * @param[in] filename Path to the Berkeley DB file.
  * @param[out] result Reference to the pointer for the @c LCFGComponent struct.
- * @param[in] compname Name of required component
+ * @param[in] comp_name Name of required component
  * @param[in] namespace Namespace for the DB keys (usually the nodename)
  * @param[in] options Controls the behaviour of the process.
  * @param[out] msg Pointer to any diagnostic messages
