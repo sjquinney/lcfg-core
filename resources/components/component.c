@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-06-20 15:35:35 +0100 (Tue, 20 Jun 2017) $
- * $Revision: 33139 $
+ * $Date: 2017-08-11 14:55:09 +0100 (Fri, 11 Aug 2017) $
+ * $Revision: 33314 $
  */
 
 #include <stdbool.h>
@@ -205,7 +205,7 @@ void lcfgcomponent_destroy(LCFGComponent * comp) {
  * does this by simply incrementing the reference count.
  *
  * To avoid memory leaks, once the reference to the structure is no
- * longer required the @c lcfgcomponent_release() function should be
+ * longer required the @c lcfgcomponent_relinquish() function should be
  * called.
  *
  * @param[in] comp Pointer to @c LCFGComponent

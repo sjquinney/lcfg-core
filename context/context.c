@@ -163,7 +163,7 @@ void lcfgcontext_relinquish( LCFGContext * ctx ) {
  */
 
 bool lcfgcontext_is_valid( const LCFGContext * ctx ) {
-  return ( ctx != NULL && lcfgcontext_has_name(ctx) );
+  return ( ctx != NULL && !isempty(ctx->name) );
 }
 
 /**
@@ -405,7 +405,7 @@ bool lcfgcontext_unset_value( LCFGContext * ctx ) {
   return true;
 }
 
-static char * valid_false_values[] = {
+static const char * valid_false_values[] = {
   "false", "no", "off", "0", "",
   NULL
 };
@@ -434,7 +434,7 @@ bool lcfgcontext_is_false( const LCFGContext * ctx ) {
 
   bool is_false = false;
 
-  char ** val_ptr;
+  const char ** val_ptr;
   for ( val_ptr = valid_false_values; *val_ptr != NULL; val_ptr++ ) {
     if ( strcasecmp( ctx->value, *val_ptr ) == 0 ) {
       is_false = true;
@@ -530,7 +530,7 @@ bool lcfgcontext_set_priority( LCFGContext * ctx, int priority ) {
  * longer required you should call the @c lcfgcontext_relinquish()
  * function.
  *
- * @param[in] input The context specification string.
+ * @param[in] ctx_str The context specification string.
  * @param[in] priority The integer priority to be set for the new context.
  * @param[out] result Reference to the pointer for the @c LCFGContext struct.
  * @param[out] msg Pointer to any diagnostic messages.
@@ -539,32 +539,28 @@ bool lcfgcontext_set_priority( LCFGContext * ctx, int priority ) {
  *
  */
 
-LCFGStatus lcfgcontext_from_string( const char * input, int priority,
+LCFGStatus lcfgcontext_from_string( const char * ctx_str, int priority,
                                     LCFGContext ** result,
                                     char ** msg ) {
 
   *result = NULL;
 
-  if ( input == NULL )
-    return invalid_context( msg, "undefined value" );
-
-  char * ctx_str = (char *) input;
+  if ( isempty(ctx_str) ) return invalid_context( msg, "undefined value" );
 
   /* skip past any leading whitespace */
   while ( isspace(*ctx_str) ) ctx_str++;
 
-  if ( *ctx_str == '\0' )
-    return invalid_context( msg, "empty string" );
+  if ( isempty(ctx_str) ) return invalid_context( msg, "empty string" );
 
   /* Find the '=' character which separates the context name and value */
 
-  char * location = strchr( ctx_str, '=' );
-  if ( location == NULL )
+  const char * sep_location = strchr( ctx_str, '=' );
+  if ( sep_location == NULL )
     return invalid_context( msg, "missing '=' assignment character" );
 
   /* Ignore any whitespace after the name (before the '=') */
 
-  size_t name_len = location - ctx_str;
+  size_t name_len = sep_location - ctx_str;
   while ( name_len > 0 && isspace( *( ctx_str + name_len - 1 ) ) ) name_len--;
   if ( name_len == 0 )
     return invalid_context( msg, "missing name" );
@@ -575,20 +571,20 @@ LCFGStatus lcfgcontext_from_string( const char * input, int priority,
   bool ok = lcfgcontext_set_name(  ctx, name );
   if ( ok ) {
 
-    char * start = location + 1;
+    const char * value_start = sep_location + 1;
 
     /* skip past any leading whitespace */
-    while ( isspace(*start) ) start++;
+    while ( isspace(*value_start) ) value_start++;
 
-    if ( *start != '\0' ) {
+    if ( *value_start != '\0' ) {
 
       /* Move backwards past any trailing whitespace (including newline) */
-      size_t value_len = strlen(start);
-      while ( value_len > 0 && isspace( *( start + value_len - 1 ) ) )
+      size_t value_len = strlen(value_start);
+      while ( value_len > 0 && isspace( *( value_start + value_len - 1 ) ) )
         value_len--;
 
       if ( value_len > 0 ) {
-        char * value = strndup( start, value_len );
+        char * value = strndup( value_start, value_len );
         ok = lcfgcontext_set_value( ctx, value );
 
         if (!ok) {
@@ -660,14 +656,15 @@ ssize_t lcfgcontext_to_string( const LCFGContext * ctx,
                                char ** result, size_t * size ) {
   assert( ctx != NULL );
 
+  if ( !lcfgcontext_is_valid(ctx) ) return -1;
+
   const char * name = lcfgcontext_get_name(ctx);
-  if ( name == NULL ) return -1;
 
   size_t name_len = strlen(name);
 
   /* Might have a value */
 
-  char * value = NULL;
+  const char * value = NULL;
   size_t value_len = 0;
   if ( lcfgcontext_has_value(ctx) ) {
     value = lcfgcontext_get_value(ctx);
@@ -780,10 +777,8 @@ bool lcfgcontext_same_name( const LCFGContext * ctx1,
                             const LCFGContext * ctx2 ) {
   assert( ctx1 != NULL && ctx2 != NULL );
 
-  const char * name1 = lcfgcontext_has_name(ctx1) ?
-                       lcfgcontext_get_name(ctx1) : "";
-  const char * name2 = lcfgcontext_has_name(ctx2) ?
-                       lcfgcontext_get_name(ctx2) : "";
+  const char * name1 = or_default( ctx1->name, "" );
+  const char * name2 = or_default( ctx2->name, "" );
 
   return ( strcmp( name1, name2 ) == 0 );
 }
@@ -807,10 +802,8 @@ bool lcfgcontext_same_value( const LCFGContext * ctx1,
                              const LCFGContext * ctx2 ) {
   assert( ctx1 != NULL && ctx2 != NULL );
 
-  const char * value1 = lcfgcontext_has_value(ctx1) ?
-                        lcfgcontext_get_value(ctx1) : "";
-  const char * value2 = lcfgcontext_has_value(ctx2) ?
-                        lcfgcontext_get_value(ctx2) : "";
+  const char * value1 = or_default( ctx1->value, "" );
+  const char * value2 = or_default( ctx2->value, "" );
 
   return ( strcmp( value1, value2 ) == 0 );
 }
@@ -1077,6 +1070,28 @@ char * lcfgcontext_combine_expressions( const char * expr1,
   }
 
   return new_expr;
+}
+
+/**
+ * @brief Test if context matches name
+ *
+ * This compares the @e name of the @c LCFGContext with the specified
+ * string.
+ *
+ * @param[in] ctx Pointer to @c LCFGContext
+ * @param[in] want_name The name to check for a match
+ *
+ * @return boolean indicating equality of values
+ *
+ */
+
+bool lcfgcontext_match( const LCFGContext * ctx, const char * want_name ) {
+  assert( ctx != NULL );
+  assert( want_name != NULL );
+
+  const char * ctx_name = or_default( ctx->name, "" );
+
+  return ( strcmp( ctx_name, want_name ) == 0 );
 }
 
 /* eof */

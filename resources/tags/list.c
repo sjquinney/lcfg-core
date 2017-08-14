@@ -3,8 +3,8 @@
  * @brief Functions for working with lists of LCFG resource tags
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-06-08 15:38:38 +0100 (Thu, 08 Jun 2017) $
- * $Revision: 33032 $
+ * $Date: 2017-08-11 14:55:09 +0100 (Fri, 11 Aug 2017) $
+ * $Revision: 33314 $
  */
 
 #include <stdio.h>
@@ -176,7 +176,7 @@ void lcfgtaglist_destroy(LCFGTagList * taglist) {
  * does this by simply incrementing the reference count.
  *
  * To avoid memory leaks, once the reference to the structure is no
- * longer required the @c lcfgtaglist_release() function should be
+ * longer required the @c lcfgtaglist_relinquish() function should be
  * called.
  *
  * @param[in] taglist Pointer to @c LCFGTagList

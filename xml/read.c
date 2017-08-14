@@ -530,12 +530,14 @@ LCFGChange lcfgprofile_overrides_context( LCFGProfile * main_profile,
   size_t buf_size   = 0;
   char * ctx_as_str = NULL;
 
-  LCFGContextNode * cur_node = NULL;
-  for ( cur_node = lcfgctxlist_head(ctxlist);
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(ctxlist);
         cur_node != NULL && change != LCFG_CHANGE_ERROR;
-        cur_node = lcfgctxlist_next(cur_node) ) {
+        cur_node = lcfgslist_next(cur_node) ) {
 
-    const LCFGContext * ctx = lcfgctxlist_context(cur_node);
+    const LCFGContext * ctx = lcfgslist_data(cur_node);
+    if ( !lcfgcontext_is_valid(ctx) ) continue;
+
     char * ctxvarfile = lcfgcontext_profile_path( ctx, override_dir, ".xml" );
 
     /* Not all contexts can be associated with valid filenames */

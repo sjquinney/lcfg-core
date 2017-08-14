@@ -368,6 +368,7 @@ LCFGChange lcfgdiffcomponent_insert_next( LCFGDiffComponent * list,
                                           LCFGSListNode     * node,
                                           LCFGDiffResource  * item ) {
   assert( list != NULL );
+  assert( item != NULL );
 
   LCFGSListNode * new_node = lcfgslistnode_new(item);
   if ( new_node == NULL ) return LCFG_CHANGE_ERROR;

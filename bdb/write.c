@@ -132,7 +132,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       memset( &key,  0, sizeof(DBT) );
       memset( &data, 0, sizeof(DBT) );
 
-      keylen = lcfgresource_build_key( resource,
+      keylen = lcfgresource_build_key( resource->name,
                                        compname,
                                        namespace,
                                        LCFG_RESOURCE_SYMBOL_DERIVATION,
@@ -171,7 +171,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       memset( &key,  0, sizeof(DBT) );
       memset( &data, 0, sizeof(DBT) );
 
-      keylen = lcfgresource_build_key( resource,
+      keylen = lcfgresource_build_key( resource->name,
                                        compname,
                                        namespace,
                                        LCFG_RESOURCE_SYMBOL_TYPE,
@@ -213,7 +213,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       memset( &key,  0, sizeof(DBT) );
       memset( &data, 0, sizeof(DBT) );
 
-      keylen = lcfgresource_build_key( resource,
+      keylen = lcfgresource_build_key( resource->name,
                                        compname,
                                        namespace,
                                        LCFG_RESOURCE_SYMBOL_CONTEXT,
@@ -254,7 +254,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       memset( &key,  0, sizeof(DBT) );
       memset( &data, 0, sizeof(DBT) );
 
-      keylen = lcfgresource_build_key( resource,
+      keylen = lcfgresource_build_key( resource->name,
                                        compname,
                                        namespace,
                                        LCFG_RESOURCE_SYMBOL_PRIORITY,
@@ -293,7 +293,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
     memset( &key,  0, sizeof(DBT) );
     memset( &data, 0, sizeof(DBT) );
 
-    keylen = lcfgresource_build_key( resource,
+    keylen = lcfgresource_build_key( resource->name,
                                      compname,
                                      namespace,
                                      LCFG_RESOURCE_SYMBOL_VALUE,

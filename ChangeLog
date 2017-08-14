@@ -1,6 +1,154 @@
-2017-06-28  SVN: new release
+2017-08-11  SVN: new release
 
-	* Release: 1.42.4
+	* Release: 1.45.1
+
+2017-08-11 14:37  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, lcfg.yml, packages/set.c: Minor docs fixes
+
+2017-08-11 14:33  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.45.0
+
+2017-08-11 14:33  squinney@INF.ED.AC.UK
+
+	* include/profile.h, include/xml.h, lcfg.yml, profile/profile.c,
+	  xml/packages.c: Switched from LCFGPackageList to LCFGPackageSet
+
+2017-08-11 14:32  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/CMakeLists.txt, packages/rpm.c,
+	  packages/set.c: Added a new hash-based package collection. This
+	  uses a bit more memory than the LCFGPackageList interface but is
+	  MUCH faster for most operations
+
+2017-08-11 14:09  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Minor tweaks to docs
+
+2017-08-11 13:55  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c, resources/components/set.c,
+	  resources/tags/list.c: corrected various docs regarding
+	  lcfgcompset_relinquish
+
+2017-08-11 13:43  squinney@INF.ED.AC.UK
+
+	* resources/components/set.c: Tweaked how the resize function works
+	  to be consistent with package sets
+
+2017-08-11 10:51  squinney@INF.ED.AC.UK
+
+	* packages/list.c: use a huge buffer when printing out packages
+	  with derivations
+
+2017-08-10 13:34  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Added a lcfgpkglist_first_package to simplify
+	  fetching the first package in a list. Altered lcfgpkglist_print
+	  so it behaves like lcfgpackage_print and adds newlines for RPM
+	  and SPEC styles, without that the default output format is pretty
+	  much useless
+
+2017-08-04 14:57  squinney@INF.ED.AC.UK
+
+	* context/list.c, include/context.h, xml/read.c: Converted context
+	  list code over to using LCFGSListNode
+
+2017-08-04 12:42  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.44.0
+
+2017-08-04 12:42  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/iterator.c,
+	  packages/list.c, packages/rpm.c: Reworked package list to use the
+	  generic LCFGSListNode structure. Also added support for
+	  incorporating the context string into the primary key (along with
+	  the standard name and arch).
+
+2017-08-04 10:38  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: Added assertion to check that the
+	  LCFGDiffResource being inserted into the list is not NULL
+
+2017-08-04 10:37  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Added support for wildcard matching on the
+	  architecture in lcfgpackage_match
+
+2017-08-03 14:28  squinney@INF.ED.AC.UK
+
+	* utils/utils.c: Use const on more char * variables
+
+2017-08-03 10:28  squinney@INF.ED.AC.UK
+
+	* context/context.c, context/list.c, include/context.h, lcfg.yml:
+	  Minor tweaks, added 'const' to a few more things
+
+2017-07-27 13:25  squinney@INF.ED.AC.UK
+
+	* packages/package.c: lcfgpackage_build_message can now append a
+	  final newline when required. This is useful for generating error
+	  messages in perl where the final newline is significant for
+	  die/croak
+
+2017-07-07 11:32  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.43.1
+
+2017-07-07 11:31  squinney@INF.ED.AC.UK
+
+	* resources/components/set.c: Fixed logic in
+	  lcfgcompset_ngeneric_components so that it actually returns
+	  something other than an empty list
+
+2017-07-03 10:00  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.43.0
+
+2017-07-03 09:33  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, lcfg.yml: Fixed a couple of memory leaks
+
+2017-06-30 14:45  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, lcfg.yml: Completely reworked how components are
+	  loaded from the DB. The previous version was somewhat inefficient
+	  and leaked memory
+
+2017-06-30 13:00  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, include/resources.h, resources/resource.c:
+	  lcfgresource_insert_key, lcfgresource_build_key and
+	  lcfgresource_compute_key_length now take a resource name rather
+	  than the resource itself to allow wider reuse
+
+2017-06-29 13:04  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.42.5
+
+2017-06-29 13:04  squinney@INF.ED.AC.UK
+
+	* include/resources.h: made a couple of mutation functions private
+
+2017-06-29 13:04  squinney@INF.ED.AC.UK
+
+	* resources/mutate.c: Added docs
+
+2017-06-29 10:53  squinney@INF.ED.AC.UK
+
+	* resources/mutate.c: Set errno to ENOTSUP when resource is not a
+	  string or list
+
+2017-06-29 10:43  squinney@INF.ED.AC.UK
+
+	* include/resources.h, lcfg.yml, resources/mutate.c: Tidied up
+	  mutator functions
+
+2017-06-28 15:13  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.42.4
 
 2017-06-28 14:22  squinney@INF.ED.AC.UK
 

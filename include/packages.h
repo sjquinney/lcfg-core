@@ -3,8 +3,8 @@
  * @brief LCFG package handling library
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-29 14:28:10 +0100 (Mon, 29 May 2017) $
- * $Revision: 32963 $
+ * $Date: 2017-08-11 15:32:28 +0100 (Fri, 11 Aug 2017) $
+ * $Revision: 33316 $
  */
 
 #ifndef LCFG_CORE_PACKAGES_H
@@ -16,6 +16,7 @@
 
 #include "common.h"
 #include "context.h"
+#include "utils.h"
 
 const char * default_architecture(void);
 
@@ -265,20 +266,11 @@ unsigned long lcfgpackage_hash( const LCFGPackage * pkg );
 
 /* Package Lists */
 
-/**
- * @brief A structure to wrap an LCFG package as a single-linked list item
- */
-
-struct LCFGPackageNode {
-  LCFGPackage * pkg; /**< Pointer to the package structure */
-  struct LCFGPackageNode * next;
-};
-
-typedef struct LCFGPackageNode LCFGPackageNode;
-
-LCFGPackageNode * lcfgpkgnode_new(LCFGPackage * pkg);
-
-void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode);
+typedef enum {
+  LCFG_PKGLIST_PK_NAME = 0,
+  LCFG_PKGLIST_PK_ARCH = 1,
+  LCFG_PKGLIST_PK_CTX  = 2
+} LCFGPkgListPK;
 
 /**
  * @brief A structure for storing LCFG packages as a single-linked list
@@ -286,10 +278,11 @@ void lcfgpkgnode_destroy(LCFGPackageNode * pkgnode);
 
 struct LCFGPackageList {
   /*@{*/
-  LCFGPackageNode * head;  /**< The first package node in the list */
-  LCFGPackageNode * tail;  /**< The last package node in the list */
+  LCFGSListNode * head;      /**< The first node in the list */
+  LCFGSListNode * tail;      /**< The last node in the list */
+  unsigned int size;         /**< The length of the list */
+  LCFGPkgListPK primary_key; /**< Controls which package fields are used as primary key */
   LCFGMergeRule merge_rules; /**< Rules which control how packages are merged */
-  unsigned int size;       /**< The length of the list */
   /*@}*/
   unsigned int _refcount;
 };
@@ -307,48 +300,6 @@ LCFGMergeRule lcfgpkglist_get_merge_rules( const LCFGPackageList * pkglist );
 bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
 				  LCFGMergeRule new_rules )
   __attribute__((warn_unused_result));
-
-LCFGChange lcfgpkglist_insert_next( LCFGPackageList * pkglist,
-                                    LCFGPackageNode * pkgnode,
-                                    LCFGPackage     * pkg )
-  __attribute__((warn_unused_result));
-
-LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
-                                    LCFGPackageNode * pkgnode,
-                                    LCFGPackage    ** pkg )
-  __attribute__((warn_unused_result));
-
-/**
- * @brief Retrieve the first package node in the list
- *
- * This is a simple macro which can be used to get the first package
- * node structure in the list. Note that if the list is empty this
- * will be the @c NULL value. To retrieve the package from this node
- * use @c lcfgpkglist_package()
- *
- * @param[in] pkglist Pointer to @c LCFGPackageList
- *
- * @return Pointer to first @c LCFGPackageNode structure in list
- *
- */
-
-#define lcfgpkglist_head(pkglist) ((pkglist)->head)
-
-/**
- * @brief Retrieve the last package node in the list
- *
- * This is a simple macro which can be used to get the last package
- * node structure in the list. Note that if the list is empty this
- * will be the @c NULL value. To retrieve the package from this node
- * use @c lcfgpkglist_package()
- *
- * @param[in] pkglist Pointer to @c LCFGPackageList
- *
- * @return Pointer to last @c LCFGPackageNode structure in list
- *
- */
-
-#define lcfgpkglist_tail(pkglist) ((pkglist)->tail)
 
 /**
  * @brief Get the number of nodes in the package list
@@ -378,66 +329,19 @@ LCFGChange lcfgpkglist_remove_next( LCFGPackageList * pkglist,
 
 #define lcfgpkglist_is_empty(pkglist) (pkglist == NULL || (pkglist)->size == 0)
 
-/**
- * @brief Retrieve the next package node in the list
- *
- * This is a simple macro which can be used to fetch the next node in
- * the single-linked package list for a given node. If the node
- * specified is the final item in the list this will return a @c NULL
- * value.
- *
- * @param[in] pkgnode Pointer to current @c LCFGPackageNode
- *
- * @return Pointer to next @c LCFGPackageNode
- */
-
-#define lcfgpkglist_next(pkgnode)     ((pkgnode)->next)
-
-/**
- * @brief Retrieve the package for a list node
- *
- * This is a simple macro which can be used to get the package
- * structure from the specified node. 
- *
- * Note that this does @b NOT increment the reference count for the
- * returned package structure. To retain the package call the
- * @c lcfgpackage_acquire() function.
- *
- * @param[in] pkgnode Pointer to @c LCFGPackageNode
- *
- * @return Pointer to @c LCFGPackage structure
- *
- */
-
-#define lcfgpkglist_package(pkgnode)  ((pkgnode)->pkg)
-
-/**
- * @brief Append a package to a list
- *
- * This is a simple macro wrapper around the
- * @c lcfgpkglist_insert_next() function which can be used to append
- * a package structure on to the end of the specified package list.
- *
- * @param[in] pkglist Pointer to @c LCFGPackageList
- * @param[in] pkg Pointer to @c LCFGPackage
- * 
- * @return Integer value indicating type of change
- *
- */
-
-#define lcfgpkglist_append(pkglist, pkg) ( lcfgpkglist_insert_next( pkglist, lcfgpkglist_tail(pkglist), pkg ) )
-
-LCFGPackageNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
-                                         const char * name,
-                                         const char * arch );
+LCFGSListNode * lcfgpkglist_find_node( const LCFGPackageList * pkglist,
+                                       const char * name,
+                                       const char * arch );
 
 LCFGPackage * lcfgpkglist_find_package( const LCFGPackageList * pkglist,
                                         const char * name,
                                         const char * arch );
 
-bool lcfgpkglist_contains( const LCFGPackageList * pkglist,
-                           const char * name,
-                           const char * arch );
+bool lcfgpkglist_has_package( const LCFGPackageList * pkglist,
+                              const char * name,
+                              const char * arch );
+
+LCFGPackage * lcfgpkglist_first_package( const LCFGPackageList * pkglist );
 
 LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
                                       LCFGPackage * pkg,
@@ -512,7 +416,7 @@ LCFGPackageList * lcfgpkglist_match( const LCFGPackageList * pkglist,
 
 struct LCFGPackageIterator {
   LCFGPackageList * list; /**< The package list */
-  LCFGPackageNode * current; /**< Current location in the list */
+  LCFGSListNode * current; /**< Current location in the list */
 };
 typedef struct LCFGPackageIterator LCFGPackageIterator;
 
@@ -525,6 +429,113 @@ void lcfgpkgiter_reset( LCFGPackageIterator * iterator );
 bool lcfgpkgiter_has_next( LCFGPackageIterator * iterator );
 
 LCFGPackage * lcfgpkgiter_next(LCFGPackageIterator * iterator);
+
+/* Set */
+
+#define LCFG_PKGSET_DEFAULT_SIZE 113
+#define LCFG_PKGSET_LOAD_INIT 0.5
+#define LCFG_PKGSET_LOAD_MAX  0.7
+
+struct LCFGPackageSet {
+  /*@{*/
+  LCFGPackageList ** packages;
+  size_t buckets;
+  size_t entries;
+  LCFGPkgListPK primary_key; /**< Controls which package fields are used as primary key */
+  LCFGMergeRule merge_rules; /**< Rules which control how packages are merged */
+  /*@}*/
+  unsigned int _refcount;
+};
+
+typedef struct LCFGPackageSet LCFGPackageSet;
+
+#define lcfgpkgset_is_empty(pkgset) (pkgset == NULL || (pkgset)->entries == 0)
+#define lcfgpkgset_size(pkgset) ((pkgset)->entries)
+
+LCFGPackageSet * lcfgpkgset_new();
+void lcfgpkgset_destroy(LCFGPackageSet * pkgset);
+
+void lcfgpkgset_acquire(LCFGPackageSet * pkgset);
+void lcfgpkgset_relinquish( LCFGPackageSet * pkgset );
+
+bool lcfgpkgset_set_merge_rules( LCFGPackageSet * pkgset,
+                                 LCFGMergeRule new_rules )
+  __attribute__((warn_unused_result));
+
+LCFGMergeRule lcfgpkgset_get_merge_rules( const LCFGPackageSet * pkgset );
+
+LCFGChange lcfgpkgset_merge_package( LCFGPackageSet * pkgset,
+                                     LCFGPackage * new_pkg,
+                                     char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgpkgset_merge_list( LCFGPackageSet * pkgset,
+                                  const LCFGPackageList * pkglist,
+                                  char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgpkgset_merge_set( LCFGPackageSet * pkgset1,
+                                 const LCFGPackageSet * pkgset2,
+                                 char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGPackageList * lcfgpkgset_find_list( const LCFGPackageSet * pkgset,
+                                        const char * want_name );
+
+LCFGPackage * lcfgpkgset_find_package( const LCFGPackageSet * pkgset,
+                                       const char * want_name,
+                                       const char * want_arch );
+
+bool lcfgpkgset_has_package( const LCFGPackageSet * pkgset,
+                             const char * want_name,
+                             const char * want_arch );
+
+bool lcfgpkgset_print( const LCFGPackageSet * pkgset,
+                       const char * defarch,
+                       LCFGPkgStyle style,
+                       LCFGOption options,
+                       FILE * out )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgpkgset_from_rpmlist( const char * filename,
+                                     LCFGPackageSet ** result,
+                                     LCFGOption options,
+                                     char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgpkgset_from_rpm_dir( const char * rpmdir,
+                                    LCFGPackageSet ** result,
+                                    char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
+                                  const char * defarch,
+                                  const char * filename,
+                                  time_t mtime,
+                                  char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgpkgset_from_cpp( const char * filename,
+                                LCFGPackageSet ** result,
+                                const char * defarch,
+                                LCFGOption options,
+                                char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
+                                 LCFGPackageSet * inactive,
+                                 const char * defarch,
+                                 const char * filename,
+                                 const char * rpminc,
+                                 time_t mtime,
+                                 char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGPackageSet * lcfgpkgset_match( const LCFGPackageSet * pkgset,
+                                   const char * want_name,
+                                   const char * want_arch,
+                                   const char * want_ver,
+                                   const char * want_rel );
 
 #endif /* LCFG_CORE_PACKAGES_H */
 

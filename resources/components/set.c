@@ -3,8 +3,8 @@
  * @brief Functions for working with sets of LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-06-08 15:54:15 +0100 (Thu, 08 Jun 2017) $
- * $Revision: 33034 $
+ * $Date: 2017-08-11 14:55:09 +0100 (Fri, 11 Aug 2017) $
+ * $Revision: 33314 $
  */
 
 #include <assert.h>
@@ -38,36 +38,45 @@ static void lcfgcompset_resize( LCFGComponentSet * compset ) {
       ( (double) compset->entries / LCFG_COMPSET_LOAD_INIT ) + 1;
   }
 
-  if ( want_buckets > compset->buckets || compset->components == NULL ) {
+  LCFGComponent ** cur_set = compset->components;
+  size_t cur_buckets = compset->buckets;
 
-    LCFGComponent ** old_set = compset->components;
-    size_t old_buckets = compset->buckets;
+  /* Decide if a resize is actually required */
 
-    LCFGComponent ** new_set = calloc( (size_t) want_buckets,
-                                       sizeof(LCFGComponent *) );
+  if ( cur_set != NULL && want_buckets <= cur_buckets ) return;
 
-    compset->components = new_set;
-    compset->entries    = 0;
-    compset->buckets    = want_buckets;
+  LCFGComponent ** new_set = calloc( (size_t) want_buckets,
+                                     sizeof(LCFGComponent *) );
+  if ( new_set == NULL ) {
+    perror( "Failed to allocate memory for LCFG component set" );
+    exit(EXIT_FAILURE);
+  }
 
-    if ( old_set != NULL && compset->entries > 0 ) {
+  compset->components = new_set;
+  compset->entries    = 0;
+  compset->buckets    = want_buckets;
 
-      unsigned int i;
-      for ( i=0; i<old_buckets; i++ ) {
-        LCFGComponent * comp = old_set[i];
-        if (comp) {
-          LCFGChange rc = lcfgcompset_insert_component( compset, comp );
-          if ( rc == LCFG_CHANGE_ERROR ) {
-            fprintf( stderr, "Failed to resize component set\n" );
-            exit(EXIT_FAILURE);
-          }
-          lcfgcomponent_relinquish(comp);
+  if ( cur_set != NULL ) {
+
+    unsigned int i;
+    for ( i=0; i<cur_buckets; i++ ) {
+      LCFGComponent * comp = cur_set[i];
+
+      if (comp) {
+        LCFGChange rc = lcfgcompset_insert_component( compset, comp );
+        if ( rc == LCFG_CHANGE_ERROR ) {
+          fprintf( stderr, "Failed to resize component set\n" );
+          exit(EXIT_FAILURE);
         }
+
+        /* Remove reference to comp from cur_set */
+        lcfgcomponent_relinquish(comp);
+        cur_set[i] = NULL;
       }
 
-      free(old_set);
     }
 
+    free(cur_set);
   }
 
 }
@@ -162,7 +171,7 @@ void lcfgcompset_destroy(LCFGComponentSet * compset) {
  * does this by simply incrementing the reference count.
  *
  * To avoid memory leaks, once the reference to the structure is no
- * longer required the @c lcfgcompset_release() function should be
+ * longer required the @c lcfgcompset_relinquish() function should be
  * called.
  *
  * @param[in] compset Pointer to @c LCFGComponentSet
@@ -1043,7 +1052,7 @@ LCFGTagList * lcfgcompset_ngeneric_components( const LCFGComponentSet * compset 
 
   LCFGTagList * comp_names = lcfgtaglist_new();
 
-  if ( !lcfgcompset_is_empty(compset) ) return comp_names;
+  if ( lcfgcompset_is_empty(compset) ) return comp_names;
 
   LCFGChange change = LCFG_CHANGE_NONE;
 

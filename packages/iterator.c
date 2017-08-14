@@ -3,8 +3,8 @@
  * @brief Functions for iterating through LCFG package lists
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2017-08-04 13:42:14 +0100 (Fri, 04 Aug 2017) $
+ * $Revision: 33301 $
  */
 
 #include <stdbool.h>
@@ -12,6 +12,7 @@
 #include <stdlib.h>
 
 #include "packages.h"
+#include "utils.h"
 
 /**
  * @brief Create new package list iterator
@@ -109,9 +110,9 @@ bool lcfgpkgiter_has_next( LCFGPackageIterator * iterator ) {
 
   bool has_next = false;
   if ( iterator->current == NULL )
-    has_next = !lcfgpkglist_is_empty(iterator->list);
+    has_next = !lcfgslist_is_empty(iterator->list);
   else
-    has_next = ( lcfgpkglist_next(iterator->current) != NULL );
+    has_next = ( lcfgslist_next(iterator->current) != NULL );
 
   return has_next;
 }
@@ -133,13 +134,13 @@ LCFGPackage * lcfgpkgiter_next(LCFGPackageIterator * iterator) {
   if ( !lcfgpkgiter_has_next(iterator) ) return NULL;
 
   if ( iterator->current == NULL )
-    iterator->current = lcfgpkglist_head(iterator->list);
+    iterator->current = lcfgslist_head(iterator->list);
   else
-    iterator->current = lcfgpkglist_next(iterator->current);
+    iterator->current = lcfgslist_next(iterator->current);
 
   LCFGPackage * next = NULL;
   if ( iterator->current != NULL )
-    next = lcfgpkglist_package(iterator->current);
+    next = lcfgslist_data(iterator->current);
 
   return next;
 }

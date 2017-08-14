@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 project (lcfg-core C)
 
-SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra" )
+SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra -fno-omit-frame-pointer -fsanitize=address" )
 
 set(LCFGTMP "/var/tmp/lcfg" CACHE PATH "Default directory for temporary files")
 set(LCFGLOG "/var/log/lcfg" CACHE PATH "Default directory for log files")

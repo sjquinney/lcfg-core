@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-29 14:38:31 +0100 (Mon, 29 May 2017) $
- * $Revision: 32965 $
+ * $Date: 2017-06-30 14:00:27 +0100 (Fri, 30 Jun 2017) $
+ * $Revision: 33246 $
  */
 
 #ifndef LCFG_CORE_RESOURCES_H
@@ -184,13 +184,6 @@ char * lcfgresource_enc_value( const LCFGResource * res );
 
 /* Resources: Value Mutations */
 
-typedef bool (*LCFGResourceTagFunc)( LCFGResource * res, const char * tag );
-
-bool lcfgresource_value_map_tagstring( LCFGResource * res,
-                                       const char * tags,
-                                       LCFGResourceTagFunc fn )
-  __attribute__((warn_unused_result));
-
 bool lcfgresource_value_append( LCFGResource * res,
                                 const char * extra_string )
   __attribute__((warn_unused_result));
@@ -207,9 +200,6 @@ bool lcfgresource_value_replace( LCFGResource * res,
 bool lcfgresource_value_remove( LCFGResource * res,
                                 const char * string )
   __attribute__((warn_unused_result));
-
-char * lcfgresource_value_find_tag( const LCFGResource * res,
-                                    const char * tag );
 
 bool lcfgresource_value_has_tag( const LCFGResource * res,
                                  const char * tag );
@@ -389,19 +379,19 @@ LCFGStatus lcfgresource_parse_spec( char * spec,
                                     char ** msg )
   __attribute__((warn_unused_result));
 
-ssize_t lcfgresource_compute_key_length( const LCFGResource * res,
+ssize_t lcfgresource_compute_key_length( const char * resource,
                                          const char * component,
                                          const char * namespace,
                                          char type_symbol );
 
-ssize_t lcfgresource_insert_key( const LCFGResource * res,
+ssize_t lcfgresource_insert_key( const char * resource,
                                  const char * component,
                                  const char * namespace,
                                  char type_symbol,
                                  char * result )
   __attribute__((warn_unused_result));
 
-ssize_t lcfgresource_build_key( const LCFGResource * res,
+ssize_t lcfgresource_build_key( const char * resource,
                                 const char * component,
                                 const char * namespace,
                                 char type_symbol,
