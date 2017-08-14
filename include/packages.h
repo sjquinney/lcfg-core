@@ -439,8 +439,8 @@ LCFGPackage * lcfgpkgiter_next(LCFGPackageIterator * iterator);
 struct LCFGPackageSet {
   /*@{*/
   LCFGPackageList ** packages;
-  size_t buckets;
-  size_t entries;
+  unsigned long buckets;
+  unsigned long entries;
   LCFGPkgListPK primary_key; /**< Controls which package fields are used as primary key */
   LCFGMergeRule merge_rules; /**< Rules which control how packages are merged */
   /*@}*/
@@ -536,6 +536,23 @@ LCFGPackageSet * lcfgpkgset_match( const LCFGPackageSet * pkgset,
                                    const char * want_arch,
                                    const char * want_ver,
                                    const char * want_rel );
+
+struct LCFGPkgSetIterator {
+  LCFGPackageSet * set;
+  LCFGPackageIterator * listiter;
+  long current;
+};
+typedef struct LCFGPkgSetIterator LCFGPkgSetIterator;
+
+LCFGPkgSetIterator * lcfgpkgsetiter_new( LCFGPackageSet * pkgset );
+
+void lcfgpkgsetiter_destroy( LCFGPkgSetIterator * iterator );
+
+void lcfgpkgsetiter_reset( LCFGPkgSetIterator * iterator );
+
+bool lcfgpkgsetiter_has_next( LCFGPkgSetIterator * iterator );
+
+LCFGPackage * lcfgpkgsetiter_next(LCFGPkgSetIterator * iterator);
 
 #endif /* LCFG_CORE_PACKAGES_H */
 
