@@ -1,3 +1,11 @@
+/**
+ * @file packages/set.c
+ * @brief Functions for iterating through LCFG package sets
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date$
+ * $Revision$
+ */
 
 #include <errno.h>
 #include <stdio.h>
@@ -216,6 +224,37 @@ void lcfgpkgset_relinquish( LCFGPackageSet * pkgset ) {
   if ( pkgset->_refcount == 0 )
     lcfgpkgset_destroy(pkgset);
 
+}
+
+/**
+ * @brief Get the number of packages in the package set
+ *
+ * This is a simple function which can be used to scan through the @c
+ * LCFGPackageSet to get the total number of packages.
+ *
+ * @param[in] pkgset Pointer to @c LCFGPackageSet
+ *
+ * @return Integer Number of packages in the list
+ *
+ */
+
+unsigned int lcfgpkgset_size( LCFGPackageSet * pkgset ) {
+  assert( pkgset != NULL );
+
+  /* No point scanning the whole array if there are no entries */
+  if ( pkgset->entries == 0 ) return 0;
+
+  unsigned int size = 0;
+
+  LCFGPackageList ** packages = pkgset->packages;
+
+  unsigned long i;
+  for ( i=0; ok && i < pkgset->buckets; i++ ) {
+    if ( packages[i] )
+      size += lcfgpkglist_size(packages[i]);
+  }
+
+  return size;
 }
 
 /**

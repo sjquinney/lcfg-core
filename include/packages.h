@@ -302,14 +302,14 @@ bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
   __attribute__((warn_unused_result));
 
 /**
- * @brief Get the number of nodes in the package list
+ * @brief Get the number of packages in the package list
  *
- * This is a simple macro which can be used to get the length of the
- * single-linked package list.
+ * This is a simple macro which can be used to get the number of
+ * packages in the single-linked package list.
  *
  * @param[in] pkglist Pointer to @c LCFGPackageList
  *
- * @return Integer length of the package list
+ * @return Integer Number of packages in the list
  *
  */
 
@@ -449,8 +449,9 @@ struct LCFGPackageSet {
 
 typedef struct LCFGPackageSet LCFGPackageSet;
 
-#define lcfgpkgset_is_empty(pkgset) (pkgset == NULL || (pkgset)->entries == 0)
-#define lcfgpkgset_size(pkgset) ((pkgset)->entries)
+unsigned int lcfgpkgset_size( LCFGPackageSet * pkgset );
+
+#define lcfgpkgset_is_empty(pkgset) (pkgset == NULL || lcfgpkgset_size(pkgset) == 0)
 
 LCFGPackageSet * lcfgpkgset_new();
 void lcfgpkgset_destroy(LCFGPackageSet * pkgset);
