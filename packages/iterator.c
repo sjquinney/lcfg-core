@@ -37,6 +37,7 @@
  */
 
 LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * list ) {
+  assert( list != NULL );
 
   LCFGPackageIterator * iterator = malloc( sizeof(LCFGPackageIterator) );
   if ( iterator == NULL ) {
