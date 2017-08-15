@@ -1,6 +1,39 @@
-2017-08-11  SVN: new release
+2017-08-15  SVN: new release
 
-	* Release: 1.45.1
+	* Release: 1.45.2
+
+2017-08-15 10:39  squinney@INF.ED.AC.UK
+
+	* packages/iterator.c, packages/setiter.c: need to include assert.h
+
+2017-08-15 10:38  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/set.c: Fixed lcfgpkgset_size so that
+	  the arg is marked as const
+
+2017-08-15 10:31  squinney@INF.ED.AC.UK
+
+	* packages/setiter.c: Added docs for functions
+
+2017-08-15 10:31  squinney@INF.ED.AC.UK
+
+	* packages/iterator.c: Added assertion to lcfgpkgiter_new since the
+	  LCFGPackageList is required
+
+2017-08-15 10:24  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/set.c: Added lcfgpkgset_size
+	  function which returns the total number of packages rather than
+	  the number of entries in the set
+
+2017-08-14 15:29  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/CMakeLists.txt, packages/setiter.c:
+	  Added iterator API for package sets
+
+2017-08-11 14:38  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.45.1
 
 2017-08-11 14:37  squinney@INF.ED.AC.UK
 
