@@ -238,7 +238,7 @@ void lcfgpkgset_relinquish( LCFGPackageSet * pkgset ) {
  *
  */
 
-unsigned int lcfgpkgset_size( LCFGPackageSet * pkgset ) {
+unsigned int lcfgpkgset_size( const LCFGPackageSet * pkgset ) {
   assert( pkgset != NULL );
 
   /* No point scanning the whole array if there are no entries */
@@ -249,7 +249,7 @@ unsigned int lcfgpkgset_size( LCFGPackageSet * pkgset ) {
   LCFGPackageList ** packages = pkgset->packages;
 
   unsigned long i;
-  for ( i=0; ok && i < pkgset->buckets; i++ ) {
+  for ( i=0; i < pkgset->buckets; i++ ) {
     if ( packages[i] )
       size += lcfgpkglist_size(packages[i]);
   }

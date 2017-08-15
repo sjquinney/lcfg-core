@@ -449,7 +449,7 @@ struct LCFGPackageSet {
 
 typedef struct LCFGPackageSet LCFGPackageSet;
 
-unsigned int lcfgpkgset_size( LCFGPackageSet * pkgset );
+unsigned int lcfgpkgset_size( const LCFGPackageSet * pkgset );
 
 #define lcfgpkgset_is_empty(pkgset) (pkgset == NULL || lcfgpkgset_size(pkgset) == 0)
 
