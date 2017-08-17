@@ -1,6 +1,19 @@
-2017-08-15  SVN: new release
+2017-08-17  SVN: new release
 
-	* Release: 1.45.2
+	* Release: 1.46.0
+
+2017-08-17 09:39  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/ex/mkrpmlist.c,
+	  packages/list.c, packages/rpm.c, packages/set.c,
+	  profile/profile.c: Modified lcfgpkgset_print and
+	  lcfgpkglist_print to take an optional prefix which is prepended
+	  to each package string. This is particularly useful for
+	  generating lists of package files with absolute paths
+
+2017-08-15 10:42  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.45.2
 
 2017-08-15 10:39  squinney@INF.ED.AC.UK
 
