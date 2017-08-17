@@ -451,7 +451,7 @@ ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_TOSTR_ARGS ) {
  *
  * @param[in] pkglist Pointer to @c LCFGPackageList
  * @param[in] defarch Default architecture string (may be @c NULL)
- * @param[in] prefix String to be prepended to all package strings
+ * @param[in] base String to be prepended to all package strings
  * @param[in] filename Path file to be created
  * @param[in] mtime Modification time to set on file (or zero)
  * @param[out] msg Pointer to any diagnostic messages.
@@ -462,7 +462,7 @@ ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_TOSTR_ARGS ) {
 
 LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
                                    const char * defarch,
-                                   const char * prefix,
+                                   const char * base,
                                    const char * filename,
                                    time_t mtime,
                                    char ** msg ) {
@@ -497,7 +497,7 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
   lcfgpkglist_sort(pkglist);
 
   ok = lcfgpkglist_print( pkglist,
-                          defarch, prefix,
+                          defarch, base,
                           LCFG_PKG_STYLE_RPM,
                           LCFG_OPT_NEWLINE,
                           tmpfh );
@@ -583,7 +583,7 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
  *
  * @param[in] pkgset Pointer to @c LCFGPackageSet
  * @param[in] defarch Default architecture string (may be @c NULL)
- * @param[in] prefix String to be prepended to all package strings
+ * @param[in] base String to be prepended to all package strings
  * @param[in] filename Path file to be created
  * @param[in] mtime Modification time to set on file (or zero)
  * @param[out] msg Pointer to any diagnostic messages.
@@ -594,7 +594,7 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
 
 LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
                                   const char * defarch,
-                                  const char * prefix,
+                                  const char * base,
                                   const char * filename,
                                   time_t mtime,
                                   char ** msg ) {
@@ -625,7 +625,7 @@ LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
 
   ok = lcfgpkgset_print( pkgset,
                          defarch,
-                         prefix,
+                         base,
                          LCFG_PKG_STYLE_RPM,
                          LCFG_OPT_NEWLINE,
                          tmpfh );

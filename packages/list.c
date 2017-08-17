@@ -886,7 +886,7 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
  *
  * @param[in] pkglist Pointer to @c LCFGPackageList
  * @param[in] defarch Default architecture string (may be @c NULL)
- * @param[in] prefix String to be prepended to all package strings
+ * @param[in] base String to be prepended to all package strings
  * @param[in] style Integer indicating required style of formatting
  * @param[in] options Integer that controls formatting
  * @param[in] out Stream to which the package list should be written
@@ -897,7 +897,7 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
 
 bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         const char * defarch,
-                        const char * prefix,
+                        const char * base,
                         LCFGPkgStyle style,
                         LCFGOption options,
                         FILE * out ) {
@@ -955,10 +955,10 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
         ok = false;
       } else {
 
-        /* Optional prefix */
+        /* Optional base string */
 
-        if ( !isempty(prefix) ) {
-          if ( fputs( prefix, out ) < 0 )
+        if ( !isempty(base) ) {
+          if ( fputs( base, out ) < 0 )
             ok = false;
         }
 

@@ -812,7 +812,7 @@ static unsigned int lcfgpkgset_sorted_entries( const LCFGPackageSet * pkgset,
  *
  * @param[in] pkgset Pointer to @c LCFGPackageSet
  * @param[in] defarch Default architecture string (may be @c NULL)
- * @param[in] prefix String to be prepended to all package strings
+ * @param[in] base String to be prepended to all package strings
  * @param[in] style Integer indicating required style of formatting
  * @param[in] options Integer that controls formatting
  * @param[in] out Stream to which the packages should be written
@@ -823,7 +823,7 @@ static unsigned int lcfgpkgset_sorted_entries( const LCFGPackageSet * pkgset,
 
 bool lcfgpkgset_print( const LCFGPackageSet * pkgset,
                        const char * defarch,
-                       const char * prefix,
+                       const char * base,
                        LCFGPkgStyle style,
                        LCFGOption options,
                        FILE * out ) {
@@ -892,10 +892,10 @@ bool lcfgpkgset_print( const LCFGPackageSet * pkgset,
           ok = false;
         } else {
 
-          /* Optional prefix */
+          /* Optional base string */
 
-          if ( !isempty(prefix) ) {
-            if ( fputs( prefix, out ) < 0 )
+          if ( !isempty(base) ) {
+            if ( fputs( base, out ) < 0 )
               ok = false;
           }
 
