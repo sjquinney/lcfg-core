@@ -357,6 +357,7 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist );
 
 bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         const char * defarch,
+                        const char * prefix,
                         LCFGPkgStyle style,
                         LCFGOption options,
                         FILE * out )
@@ -399,6 +400,7 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 
 LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
                                    const char * defarch,
+                                   const char * prefix,
                                    const char * filename,
                                    time_t mtime,
                                    char ** msg )
@@ -493,6 +495,7 @@ bool lcfgpkgset_has_package( const LCFGPackageSet * pkgset,
 
 bool lcfgpkgset_print( const LCFGPackageSet * pkgset,
                        const char * defarch,
+                       const char * prefix,
                        LCFGPkgStyle style,
                        LCFGOption options,
                        FILE * out )
@@ -511,6 +514,7 @@ LCFGStatus lcfgpkgset_from_rpm_dir( const char * rpmdir,
 
 LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
                                   const char * defarch,
+                                  const char * prefix,
                                   const char * filename,
                                   time_t mtime,
                                   char ** msg )

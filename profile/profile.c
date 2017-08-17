@@ -747,7 +747,7 @@ bool lcfgprofile_print(const LCFGProfile * profile,
 
     if (ok) {
       ok = lcfgpkgset_print( profile->active_packages,
-                             defarch, pkg_style,
+                             defarch, NULL, pkg_style,
                              LCFG_OPT_NONE, out );
     }
 
