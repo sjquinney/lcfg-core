@@ -1,6 +1,16 @@
 2017-08-17  SVN: new release
 
-	* Release: 1.46.0
+	* Release: 1.46.1
+
+2017-08-17 09:54  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/list.c, packages/rpm.c,
+	  packages/set.c: Renamed 'prefix' parameter as 'base' to avoid
+	  potential for confusion with single-character package prefixes
+
+2017-08-17 09:39  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.46.0
 
 2017-08-17 09:39  squinney@INF.ED.AC.UK
 
