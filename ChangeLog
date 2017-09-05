@@ -1,6 +1,14 @@
-2017-08-17  SVN: new release
+2017-09-05  SVN: new release
 
-	* Release: 1.46.1
+	* Release: 1.46.2
+
+2017-09-05 14:09  squinney@INF.ED.AC.UK
+
+	* profile/diff.c: removed unnecessary debugging printf
+
+2017-08-17 09:54  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.46.1
 
 2017-08-17 09:54  squinney@INF.ED.AC.UK
 
