@@ -90,6 +90,10 @@ LCFGChange lcfgprofile_merge( LCFGProfile * profile1,
 			      char ** msg )
   __attribute__((warn_unused_result));
 
+bool lcfgprofile_has_active_packages( const LCFGProfile * profile );
+bool lcfgprofile_has_inactive_packages( const LCFGProfile * profile );
+bool lcfgprofile_has_packages( const LCFGProfile * profile );
+
 LCFGChange lcfgprofile_write_rpmcfg( const LCFGProfile * profile,
                                      const char * defarch,
                                      const char * filename,

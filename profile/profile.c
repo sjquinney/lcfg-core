@@ -699,6 +699,55 @@ LCFGChange lcfgprofile_write_rpmcfg( const LCFGProfile * profile,
 }
 
 /**
+ * @brief Check if the profile has active packages
+ *
+ * Check if the list of packages for the current set of active
+ * contexts is non-empty.
+ *
+ * @param[in] profile Pointer to @c LCFGProfile
+ *
+ * @return Boolean which indicates if package list is non-empty
+ *
+ */
+
+bool lcfgprofile_has_active_packages( const LCFGProfile * profile ) {
+  return !lcfgpkgset_is_empty(profile->active_packages);
+}
+
+/**
+ * @brief Check if the profile has inactive packages
+ *
+ * Check if there are any packages which should not be installed for
+ * the current set of active contexts.
+ *
+ * @param[in] profile Pointer to @c LCFGProfile
+ *
+ * @return Boolean which indicates if package list is non-empty
+ *
+ */
+
+bool lcfgprofile_has_inactive_packages( const LCFGProfile * profile ) {
+  return !lcfgpkgset_is_empty(profile->inactive_packages);
+}
+
+/**
+ * @brief Check if the profile has any packages
+ *
+ * Check if there are any packages for this profile, regardless of
+ * state of current contexts.
+ *
+ * @param[in] profile Pointer to @c LCFGProfile
+ *
+ * @return Boolean which indicates if package list is non-empty
+ *
+ */
+
+bool lcfgprofile_has_packages( const LCFGProfile * profile ) {
+  return ( lcfgprofile_has_active_packages(profile) ||
+           lcfgprofile_has_inactive_packages(profile) );
+}
+
+/**
  * @brief Write out profile to file stream
  *
  * This can be used to write out an entire @c LCFGProfile to the
@@ -715,7 +764,6 @@ LCFGChange lcfgprofile_write_rpmcfg( const LCFGProfile * profile,
  * @return Boolean indicating success
  *
  */
-
 
 bool lcfgprofile_print(const LCFGProfile * profile,
                        bool show_comps,
