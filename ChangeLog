@@ -1,6 +1,15 @@
-2017-09-05  SVN: new release
+2017-09-08  SVN: new release
 
-	* Release: 1.46.2
+	* Release: 1.46.3
+
+2017-09-08 15:08  squinney@INF.ED.AC.UK
+
+	* include/profile.h, lcfg.yml, profile/profile.c: Added functions
+	  for checking if a profile has any packages
+
+2017-09-05 15:39  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.46.2
 
 2017-09-05 14:09  squinney@INF.ED.AC.UK
 
