@@ -1528,7 +1528,7 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
     ok = false;
 
   if ( ok && !lcfgpkgset_is_empty(inactive) ) {
-    ok = lcfgpkgset_print( active, defarch, NULL,
+    ok = lcfgpkgset_print( inactive, defarch, NULL,
                            LCFG_PKG_STYLE_CPP, LCFG_OPT_USE_META,
                            out );
   }
