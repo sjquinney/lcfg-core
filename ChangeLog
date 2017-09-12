@@ -1,6 +1,15 @@
-2017-09-08  SVN: new release
+2017-09-12  SVN: new release
 
-	* Release: 1.46.3
+	* Release: 1.46.4
+
+2017-09-12 12:57  squinney@INF.ED.AC.UK
+
+	* packages/rpm.c: Fixed lcfgpkgset_to_rpmcfg so that it prints the
+	  correct list for inactive packages
+
+2017-09-08 15:08  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.46.3
 
 2017-09-08 15:08  squinney@INF.ED.AC.UK
 
