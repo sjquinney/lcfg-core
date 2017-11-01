@@ -1763,7 +1763,7 @@ bool lcfgresource_set_context( LCFGResource * res, char * new_ctx ) {
   assert( res != NULL );
 
   bool ok = false;
-  if ( lcfgresource_valid_context(new_ctx) ) {
+  if ( new_ctx == NULL || lcfgresource_valid_context(new_ctx) ) {
     free(res->context);
 
     res->context = new_ctx;
