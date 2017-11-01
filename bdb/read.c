@@ -247,7 +247,10 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
 
     LCFGResource * res = lcfgresource_new();
 
-    if ( !lcfgresource_set_name( res, strdup(resname) ) ) {
+    char * resname_copy = strdup(resname);
+    if ( !lcfgresource_set_name( res, resname_copy ) ) {
+      free(resname_copy);
+
       status = LCFG_STATUS_ERROR;
       lcfgutils_build_message( msg, "Failed to set resource name '%s.%s'",
                                comp_name, resname );
