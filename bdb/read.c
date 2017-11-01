@@ -517,6 +517,13 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
 
       if ( (size_t) key.size == 0 ) continue;
 
+      /* Scan for a period character '.', if not found in the key then
+         this is probably a component name which is used as the key
+         for the list of resources for that component. */
+
+      if ( memchr( key.data, '.', (size_t) key.size ) != NULL ) continue;
+
+      /* Get a null-terminated string for the key */
       char * keyname = strndup( (char *) key.data, key.size );
 
       /* 'resource list' entry for a component */
