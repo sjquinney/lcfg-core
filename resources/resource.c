@@ -490,9 +490,10 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
 bool lcfgresource_set_type_default( LCFGResource * res ) {
   assert( res != NULL );
 
+  bool ok = true;
   if ( lcfgresource_get_type(res) != LCFG_RESOURCE_DEFAULT_TYPE ) {
 
-    bool ok = lcfgresource_set_type( res, LCFG_RESOURCE_DEFAULT_TYPE );
+    ok = lcfgresource_set_type( res, LCFG_RESOURCE_DEFAULT_TYPE );
 
     /* Clear any previous templates and comments */
     if (ok) {
