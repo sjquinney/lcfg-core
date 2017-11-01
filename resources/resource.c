@@ -63,12 +63,12 @@ LCFGResource * lcfgresource_new(void) {
 
   res->name       = NULL;
   res->value      = NULL;
-  res->type       = LCFG_RESOURCE_TYPE_STRING;
+  res->type       = LCFG_RESOURCE_DEFAULT_TYPE;
   res->template   = NULL;
   res->context    = NULL;
   res->derivation = NULL;
   res->comment    = NULL;
-  res->priority   = 0;
+  res->priority   = LCFG_RESOURCE_DEFAULT_PRIORITY;
   res->_refcount  = 1;
 
   return res;
@@ -475,6 +475,39 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
 }
 
 /**
+ * @brief Set the type of the resource to the default
+ *
+ * Sets the value of the @e type parameter for the @c LCFGResource to
+ * the value of @c LCFG_RESOURCE_DEFAULT_TYPE (which is @c string). If
+ * the resource type was not previously @c string then any templates
+ * or comments associated with the previous type will be erased.
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ *
+ * @return boolean indicating success
+ */
+
+bool lcfgresource_set_type_default( LCFGResource * res ) {
+  assert( res != NULL );
+
+  if ( lcfgresource_get_type(res) != LCFG_RESOURCE_DEFAULT_TYPE ) {
+
+    bool ok = lcfgresource_set_type( res, LCFG_RESOURCE_DEFAULT_TYPE );
+
+    /* Clear any previous templates and comments */
+    if (ok) {
+      bool tmpl_ok = lcfgresource_set_template( res, NULL );
+      bool cmt_ok  = lcfgresource_set_comment( res, NULL );
+
+      if ( !tmpl_ok || !cmt_ok )
+	ok = false;
+    }
+  }
+
+  return ok;
+}
+
+/**
  * @brief Set the type of the resource as a string
  *
  * Parses the specified type string and sets the type for the resource
@@ -533,7 +566,7 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
   /* If the new type string is empty then the resource is considered
      to be the default string type */
 
-  LCFGResourceType new_type = LCFG_RESOURCE_TYPE_STRING;
+  LCFGResourceType new_type = LCFG_RESOURCE_DEFAULT_TYPE;
 
   /* Spin past any leading whitespace */
   if ( !isempty(type_str) )
@@ -1926,6 +1959,24 @@ bool lcfgresource_set_priority( LCFGResource * res, int new_prio ) {
 }
 
 /**
+ * @brief Set the priority for the resource to the default value
+ *
+ * Sets the value of the @e priority parameter for the @c LCFGResource
+ * to the value of @c LCFG_RESOURCE_DEFAULT_PRIORITY (which is zero). 
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgresource_set_priority_default( LCFGResource * res ) {
+  assert( res != NULL );
+
+  return lcfgresource_set_priority( res, LCFG_RESOURCE_DEFAULT_PRIORITY );
+}
+
+/**
  * @brief Evaluate the priority for the resource for a list of contexts
  *
  * This will evaluate and update the value of the @e priority
@@ -1953,7 +2004,7 @@ bool lcfgresource_eval_priority( LCFGResource * res,
 
   bool ok = true;
 
-  int priority = 0;
+  int priority = LCFG_RESOURCE_DEFAULT_PRIORITY;
   if ( lcfgresource_has_context(res) ) {
 
     /* Calculate the priority using the context expression for this

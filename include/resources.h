@@ -51,6 +51,9 @@ typedef enum {
   LCFG_RESOURCE_TYPE_SUBSCRIBE    /**< Subscribed from spanning map, like String*/
 } LCFGResourceType;
 
+#define LCFG_RESOURCE_DEFAULT_TYPE     LCFG_RESOURCE_TYPE_STRING
+#define LCFG_RESOURCE_DEFAULT_PRIORITY 0
+
 /**
  * @brief Resource format styles
  *
@@ -264,7 +267,11 @@ bool lcfgresource_set_comment( LCFGResource * res, char * new_value );
 
 int lcfgresource_get_priority( const LCFGResource * res );
 char * lcfgresource_get_priority_as_string( const LCFGResource * res );
-bool lcfgresource_set_priority( LCFGResource * res, int priority );
+bool lcfgresource_set_priority( LCFGResource * res, int priority )
+  __attribute__((warn_unused_result));
+bool lcfgresource_set_priority_default( LCFGResource * res )
+  __attribute__((warn_unused_result));
+
 bool lcfgresource_is_active( const LCFGResource * res );
 
 bool lcfgresource_eval_priority( LCFGResource * res,
