@@ -1,6 +1,65 @@
-2017-09-12  SVN: new release
+2017-11-01  SVN: new release
 
-	* Release: 1.46.4
+	* Release: 1.46.5
+
+2017-11-01 19:51  squinney@INF.ED.AC.UK
+
+	* resources/ex/qxprof.c: Added simple example based on qxprof
+
+2017-11-01 18:36  squinney@INF.ED.AC.UK
+
+	* bdb/read.c: fixed mutation of wrong taglist in
+	  lcfgprofile_from_bdb
+
+2017-11-01 18:31  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: aargh, strings need double quotes not
+	  single
+
+2017-11-01 18:28  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: fixed scope of return value declaration in
+	  lcfgresource_set_type_default
+
+2017-11-01 18:26  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Reworked lcfgresource_set_attribute to
+	  avoid problems with handling unterminated strings. This should
+	  also avoid taking quite so many copies of strings. Also tidied
+	  error handling
+
+2017-11-01 18:02  squinney@INF.ED.AC.UK
+
+	* bdb/read.c: Avoid a lot of strndup calls in
+	  lcfgbdb_process_components by first scanning the keys for '.'
+	  using memchr
+
+2017-11-01 17:33  squinney@INF.ED.AC.UK
+
+	* bdb/read.c: altered lcfgbdb_get_resource_item to return the
+	  change type
+
+2017-11-01 16:50  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, include/resources.h,
+	  resources/components/component.c, resources/resource.c: Modified
+	  spec for lcfgresource_set_attribute to also take the length of
+	  the new attribute value (doesn't actually use it yet)
+
+2017-11-01 16:40  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Made it possible to reset context to NULL
+	  using lcfgresource_set_context
+
+2017-11-01 16:37  squinney@INF.ED.AC.UK
+
+	* include/resources.h, resources/resource.c: Added functions for
+	  setting priority and type back to default values. Extracted a few
+	  hardwired default values into macros for ease of maintenance
+
+2017-09-12 13:49  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.46.4
 
 2017-09-12 12:57  squinney@INF.ED.AC.UK
 

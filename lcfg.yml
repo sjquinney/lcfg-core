@@ -7,7 +7,7 @@ build:
   gencmake: 1
   remove_input_after_translate: 1
   translate_before_pack: 1
-date: 12/09/17 13:49:19
+date: 01/11/17 19:51:52
 group: LCFG
 license: GPLv2
 name: lcfg-core
@@ -23,4 +23,4 @@ vcs:
   genchangelog: 1
   logname: ChangeLog
 vendor: University of Edinburgh
-version: 1.46.4
+version: 1.46.5
