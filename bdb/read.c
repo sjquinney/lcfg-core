@@ -86,7 +86,7 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
       comps_wanted2 = lcfgtaglist_clone(comps_wanted);
 
       char * add_msg = NULL;
-      if ( !lcfgtaglist_mutate_add( comps_wanted, "profile", &add_msg ) ) {
+      if ( !lcfgtaglist_mutate_add( comps_wanted2, "profile", &add_msg ) ) {
         lcfgutils_build_message( msg,
                                  "Problems with list of components: %s",
                                  add_msg );
