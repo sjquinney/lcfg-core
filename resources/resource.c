@@ -4022,7 +4022,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
     {
     case LCFG_RESOURCE_SYMBOL_DERIVATION:
       ;
-      attr_name = 'derivation';
+      attr_name = "derivation";
 
       if ( value_len > 0 )
         ok = lcfgresource_set_derivation( res, value_copy );
@@ -4032,7 +4032,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
       break;
     case LCFG_RESOURCE_SYMBOL_TYPE:
       ;
-      attr_name = 'type';
+      attr_name = "type";
 
       if ( value_len > 0 )
         ok = lcfgresource_set_type_as_string( res, value_copy, msg );
@@ -4043,7 +4043,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
       break;
     case LCFG_RESOURCE_SYMBOL_CONTEXT:
       ;
-      attr_name = 'context';
+      attr_name = "context";
 
       if ( value_len > 0 )
         ok = lcfgresource_set_context( res, value_copy );
@@ -4053,7 +4053,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
       break;
     case LCFG_RESOURCE_SYMBOL_PRIORITY:
       ;
-      attr_name = 'priority';
+      attr_name = "priority";
 
       if ( value_len > 0 ) {
         /* Be careful to only convert string to int if it looks safe */
@@ -4073,7 +4073,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
     case  LCFG_RESOURCE_SYMBOL_VALUE:
     default:        /* value line */
       ;
-      attr_name = 'value';
+      attr_name = "value";
 
       if ( value_len > 0 ) {
         /* Value strings may be html encoded as they can contain
@@ -4091,13 +4091,13 @@ bool lcfgresource_set_attribute( LCFGResource * res,
       break;
     }
 
-  if ( free_copy || !ok )
-    free(value_copy);
-
   if ( !ok && *msg == NULL ) {
     lcfgutils_build_message( msg, "Invalid %s '%s'", attr_name,
-			     ( value_len > 0 ? value_copy : '(empty string)' ));
+			     ( value_len > 0 ? value_copy : "(empty string)" ));
   }
+
+  if ( free_copy || !ok )
+    free(value_copy);
 
   return ok;
 }
