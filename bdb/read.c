@@ -155,12 +155,11 @@ static LCFGStatus lcfgbdb_get_resource_item( DB * dbh,
   int ret = dbh->get( dbh, NULL, &key, &data, 0 );
 
   if ( ret == 0 ) {
-    char * item_value = data.data;
-    item_value[data.size] = '\0';
 
     char * set_msg = NULL;
     if ( !lcfgresource_set_attribute( res, type_symbol,
-                                      item_value, &set_msg ) ) {
+                                      (char *) data.data, (size_t) data.size,
+				      &set_msg ) ) {
       status = LCFG_STATUS_ERROR;
       *msg = lcfgresource_build_message( res, comp_name,
                                          "Failed to set attribute: %s",

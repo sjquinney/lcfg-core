@@ -2246,7 +2246,9 @@ LCFGStatus lcfgresource_from_spec( const char * spec, LCFGResource ** result,
 
   if ( status != LCFG_STATUS_ERROR ) {
     char * set_msg = NULL;
-    if ( !lcfgresource_set_attribute( res, spec_type, spec_val, &set_msg ) ) {
+    size_t val_len = strlen(spec_val);
+    if ( !lcfgresource_set_attribute( res, spec_type,
+				      spec_val, val_len, &set_msg ) ) {
       lcfgutils_build_message( msg, "bad value for resource attribute (%s)",
 			       set_msg );
       status = LCFG_STATUS_ERROR;
@@ -3982,6 +3984,7 @@ bool lcfgresource_parse_key( char  * key,
  * @param[in] res Pointer to @c LCFGResource
  * @param[in] type_symbol The symbol for the required attribute type
  * @param[in] value The new value for the attribute
+ * @param[in] value_len The length of the new value string for the attribute
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return boolean indicating success
@@ -3991,6 +3994,7 @@ bool lcfgresource_parse_key( char  * key,
 bool lcfgresource_set_attribute( LCFGResource * res,
                                  char type_symbol,
                                  const char * value,
+				 size_t value_len,
                                  char ** msg ) {
   assert( res != NULL );
 

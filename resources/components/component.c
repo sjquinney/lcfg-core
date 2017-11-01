@@ -1041,7 +1041,9 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
        resource value. */
 
     char * set_msg = NULL;
-    ok = lcfgresource_set_attribute( res, this_type, status_value,
+    size_t val_len = strlen(status_value);
+    ok = lcfgresource_set_attribute( res, this_type,
+				     status_value, val_len,
 				     &set_msg );
 
     if ( !ok ) {

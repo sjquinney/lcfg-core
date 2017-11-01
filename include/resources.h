@@ -409,6 +409,7 @@ ssize_t lcfgresource_build_key( const char * resource,
 bool lcfgresource_set_attribute( LCFGResource * res,
                                  char type_symbol,
                                  const char * value,
+				 size_t value_len,
                                  char ** msg )
   __attribute__((warn_unused_result));
 
