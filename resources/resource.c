@@ -3998,73 +3998,105 @@ bool lcfgresource_set_attribute( LCFGResource * res,
                                  char ** msg ) {
   assert( res != NULL );
 
+  free(*msg);
+  *msg = NULL;
+
   bool ok = false;
 
   /* Apply the action which matches with the symbol at the start of
      the status line or assume this is a simple specification of the
      resource value. */
 
+  /* Always take a copy to ensure the value string is null-terminated */
+
+  char * value_copy = NULL;
+  if ( value_len > 0 )
+    value_copy = strndup( value, value_len );
+
+  bool free_copy = false; /* Will value_copy need freeing at end? */
+
+  const char * attr_name = NULL; /* used for error messages */
+
   switch (type_symbol)
     {
     case LCFG_RESOURCE_SYMBOL_DERIVATION:
       ;
-      char * derivation = strdup(value);
+      attr_name = 'derivation';
 
-      ok = lcfgresource_set_derivation( res, derivation );
-      if ( !ok ) {
-        lcfgutils_build_message( msg, "Invalid derivation '%s'", derivation );
-	free(derivation);
-      }
+      if ( value_len > 0 )
+        ok = lcfgresource_set_derivation( res, value_copy );
+      else
+        ok = lcfgresource_set_derivation( res, NULL ); /* unset */
 
       break;
     case LCFG_RESOURCE_SYMBOL_TYPE:
+      ;
+      attr_name = 'type';
 
-      ok = lcfgresource_set_type_as_string( res, value, msg );
+      if ( value_len > 0 )
+        ok = lcfgresource_set_type_as_string( res, value_copy, msg );
+      else
+        ok = lcfgresource_set_type_default(res);
 
+      free_copy = true;
       break;
     case LCFG_RESOURCE_SYMBOL_CONTEXT:
       ;
-      char * context = strdup(value);
+      attr_name = 'context';
 
-      ok = lcfgresource_set_context( res, context );
-      if ( !ok ) {
-        lcfgutils_build_message( msg, "Invalid context '%s'", context );
-	free(context);
-      }
+      if ( value_len > 0 )
+        ok = lcfgresource_set_context( res, value_copy );
+      else
+        ok = lcfgresource_set_context( res, NULL ); /* unset */
 
       break;
     case LCFG_RESOURCE_SYMBOL_PRIORITY:
-      /* Be careful to only convert string to int if it looks safe */
-      ok = lcfgresource_valid_integer(value);
+      ;
+      attr_name = 'priority';
 
-      if (ok) {
-        int priority = atoi(value);
-        ok = lcfgresource_set_priority( res, priority );
+      if ( value_len > 0 ) {
+        /* Be careful to only convert string to int if it looks safe */
+        ok = lcfgresource_valid_integer(value_copy);
+
+        if (ok) {
+          int priority = atoi(value_copy);
+          ok = lcfgresource_set_priority( res, priority );
+        }
+      } else {
+        ok = lcfgresource_set_priority_default(res);
       }
 
-      if ( !ok )
-        lcfgutils_build_message( msg, "Invalid priority '%s'", value );
+      free_copy = true;
 
       break;
     case  LCFG_RESOURCE_SYMBOL_VALUE:
     default:        /* value line */
       ;
-      char * value2 = strdup(value);
+      attr_name = 'value';
 
-      /* Value strings may be html encoded as they can contain
-	 whitespace characters which would otherwise corrupt the status
-	 file formatting. */
+      if ( value_len > 0 ) {
+        /* Value strings may be html encoded as they can contain
+           whitespace characters which would otherwise corrupt the status
+           file formatting. */
 
-      lcfgutils_decode_html_entities_utf8( value2, NULL );
+        lcfgutils_decode_html_entities_utf8( value_copy, NULL );
 
-      ok = lcfgresource_set_value( res, value2 );
-      if (!ok) {
-        lcfgutils_build_message( msg, "Invalid value '%s'", value2 );
-	free(value2);
+        ok = lcfgresource_set_value( res, value_copy );
+      } else {
+        value_copy = strdup("");
+        ok = lcfgresource_set_value( res, value_copy );
       }
 
       break;
     }
+
+  if ( free_copy || !ok )
+    free(value_copy);
+
+  if ( !ok && *msg == NULL ) {
+    lcfgutils_build_message( msg, "Invalid %s '%s'", attr_name,
+			     ( value_len > 0 ? value_copy : '(empty string)' ));
+  }
 
   return ok;
 }
