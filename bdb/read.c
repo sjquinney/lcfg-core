@@ -121,7 +121,7 @@ LCFGStatus lcfgprofile_from_bdb( const char * filename,
   return status;
 }
 
-static LCFGStatus lcfgbdb_get_resource_item( DB * dbh,
+static LCFGChange lcfgbdb_get_resource_item( DB * dbh,
                                              LCFGResource * res,
                                              const char * comp_name,
                                              const char * namespace,
@@ -139,10 +139,10 @@ static LCFGStatus lcfgbdb_get_resource_item( DB * dbh,
   if ( keylen < 0 ) {
     *msg = lcfgresource_build_message( res, comp_name,
                                        "Failed to retrieve data from DB" );
-    return LCFG_STATUS_ERROR;
+    return LCFG_CHANGE_ERROR;
   }
 
-  LCFGStatus status = LCFG_STATUS_OK;
+  LCFGChange change = LCFG_CHANGE_NONE;
 
   DBT key, data;
 
@@ -157,10 +157,12 @@ static LCFGStatus lcfgbdb_get_resource_item( DB * dbh,
   if ( ret == 0 ) {
 
     char * set_msg = NULL;
-    if ( !lcfgresource_set_attribute( res, type_symbol,
+    if ( lcfgresource_set_attribute( res, type_symbol,
                                       (char *) data.data, (size_t) data.size,
 				      &set_msg ) ) {
-      status = LCFG_STATUS_ERROR;
+      change = LCFG_CHANGE_MODIFIED;
+    } else {
+      change = LCFG_CHANGE_ERROR;
       *msg = lcfgresource_build_message( res, comp_name,
                                          "Failed to set attribute: %s",
                                          set_msg );
@@ -169,7 +171,7 @@ static LCFGStatus lcfgbdb_get_resource_item( DB * dbh,
     free(set_msg);
   }
 
-  return status;
+  return change;
 }
 
 static LCFGStatus lcfgbdb_process_component( DB * dbh,
@@ -252,52 +254,87 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
       goto local_cleanup;
     }
 
+    LCFGChange res_change = LCFG_CHANGE_NONE;
+
     /* Derivation */
 
-    status = lcfgbdb_get_resource_item( dbh, res, 
-                                        comp_name, namespace,
-                                        LCFG_RESOURCE_SYMBOL_DERIVATION,
-                                        &keybuf, &keybufsize, msg );
+    LCFGChange deriv_change =
+      lcfgbdb_get_resource_item( dbh, res, 
+				 comp_name, namespace,
+				 LCFG_RESOURCE_SYMBOL_DERIVATION,
+				 &keybuf, &keybufsize, msg );
 
-    if ( status == LCFG_STATUS_ERROR ) goto local_cleanup;
+    if ( deriv_change == LCFG_CHANGE_ERROR ) {
+      res_change = LCFG_CHANGE_ERROR;
+      goto local_cleanup;
+    } else if ( deriv_change == LCFG_CHANGE_MODIFIED ) {
+      res_change = LCFG_CHANGE_MODIFIED;
+    }
 
     /* Type */
 
-    status = lcfgbdb_get_resource_item( dbh, res, 
-                                        comp_name, namespace,
-                                        LCFG_RESOURCE_SYMBOL_TYPE,
-                                        &keybuf, &keybufsize, msg );
+    LCFGChange type_change =
+      lcfgbdb_get_resource_item( dbh, res, 
+				 comp_name, namespace,
+				 LCFG_RESOURCE_SYMBOL_TYPE,
+				 &keybuf, &keybufsize, msg );
 
-    if ( status == LCFG_STATUS_ERROR ) goto local_cleanup;
+    if ( type_change == LCFG_CHANGE_ERROR ) {
+      res_change = LCFG_CHANGE_ERROR;
+      goto local_cleanup;
+    } else if ( type_change == LCFG_CHANGE_MODIFIED ) {
+      res_change = LCFG_CHANGE_MODIFIED;
+    }
 
     /* Context */
 
-    status = lcfgbdb_get_resource_item( dbh, res, 
-                                        comp_name, namespace,
-                                        LCFG_RESOURCE_SYMBOL_CONTEXT,
-                                        &keybuf, &keybufsize, msg );
+    LCFGChange context_change =
+      lcfgbdb_get_resource_item( dbh, res, 
+				 comp_name, namespace,
+				 LCFG_RESOURCE_SYMBOL_CONTEXT,
+				 &keybuf, &keybufsize, msg );
 
-    if ( status == LCFG_STATUS_ERROR ) goto local_cleanup;
+    if ( context_change == LCFG_CHANGE_ERROR ) {
+      res_change = LCFG_CHANGE_ERROR;
+      goto local_cleanup;
+    } else if ( context_change == LCFG_CHANGE_MODIFIED ) {
+      res_change = LCFG_CHANGE_MODIFIED;
+    }
 
     /* Priority */
 
-    status = lcfgbdb_get_resource_item( dbh, res, 
-                                        comp_name, namespace,
-                                        LCFG_RESOURCE_SYMBOL_PRIORITY,
-                                        &keybuf, &keybufsize, msg );
+    LCFGChange prio_change =
+      lcfgbdb_get_resource_item( dbh, res, 
+				 comp_name, namespace,
+				 LCFG_RESOURCE_SYMBOL_PRIORITY,
+				 &keybuf, &keybufsize, msg );
 
-    if ( status == LCFG_STATUS_ERROR ) goto local_cleanup;
+    if ( prio_change == LCFG_CHANGE_ERROR ) {
+      res_change = LCFG_CHANGE_ERROR;
+      goto local_cleanup;
+    } else if ( prio_change == LCFG_CHANGE_MODIFIED ) {
+      res_change = LCFG_CHANGE_MODIFIED;
+    }
 
     /* Value */
 
-    status = lcfgbdb_get_resource_item( dbh, res, 
-                                        comp_name, namespace,
-                                        LCFG_RESOURCE_SYMBOL_VALUE,
-                                        &keybuf, &keybufsize, msg );
+    LCFGChange value_change =
+      lcfgbdb_get_resource_item( dbh, res, 
+				 comp_name, namespace,
+				 LCFG_RESOURCE_SYMBOL_VALUE,
+				 &keybuf, &keybufsize, msg );
 
-    if ( status == LCFG_STATUS_ERROR ) goto local_cleanup;
+    if ( value_change == LCFG_CHANGE_ERROR ) {
+      res_change = LCFG_CHANGE_ERROR;
+      goto local_cleanup;
+    } else if ( value_change == LCFG_CHANGE_MODIFIED ) {
+      res_change = LCFG_CHANGE_MODIFIED;
+    }
 
-    /* Store the resource into the component */
+    /* Store the resource into the component.  Maybe we only want to
+       store it if something has been modified?? That would avoid
+       adding resources which don't really exist in the DB. That would
+       be different from behaviour in old client code. */
 
     char * merge_msg = NULL;
     LCFGChange merge_rc = 
@@ -312,6 +349,9 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
     free(merge_msg);
 
   local_cleanup:
+
+    if ( res_change == LCFG_CHANGE_ERROR )
+      status = LCFG_STATUS_ERROR;
 
     lcfgresource_relinquish(res);
 
