@@ -220,7 +220,10 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
   if ( status == LCFG_STATUS_ERROR ) goto cleanup;
 
   component = lcfgcomponent_new();
-  if ( !lcfgcomponent_set_name( component, strdup(comp_name) ) ) {
+  char * comp_name2 = strdup(comp_name);
+  if ( !lcfgcomponent_set_name( component, comp_name2 ) ) {
+    free(comp_name2);
+
     status = LCFG_STATUS_ERROR;
     lcfgutils_build_message( msg,
                              "Failed to set '%s' as name for component",
@@ -442,9 +445,12 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
       /* Create an empty component with the required name */
 
       LCFGComponent * comp = lcfgcomponent_new();
-      if ( lcfgcomponent_set_name( comp, strdup(comp_name) ) ) {
+      char * comp_name2 = strdup(comp_name);
+      if ( lcfgcomponent_set_name( comp, comp_name2 ) ) {
         *result = comp;
       } else {
+        free(comp_name2);
+
         status = LCFG_STATUS_ERROR;
         lcfgcomponent_relinquish(comp);
       }
