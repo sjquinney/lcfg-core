@@ -2235,8 +2235,10 @@ LCFGStatus lcfgresource_from_spec( const char * spec, LCFGResource ** result,
 
   if ( status != LCFG_STATUS_ERROR ) {
     res = lcfgresource_new();
+    char * res_name = strdup(spec_res);
+    if ( !lcfgresource_set_name( res, res_name ) ) {
+      free(res_name);
 
-    if ( !lcfgresource_set_name( res, strdup(spec_res) ) ) {
       lcfgutils_build_message( msg, "invalid resource name '%s'", spec_res );
       status = LCFG_STATUS_ERROR;
     }
