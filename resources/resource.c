@@ -1206,6 +1206,7 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
       {
       case '\r':
 	to = stpncpy( to, cr, cr_len );
+	break;
       case '\n':
 	to = stpncpy( to, lf, lf_len );
 	break;
