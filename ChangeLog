@@ -1,6 +1,33 @@
-2017-11-01  SVN: new release
+2017-11-03  SVN: new release
 
-	* Release: 1.46.5
+	* Release: 1.46.6
+
+2017-11-03 15:27  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/rpm.c: Added support for
+	  reading a package set from an RPM database
+
+2017-11-02 11:38  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Avoid small possibility of memory leaks if
+	  resource name is invalid
+
+2017-11-02 11:29  squinney@INF.ED.AC.UK
+
+	* bdb/read.c: Avoid small possibility of memory leaks if component
+	  or resource names are invalid
+
+2017-11-02 10:03  squinney@INF.ED.AC.UK
+
+	* xml/resource.c: Minor improvements to some error messages
+
+2017-11-01 20:42  squinney@INF.ED.AC.UK
+
+	* bdb/read.c: ensure resource name string is freed if error occurs
+
+2017-11-01 19:51  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.46.5
 
 2017-11-01 19:51  squinney@INF.ED.AC.UK
 
