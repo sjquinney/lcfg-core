@@ -1586,4 +1586,132 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
   return ( ok ? change : LCFG_CHANGE_ERROR );
 }
 
+#ifdef HAVE_RPM
+
+#include <rpm/rpmlib.h>
+#include <rpm/rpmts.h>
+#include <rpm/rpmdb.h>
+#include <rpm/rpmds.h>
+
+/**
+ * @brief Read package set from RPM database
+ *
+ * This reads the contents of an RPM database and generates a new @c
+ * LCFGPackageSet. This requires rpmlib and thus does not work on
+ * platforms which do not provide that library.
+ *
+ * To avoid memory leaks, when the package list is no longer required
+ * the @c lcfgpkgset_relinquish() function should be called.
+ *
+ * @param[in] rootdir Alternate root directory
+ * @param[out] result Reference to pointer for new @c LCFGPackageSet
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgpkgset_from_rpm_db( const char * rootdir,
+                                   LCFGPackageSet ** result,
+                                   char ** msg ) {
+
+  if ( rpmReadConfigFiles(NULL, NULL) == -1 ) {
+     perror("Failed to read RPM config files");
+     exit(EXIT_FAILURE);
+  }
+
+  rpmts ts = rpmtsCreate();
+
+  if ( !isempty(rootdir) )
+    rpmtsSetRootDir(ts, rootdir);
+
+  LCFGPackageSet * pkgs = lcfgpkgset_new();
+  lcfgpkgset_set_merge_rules( pkgs, LCFG_MERGE_RULE_SQUASH_IDENTICAL|LCFG_MERGE_RULE_KEEP_ALL );
+  rpmdbMatchIterator iter = rpmtsInitIterator(ts, RPMDBI_PACKAGES, NULL, 0);
+
+  bool ok = true;
+
+  if ( iter == NULL) {
+    /* no packages installed */
+  } else {
+
+    Header hdr;
+    while ( ok && (hdr = rpmdbNextIterator(iter)) != NULL) {
+
+      /* Ignoring keyring - code taken from updaterpms */
+      rpmds provides = rpmdsNew(hdr, RPMTAG_PROVIDENAME, 0);
+      if (rpmdsNext(provides) != -1) {
+        if  (rpmdsFlags(provides) & RPMSENSE_KEYRING) {
+          rpmdsFree(provides);
+          continue;
+        }
+      }   
+      rpmdsFree(provides);
+      
+      LCFGPackage * pkg = lcfgpackage_new();
+
+      char * pkg_name = headerGetAsString( hdr, RPMTAG_NAME );
+      ok = lcfgpackage_set_name( pkg, pkg_name );
+      if (!ok ) {
+        lcfgutils_build_message( msg, "Invalid package name '%s'", pkg_name );
+        free(pkg_name);
+      }
+
+      if (ok) {
+        char * pkg_arch = headerGetAsString( hdr, RPMTAG_ARCH );
+        ok = lcfgpackage_set_arch( pkg, pkg_arch );
+        if (!ok ) {
+          lcfgutils_build_message( msg, "Invalid architecture '%s' for package '%s'", pkg_arch, pkg_name );
+          free(pkg_arch);
+        }
+      }
+
+      if (ok) {
+        char * pkg_version = headerGetAsString( hdr, RPMTAG_VERSION );
+        ok = lcfgpackage_set_version( pkg, pkg_version );
+        if (!ok ) {
+          lcfgutils_build_message( msg, "Invalid version '%s' for package '%s'", pkg_version, pkg_name );
+          free(pkg_version);
+        }
+      }
+
+      if (ok) {
+        char * pkg_release = headerGetAsString( hdr, RPMTAG_RELEASE );
+        ok = lcfgpackage_set_release( pkg, pkg_release );
+        if (!ok ) {
+          lcfgutils_build_message( msg, "Invalid release '%s' for package '%s'", pkg_release, pkg_name );
+          free(pkg_release);
+        }
+      }
+
+      /* Add the package to the set */
+      if (ok) {
+        LCFGChange change = lcfgpkgset_merge_package( pkgs, pkg, msg );
+        if ( change == LCFG_CHANGE_ERROR )
+          ok = false;
+      }
+
+      lcfgpackage_relinquish(pkg);
+    }
+
+    rpmdbFreeIterator(iter);
+  }
+
+  ts = rpmtsFree(ts);
+
+  LCFGStatus status = LCFG_STATUS_OK;
+  if (!ok) {
+    status = LCFG_STATUS_ERROR;
+
+    lcfgpkgset_relinquish(pkgs);
+    pkgs = NULL;
+  }
+
+  *result = pkgs;
+  
+  return status;
+}
+
+#endif /* HAVE_RPM */
+
 /* eof */

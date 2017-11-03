@@ -536,6 +536,11 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
                                  char ** msg )
   __attribute__((warn_unused_result));
 
+LCFGStatus lcfgpkgset_from_rpm_db( const char * rootdir,
+                                   LCFGPackageSet ** result,
+                                   char ** msg )
+  __attribute__((warn_unused_result));
+
 LCFGPackageSet * lcfgpkgset_match( const LCFGPackageSet * pkgset,
                                    const char * want_name,
                                    const char * want_arch,
