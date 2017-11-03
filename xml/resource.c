@@ -540,7 +540,8 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
     if ( nodedepth == topdepth + 1 ) {
 
       if ( nodetype == XML_READER_TYPE_TEXT ||
-           nodetype == XML_READER_TYPE_CDATA ) {
+           nodetype == XML_READER_TYPE_CDATA ||
+           nodetype == XML_READER_TYPE_SIGNIFICANT_WHITESPACE ) {
 
         xmlChar * nodevalue = xmlTextReaderValue(reader);
 
@@ -564,7 +565,11 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
             free(canon_value);
           }
 
-        } else {
+        } else if ( !lcfgresource_is_list(resource) ) {
+
+          /* Only setting value for resources which are not lists. Tag
+             lists get the values modified when a record is processed
+             and a tag name is returned. */
 
           if ( lcfgresource_set_value( resource, (char *) nodevalue ) ) {
             nodevalue = NULL; /* Resource now "owns" value string */
@@ -630,8 +635,7 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
         xmlFree(nodename);
         nodename = NULL;
 
-      } else if ( nodetype != XML_READER_TYPE_WHITESPACE &&
-                  nodetype != XML_READER_TYPE_SIGNIFICANT_WHITESPACE ) {
+      } else {
 
         xmlChar * nodename  = xmlTextReaderName(reader);
         status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing record.", nodename, nodetype, linenum);
