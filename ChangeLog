@@ -1,6 +1,15 @@
 2017-11-03  SVN: new release
 
-	* Release: 1.46.6
+	* Release: 1.46.7
+
+2017-11-03 17:00  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, xml/resource.c: Tweaked how the resource values are
+	  processed so that whitespace is preserved in non-list cases
+
+2017-11-03 15:27  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.46.6
 
 2017-11-03 15:27  squinney@INF.ED.AC.UK
 
