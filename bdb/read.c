@@ -54,7 +54,7 @@
 
 LCFGStatus lcfgprofile_from_bdb( const char * filename,
                                  LCFGProfile ** result,
-                                 const LCFGTagList * comps_wanted,
+                                 LCFGTagList * comps_wanted,
                                  const char * namespace,
 				 LCFGOption options,
                                  char ** msg ) {
@@ -487,7 +487,7 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
 
 LCFGStatus lcfgbdb_process_components( DB * dbh,
                                        LCFGComponentSet ** result,
-                                       const LCFGTagList * comps_wanted,
+                                       LCFGTagList * comps_wanted,
                                        const char * namespace,
                                        char ** msg ) {
   assert( dbh != NULL );

@@ -276,7 +276,7 @@ bool lcfgcomponent_match( const LCFGComponent * comp,
                           const char * name );
 
 LCFGStatus lcfgcomponent_select( const LCFGComponent * comp,
-				 const LCFGTagList * res_wanted,
+				 LCFGTagList * res_wanted,
                                  LCFGComponent ** result,
                                  LCFGOption options,
                                  char ** msg )

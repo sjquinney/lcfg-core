@@ -36,14 +36,14 @@ DB * lcfgbdb_init_writer( const char * filename,
 
 LCFGStatus lcfgbdb_process_components( DB * dbh,
 				       LCFGComponentSet ** result,
-				       const LCFGTagList * comps_wanted,
+				       LCFGTagList * comps_wanted,
                                        const char * namespace,
 				       char ** errmsg )
    __attribute__((warn_unused_result));
 
 LCFGStatus lcfgprofile_from_bdb( const char * filename,
 				 LCFGProfile ** result,
-				 const LCFGTagList * comps_wanted,
+				 LCFGTagList * comps_wanted,
                                  const char * namespace,
 				 unsigned int options,
 				 char ** errmsg )
@@ -58,9 +58,9 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
-                                     const char * namespace,
-                                     DB * dbh,
-                                     char ** errmsg )
+				 const char * namespace,
+				 DB * dbh,
+				 char ** errmsg )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcompset_to_bdb( const LCFGComponentSet * components,

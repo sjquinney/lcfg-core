@@ -2192,7 +2192,7 @@ bool lcfgcomponent_same_name( const LCFGComponent * comp1,
  */
 
 LCFGStatus lcfgcomponent_select( const LCFGComponent * comp,
-                                 const LCFGTagList * res_wanted,
+                                 LCFGTagList * res_wanted,
                                  LCFGComponent ** result,
                                  LCFGOption options,
                                  char ** msg ) {
