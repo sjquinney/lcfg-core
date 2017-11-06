@@ -76,7 +76,7 @@ rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 %defattr(-,root,root)
 %doc ChangeLog README.md
 #%{_mandir}/man1/*
-#%{_mandir}/man3/*
+%{_mandir}/man8/*
 #%{_bindir}/parse_pkgspec
 %{_sbindir}/daemon
 %{_sbindir}/lcfgmsg
