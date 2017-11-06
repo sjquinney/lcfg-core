@@ -37,6 +37,35 @@ target_link_libraries(shiftpressed lcfg_utils)
 set(SBIN_TARGETS daemon lcfgmsg shiftpressed)
 set(BIN_TARGETS)
 
+SET(MANFILES "")
+SET(MAN_INSTALL_DIR share/man CACHE PATH "Output directory for man pages")
+
+find_program(POD2MAN pod2man)
+if(POD2MAN)
+
+  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/lcfgutils.pod.cin
+                  ${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.pod @ONLY)
+  execute_process(COMMAND ${POD2MAN} --section="8" --center="LCFG/Utils"
+    ${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.pod
+    ${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.8)
+  SET(MANFILES ${MANFILES} ${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.8)
+
+  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/lcfgmsg.pod.cin
+                  ${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.pod @ONLY)
+   execute_process(COMMAND ${POD2MAN} --section="8" --center="LCFG/Utils"
+     ${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.pod
+     ${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.8)
+  SET(MANFILES ${MANFILES} ${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.8)
+
+  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/shiftpressed.pod.cin
+                  ${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.pod @ONLY)
+  execute_process(COMMAND ${POD2MAN} --section="8" --center="LCFG/Utils"
+    ${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.pod
+    ${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.8)
+  SET(MANFILES ${MANFILES} ${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.8)
+
+endif(POD2MAN)
+
 # setsid is needed on solaris and macosx
 
 IF(CMAKE_SYSTEM_NAME MATCHES "^(Darwin|SunOS)$")
@@ -48,9 +77,14 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES "^(Darwin|SunOS)$")
 if(REQ_SETSID)
   add_executable(setsid setsid.c)
   set(BIN_TARGETS ${BIN_TARGETS} setsid)
+  SET(MANFILES ${MANFILES} ${CMAKE_CURRENT_BINARY_DIR}/setsid.8)
 endif(REQ_SETSID)
 
 # Specify where various files should be installed.
+
+if (MANFILES)
+  install( FILES ${MANFILES} DESTINATION ${MAN_INSTALL_DIR}/man8)
+endif (MANFILES)
 
 install(TARGETS ${BIN_TARGETS}
         DESTINATION bin)
