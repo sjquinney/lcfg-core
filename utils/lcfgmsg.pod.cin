@@ -4,8 +4,7 @@ lcfgmsg - send messages to LCFG error/logging system
 
 =head1 SYNOPSIS
 
- 
-@LCFGSBIN@/lcfgmsg [I<options>] I<component> I<message>
+lcfgmsg [I<options>] I<component> I<message>
 
 =head1 DESCRIPTION
 

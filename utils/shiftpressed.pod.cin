@@ -5,7 +5,7 @@ shiftpressed - detect if shift key pressed
 =head1 SYNOPSIS
 
  
-@LCFGSBIN@/shiftpressed
+shiftpressed
 
 =head1 DESCRIPTION
 
