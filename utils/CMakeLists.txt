@@ -37,35 +37,6 @@ target_link_libraries(shiftpressed lcfg_utils)
 set(SBIN_TARGETS daemon lcfgmsg shiftpressed)
 set(BIN_TARGETS)
 
-SET(MANFILES "")
-SET(MAN_INSTALL_DIR share/man CACHE PATH "Output directory for man pages")
-
-find_program(POD2MAN pod2man)
-if(POD2MAN)
-
-  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/lcfgutils.pod.cin
-                  ${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.pod @ONLY)
-  execute_process(COMMAND ${POD2MAN} --section="8" --center="LCFG/Utils"
-    ${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.pod
-    ${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.8)
-  SET(MANFILES ${MANFILES} ${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.8)
-
-  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/lcfgmsg.pod.cin
-                  ${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.pod @ONLY)
-   execute_process(COMMAND ${POD2MAN} --section="8" --center="LCFG/Utils"
-     ${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.pod
-     ${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.8)
-  SET(MANFILES ${MANFILES} ${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.8)
-
-  configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/shiftpressed.pod.cin
-                  ${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.pod @ONLY)
-  execute_process(COMMAND ${POD2MAN} --section="8" --center="LCFG/Utils"
-    ${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.pod
-    ${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.8)
-  SET(MANFILES ${MANFILES} ${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.8)
-
-endif(POD2MAN)
-
 # setsid is needed on solaris and macosx
 
 IF(CMAKE_SYSTEM_NAME MATCHES "^(Darwin|SunOS)$")
@@ -82,10 +53,6 @@ endif(REQ_SETSID)
 
 # Specify where various files should be installed.
 
-if (MANFILES)
-  install( FILES ${MANFILES} DESTINATION ${MAN_INSTALL_DIR}/man8)
-endif (MANFILES)
-
 install(TARGETS ${BIN_TARGETS}
         DESTINATION bin)
 
@@ -97,4 +64,75 @@ SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
 install(TARGETS lcfg_utils lcfg_utils-static
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}
         ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
+
+# man pages
+
+# Use pod2man to generate manual pages from .pod files
+# Usage:  pod2man(<podfile> <release-string> <man-section> <heading-center-text>)
+#
+# E.g.: pod2man("/path/to/file/mypod.pod" "1.2.3" 1 "My Manual Pages")
+
+SET(MAN_INSTALL_DIR share/man CACHE PATH "Output directory for man pages")
+
+find_program(POD2MAN pod2man)
+if(NOT POD2MAN)
+  message(STATUS "Could not find pod2man - man pages disabled")
+endif(NOT POD2MAN)
+
+macro(pod2man PODFILE_FULL RELEASE SECTION CENTER)
+
+  get_filename_component(PODFILE ${PODFILE_FULL} NAME)
+  string(REPLACE "." ";" PODFILE_LIST ${PODFILE})
+  list(GET PODFILE_LIST 0 NAME)
+  list(GET PODFILE_LIST 1 LANG)
+  string(TOUPPER ${NAME} NAME_UPCASE)
+  if(${LANG} STREQUAL "pod")
+    set(LANG "")
+  endif()
+
+  if(NOT EXISTS ${PODFILE_FULL})
+    message(FATAL ERROR "Could not find pod file ${PODFILE_FULL} to generate man page")
+  endif(NOT EXISTS ${PODFILE_FULL})
+
+  if(POD2MAN)
+    if(LANG)
+      set(MANPAGE_TARGET "man-${NAME}-${LANG}")
+      set(MANFILE_FULL "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.${LANG}.${SECTION}")
+      set(MANFILE_DEST "${MAN_INSTALL_DIR}/${LANG}/man${SECTION}")
+    else(LANG)
+      set(MANPAGE_TARGET "man-${NAME}")
+      set(MANFILE_FULL "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.${SECTION}")
+      set(MANFILE_DEST "${MAN_INSTALL_DIR}/man${SECTION}")
+    endif(LANG)
+
+    add_custom_command(
+      OUTPUT ${MANFILE_FULL}
+      COMMAND ${POD2MAN} --utf8 --section="${SECTION}" --center="${CENTER}" --release="${RELEASE}" --name="${NAME_UPCASE}" "${PODFILE_FULL}" "${MANFILE_FULL}"
+    )
+
+    add_custom_target(${MANPAGE_TARGET} ALL
+      DEPENDS ${MANFILE_FULL}
+    )
+
+    install(
+      FILES ${MANFILE_FULL}
+      RENAME ${NAME}.${SECTION}
+      DESTINATION ${MANFILE_DEST}
+    )
+
+  endif(POD2MAN)
+
+endmacro(pod2man PODFILE NAME SECTION CENTER)
+
+configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/shiftpressed.pod.cin"
+                "${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.pod" @ONLY)
+pod2man("${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.pod" "1.2.3" 8 "LCFG/Utils")
+
+configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/lcfgmsg.pod.cin"
+                "${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.pod" @ONLY)
+pod2man("${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.pod" "1.2.3" 8 "LCFG/Utils")
+
+configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/lcfgutils.pod.cin"
+                "${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.pod" @ONLY)
+pod2man("${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.pod" "1.2.3" 8 "LCFG/Utils")
 
