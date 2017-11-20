@@ -32,7 +32,14 @@ int main(int argc, char* argv[]) {
   while( ok && getline( &line, &line_len, in_fh ) != -1 ) {
     linenum++;
 
-    if ( *line == '#' ) {
+    /* If line is a comment or is only whitespace just write it out */
+
+    bool isempty = true;
+    char * p;
+    for ( p = line; isempty && *p != '\0'; p++ )
+      if ( !isspace(*p) ) isempty = false;
+
+    if ( isempty || *line == '#' ) {
       fputs( line, out_fh );
       continue;
     }
