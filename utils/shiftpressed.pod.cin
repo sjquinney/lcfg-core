@@ -14,12 +14,22 @@ connected to the stdin. It returns an exit status of 0 if the
 key is pressed, 2 if it is not, and 1 if the stdout is not a
 console or the state cannot be determined for some other reason.
 
-=head1 PLATFORMS
+=head1 BUGS AND LIMITATIONS
 
-Redhat7, Redhat9
+Please report any bugs or problems (or praise!) to bugs@lcfg.org,
+feedback and patches are also always very welcome.
 
 =head1 AUTHOR
 
-@LCFG_AUTHOR@
+Originally written by Paul Anderson now maintained by:
+
+   Stephen Quinney <squinney@inf.ed.ac.uk>
+
+=head1 LICENSE AND COPYRIGHT
+
+    Copyright (C) 2002-2017 University of Edinburgh. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GPL, version 2 or later.
 
 =cut
