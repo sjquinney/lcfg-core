@@ -3,9 +3,6 @@
  * Program to convert prefixed arch style rpmspecs to postfixed arch style
  * (Required for 64 bit platform)       
  *
- * Author: @LCFG_AUTHOR@
- * Version: @LCFG_VERSION@
- *
  */
 
 #define _WITH_GETLINE /* for BSD */
