@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
       continue;
     }
 
-    LCFGResource * pkg = NULL;
+    LCFGPackage * pkg = NULL;
     char * msg = NULL;
     LCFGStatus status = lcfgpackage_from_spec( line, &pkg, &msg );
     if ( status == LCFG_STATUS_ERROR ) {
