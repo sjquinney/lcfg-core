@@ -44,7 +44,7 @@ add_executable(parse_pkgspec parse_pkgspec.c)
 target_link_libraries(parse_pkgspec lcfg_packages)
 
 add_executable(translaterpmcfg translaterpmcfg.c)
-target_link_libraries(translaterpmcfg lcfg_packages lcfg_utils)
+target_link_libraries(translaterpmcfg lcfg_packages)
 
 # Specify where various files should be installed.
 
