@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 project (lcfg-core C)
 
+file (STRINGS "lcfg-build-id.txt" LCFG_VERSION)
+
 SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra" )
 
 set(LCFGTMP "/var/tmp/lcfg" CACHE PATH "Default directory for temporary files")
