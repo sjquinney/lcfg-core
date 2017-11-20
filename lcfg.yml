@@ -4,9 +4,7 @@ author:
   - Stephen Quinney <squinney@inf.ed.ac.uk>
 base: ~
 build: 
-  gencmake: 1
-  remove_input_after_translate: 1
-  translate_before_pack: 1
+  gencmake: 0
 date: 03/11/17 17:00:35
 group: LCFG
 license: GPLv2
@@ -14,7 +12,7 @@ name: lcfg-core
 orgident: org.lcfg
 platforms: 
   - ScientificLinux7
-release: 1
+release: 24
 schema: 1
 translate: 
   - "*.cin"
@@ -22,5 +20,6 @@ vcs:
   checkcommitted: 1
   genchangelog: 1
   logname: ChangeLog
+  store_version: 1
 vendor: University of Edinburgh
 version: 1.46.7
