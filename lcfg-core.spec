@@ -16,7 +16,7 @@ BuildRequires:  db4-devel
 BuildRequires:  libdb-devel
 %endif
 BuildRequires:  rpm-devel
-BuildRequires:  doxygen
+BuildRequires:  doxygen, doxygen-latex
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires(post,postun):         /sbin/ldconfig
 
