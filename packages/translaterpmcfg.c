@@ -8,8 +8,9 @@
 #define _WITH_GETLINE /* for BSD */
 
 #include <stdlib.h>
-#include <lcfg/packages.h>
-#include <lcfg/utils.h>
+
+#include "utils.h"
+#include "packages.h"
 
 int main(int argc, char* argv[]) {
 
