@@ -7,6 +7,6 @@ modules=1
 Name: lcfg-packages
 Version: @LCFG_VERSION@
 Description: LCFG packages handling library
-Requires: lcfg-utils = @LCFG_VERSION@, lcfg-context = @LCFG_VERSION@
+Requires: lcfg-utils = @LCFG_VERSION@, lcfg-context = @LCFG_VERSION@, @PACKAGES_DEPS@
 Libs: -L${libdir} -llcfg_packages
 Cflags: -I${includedir}
