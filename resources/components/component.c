@@ -2209,8 +2209,8 @@ LCFGStatus lcfgcomponent_select( const LCFGComponent * comp,
     if ( !lcfgcomponent_set_name( new_comp, new_name ) ) {
       status = LCFG_STATUS_ERROR;
       lcfgutils_build_message( msg, "Invalid component name '%s'", comp->name );
-
       free(new_name);
+      goto cleanup;
     }
   }
 
