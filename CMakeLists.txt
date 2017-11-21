@@ -34,18 +34,13 @@ add_subdirectory(xml)
 
 add_subdirectory(bdb)
 
+add_subdirectory(pc)
+
 # Headers
 
 install(DIRECTORY ${CMAKE_BINARY_DIR}/include/ include/
                   DESTINATION "include/lcfg"
                   FILES_MATCHING PATTERN "*.h"
-                  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-
-# pkg-config
-
-install(DIRECTORY ${CMAKE_BINARY_DIR}/pc/ pc/
-                  DESTINATION "share/pkgconfig"
-                  FILES_MATCHING PATTERN "*.pc"
                   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
 # Documentation
