@@ -1,6 +1,15 @@
 2017-11-21  SVN: new release
 
-	* Release: 1.46.8
+	* Release: 1.46.9
+
+2017-11-21 10:15  squinney@INF.ED.AC.UK
+
+	* packages/translaterpmcfg.c: fixed header inclusion so that the
+	  build suceeds in mock
+
+2017-11-21 10:07  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.46.8
 
 2017-11-21 10:04  squinney@INF.ED.AC.UK
 
