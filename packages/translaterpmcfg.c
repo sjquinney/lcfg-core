@@ -8,11 +8,12 @@
 #define _WITH_GETLINE /* for BSD */
 
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "utils.h"
 #include "packages.h"
 
-int main(int argc, char* argv[]) {
+int main(void) {
 
   FILE * in_fh  = stdin;
   FILE * out_fh = stdout;
