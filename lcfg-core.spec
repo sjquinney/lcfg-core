@@ -81,6 +81,7 @@ rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 %{_sbindir}/daemon
 %{_sbindir}/lcfgmsg
 %{_sbindir}/shiftpressed
+%{_sbindir}/translaterpmcfg
 %{_bindir}/lcfg_xml_reader
 %{_libdir}/liblcfg_bdb.so.*
 %{_libdir}/liblcfg_utils.so.*
