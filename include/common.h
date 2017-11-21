@@ -72,7 +72,8 @@ typedef enum {
   LCFG_OPT_ALL_CONTEXTS   = 128, /**< Include all contexts */
   LCFG_OPT_ALL_PRIORITIES = 256, /**< Include all priorities */
   LCFG_OPT_USE_META       = 512, /**< Include metadata */
-  LCFG_OPT_ALL_VALUES     = 1024 /**< Include all values */
+  LCFG_OPT_ALL_VALUES     = 1024,/**< Include all values */
+  LCFG_OPT_COMPAT         = 2048 /**< Compatibility mode */
 } LCFGOption;
 
 /**

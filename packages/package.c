@@ -1981,6 +1981,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
  *   - @c LCFG_OPT_NOPREFIX - Do not include any prefix character.
  *   - @c LCFG_OPT_NOCONTEXT - Do not include any context information.
  *   - @c LCFG_OPT_NEWLINE - Add a newline at the end of the string.
+ *   - @c LCFG_OPT_COMPAT - Put arch before name if not default or noarch
  *
  * This function uses a string buffer which may be pre-allocated if
  * nececesary to improve efficiency. This makes it possible to reuse
@@ -2044,12 +2045,22 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
 
   const char * pkgarch = NULL;
   size_t pkgarchlen = 0;
+  bool arch_compat = false;
+
   if ( lcfgpackage_has_arch(pkg) ) {
 
     /* Not added to the spec when same as default architecture */
-    if ( isempty(defarch) ||
-         strcmp( pkg->arch, defarch ) != 0 ) {
 
+    bool needs_arch = false;
+    if ( isempty(defarch) ) {
+      needs_arch = true;
+    } else if ( strcmp( pkg->arch, defarch ) != 0 ) {
+      needs_arch = true;
+      arch_compat = ( options&LCFG_OPT_COMPAT &&
+                      strcmp( pkg->arch, "noarch" ) != 0 );
+    }
+
+    if ( needs_arch ) {
       pkgarch = pkg->arch;
       pkgarchlen = strlen(pkgarch);
       new_len += ( pkgarchlen + 1 ); /* +1 for '/' separator */
@@ -2100,6 +2111,14 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
     to++;
   }
 
+  /* arch - compatibility support for v3 server/client */
+  if ( pkgarch != NULL && arch_compat ) {
+    to = stpncpy( to, pkgarch, pkgarchlen );
+
+    *to = '/';
+    to++;
+  }
+
   /* name */
   to = stpncpy( to, pkgnam, pkgnamlen );
 
@@ -2116,7 +2135,7 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   to = stpncpy( to, pkgrel, pkgrellen );
 
   /* arch */
-  if ( pkgarch != NULL ) {
+  if ( pkgarch != NULL && !arch_compat ) {
     *to = '/';
     to++;
 
