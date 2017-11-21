@@ -1,6 +1,130 @@
-2017-11-03  SVN: new release
+2017-11-21  SVN: new release
 
-	* Release: 1.46.7
+	* Release: 1.46.8
+
+2017-11-21 10:04  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec: enabled generation of latex docs
+
+2017-11-21 10:02  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec: re-enabled installation of parse_pkgspec
+
+2017-11-21 09:55  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec: Include translaterpmcfg utility
+
+2017-11-21 09:53  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, pc/CMakeLists.txt: Pre-process pkg-config files
+
+2017-11-21 09:52  squinney@INF.ED.AC.UK
+
+	* pc/lcfg-packages.pc.in: Need to have rpm in the requires list for
+	  platforms where it is supported
+
+2017-11-21 07:53  squinney@INF.ED.AC.UK
+
+	* utils/CMakeLists.txt: Set version when generating docs from pod
+	  files
+
+2017-11-20 17:30  squinney@INF.ED.AC.UK
+
+	* pc/lcfg-bdb.pc.cin, pc/lcfg-bdb.pc.in, pc/lcfg-context.pc.cin,
+	  pc/lcfg-context.pc.in, pc/lcfg-packages.pc.cin,
+	  pc/lcfg-packages.pc.in, pc/lcfg-profile.pc.cin,
+	  pc/lcfg-profile.pc.in, pc/lcfg-resources.pc.cin,
+	  pc/lcfg-resources.pc.in, pc/lcfg-utils.pc.cin,
+	  pc/lcfg-utils.pc.in, pc/lcfg-xml.pc.cin, pc/lcfg-xml.pc.in:
+	  Renamed to be consistent
+
+2017-11-20 16:24  squinney@INF.ED.AC.UK
+
+	* docs/parse_pkgspec.pod.cin, utils/lcfgmsg.pod.cin,
+	  utils/lcfgutils.pod.cin, utils/shiftpressed.pod.cin: Minor doc
+	  improvements
+
+2017-11-20 16:18  squinney@INF.ED.AC.UK
+
+	* Doxyfile.in, include/utils.h.in, packages/translaterpmcfg.c:
+	  tidied the macros being used
+
+2017-11-20 16:18  squinney@INF.ED.AC.UK
+
+	* lcfg.yml: no longer generating lcfg cmake as it is not required.
+	  Just manage the version string in the lcfg-build-id.txt file
+
+2017-11-20 16:17  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, lcfg-build-id.txt: Use new lcfg-build-id.txt file
+	  to get LCFG_VERSION string, this reduces dependencies on lcfg
+	  build tools cmake stuff
+
+2017-11-20 16:16  squinney@INF.ED.AC.UK
+
+	* packages/CMakeLists.txt: no need to link translaterpmcfg against
+	  lcfg_utils
+
+2017-11-20 14:01  squinney@INF.ED.AC.UK
+
+	* packages/translaterpmcfg.c, packages/translaterpmcfg.c.cin: Added
+	  new version of translaterpmcfg utility which is written in C to
+	  replace old hacky perl version
+
+2017-11-20 12:58  squinney@INF.ED.AC.UK
+
+	* packages/translaterpmcfg.c.cin: Ignore lines which are just
+	  whitespace
+
+2017-11-20 12:01  squinney@INF.ED.AC.UK
+
+	* packages/translaterpmcfg.c.cin: Fixed package variable type
+
+2017-11-20 11:59  squinney@INF.ED.AC.UK
+
+	* packages/CMakeLists.txt, packages/translaterpmcfg.c.cin,
+	  translaterpmcfg.c.cin: build and install translaterpmcfg tool
+
+2017-11-20 11:55  squinney@INF.ED.AC.UK
+
+	* translaterpmcfg.c.cin: moved to lcfg-core
+
+2017-11-06 20:23  squinney@INF.ED.AC.UK
+
+	* utils/CMakeLists.txt: Improved how man pages are generated
+
+2017-11-06 17:49  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec: include man pages
+
+2017-11-06 16:56  squinney@INF.ED.AC.UK
+
+	* utils/CMakeLists.txt: Make and install man pages
+
+2017-11-06 16:11  squinney@INF.ED.AC.UK
+
+	* utils/lcfgmsg.pod.cin, utils/shiftpressed.pod.cin: Tidied pod
+
+2017-11-04 08:02  squinney@INF.ED.AC.UK
+
+	* utils/daemon.c: Tweaked argv variable type to silence compiler
+	  warning
+
+2017-11-04 07:55  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, include/bdb.h, include/components.h,
+	  resources/components/component.c: Fixed a few warnings related to
+	  using iterators for tag lists, these can't be const since we need
+	  to increment the reference count
+
+2017-11-03 19:03  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: fixed switch in lcfgresource_enc_value
+	  where case accidentally fell through
+
+2017-11-03 17:00  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg.yml: lcfg-core release: 1.46.7
 
 2017-11-03 17:00  squinney@INF.ED.AC.UK
 
