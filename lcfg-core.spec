@@ -60,13 +60,11 @@ make
 # Documentation
 
 make doc
-#make -C docs/latex
+make -C docs/latex
 
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-# Conflicts with lcfg-pkgtools so need to remove for now
-rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 
 %post -p /sbin/ldconfig
 
@@ -77,7 +75,7 @@ rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 %doc ChangeLog README.md
 #%{_mandir}/man1/*
 %{_mandir}/man8/*
-#%{_bindir}/parse_pkgspec
+%{_bindir}/parse_pkgspec
 %{_sbindir}/daemon
 %{_sbindir}/lcfgmsg
 %{_sbindir}/shiftpressed
@@ -111,7 +109,7 @@ rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 
 %files doc
 %doc docs/html
-#%doc docs/latex/refman.pdf
+%doc docs/latex/refman.pdf
 
 %clean
 rm -rf $RPM_BUILD_ROOT
