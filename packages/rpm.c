@@ -1625,11 +1625,12 @@ LCFGStatus lcfgpkgset_from_rpm_db( const char * rootdir,
   if ( !isempty(rootdir) )
     rpmtsSetRootDir(ts, rootdir);
 
-  LCFGPackageSet * pkgs = lcfgpkgset_new();
-  lcfgpkgset_set_merge_rules( pkgs, LCFG_MERGE_RULE_SQUASH_IDENTICAL|LCFG_MERGE_RULE_KEEP_ALL );
   rpmdbMatchIterator iter = rpmtsInitIterator(ts, RPMDBI_PACKAGES, NULL, 0);
 
-  bool ok = true;
+  LCFGPackageSet * pkgs = lcfgpkgset_new();
+  bool ok = lcfgpkgset_set_merge_rules( pkgs, LCFG_MERGE_RULE_SQUASH_IDENTICAL|LCFG_MERGE_RULE_KEEP_ALL );
+
+  if ( !ok ) goto cleanup;
 
   if ( iter == NULL) {
     /* no packages installed */
@@ -1694,9 +1695,11 @@ LCFGStatus lcfgpkgset_from_rpm_db( const char * rootdir,
       lcfgpackage_relinquish(pkg);
     }
 
-    rpmdbFreeIterator(iter);
   }
 
+ cleanup:
+  
+  rpmdbFreeIterator(iter);
   ts = rpmtsFree(ts);
 
   LCFGStatus status = LCFG_STATUS_OK;
