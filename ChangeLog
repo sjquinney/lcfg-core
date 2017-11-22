@@ -1,6 +1,20 @@
 2017-11-22  SVN: new release
 
-	* Release: 1.46.10
+	* Release: 1.46.11
+
+2017-11-22 13:29  squinney@INF.ED.AC.UK
+
+	* xml/packages.c: Removed debugging accidentally left in
+
+2017-11-22 12:33  squinney@INF.ED.AC.UK
+
+	* xml/packages.c: Fixed logic bug in error message handling when
+	  processing package attributes
+
+2017-11-22 11:38  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release:
+	  1.46.10
 
 2017-11-21 17:01  squinney@INF.ED.AC.UK
 
