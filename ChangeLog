@@ -1,6 +1,31 @@
-2017-11-21  SVN: new release
+2017-11-22  SVN: new release
 
-	* Release: 1.46.9
+	* Release: 1.46.10
+
+2017-11-21 17:01  squinney@INF.ED.AC.UK
+
+	* include/common.h, lcfg.yml, packages/package.c: Added support for
+	  generating package specs in the compatibility style, we need this
+	  so that package lists for the current server can be generated on
+	  a machine with the new core libs
+
+2017-11-21 11:34  squinney@INF.ED.AC.UK
+
+	* packages/rpm.c: Minor improvements to error handling in
+	  lcfgpkgset_from_rpm_db
+
+2017-11-21 11:33  squinney@INF.ED.AC.UK
+
+	* packages/translaterpmcfg.c: need to include ctype.h
+
+2017-11-21 11:03  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: Minor improvement to error
+	  handling in lcfgcomponent_select
+
+2017-11-21 10:15  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.46.9
 
 2017-11-21 10:15  squinney@INF.ED.AC.UK
 
