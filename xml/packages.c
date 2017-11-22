@@ -171,7 +171,6 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
   /* Gather any derivation and context information */
 
   status = lcfgxml_gather_package_attributes( reader, pkg, msg );
-  fprintf( stderr, "Gather attributes: %s\n", (  status == LCFG_STATUS_ERROR ? "ERROR" : "OK" ) );
   if ( status == LCFG_STATUS_ERROR ) goto cleanup;
 
   bool done  = false;
@@ -262,11 +261,10 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
             nodevalue = NULL;
           }
 
-          fprintf( stderr, "Name: %s\n", (  status == LCFG_STATUS_ERROR ? "ERROR" : "OK" ) );
         /* Version */
 
         } else if ( xmlStrcmp(nodename, BAD_CAST "v" ) == 0 ) {
-          fprintf( stderr, "Setting version to '%s'\n", (char *) nodevalue );
+
           if ( !lcfgpackage_set_version( pkg, (char *) nodevalue ) ) {
             status = LCFG_STATUS_ERROR;
             *msg = lcfgpackage_build_message( pkg,
@@ -275,7 +273,6 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
             nodevalue = NULL;
           }
 
-          fprintf( stderr, "Version: %s\n", (  status == LCFG_STATUS_ERROR ? "ERROR" : "OK" ) );
         /* Release (and optional architecture) */
 
         } else if ( xmlStrcmp(nodename, BAD_CAST "r" ) == 0 ) {
@@ -316,7 +313,6 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
           }
 
-          fprintf( stderr, "Release: %s\n", (  status == LCFG_STATUS_ERROR ? "ERROR" : "OK" ) );
           if ( status != LCFG_STATUS_OK ) {
             xmlFree(nodevalue);
             nodevalue = NULL;
@@ -334,7 +330,6 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
             nodevalue = NULL;
           }
 
-          fprintf( stderr, "Flags: %s\n", (  status == LCFG_STATUS_ERROR ? "ERROR" : "OK" ) );
         /* Anything else is an error */
 
         } else {
