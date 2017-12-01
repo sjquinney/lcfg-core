@@ -66,7 +66,8 @@ typedef enum {
   LCFG_RESOURCE_STYLE_SPEC,       /**< Standard LCFG resource specification */
   LCFG_RESOURCE_STYLE_STATUS,     /**< LCFG status block (as used by components) */
   LCFG_RESOURCE_STYLE_SUMMARY,    /**< qxprof style summary */
-  LCFG_RESOURCE_STYLE_EXPORT      /**< Environment variables for shell evaluation */
+  LCFG_RESOURCE_STYLE_EXPORT,     /**< Environment variables for shell evaluation */
+  LCFG_RESOURCE_STYLE_VALUE       /**< Resource value only (possibly encoded) */
 } LCFGResourceStyle;
 
 /**
@@ -334,6 +335,9 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS )
 ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS )
   __attribute__((warn_unused_result));
 
+ssize_t lcfgresource_to_value( LCFG_RES_TOSTR_ARGS )
+  __attribute__((warn_unused_result));
+   
 ssize_t lcfgresource_to_export( const LCFGResource * res,
                                 const char * compname,
                                 const char * val_pfx, const char * type_pfx,

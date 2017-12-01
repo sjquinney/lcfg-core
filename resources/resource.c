@@ -2330,10 +2330,13 @@ LCFGStatus lcfgresource_to_string( const LCFGResource * res,
 
   /* Select the appropriate string function */
 
-  LCFGResStrFunc str_func;
+  LCFGResStrFunc str_func = NULL;
 
   switch (style)
     {
+    case LCFG_RESOURCE_STYLE_VALUE:
+      str_func = &lcfgresource_to_value;
+      break;
     case LCFG_RESOURCE_STYLE_SUMMARY:
       str_func = &lcfgresource_to_summary;
       break;
@@ -3028,7 +3031,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
   return new_len;
 }
 
-  /**
+/**
  * @brief Format the resource as an LCFG specification
  *
  * Generates a new string representation for the @c LCFGResource. This
@@ -3179,6 +3182,96 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
       to = stpncpy( to, value, value_len );
 
   }
+
+  free(value_enc);
+
+  /* Optional newline at the end of the string */
+
+  if ( options&LCFG_OPT_NEWLINE )
+    to = stpcpy( to, "\n" );
+
+  assert( (*result + new_len ) == to );
+
+  return new_len;
+}
+
+/**
+ * @brief Format the resource value
+ *
+ * Generates a new string representation for value of the @c LCFGResource.
+ *
+ * The following options are supported:
+ *   - @c LCFG_OPT_ENCODE - encode any newline characters in the value
+ *   - @c LCFG_OPT_NEWLINE - append a final newline character
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many resource strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated.
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required. If an error occurs this function will return -1.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] prefix Prefix, usually the component name (not used)
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
+
+ssize_t lcfgresource_to_value( LCFG_RES_TOSTR_ARGS ) {
+  assert( res != NULL );
+
+  const char * value = NULL;
+  char * value_enc = NULL;
+
+  if ( options&LCFG_OPT_ENCODE && lcfgresource_value_needs_encode(res) ) {
+    value_enc = lcfgresource_enc_value(res);
+    value = value_enc;
+  } else {
+    value = lcfgresource_get_value(res);
+  }
+
+  size_t value_len = value != NULL ? strlen(value) : 0;
+  size_t new_len = value_len;
+
+  /* Optional newline at end of string */
+
+  if ( options&LCFG_OPT_NEWLINE )
+    new_len += 1;
+
+  /* Allocate the required space */
+
+  if ( *result == NULL || *size < ( new_len + 1 ) ) {
+    *size = new_len + 1;
+
+    *result = realloc( *result, ( *size * sizeof(char) ) );
+    if ( *result == NULL ) {
+      perror("Failed to allocate memory for LCFG resource string");
+      exit(EXIT_FAILURE);
+    }
+
+  }
+
+  /* Always initialise the characters of the full space to nul */
+  memset( *result, '\0', *size );
+
+  /* Build the new string */
+
+  char * to = *result;
+
+  if ( value_len > 0 )
+    to = stpncpy( to, value, value_len );
 
   free(value_enc);
 
