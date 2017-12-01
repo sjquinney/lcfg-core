@@ -1,6 +1,19 @@
-2017-11-22  SVN: new release
+2017-12-01  SVN: new release
 
-	* Release: 1.46.11
+	* Release: 1.46.12
+
+2017-12-01 15:00  squinney@INF.ED.AC.UK
+
+	* include/resources.h, lcfg.yml, resources/resource.c: Added
+	  lcfgresource_to_value which can be used to format the resource as
+	  just the value (possibly encoded). This is used by a new feature
+	  in qxprof which makes it easier for a shell script to retrieve
+	  the value for a resource
+
+2017-11-22 15:10  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release:
+	  1.46.11
 
 2017-11-22 13:29  squinney@INF.ED.AC.UK
 
