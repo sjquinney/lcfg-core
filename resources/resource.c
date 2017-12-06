@@ -1367,9 +1367,11 @@ bool lcfgresource_valid_integer( const char * value ) {
   if ( *ptr == '-' )
     ptr++;
 
-  /* MUST be further characters */
+  /* MUST be further characters.
+     MUST not have leading zeroes unless it is just "0" */
 
-  bool valid = ( *ptr != '\0' );
+  bool valid = ( *ptr != '\0' &&
+                 ( *ptr != '0' || strcmp( ptr, "0" ) == 0 ) );
 
   /* All other characters MUST be digits */
 
