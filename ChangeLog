@@ -1,6 +1,29 @@
-2017-12-01  SVN: new release
+2017-12-07  SVN: new release
 
-	* Release: 1.46.12
+	* Release: 1.47.0
+
+2017-12-07 16:42  squinney@INF.ED.AC.UK
+
+	* include/resources.h, lcfg.yml, resources/components/component.c,
+	  resources/resource.c: Replaced lcfgresource_build_env_prefix with
+	  lcfgresource_build_env_var which can build the prefix or the
+	  whole environment variable name when required. This function
+	  brings together various functionality that existed in multiple
+	  other functions. Also added lcfgresource_valid_env_var which can
+	  be used to ensure the validity of the generated variable names.
+	  This is particularly necessary in the to_export functions which
+	  create output which is safe for shell eval.
+
+2017-12-06 11:49  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/resource.c: Slightly tightened up check in
+	  lcfgresource_valid_integer to only allow leading zeroes when the
+	  string is exactly '0' (i.e. 0100 is not a valid integer)
+
+2017-12-01 15:00  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release:
+	  1.46.12
 
 2017-12-01 15:00  squinney@INF.ED.AC.UK
 
