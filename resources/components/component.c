@@ -747,24 +747,37 @@ bool lcfgcomponent_to_export( const LCFGComponent * comp,
 
   const char * comp_name = lcfgcomponent_get_name(comp);
 
-  if ( val_pfx  == NULL ) val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
-  if ( type_pfx == NULL ) type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
+  bool ok = true;
 
-  /* Need these to handle the copies (if any) and free them later */
+  /* For efficiency the prefixes are expanded to include the component name */
+
   char * val_pfx2  = NULL;
   char * type_pfx2 = NULL;
 
-  if ( lcfgresource_build_env_prefix( val_pfx, comp_name, &val_pfx2 )
-       && val_pfx2 != NULL ) {
-    val_pfx = val_pfx2;
+  size_t val_pfx_size = 0;
+  ssize_t val_pfx_len =
+    lcfgresource_build_env_var( NULL, comp_name,
+                                LCFG_RESOURCE_ENV_VAL_PFX, val_pfx,
+                                &val_pfx2, &val_pfx_size );
+
+  if ( val_pfx_len < 0 ) {
+    ok = false;
+    goto cleanup;
   }
 
   /* No point doing this if the type data isn't required */
   if ( options&LCFG_OPT_USE_META ) {
-    if ( lcfgresource_build_env_prefix( type_pfx, comp_name, &type_pfx2 )
-         && type_pfx2 != NULL ) {
-      type_pfx = type_pfx2;
+    size_t type_pfx_size = 0;
+    ssize_t type_pfx_len =
+      lcfgresource_build_env_var( NULL, comp_name,
+                                  LCFG_RESOURCE_ENV_TYPE_PFX, type_pfx,
+                                  &type_pfx2, &type_pfx_size );
+
+    if ( type_pfx_len < 0 ) {
+      ok = false;
+      goto cleanup;
     }
+
   }
 
   /* Preallocate string buffer for efficiency */
@@ -777,7 +790,6 @@ bool lcfgcomponent_to_export( const LCFGComponent * comp,
   }
 
   LCFGTagList * export_res = lcfgtaglist_new();
-  bool ok = true;
 
   const LCFGResourceNode * cur_node = NULL;
   for ( cur_node = lcfgcomponent_head(comp);
@@ -793,7 +805,7 @@ bool lcfgcomponent_to_export( const LCFGComponent * comp,
          ( all_priorities || lcfgresource_is_active(res) ) ) {
 
       ssize_t rc = lcfgresource_to_export( res, NULL,
-                                           val_pfx, type_pfx,
+                                           val_pfx2, type_pfx2,
                                            options,
                                            &buffer, &buf_size );
 
@@ -833,17 +845,37 @@ bool lcfgcomponent_to_export( const LCFGComponent * comp,
     if ( len < 0 ) {
       ok = false;
     } else {
-      int rc = fprintf( out, "export %s%s='%s'\n", val_pfx, 
-                        LCFG_RESOURCE_ENV_LISTKEY, buffer );
+
+      char * reslist_key = NULL;
+      size_t reslist_key_size = 0;
+
+      ssize_t reslist_key_len =
+        lcfgresource_build_env_var( LCFG_RESOURCE_ENV_LISTKEY,
+                                    comp_name,
+                                    LCFG_RESOURCE_ENV_VAL_PFX,
+                                    val_pfx2,
+                                    &reslist_key, &reslist_key_size );
+
+      if ( reslist_key_len < 0 ) {
+        free(reslist_key);
+        ok = false;
+        goto cleanup;
+      }
+
+      int rc = fprintf( out, "export %s='%s'\n", reslist_key, buffer );
       if ( rc < 0 )
         ok = false;
+
+      free(reslist_key);
     }
 
   }
 
   free(buffer);
-
   lcfgtaglist_relinquish(export_res);
+
+ cleanup:
+
   free(val_pfx2);
   free(type_pfx2);
 
@@ -1133,24 +1165,39 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 
   const char * comp_name = lcfgcomponent_get_name(comp);
 
-  if ( val_pfx  == NULL ) val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
-  if ( type_pfx == NULL ) type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
+  /* For efficiency the prefixes are expanded to include the component name */
 
-  /* Need these to handle the copies (if any) and free them later */
   char * val_pfx2  = NULL;
   char * type_pfx2 = NULL;
 
-  if ( lcfgresource_build_env_prefix( val_pfx, comp_name, &val_pfx2 )
-       && val_pfx2 != NULL ) {
-    val_pfx = val_pfx2;
+  size_t val_pfx_size = 0;
+  ssize_t val_pfx_len =
+    lcfgresource_build_env_var( NULL, comp_name,
+                                LCFG_RESOURCE_ENV_VAL_PFX, val_pfx,
+                                &val_pfx2, &val_pfx_size );
+
+  if ( val_pfx_len < 0 ) {
+    lcfgutils_build_message( msg,
+                             "Failed to build environment variable prefix" );
+    status = LCFG_STATUS_ERROR;
+    goto cleanup;
   }
 
   /* No point doing this if the type data isn't required */
   if ( options&LCFG_OPT_USE_META ) {
-    if ( lcfgresource_build_env_prefix( type_pfx, comp_name, &type_pfx2 )
-         && type_pfx2 != NULL ) {
-      type_pfx = type_pfx2;
+    size_t type_pfx_size = 0;
+    ssize_t type_pfx_len =
+      lcfgresource_build_env_var( NULL, comp_name,
+                                  LCFG_RESOURCE_ENV_TYPE_PFX, type_pfx,
+                                  &type_pfx2, &type_pfx_size );
+
+    if ( type_pfx_len < 0 ) {
+      lcfgutils_build_message( msg,
+                               "Failed to build environment variable prefix" );
+      status = LCFG_STATUS_ERROR;
+      goto cleanup;
     }
+
   }
 
   LCFGTagList * export_res = lcfgtaglist_new();
@@ -1165,7 +1212,7 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
     if ( ( all_values     || lcfgresource_has_value(res) ) &&
          ( all_priorities || lcfgresource_is_active(res) ) ) {
 
-      status = lcfgresource_to_env( res, NULL, val_pfx, type_pfx, options );
+      status = lcfgresource_to_env( res, NULL, val_pfx2, type_pfx2, options );
 
       if ( status == LCFG_STATUS_ERROR ) {
         *msg = lcfgresource_build_message( res, comp_name,
@@ -1190,8 +1237,22 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
     /* Also create an environment variable which holds list of
        resource names for this component. */
 
-    char * reslist_key =
-      lcfgutils_string_join( "", val_pfx, LCFG_RESOURCE_ENV_LISTKEY );
+    char * reslist_key = NULL;
+    size_t reslist_key_size = 0;
+
+    ssize_t reslist_key_len =
+      lcfgresource_build_env_var( LCFG_RESOURCE_ENV_LISTKEY,
+                                  NULL,
+                                  LCFG_RESOURCE_ENV_VAL_PFX,
+                                  val_pfx2,
+                                  &reslist_key, &reslist_key_size );
+    if ( reslist_key_len < 0 ) {
+      free(reslist_key);
+      lcfgutils_build_message( msg,
+                               "Failed to build environment variable prefix" );
+      status = LCFG_STATUS_ERROR;
+      goto cleanup;
+    }
 
     lcfgtaglist_sort(export_res);
 
@@ -1212,6 +1273,9 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
   }
 
   lcfgtaglist_relinquish(export_res);
+
+ cleanup:
+
   free(val_pfx2);
   free(type_pfx2);
 
@@ -1963,23 +2027,6 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
     return LCFG_STATUS_ERROR;
   }
 
-  if ( val_pfx  == NULL ) val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
-  if ( type_pfx == NULL ) type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
-
-  /* Need these to handle the copies (if any) and free them later */
-  char * val_pfx2  = NULL;
-  char * type_pfx2 = NULL;
-
-  if ( lcfgresource_build_env_prefix( val_pfx, compname_in, &val_pfx2 )
-       && val_pfx2 != NULL ) {
-    val_pfx = val_pfx2;
-  }
-
-  if ( lcfgresource_build_env_prefix( type_pfx, compname_in, &type_pfx2 )
-       && type_pfx2 != NULL ) {
-    type_pfx = type_pfx2;
-  }
-
   /* Declare variables here which need to be defined before a jump to
      the cleanup stage */
 
@@ -1987,14 +2034,49 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
   LCFGComponent * comp = NULL;
   LCFGTagList * import_res = NULL;
 
+  char * val_pfx2  = NULL;
+  char * type_pfx2 = NULL;
+  ssize_t key_len = 0;
+  size_t key_size = 0;
+
+  key_len = lcfgresource_build_env_var( NULL, compname_in,
+                                        LCFG_RESOURCE_ENV_VAL_PFX,
+                                        val_pfx,
+                                        &val_pfx2, &key_size );
+
+  if ( key_len < 0 ) {
+    status = LCFG_STATUS_ERROR;
+    lcfgutils_build_message( msg, "Failed to build environment variable name" );
+    goto cleanup;
+  }
+
+  key_len = lcfgresource_build_env_var( NULL, compname_in,
+                                        LCFG_RESOURCE_ENV_TYPE_PFX,
+                                        type_pfx,
+                                        &type_pfx2, &key_size );
+
+  if ( key_len < 0 ) {
+    status = LCFG_STATUS_ERROR;
+    lcfgutils_build_message( msg, "Failed to build environment variable name" );
+    goto cleanup;
+  }
+
   /* Find the list of resource names for the component */
 
-  char * reslist_key =
-    lcfgutils_string_join( "", val_pfx, LCFG_RESOURCE_ENV_LISTKEY );
+  char * reslist_key = NULL;
+  key_len = lcfgresource_build_env_var( LCFG_RESOURCE_ENV_LISTKEY,
+                                        compname_in,
+                                        LCFG_RESOURCE_ENV_VAL_PFX,
+                                        val_pfx2,
+                                        &reslist_key, &key_size );
+
+  if ( key_len < 0 ) {
+    status = LCFG_STATUS_ERROR;
+    lcfgutils_build_message( msg, "Failed to build environment variable name" );
+    goto cleanup;
+  }
 
   const char * reslist_value = getenv(reslist_key);
-
-  free(reslist_key);
 
   if ( !isempty(reslist_value) ) {
 
@@ -2038,7 +2120,7 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
     }
 
     LCFGResource * res = NULL;
-    status = lcfgresource_from_env( resname, NULL, val_pfx, type_pfx, 
+    status = lcfgresource_from_env( resname, NULL, val_pfx2, type_pfx2, 
                                     &res, LCFG_OPT_NONE, msg );
 
     if ( status != LCFG_STATUS_ERROR ) {
@@ -2059,6 +2141,7 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
 
  cleanup:
 
+  free(reslist_key);
   free(val_pfx2);
   free(type_pfx2);
 

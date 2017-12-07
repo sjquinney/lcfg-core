@@ -294,9 +294,13 @@ bool lcfgresource_print( const LCFGResource * res,
                          FILE * out )
   __attribute__((warn_unused_result));
 
-bool lcfgresource_build_env_prefix( const char * prefix,
+ssize_t lcfgresource_build_env_var( const char * resname,
                                     const char * compname,
-                                    char ** result );
+                                    const char * default_base,
+                                    const char * base,
+                                    char ** result, size_t * size );
+
+bool lcfgresource_valid_env_var( const char * name );
 
 LCFGStatus lcfgresource_from_env( const char * resname,
                                   const char * compname,
