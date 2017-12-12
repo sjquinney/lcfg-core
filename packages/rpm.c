@@ -50,73 +50,6 @@ static LCFGStatus invalid_rpm( char ** msg, const char * base, ... ) {
   return LCFG_STATUS_ERROR;
 }
 
-static bool file_needs_update( const char * cur_file,
-                               const char * new_file ) {
-
-  assert( cur_file != NULL );
-  assert( new_file != NULL );
-
-  struct stat sb;
-  if ( ( stat( cur_file, &sb ) != 0 ) || !S_ISREG(sb.st_mode) )
-    return true;
-
-  /* open files and compare sizes first. If anything fails then just
-     request the file is updated in the hope that will fix things. */
-
-  /* Declare here before using goto */
-  bool needs_update = false;
-  FILE * fh1 = NULL;
-  FILE * fh2 = NULL;
-
-  fh1 = fopen( cur_file, "r" );
-  if ( fh1 == NULL ) {
-    needs_update = true;
-    goto cleanup;
-  }
-
-  fseek(fh1, 0, SEEK_END);
-  long size1 = ftell(fh1);
-  rewind(fh1);
-
-  fh2 = fopen( new_file, "r" );
-  if ( fh2 == NULL ) {
-    needs_update = true;
-    goto cleanup;
-  }
-
-  fseek(fh2, 0, SEEK_END);
-  long size2 = ftell(fh2);
-  rewind(fh2);
-
-  if (size1 != size2) {
-    needs_update = true;
-    goto cleanup;
-  }
-
-  /* Only if sizes are same do we bother comparing bytes */
-
-  char tmp1, tmp2;
-  long i;
-  for ( i=0; i < size1; i++ ) {
-    size_t s1 = fread( &tmp1, sizeof(char), 1, fh1 );
-    size_t s2 = fread( &tmp2, sizeof(char), 1, fh2 );
-    if ( s1 != s2 || tmp1 != tmp2 ) {
-      needs_update = true;
-      break;
-    }
-  }
-
- cleanup:
-
-  if ( fh1 != NULL )
-    fclose(fh1);
-
-  if ( fh2 != NULL )
-    fclose(fh2);
-
-  return needs_update;
-}
-
 /**
  * @brief Create a new package from an RPM filename
  *
@@ -520,7 +453,7 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
 
   if ( ok ) {
 
-    if ( file_needs_update( filename, tmpfile ) ) {
+    if ( lcfgutils_file_needs_update( filename, tmpfile ) ) {
 
       if ( rename( tmpfile, filename ) == 0 ) {
         change = LCFG_CHANGE_MODIFIED;
@@ -540,7 +473,7 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
     struct utimbuf times;
     times.actime  = mtime;
     times.modtime = mtime;
-    utime( filename, &times );
+    (void) utime( filename, &times );
   }
 
  cleanup:
@@ -549,10 +482,10 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
      tidiness. Do not care about the result */
 
   if ( tmpfh != NULL )
-    fclose(tmpfh);
+    (void) fclose(tmpfh);
 
   if ( tmpfile != NULL ) {
-    unlink(tmpfile);
+    (void) unlink(tmpfile);
     free(tmpfile);
   }
 
@@ -648,7 +581,7 @@ LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
 
   if ( ok ) {
 
-    if ( file_needs_update( filename, tmpfile ) ) {
+    if ( lcfgutils_file_needs_update( filename, tmpfile ) ) {
 
       if ( rename( tmpfile, filename ) == 0 ) {
         change = LCFG_CHANGE_MODIFIED;
@@ -1418,7 +1351,7 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
 
   if ( ok ) {
 
-    if ( file_needs_update( filename, tmpfile ) ) {
+    if ( lcfgutils_file_needs_update( filename, tmpfile ) ) {
 
       if ( rename( tmpfile, filename ) == 0 ) {
         change = LCFG_CHANGE_MODIFIED;
@@ -1491,6 +1424,7 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
                                  const char * rpminc,
                                  time_t mtime,
                                  char ** msg ) {
+  assert( filename != NULL );
 
   *msg = NULL;
   LCFGChange change = LCFG_CHANGE_ERROR;
@@ -1553,7 +1487,7 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
 
   if ( ok ) {
 
-    if ( file_needs_update( filename, tmpfile ) ) {
+    if ( lcfgutils_file_needs_update( filename, tmpfile ) ) {
 
       if ( rename( tmpfile, filename ) == 0 ) {
         change = LCFG_CHANGE_MODIFIED;
@@ -1579,7 +1513,7 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
  cleanup:
 
   if ( tmpfile != NULL ) {
-    unlink(tmpfile);
+    (void) unlink(tmpfile);
     free(tmpfile);
   }
 

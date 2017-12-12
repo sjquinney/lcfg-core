@@ -478,6 +478,90 @@ bool lcfgutils_file_readable( const char * path ) {
   return is_readable;
 }
 
+/**
+ * @brief Compare contents of two files for any differences
+ *
+ * This can be used to compare the contents of two files in the
+ * situation where a 'new' file is available to replace a 'current'
+ * file. It will immediately return true if the current file does not
+ * exist or if the files have different sizes. Otherwise the contents
+ * of the files will be compared one character at a time until a
+ * difference is found or the end of the files is reached.
+ *
+ * @param[in] cur_file Path to the current file
+ * @param[in] new_file Path to the new file
+ *
+ * @return Boolean which indicates if contents of files differ
+ *
+ */
+
+bool lcfgutils_file_needs_update( const char * cur_file,
+                                  const char * new_file ) {
+
+  assert( cur_file != NULL );
+  assert( new_file != NULL );
+
+  struct stat sb;
+  if ( ( stat( cur_file, &sb ) != 0 ) || !S_ISREG(sb.st_mode) )
+    return true;
+
+  /* open files and compare sizes first. If anything fails then just
+     request the file is updated in the hope that will fix things. */
+
+  /* Declare here before using goto */
+  bool needs_update = false;
+  FILE * fh1 = NULL;
+  FILE * fh2 = NULL;
+
+  fh1 = fopen( cur_file, "r" );
+  if ( fh1 == NULL ) {
+    needs_update = true;
+    goto cleanup;
+  }
+
+  fseek(fh1, 0, SEEK_END);
+  long size1 = ftell(fh1);
+  rewind(fh1);
+
+  fh2 = fopen( new_file, "r" );
+  if ( fh2 == NULL ) {
+    needs_update = false;
+    goto cleanup;
+  }
+
+  fseek(fh2, 0, SEEK_END);
+  long size2 = ftell(fh2);
+  rewind(fh2);
+
+  if (size1 != size2) {
+    needs_update = true;
+    goto cleanup;
+  }
+
+  /* Only if sizes are same do we bother comparing bytes */
+
+  char tmp1, tmp2;
+  long i;
+  for ( i=0; i < size1; i++ ) {
+    size_t s1 = fread( &tmp1, sizeof(char), 1, fh1 );
+    size_t s2 = fread( &tmp2, sizeof(char), 1, fh2 );
+    if ( s1 != s2 || tmp1 != tmp2 ) {
+      needs_update = true;
+      break;
+    }
+  }
+
+ cleanup:
+
+  if ( fh1 != NULL )
+    (void) fclose(fh1);
+
+  if ( fh2 != NULL )
+    (void) fclose(fh2);
+
+  return needs_update;
+}
+
 void lcfgutils_build_message( char ** strp, const char *fmt, ... ) {
   free( *strp );
   *strp = NULL;
