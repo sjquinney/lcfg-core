@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <sys/types.h>
 
+#include "common.h"
+
 #define LCFGLOG "@LCFGLOG@"
 #define PROGRESSFILE "@LCFGTMP@/utils.progress"
 
