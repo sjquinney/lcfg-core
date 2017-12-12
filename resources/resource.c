@@ -2708,7 +2708,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   }
 
   /* +1 space, +1 =, +2 '', +1 '\n' == 5 */
-  ssize_t new_len = ( env_fn_len + val_key_len + value_len + 5 );
+  size_t new_len = ( env_fn_len + val_key_len + value_len + 5 );
 
   /* Type - optional */
 
@@ -2849,7 +2849,11 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   free(type_key);
   free(msg);
 
-  return ( ok ? new_len : -1 );
+  if (ok)
+    return new_len;
+  else
+    return -1;
+
 }
 
 /**
