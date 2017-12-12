@@ -222,7 +222,7 @@ LCFGStatus lcfgctxlist_from_file( const char * filename,
                                   char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgctxlist_to_file( LCFGContextList * ctxlist,
+LCFGChange lcfgctxlist_to_file( LCFGContextList * ctxlist,
                                 const char * filename,
                                 time_t mtime,
                                 char ** errmsg )
