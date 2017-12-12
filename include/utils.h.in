@@ -58,6 +58,10 @@ bool lcfgutils_file_readable( const char * path );
 bool lcfgutils_file_needs_update( const char * cur_file,
                                   const char * new_file );
 
+LCFGChange lcfgutils_file_update( const char * cur_file, const char * new_file,
+				  time_t mtime )
+  __attribute__((warn_unused_result));
+
 void lcfgutils_string_chomp( char * str );
 
 void lcfgutils_string_trim( char * str );

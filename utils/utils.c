@@ -10,16 +10,17 @@
 #define _GNU_SOURCE /* for asprintf */
 
 #include <ctype.h>
+#include <dirent.h>
+#include <fcntl.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
-#include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <sys/types.h>
 #include <unistd.h>
+#include <utime.h>
 #include <assert.h>
 
 #include "common.h"
@@ -560,6 +561,31 @@ bool lcfgutils_file_needs_update( const char * cur_file,
     (void) fclose(fh2);
 
   return needs_update;
+}
+
+LCFGChange lcfgutils_file_update( const char * cur_file, const char * new_file,
+				  time_t mtime ) {
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+
+  if ( lcfgutils_file_needs_update( cur_file, new_file ) ) {
+
+    if ( rename( cur_file, new_file ) == 0 ) {
+      change = LCFG_CHANGE_MODIFIED;
+    } else {
+      change = LCFG_CHANGE_ERROR;
+    }
+
+  }
+
+  if ( change != LCFG_CHANGE_ERROR && mtime != 0 ) {
+    struct utimbuf times;
+    times.actime  = mtime;
+    times.modtime = mtime;
+    (void) utime( new_file, &times );
+  }
+
+  return change;
 }
 
 void lcfgutils_build_message( char ** strp, const char *fmt, ... ) {
