@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-12-07 16:42:55 +0000 (Thu, 07 Dec 2017) $
- * $Revision: 33863 $
+ * $Date: 2017-12-12 16:08:48 +0000 (Tue, 12 Dec 2017) $
+ * $Revision: 33876 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -2708,7 +2708,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   }
 
   /* +1 space, +1 =, +2 '', +1 '\n' == 5 */
-  ssize_t new_len = ( env_fn_len + val_key_len + value_len + 5 );
+  size_t new_len = ( env_fn_len + val_key_len + value_len + 5 );
 
   /* Type - optional */
 
@@ -2849,7 +2849,11 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   free(type_key);
   free(msg);
 
-  return ( ok ? new_len : -1 );
+  if (ok)
+    return new_len;
+  else
+    return -1;
+
 }
 
 /**

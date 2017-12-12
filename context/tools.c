@@ -542,7 +542,7 @@ LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
         ok = false;
       }
     } else {
-      int rc = fclose(tmpfh); /* Ignoring any errors */
+      (void) fclose(tmpfh); /* Ignoring any errors */
     }
 
     /* Rename to the active file */
@@ -553,7 +553,7 @@ LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
     }
 
     if ( tmpfile != NULL ) {
-      unlink(tmpfile);
+      (void) unlink(tmpfile);
       free(tmpfile);
     }
 
@@ -567,7 +567,7 @@ LCFGChange lcfgcontext_pending_to_active( const char * contextdir,
     struct utimbuf times;
     times.actime  = pending_mtime;
     times.modtime = pending_mtime;
-    utime( afile, &times );
+    (void) utime( afile, &times );
   }
 
   free(afile);

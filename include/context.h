@@ -3,8 +3,8 @@
  * @brief LCFG context handling library
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-08-04 15:57:41 +0100 (Fri, 04 Aug 2017) $
- * $Revision: 33307 $
+ * $Date: 2017-12-12 16:19:49 +0000 (Tue, 12 Dec 2017) $
+ * $Revision: 33878 $
  */
 
 #ifndef LCFG_CORE_CONTEXT_H
@@ -222,7 +222,7 @@ LCFGStatus lcfgctxlist_from_file( const char * filename,
                                   char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgctxlist_to_file( LCFGContextList * ctxlist,
+LCFGChange lcfgctxlist_to_file( LCFGContextList * ctxlist,
                                 const char * filename,
                                 time_t mtime,
                                 char ** errmsg )

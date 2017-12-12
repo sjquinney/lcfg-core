@@ -15,6 +15,7 @@
 #include <ctype.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <utime.h>
 #include <assert.h>
 
@@ -650,43 +651,91 @@ bool lcfgctxlist_print( const LCFGContextList * ctxlist,
  * @param[in] mtime Modification time to set on the file
  * @param[out] msg Pointer to any diagnostic messages.
  *
- * @return Status value indicating success of the process
+ * @return Integer value indicating type of change for file
  *
  */
 
-LCFGStatus lcfgctxlist_to_file( LCFGContextList * ctxlist,
+LCFGChange lcfgctxlist_to_file( LCFGContextList * ctxlist,
                                 const char * filename,
                                 time_t mtime,
                                 char ** msg ) {
   assert( ctxlist != NULL );
+  assert( filename != NULL );
+
+  LCFGChange change = LCFG_CHANGE_ERROR;
+
+  char * tmpfile = lcfgutils_safe_tmpfile(filename);
+
+  FILE * tmpfh = NULL;
+  int tmpfd = mkstemp(tmpfile);
+  if ( tmpfd >= 0 )
+    tmpfh = fdopen( tmpfd, "w" );
+
+  if ( tmpfh == NULL ) {
+    if ( tmpfd >= 0 ) close(tmpfd);
+
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to open context file" );
+    goto cleanup;
+  }
 
   lcfgctxlist_sort_by_priority(ctxlist);
 
-  FILE *file;
-  if ((file = fopen(filename, "w")) == NULL) {
-    lcfgutils_build_message( msg, "Failed to open file '%s' for writing",
-                             filename );
-    return LCFG_STATUS_ERROR;
-  }
+  bool ok = lcfgctxlist_print( ctxlist, tmpfh );
 
-  bool ok = lcfgctxlist_print( ctxlist, file );
+  if (!ok) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to write context file" );
+  } else {
 
-  if (ok) {
-    if ( fclose(file) != 0 ) {
-      lcfgutils_build_message( msg, "Failed to close file '%s'", filename );
-      ok = false;
-    }
-
-    /* Should this WARN if it fails? */
-    if ( ok && mtime != 0 ) {
-      struct utimbuf times;
-      times.actime  = mtime;
-      times.modtime = mtime;
-      utime( filename, &times );
+    if ( fclose(tmpfh) == 0 ) {
+      tmpfh = NULL; /* Avoids a further attempt to close in cleanup */
+    } else {
+      change = LCFG_CHANGE_ERROR;
+      lcfgutils_build_message( msg, "Failed to close context file" );
     }
   }
 
-  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+  /* Only update file if there are differences */
+  if ( change != LCFG_CHANGE_ERROR ) {
+
+    if ( lcfgutils_file_needs_update( filename, tmpfile ) ) {
+
+      if ( rename( tmpfile, filename ) == 0 ) {
+        change = LCFG_CHANGE_MODIFIED;
+      } else {
+        change = LCFG_CHANGE_ERROR;
+      }
+
+    } else {
+      change = LCFG_CHANGE_NONE;
+    }
+
+  }
+
+  /* Even when the file is not changed the mtime might need to be updated */
+
+  if ( change != LCFG_CHANGE_ERROR && mtime != 0 ) {
+    struct utimbuf times;
+    times.actime  = mtime;
+    times.modtime = mtime;
+    (void) utime( filename, &times );
+  }
+
+ cleanup:
+
+  /* This might have already gone but call fclose and unlink to ensure
+     tidiness. Do not care about the result */
+
+  if ( tmpfh != NULL )
+    (void) fclose(tmpfh);
+
+  if ( tmpfile != NULL ) {
+    (void) unlink(tmpfile);
+    free(tmpfile);
+  }
+
+  return change;
 }
 
 /**
