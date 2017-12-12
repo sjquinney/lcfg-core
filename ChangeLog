@@ -1,6 +1,32 @@
-2017-12-07  SVN: new release
+2017-12-12  SVN: new release
 
-	* Release: 1.47.0
+	* Release: 1.47.1
+
+2017-12-12 16:19  squinney@INF.ED.AC.UK
+
+	* context/list.c, include/context.h, lcfg.yml: Improved
+	  lcfgctxlist_to_file, will now only replace a file when the
+	  contents is different from the previous version
+
+2017-12-12 16:09  squinney@INF.ED.AC.UK
+
+	* context/tools.c: explicitly ignore some return values to keep the
+	  compiler happy
+
+2017-12-12 16:08  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Minor tweak to return of _to_export to
+	  silence compiler warning
+
+2017-12-12 15:30  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, packages/rpm.c, utils/utils.c: Moved
+	  file_needs_update into utils as lcfgutils_file_needs_update so
+	  that it can be used elsewhere
+
+2017-12-07 16:43  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.47.0
 
 2017-12-07 16:42  squinney@INF.ED.AC.UK
 
