@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-06-30 14:00:27 +0100 (Fri, 30 Jun 2017) $
- * $Revision: 33246 $
+ * $Date: 2017-12-07 16:42:55 +0000 (Thu, 07 Dec 2017) $
+ * $Revision: 33863 $
  */
 
 #ifndef LCFG_CORE_RESOURCES_H
@@ -51,6 +51,9 @@ typedef enum {
   LCFG_RESOURCE_TYPE_SUBSCRIBE    /**< Subscribed from spanning map, like String*/
 } LCFGResourceType;
 
+#define LCFG_RESOURCE_DEFAULT_TYPE     LCFG_RESOURCE_TYPE_STRING
+#define LCFG_RESOURCE_DEFAULT_PRIORITY 0
+
 /**
  * @brief Resource format styles
  *
@@ -63,7 +66,8 @@ typedef enum {
   LCFG_RESOURCE_STYLE_SPEC,       /**< Standard LCFG resource specification */
   LCFG_RESOURCE_STYLE_STATUS,     /**< LCFG status block (as used by components) */
   LCFG_RESOURCE_STYLE_SUMMARY,    /**< qxprof style summary */
-  LCFG_RESOURCE_STYLE_EXPORT      /**< Environment variables for shell evaluation */
+  LCFG_RESOURCE_STYLE_EXPORT,     /**< Environment variables for shell evaluation */
+  LCFG_RESOURCE_STYLE_VALUE       /**< Resource value only (possibly encoded) */
 } LCFGResourceStyle;
 
 /**
@@ -264,7 +268,11 @@ bool lcfgresource_set_comment( LCFGResource * res, char * new_value );
 
 int lcfgresource_get_priority( const LCFGResource * res );
 char * lcfgresource_get_priority_as_string( const LCFGResource * res );
-bool lcfgresource_set_priority( LCFGResource * res, int priority );
+bool lcfgresource_set_priority( LCFGResource * res, int priority )
+  __attribute__((warn_unused_result));
+bool lcfgresource_set_priority_default( LCFGResource * res )
+  __attribute__((warn_unused_result));
+
 bool lcfgresource_is_active( const LCFGResource * res );
 
 bool lcfgresource_eval_priority( LCFGResource * res,
@@ -286,9 +294,13 @@ bool lcfgresource_print( const LCFGResource * res,
                          FILE * out )
   __attribute__((warn_unused_result));
 
-bool lcfgresource_build_env_prefix( const char * prefix,
+ssize_t lcfgresource_build_env_var( const char * resname,
                                     const char * compname,
-                                    char ** result );
+                                    const char * default_base,
+                                    const char * base,
+                                    char ** result, size_t * size );
+
+bool lcfgresource_valid_env_var( const char * name );
 
 LCFGStatus lcfgresource_from_env( const char * resname,
                                   const char * compname,
@@ -327,6 +339,9 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS )
 ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS )
   __attribute__((warn_unused_result));
 
+ssize_t lcfgresource_to_value( LCFG_RES_TOSTR_ARGS )
+  __attribute__((warn_unused_result));
+   
 ssize_t lcfgresource_to_export( const LCFGResource * res,
                                 const char * compname,
                                 const char * val_pfx, const char * type_pfx,
@@ -402,6 +417,7 @@ ssize_t lcfgresource_build_key( const char * resource,
 bool lcfgresource_set_attribute( LCFGResource * res,
                                  char type_symbol,
                                  const char * value,
+				 size_t value_len,
                                  char ** msg )
   __attribute__((warn_unused_result));
 

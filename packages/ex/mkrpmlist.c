@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
   } else {
 
     LCFGChange write_rc = lcfgpkglist_to_rpmlist( pkglist,
-                                                  NULL,
+                                                  NULL, NULL,
                                                   outfile, 
                                                   0,
                                                   &msg );

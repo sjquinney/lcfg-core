@@ -16,7 +16,7 @@ BuildRequires:  db4-devel
 BuildRequires:  libdb-devel
 %endif
 BuildRequires:  rpm-devel
-BuildRequires:  doxygen
+BuildRequires:  doxygen, doxygen-latex
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires(post,postun):         /sbin/ldconfig
 
@@ -60,13 +60,11 @@ make
 # Documentation
 
 make doc
-#make -C docs/latex
+make -C docs/latex
 
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-# Conflicts with lcfg-pkgtools so need to remove for now
-rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 
 %post -p /sbin/ldconfig
 
@@ -76,11 +74,12 @@ rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 %defattr(-,root,root)
 %doc ChangeLog README.md
 #%{_mandir}/man1/*
-#%{_mandir}/man3/*
-#%{_bindir}/parse_pkgspec
+%{_mandir}/man8/*
+%{_bindir}/parse_pkgspec
 %{_sbindir}/daemon
 %{_sbindir}/lcfgmsg
 %{_sbindir}/shiftpressed
+%{_sbindir}/translaterpmcfg
 %{_bindir}/lcfg_xml_reader
 %{_libdir}/liblcfg_bdb.so.*
 %{_libdir}/liblcfg_utils.so.*
@@ -110,7 +109,7 @@ rm -f $RPM_BUILD_ROOT/usr/bin/parse_pkgspec
 
 %files doc
 %doc docs/html
-#%doc docs/latex/refman.pdf
+%doc docs/latex/refman.pdf
 
 %clean
 rm -rf $RPM_BUILD_ROOT

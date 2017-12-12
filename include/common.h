@@ -3,8 +3,8 @@
  * @brief LCFG common constants
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-29 14:29:10 +0100 (Mon, 29 May 2017) $
- * $Revision: 32964 $
+ * $Date: 2017-11-21 17:01:57 +0000 (Tue, 21 Nov 2017) $
+ * $Revision: 33803 $
  */
 
 #ifndef LCFG_CORE_COMMON_H
@@ -72,7 +72,8 @@ typedef enum {
   LCFG_OPT_ALL_CONTEXTS   = 128, /**< Include all contexts */
   LCFG_OPT_ALL_PRIORITIES = 256, /**< Include all priorities */
   LCFG_OPT_USE_META       = 512, /**< Include metadata */
-  LCFG_OPT_ALL_VALUES     = 1024 /**< Include all values */
+  LCFG_OPT_ALL_VALUES     = 1024,/**< Include all values */
+  LCFG_OPT_COMPAT         = 2048 /**< Compatibility mode */
 } LCFGOption;
 
 /**

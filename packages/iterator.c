@@ -3,10 +3,11 @@
  * @brief Functions for iterating through LCFG package lists
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-08-04 13:42:14 +0100 (Fri, 04 Aug 2017) $
- * $Revision: 33301 $
+ * $Date: 2017-08-15 11:39:25 +0100 (Tue, 15 Aug 2017) $
+ * $Revision: 33333 $
  */
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,6 +38,7 @@
  */
 
 LCFGPackageIterator * lcfgpkgiter_new( LCFGPackageList * list ) {
+  assert( list != NULL );
 
   LCFGPackageIterator * iterator = malloc( sizeof(LCFGPackageIterator) );
   if ( iterator == NULL ) {

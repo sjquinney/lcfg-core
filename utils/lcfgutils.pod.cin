@@ -65,7 +65,7 @@ and monitoring systems.
 
 =head1 ENVIRONMENT VARIABLES
 
-=over 4
+=over
 
 =item B<LCFG_MONITOR>
 
@@ -83,12 +83,22 @@ will be copied to syslog.
 
 LCFG::Utils, lcfgmsg, lcfg-ngeneric, LCFG::Component
 
-=head1 PLATFORMS
+=head1 BUGS AND LIMITATIONS
 
-@LCFG_PLATFORMS@
+Please report any bugs or problems (or praise!) to bugs@lcfg.org,
+feedback and patches are also always very welcome.
 
 =head1 AUTHOR
 
-@LCFG_AUTHOR@
+Originally written by Paul Anderson, now maintained by:
+
+   Stephen Quinney <squinney@inf.ed.ac.uk>
+
+=head1 LICENSE AND COPYRIGHT
+
+    Copyright (C) 2002-2017 University of Edinburgh. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GPL, version 2 or later.
 
 =cut

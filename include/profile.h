@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG profiles
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-08-11 15:33:00 +0100 (Fri, 11 Aug 2017) $
- * $Revision: 33317 $
+ * $Date: 2017-09-08 16:08:29 +0100 (Fri, 08 Sep 2017) $
+ * $Revision: 33410 $
  */
 
 #ifndef LCFG_CORE_PROFILE_H
@@ -89,6 +89,10 @@ LCFGChange lcfgprofile_merge( LCFGProfile * profile1,
 			      bool take_new_comps,
 			      char ** msg )
   __attribute__((warn_unused_result));
+
+bool lcfgprofile_has_active_packages( const LCFGProfile * profile );
+bool lcfgprofile_has_inactive_packages( const LCFGProfile * profile );
+bool lcfgprofile_has_packages( const LCFGProfile * profile );
 
 LCFGChange lcfgprofile_write_rpmcfg( const LCFGProfile * profile,
                                      const char * defarch,

@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 2.6)
 
 project (lcfg-core C)
 
-SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra -fno-omit-frame-pointer -fsanitize=address" )
+file (STRINGS "lcfg-build-id.txt" LCFG_VERSION)
+
+SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra" )
 
 set(LCFGTMP "/var/tmp/lcfg" CACHE PATH "Default directory for temporary files")
 set(LCFGLOG "/var/log/lcfg" CACHE PATH "Default directory for log files")
@@ -32,18 +34,13 @@ add_subdirectory(xml)
 
 add_subdirectory(bdb)
 
+add_subdirectory(pc)
+
 # Headers
 
 install(DIRECTORY ${CMAKE_BINARY_DIR}/include/ include/
                   DESTINATION "include/lcfg"
                   FILES_MATCHING PATTERN "*.h"
-                  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
-
-# pkg-config
-
-install(DIRECTORY ${CMAKE_BINARY_DIR}/pc/ pc/
-                  DESTINATION "share/pkgconfig"
-                  FILES_MATCHING PATTERN "*.pc"
                   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 
 # Documentation

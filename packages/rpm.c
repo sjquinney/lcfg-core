@@ -3,8 +3,8 @@
  * @brief Functions for working with RPMs
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-08-11 15:32:28 +0100 (Fri, 11 Aug 2017) $
- * $Revision: 33316 $
+ * $Date: 2017-11-21 11:34:02 +0000 (Tue, 21 Nov 2017) $
+ * $Revision: 33798 $
  */
 
 #define _GNU_SOURCE   /* asprintf */
@@ -451,6 +451,7 @@ ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_TOSTR_ARGS ) {
  *
  * @param[in] pkglist Pointer to @c LCFGPackageList
  * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] base String to be prepended to all package strings
  * @param[in] filename Path file to be created
  * @param[in] mtime Modification time to set on file (or zero)
  * @param[out] msg Pointer to any diagnostic messages.
@@ -461,6 +462,7 @@ ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_TOSTR_ARGS ) {
 
 LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
                                    const char * defarch,
+                                   const char * base,
                                    const char * filename,
                                    time_t mtime,
                                    char ** msg ) {
@@ -495,7 +497,7 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
   lcfgpkglist_sort(pkglist);
 
   ok = lcfgpkglist_print( pkglist,
-                          defarch,
+                          defarch, base,
                           LCFG_PKG_STYLE_RPM,
                           LCFG_OPT_NEWLINE,
                           tmpfh );
@@ -581,6 +583,7 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
  *
  * @param[in] pkgset Pointer to @c LCFGPackageSet
  * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] base String to be prepended to all package strings
  * @param[in] filename Path file to be created
  * @param[in] mtime Modification time to set on file (or zero)
  * @param[out] msg Pointer to any diagnostic messages.
@@ -591,6 +594,7 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
 
 LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
                                   const char * defarch,
+                                  const char * base,
                                   const char * filename,
                                   time_t mtime,
                                   char ** msg ) {
@@ -621,6 +625,7 @@ LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
 
   ok = lcfgpkgset_print( pkgset,
                          defarch,
+                         base,
                          LCFG_PKG_STYLE_RPM,
                          LCFG_OPT_NEWLINE,
                          tmpfh );
@@ -1510,7 +1515,7 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
      order so that we can compare the RPM list for changes using cmp */
 
   if ( !lcfgpkgset_is_empty(active) ) {
-    ok = lcfgpkgset_print( active, defarch, 
+    ok = lcfgpkgset_print( active, defarch, NULL,
                            LCFG_PKG_STYLE_CPP, LCFG_OPT_USE_META,
                            out );
   }
@@ -1523,7 +1528,7 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
     ok = false;
 
   if ( ok && !lcfgpkgset_is_empty(inactive) ) {
-    ok = lcfgpkgset_print( active, defarch, 
+    ok = lcfgpkgset_print( inactive, defarch, NULL,
                            LCFG_PKG_STYLE_CPP, LCFG_OPT_USE_META,
                            out );
   }
@@ -1580,5 +1585,136 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
 
   return ( ok ? change : LCFG_CHANGE_ERROR );
 }
+
+#ifdef HAVE_RPM
+
+#include <rpm/rpmlib.h>
+#include <rpm/rpmts.h>
+#include <rpm/rpmdb.h>
+#include <rpm/rpmds.h>
+
+/**
+ * @brief Read package set from RPM database
+ *
+ * This reads the contents of an RPM database and generates a new @c
+ * LCFGPackageSet. This requires rpmlib and thus does not work on
+ * platforms which do not provide that library.
+ *
+ * To avoid memory leaks, when the package list is no longer required
+ * the @c lcfgpkgset_relinquish() function should be called.
+ *
+ * @param[in] rootdir Alternate root directory
+ * @param[out] result Reference to pointer for new @c LCFGPackageSet
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgpkgset_from_rpm_db( const char * rootdir,
+                                   LCFGPackageSet ** result,
+                                   char ** msg ) {
+
+  if ( rpmReadConfigFiles(NULL, NULL) == -1 ) {
+     perror("Failed to read RPM config files");
+     exit(EXIT_FAILURE);
+  }
+
+  rpmts ts = rpmtsCreate();
+
+  if ( !isempty(rootdir) )
+    rpmtsSetRootDir(ts, rootdir);
+
+  rpmdbMatchIterator iter = rpmtsInitIterator(ts, RPMDBI_PACKAGES, NULL, 0);
+
+  LCFGPackageSet * pkgs = lcfgpkgset_new();
+  bool ok = lcfgpkgset_set_merge_rules( pkgs, LCFG_MERGE_RULE_SQUASH_IDENTICAL|LCFG_MERGE_RULE_KEEP_ALL );
+
+  if ( !ok ) goto cleanup;
+
+  if ( iter == NULL) {
+    /* no packages installed */
+  } else {
+
+    Header hdr;
+    while ( ok && (hdr = rpmdbNextIterator(iter)) != NULL) {
+
+      /* Ignoring keyring - code taken from updaterpms */
+      rpmds provides = rpmdsNew(hdr, RPMTAG_PROVIDENAME, 0);
+      if (rpmdsNext(provides) != -1) {
+        if  (rpmdsFlags(provides) & RPMSENSE_KEYRING) {
+          rpmdsFree(provides);
+          continue;
+        }
+      }   
+      rpmdsFree(provides);
+      
+      LCFGPackage * pkg = lcfgpackage_new();
+
+      char * pkg_name = headerGetAsString( hdr, RPMTAG_NAME );
+      ok = lcfgpackage_set_name( pkg, pkg_name );
+      if (!ok ) {
+        lcfgutils_build_message( msg, "Invalid package name '%s'", pkg_name );
+        free(pkg_name);
+      }
+
+      if (ok) {
+        char * pkg_arch = headerGetAsString( hdr, RPMTAG_ARCH );
+        ok = lcfgpackage_set_arch( pkg, pkg_arch );
+        if (!ok ) {
+          lcfgutils_build_message( msg, "Invalid architecture '%s' for package '%s'", pkg_arch, pkg_name );
+          free(pkg_arch);
+        }
+      }
+
+      if (ok) {
+        char * pkg_version = headerGetAsString( hdr, RPMTAG_VERSION );
+        ok = lcfgpackage_set_version( pkg, pkg_version );
+        if (!ok ) {
+          lcfgutils_build_message( msg, "Invalid version '%s' for package '%s'", pkg_version, pkg_name );
+          free(pkg_version);
+        }
+      }
+
+      if (ok) {
+        char * pkg_release = headerGetAsString( hdr, RPMTAG_RELEASE );
+        ok = lcfgpackage_set_release( pkg, pkg_release );
+        if (!ok ) {
+          lcfgutils_build_message( msg, "Invalid release '%s' for package '%s'", pkg_release, pkg_name );
+          free(pkg_release);
+        }
+      }
+
+      /* Add the package to the set */
+      if (ok) {
+        LCFGChange change = lcfgpkgset_merge_package( pkgs, pkg, msg );
+        if ( change == LCFG_CHANGE_ERROR )
+          ok = false;
+      }
+
+      lcfgpackage_relinquish(pkg);
+    }
+
+  }
+
+ cleanup:
+  
+  rpmdbFreeIterator(iter);
+  ts = rpmtsFree(ts);
+
+  LCFGStatus status = LCFG_STATUS_OK;
+  if (!ok) {
+    status = LCFG_STATUS_ERROR;
+
+    lcfgpkgset_relinquish(pkgs);
+    pkgs = NULL;
+  }
+
+  *result = pkgs;
+  
+  return status;
+}
+
+#endif /* HAVE_RPM */
 
 /* eof */

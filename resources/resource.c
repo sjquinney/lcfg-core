@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-06-30 14:00:27 +0100 (Fri, 30 Jun 2017) $
- * $Revision: 33246 $
+ * $Date: 2017-12-07 16:42:55 +0000 (Thu, 07 Dec 2017) $
+ * $Revision: 33863 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -63,12 +63,12 @@ LCFGResource * lcfgresource_new(void) {
 
   res->name       = NULL;
   res->value      = NULL;
-  res->type       = LCFG_RESOURCE_TYPE_STRING;
+  res->type       = LCFG_RESOURCE_DEFAULT_TYPE;
   res->template   = NULL;
   res->context    = NULL;
   res->derivation = NULL;
   res->comment    = NULL;
-  res->priority   = 0;
+  res->priority   = LCFG_RESOURCE_DEFAULT_PRIORITY;
   res->_refcount  = 1;
 
   return res;
@@ -475,6 +475,40 @@ bool lcfgresource_set_type( LCFGResource * res, LCFGResourceType new_type ) {
 }
 
 /**
+ * @brief Set the type of the resource to the default
+ *
+ * Sets the value of the @e type parameter for the @c LCFGResource to
+ * the value of @c LCFG_RESOURCE_DEFAULT_TYPE (which is @c string). If
+ * the resource type was not previously @c string then any templates
+ * or comments associated with the previous type will be erased.
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ *
+ * @return boolean indicating success
+ */
+
+bool lcfgresource_set_type_default( LCFGResource * res ) {
+  assert( res != NULL );
+
+  bool ok = true;
+  if ( lcfgresource_get_type(res) != LCFG_RESOURCE_DEFAULT_TYPE ) {
+
+    ok = lcfgresource_set_type( res, LCFG_RESOURCE_DEFAULT_TYPE );
+
+    /* Clear any previous templates and comments */
+    if (ok) {
+      bool tmpl_ok = lcfgresource_set_template( res, NULL );
+      bool cmt_ok  = lcfgresource_set_comment( res, NULL );
+
+      if ( !tmpl_ok || !cmt_ok )
+	ok = false;
+    }
+  }
+
+  return ok;
+}
+
+/**
  * @brief Set the type of the resource as a string
  *
  * Parses the specified type string and sets the type for the resource
@@ -533,7 +567,7 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
   /* If the new type string is empty then the resource is considered
      to be the default string type */
 
-  LCFGResourceType new_type = LCFG_RESOURCE_TYPE_STRING;
+  LCFGResourceType new_type = LCFG_RESOURCE_DEFAULT_TYPE;
 
   /* Spin past any leading whitespace */
   if ( !isempty(type_str) )
@@ -1172,6 +1206,7 @@ char * lcfgresource_enc_value( const LCFGResource * res ) {
       {
       case '\r':
 	to = stpncpy( to, cr, cr_len );
+	break;
       case '\n':
 	to = stpncpy( to, lf, lf_len );
 	break;
@@ -1332,9 +1367,11 @@ bool lcfgresource_valid_integer( const char * value ) {
   if ( *ptr == '-' )
     ptr++;
 
-  /* MUST be further characters */
+  /* MUST be further characters.
+     MUST not have leading zeroes unless it is just "0" */
 
-  bool valid = ( *ptr != '\0' );
+  bool valid = ( *ptr != '\0' &&
+                 ( *ptr != '0' || strcmp( ptr, "0" ) == 0 ) );
 
   /* All other characters MUST be digits */
 
@@ -1730,7 +1767,7 @@ bool lcfgresource_set_context( LCFGResource * res, char * new_ctx ) {
   assert( res != NULL );
 
   bool ok = false;
-  if ( lcfgresource_valid_context(new_ctx) ) {
+  if ( new_ctx == NULL || lcfgresource_valid_context(new_ctx) ) {
     free(res->context);
 
     res->context = new_ctx;
@@ -1926,6 +1963,24 @@ bool lcfgresource_set_priority( LCFGResource * res, int new_prio ) {
 }
 
 /**
+ * @brief Set the priority for the resource to the default value
+ *
+ * Sets the value of the @e priority parameter for the @c LCFGResource
+ * to the value of @c LCFG_RESOURCE_DEFAULT_PRIORITY (which is zero). 
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgresource_set_priority_default( LCFGResource * res ) {
+  assert( res != NULL );
+
+  return lcfgresource_set_priority( res, LCFG_RESOURCE_DEFAULT_PRIORITY );
+}
+
+/**
  * @brief Evaluate the priority for the resource for a list of contexts
  *
  * This will evaluate and update the value of the @e priority
@@ -1953,7 +2008,7 @@ bool lcfgresource_eval_priority( LCFGResource * res,
 
   bool ok = true;
 
-  int priority = 0;
+  int priority = LCFG_RESOURCE_DEFAULT_PRIORITY;
   if ( lcfgresource_has_context(res) ) {
 
     /* Calculate the priority using the context expression for this
@@ -2034,28 +2089,13 @@ LCFGStatus lcfgresource_from_env( const char * name,
 				  LCFGResource ** result, 
                                   LCFGOption options, char ** msg ) {
 
-  if ( val_pfx  == NULL ) val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
-  if ( type_pfx == NULL ) type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
-
-  /* Need these to handle the copies (if any) and free them later */
-  char * val_pfx2  = NULL;
-  char * type_pfx2 = NULL;
-
-  if ( compname != NULL ) {
-
-    if ( lcfgresource_build_env_prefix( val_pfx, compname, &val_pfx2 )
-         && val_pfx2 != NULL ) {
-      val_pfx = val_pfx2;
-    }
-
-    if ( lcfgresource_build_env_prefix( type_pfx, compname, &type_pfx2 )
-         && type_pfx2 != NULL ) {
-      type_pfx = type_pfx2;
-    }
-
-  }
+  /* Declared before any cleanups */
 
   LCFGStatus status = LCFG_STATUS_OK;
+
+  char * env_key      = NULL;
+  size_t env_key_size = 0;
+  ssize_t env_key_len = -1;
 
   LCFGResource * res = lcfgresource_new();
   char * resname = strdup(name);
@@ -2067,9 +2107,22 @@ LCFGStatus lcfgresource_from_env( const char * name,
     goto cleanup;
   }
 
-  char * type_key = lcfgutils_string_join( "", type_pfx, resname );
-  const char * type = getenv(type_key);
-  free(type_key);
+  /* Type */
+
+  env_key_len = lcfgresource_build_env_var( name, compname,
+                                            LCFG_RESOURCE_ENV_TYPE_PFX,
+                                            type_pfx,
+                                            &env_key, &env_key_size );
+
+  if ( env_key_len <= 0 ) {
+    status = LCFG_STATUS_ERROR;
+    *msg = lcfgresource_build_message( res, compname,
+                "Failed to build environment variable name from '%s'",
+                ( type_pfx != NULL ? type_pfx : LCFG_RESOURCE_ENV_TYPE_PFX ) );
+    goto cleanup;
+  }
+
+  const char * type = getenv(env_key);
 
   if ( !isempty(type) ) {
 
@@ -2087,9 +2140,20 @@ LCFGStatus lcfgresource_from_env( const char * name,
 
   /* Value */
 
-  char * val_key = lcfgutils_string_join( "", val_pfx, resname );
-  const char * value = getenv(val_key);
-  free(val_key);
+  env_key_len = lcfgresource_build_env_var( name, compname,
+                                            LCFG_RESOURCE_ENV_VAL_PFX,
+                                            val_pfx,
+                                            &env_key, &env_key_size );
+
+  if ( env_key_len <= 0 ) {
+    status = LCFG_STATUS_ERROR;
+    *msg = lcfgresource_build_message( res, compname,
+                "Failed to build environment variable name from '%s'",
+                ( val_pfx != NULL ? val_pfx : LCFG_RESOURCE_ENV_VAL_PFX ) );
+    goto cleanup;
+  }
+
+  const char * value = getenv(env_key);
 
   if ( value == NULL ) {
     if ( options&LCFG_OPT_ALLOW_NOEXIST ) {
@@ -2114,8 +2178,7 @@ LCFGStatus lcfgresource_from_env( const char * name,
 
  cleanup:
 
-  free(val_pfx2);
-  free(type_pfx2);
+  free(env_key);
 
   if ( status == LCFG_STATUS_ERROR ) {
     lcfgresource_destroy(res);
@@ -2183,8 +2246,10 @@ LCFGStatus lcfgresource_from_spec( const char * spec, LCFGResource ** result,
 
   if ( status != LCFG_STATUS_ERROR ) {
     res = lcfgresource_new();
+    char * res_name = strdup(spec_res);
+    if ( !lcfgresource_set_name( res, res_name ) ) {
+      free(res_name);
 
-    if ( !lcfgresource_set_name( res, strdup(spec_res) ) ) {
       lcfgutils_build_message( msg, "invalid resource name '%s'", spec_res );
       status = LCFG_STATUS_ERROR;
     }
@@ -2195,7 +2260,9 @@ LCFGStatus lcfgresource_from_spec( const char * spec, LCFGResource ** result,
 
   if ( status != LCFG_STATUS_ERROR ) {
     char * set_msg = NULL;
-    if ( !lcfgresource_set_attribute( res, spec_type, spec_val, &set_msg ) ) {
+    size_t val_len = strlen(spec_val);
+    if ( !lcfgresource_set_attribute( res, spec_type,
+				      spec_val, val_len, &set_msg ) ) {
       lcfgutils_build_message( msg, "bad value for resource attribute (%s)",
 			       set_msg );
       status = LCFG_STATUS_ERROR;
@@ -2273,10 +2340,13 @@ LCFGStatus lcfgresource_to_string( const LCFGResource * res,
 
   /* Select the appropriate string function */
 
-  LCFGResStrFunc str_func;
+  LCFGResStrFunc str_func = NULL;
 
   switch (style)
     {
+    case LCFG_RESOURCE_STYLE_VALUE:
+      str_func = &lcfgresource_to_value;
+      break;
     case LCFG_RESOURCE_STYLE_SUMMARY:
       str_func = &lcfgresource_to_summary;
       break;
@@ -2291,22 +2361,116 @@ LCFGStatus lcfgresource_to_string( const LCFGResource * res,
   return (*str_func)( res, prefix, options, result, size );
 }
 
-bool lcfgresource_build_env_prefix( const char * base,
+ssize_t lcfgresource_build_env_var( const char * resname,
                                     const char * compname,
-                                    char ** result ) {
+                                    const char * default_base,
+                                    const char * base,
+                                    char ** result, size_t * size ) {
+  *result = NULL;
 
-  *result = false;
+  if ( base == NULL ) base = default_base;
 
-  bool ok = true;
-  if ( strstr( base, LCFG_RESOURCE_ENV_PHOLDER ) != NULL ) {
-    *result = lcfgutils_string_replace( base,
-                                        LCFG_RESOURCE_ENV_PHOLDER,
-                                        compname );
-    if ( *result == NULL )
-      ok = false;
+  char * base2 = NULL;
+  if ( compname != NULL &&
+       strstr( base, LCFG_RESOURCE_ENV_PHOLDER ) != NULL ) {
+    base2 = lcfgutils_string_replace( base,
+                                      LCFG_RESOURCE_ENV_PHOLDER,
+                                      compname );
+    base = base2;
   }
 
-  return ok;
+  size_t base_len = strlen(base);
+
+  size_t new_len = base_len;
+
+  /* Optional resource name */
+
+  size_t res_len = 0;
+  if ( resname != NULL ) {
+    res_len = strlen(resname);
+    new_len += res_len;
+  }
+
+  /* Allocate the required space */
+
+  if ( *result == NULL || *size < ( new_len + 1 ) ) {
+    *size = new_len + 1;
+
+    *result = realloc( *result, ( *size * sizeof(char) ) );
+    if ( *result == NULL ) {
+      perror("Failed to allocate memory for LCFG resource string");
+      exit(EXIT_FAILURE);
+    }
+
+  }
+
+  /* Always initialise the characters of the full space to nul */
+  memset( *result, '\0', *size );
+
+  /* Build the new string */
+
+  char * to = *result;
+
+  to = stpncpy( to, base, base_len );
+
+  if ( res_len > 0 )
+    to = stpncpy( to, resname, res_len );
+
+  *to = '\0';
+
+  free(base2);
+
+  assert( ( *result + new_len ) == to );
+
+  return new_len;
+}
+
+/**
+ * @brief Check if a string is a valid environment variable name
+ *
+ * This can be used to validate an environment variable name to ensure
+ * it is safe for use. The specification requires that the first
+ * character is in the set [a-zA-Z_] and that any subsequent
+ * characters are in the set [a-zA-Z0-9_] (i.e. it does not start with
+ * a digit). We go further by requiring that where there are leading
+ * underscores there must be an additional character in the set
+ * [a-zA-Z0-9]. For example '__foo' is allowed but '___' is not.
+ *
+ * @param[in] name String to be checked
+ *
+ * @return Boolean indicating validity of variable name
+ *
+ */
+
+bool lcfgresource_valid_env_var( const char * name ) {
+
+  if ( isempty(name) ) return false;
+
+  bool valid = true;
+
+  bool need_extra_char  = false;
+  bool found_extra_char = false;
+
+  if ( !isalpha(*name) ) {
+
+    if ( *name == '_' && *(name+1) != '\0' )
+      need_extra_char = true;
+    else
+      valid = false;
+  }
+
+  const char * ptr;
+  for ( ptr=name+1; valid && *ptr!='\0'; ptr++ ) {
+    if ( isalnum(*ptr) )
+      found_extra_char = true;
+    else if ( *ptr != '_' )
+      valid = false;
+  }
+
+  if ( need_extra_char && !found_extra_char )
+    valid = false;
+
+  return valid;
 }
 
 /**
@@ -2341,49 +2505,49 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
   /* Name is required */
   if ( !lcfgresource_is_valid(res) ) return LCFG_STATUS_ERROR;
 
-  if ( val_pfx  == NULL ) val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
-  if ( type_pfx == NULL ) type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
+  const char * name = res->name;
 
-  /* Need these to handle the copies (if any) and free them later */
-  char * val_pfx2  = NULL;
-  char * type_pfx2 = NULL;
-
-  if ( compname != NULL ) {
-
-    if ( lcfgresource_build_env_prefix( val_pfx, compname, &val_pfx2 )
-         && val_pfx2 != NULL ) {
-      val_pfx = val_pfx2;
-    }
-
-    /* No point doing this if the type data isn't required */
-    if ( options&LCFG_OPT_USE_META ) {
-      if ( lcfgresource_build_env_prefix( type_pfx, compname, &type_pfx2 )
-           && type_pfx2 != NULL ) {
-        type_pfx = type_pfx2;
-      }
-    }
-  }
+  /* Declared before any cleanups */
 
   LCFGStatus status = LCFG_STATUS_OK;
 
-  const char * name = res->name;
+  char * env_key      = NULL;
+  size_t env_key_size = 0;
+  ssize_t env_key_len = -1;
+  char * type_as_str = NULL;
+  char * msg = NULL;
 
   /* Value */
 
-  char * val_key = lcfgutils_string_join( "", val_pfx, name );
+  env_key_len = lcfgresource_build_env_var( name, compname,
+                                            LCFG_RESOURCE_ENV_VAL_PFX,
+                                            val_pfx,
+                                            &env_key, &env_key_size );
+
+  if ( env_key_len <= 0 ) {
+    status = LCFG_STATUS_ERROR;
+    msg = lcfgresource_build_message( res, compname,
+                "Failed to build environment variable name from '%s'",
+                ( val_pfx != NULL ? val_pfx : LCFG_RESOURCE_ENV_VAL_PFX ) );
+    goto cleanup;
+  } else if ( !lcfgresource_valid_env_var(env_key) ) {
+    status = LCFG_STATUS_ERROR;
+    msg = lcfgresource_build_message( res, compname,
+                "Invalid environment variable name '%s'", env_key );
+    goto cleanup;
+  }
 
   const char * value = or_default( res->value, "" );
 
-  if ( setenv( val_key, value, 1 ) != 0 )
+  if ( setenv( env_key, value, 1 ) != 0 ) {
     status = LCFG_STATUS_ERROR;
-
-  free(val_key);
+    goto cleanup;
+  }
 
   /* Type - optional */
 
   if ( options&LCFG_OPT_USE_META ) {
 
-    char * type_as_str = NULL;
     if ( lcfgresource_get_type(res) != LCFG_RESOURCE_TYPE_STRING ||
 	 lcfgresource_has_comment(res) ) {
 
@@ -2392,20 +2556,42 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
 
     if ( !isempty(type_as_str) ) {
 
-      char * type_key = lcfgutils_string_join( "", type_pfx, name );
+      env_key_len = lcfgresource_build_env_var( name, compname,
+                                                LCFG_RESOURCE_ENV_TYPE_PFX,
+                                                type_pfx,
+                                                &env_key, &env_key_size );
 
-      if ( setenv( type_key, type_as_str, 1 ) != 0 )
+      if ( env_key_len <= 0 ) {
+        status = LCFG_STATUS_ERROR;
+        msg = lcfgresource_build_message( res, compname,
+                "Failed to build environment variable name from '%s'",
+                ( type_pfx != NULL ? type_pfx : LCFG_RESOURCE_ENV_TYPE_PFX ) );
+        goto cleanup;
+      } else if ( !lcfgresource_valid_env_var(env_key) ) {
+        status = LCFG_STATUS_ERROR;
+        msg = lcfgresource_build_message( res, compname,
+                "Invalid environment variable name '%s'", env_key );
+        goto cleanup;
+      }
+
+      if ( setenv( env_key, type_as_str, 1 ) != 0 ) {
 	status = LCFG_STATUS_ERROR;
+        goto cleanup;
+      }
 
-      free(type_key);
     }
-
-    free(type_as_str);
 
   }
 
-  free(val_pfx2);
-  free(type_pfx2);
+ cleanup:
+
+  free(type_as_str);
+  free(env_key);
+
+  if ( status == LCFG_STATUS_ERROR && msg != NULL ) {
+    fprintf( stderr, "%s\n", msg );
+  }
+  free(msg);
 
   return status;
 }
@@ -2472,36 +2658,37 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
   if ( !lcfgresource_is_valid(res) ) return -1;
 
-  if ( val_pfx  == NULL ) val_pfx  = LCFG_RESOURCE_ENV_VAL_PFX;
-  if ( type_pfx == NULL ) type_pfx = LCFG_RESOURCE_ENV_TYPE_PFX;
-
-  /* Need these to handle the copies (if any) and free them later */
-  char * val_pfx2  = NULL;
-  char * type_pfx2 = NULL;
-
-  if ( compname != NULL ) {
-    if ( lcfgresource_build_env_prefix( val_pfx, compname, &val_pfx2 )
-         && val_pfx2 != NULL ) {
-      val_pfx = val_pfx2;
-    }
-
-    /* No point doing this if the type data isn't required */
-    if ( options&LCFG_OPT_USE_META ) {
-      if ( lcfgresource_build_env_prefix( type_pfx, compname, &type_pfx2 )
-           && type_pfx2 != NULL ) {
-        type_pfx = type_pfx2;
-      }
-    }
-  }
-
   const char * name = lcfgresource_get_name(res);
-  size_t name_len = strlen(name);
 
-  size_t new_len = 0;
+  /* Declare before jumps to cleanup */
+
+  bool ok = true;
+  char * msg = NULL;
+
+  char * val_key  = NULL;
+  char * type_key = NULL;
+  char * type_as_str = NULL;
 
   /* Value */
 
-  size_t val_pfx_len = strlen(val_pfx);
+  size_t val_key_size  = 0;
+  ssize_t val_key_len = lcfgresource_build_env_var( name, compname,
+                                                    LCFG_RESOURCE_ENV_VAL_PFX,
+                                                    val_pfx,
+                                                    &val_key, &val_key_size );
+
+  if ( val_key_len <= 0 ) {
+    ok = false;
+    msg = lcfgresource_build_message( res, compname,
+                   "Failed to build environment variable name from '%s'",
+                   ( val_pfx != NULL ? val_pfx : LCFG_RESOURCE_ENV_VAL_PFX ) );
+    goto cleanup;
+  } else if ( !lcfgresource_valid_env_var(val_key) ) {
+    ok = false;
+    msg = lcfgresource_build_message( res, compname,
+                   "Invalid environment variable name '%s'", val_key );
+    goto cleanup;
+  }
 
   static const char escaped[] = "'\"'\"'";
   static const size_t escaped_len = sizeof(escaped) - 1;
@@ -2521,13 +2708,12 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   }
 
   /* +1 space, +1 =, +2 '', +1 '\n' == 5 */
-  new_len += ( env_fn_len + val_pfx_len + name_len + value_len + 5 );
+  ssize_t new_len = ( env_fn_len + val_key_len + value_len + 5 );
 
   /* Type - optional */
 
-  size_t type_pfx_len = 0;
   size_t type_len = 0;
-  char * type_as_str = NULL;
+  ssize_t type_key_len = 0;
 
   if ( options&LCFG_OPT_USE_META ) {
 
@@ -2538,9 +2724,33 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
     }
 
     if ( !isempty(type_as_str) ) {
-      type_pfx_len = strlen(type_pfx);
-
       type_len = strlen(type_as_str);
+
+      size_t type_key_size = 0;
+      type_key_len = lcfgresource_build_env_var( name, compname,
+                                                 LCFG_RESOURCE_ENV_TYPE_PFX,
+                                                 type_pfx,
+                                                 &type_key, &type_key_size );
+
+      if ( type_key_len <= 0 ) {
+        ok = false;
+        msg = lcfgresource_build_message( res, compname,
+                "Failed to build environment variable name from '%s'",
+                ( type_pfx != NULL ? type_pfx : LCFG_RESOURCE_ENV_TYPE_PFX ) );
+        goto cleanup;
+      } else if ( !lcfgresource_valid_env_var(type_key) ) {
+        ok = false;
+        msg = lcfgresource_build_message( res, compname,
+                "Invalid environment variable name '%s'", type_key );
+        goto cleanup;
+      }
+
+      if ( strcmp( val_key, type_key ) == 0 ) {
+        ok = false;
+        msg = lcfgresource_build_message( res, compname,
+                                          "Must not have identical environment variables for value and type information" );
+        goto cleanup;
+      }
 
       const char * ptr;
       for ( ptr = type_as_str; *ptr != '\0'; ptr++ ) {
@@ -2549,7 +2759,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
       }
 
       /* +1 space, +1 =, +2 '', +1 '\n' == 5 */
-      new_len += ( env_fn_len + type_pfx_len + name_len + type_len + 5 );
+      new_len += ( env_fn_len + type_key_len + type_len + 5 );
     }
   }
 
@@ -2583,10 +2793,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
     *to = ' ';
     to++;
 
-    if ( type_pfx_len > 0 )
-      to = stpncpy( to, type_pfx, type_pfx_len );
-
-    to = stpncpy( to, name, name_len );
+    to = stpncpy( to, type_key, type_key_len );
 
     to = stpncpy( to, "='", 2 );
 
@@ -2610,10 +2817,7 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   *to = ' ';
   to++;
 
-  if ( val_pfx_len > 0 )
-    to = stpncpy( to, val_pfx, val_pfx_len );
-
-  to = stpncpy( to, name, name_len );
+  to = stpncpy( to, val_key, val_key_len );
 
   to = stpncpy( to, "='", 2 );
 
@@ -2633,13 +2837,19 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
   *to = '\0';
 
-  free(type_as_str);
-  free(val_pfx2);
-  free(type_pfx2);
-
   assert( ( *result + new_len ) == to );
 
-  return new_len;
+ cleanup:
+
+  if ( !ok && msg != NULL )
+    fprintf( stderr, "%s\n", msg );
+
+  free(type_as_str);
+  free(val_key);
+  free(type_key);
+  free(msg);
+
+  return ( ok ? new_len : -1 );
 }
 
 /**
@@ -2971,7 +3181,7 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
   return new_len;
 }
 
-  /**
+/**
  * @brief Format the resource as an LCFG specification
  *
  * Generates a new string representation for the @c LCFGResource. This
@@ -3122,6 +3332,96 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
       to = stpncpy( to, value, value_len );
 
   }
+
+  free(value_enc);
+
+  /* Optional newline at the end of the string */
+
+  if ( options&LCFG_OPT_NEWLINE )
+    to = stpcpy( to, "\n" );
+
+  assert( (*result + new_len ) == to );
+
+  return new_len;
+}
+
+/**
+ * @brief Format the resource value
+ *
+ * Generates a new string representation for value of the @c LCFGResource.
+ *
+ * The following options are supported:
+ *   - @c LCFG_OPT_ENCODE - encode any newline characters in the value
+ *   - @c LCFG_OPT_NEWLINE - append a final newline character
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many resource strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated.
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required. If an error occurs this function will return -1.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] prefix Prefix, usually the component name (not used)
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
+
+ssize_t lcfgresource_to_value( LCFG_RES_TOSTR_ARGS ) {
+  assert( res != NULL );
+
+  const char * value = NULL;
+  char * value_enc = NULL;
+
+  if ( options&LCFG_OPT_ENCODE && lcfgresource_value_needs_encode(res) ) {
+    value_enc = lcfgresource_enc_value(res);
+    value = value_enc;
+  } else {
+    value = lcfgresource_get_value(res);
+  }
+
+  size_t value_len = value != NULL ? strlen(value) : 0;
+  size_t new_len = value_len;
+
+  /* Optional newline at end of string */
+
+  if ( options&LCFG_OPT_NEWLINE )
+    new_len += 1;
+
+  /* Allocate the required space */
+
+  if ( *result == NULL || *size < ( new_len + 1 ) ) {
+    *size = new_len + 1;
+
+    *result = realloc( *result, ( *size * sizeof(char) ) );
+    if ( *result == NULL ) {
+      perror("Failed to allocate memory for LCFG resource string");
+      exit(EXIT_FAILURE);
+    }
+
+  }
+
+  /* Always initialise the characters of the full space to nul */
+  memset( *result, '\0', *size );
+
+  /* Build the new string */
+
+  char * to = *result;
+
+  if ( value_len > 0 )
+    to = stpncpy( to, value, value_len );
 
   free(value_enc);
 
@@ -3931,6 +4231,7 @@ bool lcfgresource_parse_key( char  * key,
  * @param[in] res Pointer to @c LCFGResource
  * @param[in] type_symbol The symbol for the required attribute type
  * @param[in] value The new value for the attribute
+ * @param[in] value_len The length of the new value string for the attribute
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return boolean indicating success
@@ -3940,8 +4241,12 @@ bool lcfgresource_parse_key( char  * key,
 bool lcfgresource_set_attribute( LCFGResource * res,
                                  char type_symbol,
                                  const char * value,
+				 size_t value_len,
                                  char ** msg ) {
   assert( res != NULL );
+
+  free(*msg);
+  *msg = NULL;
 
   bool ok = false;
 
@@ -3949,67 +4254,96 @@ bool lcfgresource_set_attribute( LCFGResource * res,
      the status line or assume this is a simple specification of the
      resource value. */
 
+  /* Always take a copy to ensure the value string is null-terminated */
+
+  char * value_copy = NULL;
+  if ( value_len > 0 )
+    value_copy = strndup( value, value_len );
+
+  bool free_copy = false; /* Will value_copy need freeing at end? */
+
+  const char * attr_name = NULL; /* used for error messages */
+
   switch (type_symbol)
     {
     case LCFG_RESOURCE_SYMBOL_DERIVATION:
       ;
-      char * derivation = strdup(value);
+      attr_name = "derivation";
 
-      ok = lcfgresource_set_derivation( res, derivation );
-      if ( !ok ) {
-        lcfgutils_build_message( msg, "Invalid derivation '%s'", derivation );
-	free(derivation);
-      }
+      if ( value_len > 0 )
+        ok = lcfgresource_set_derivation( res, value_copy );
+      else
+        ok = lcfgresource_set_derivation( res, NULL ); /* unset */
 
       break;
     case LCFG_RESOURCE_SYMBOL_TYPE:
+      ;
+      attr_name = "type";
 
-      ok = lcfgresource_set_type_as_string( res, value, msg );
+      if ( value_len > 0 )
+        ok = lcfgresource_set_type_as_string( res, value_copy, msg );
+      else
+        ok = lcfgresource_set_type_default(res);
 
+      free_copy = true;
       break;
     case LCFG_RESOURCE_SYMBOL_CONTEXT:
       ;
-      char * context = strdup(value);
+      attr_name = "context";
 
-      ok = lcfgresource_set_context( res, context );
-      if ( !ok ) {
-        lcfgutils_build_message( msg, "Invalid context '%s'", context );
-	free(context);
-      }
+      if ( value_len > 0 )
+        ok = lcfgresource_set_context( res, value_copy );
+      else
+        ok = lcfgresource_set_context( res, NULL ); /* unset */
 
       break;
     case LCFG_RESOURCE_SYMBOL_PRIORITY:
-      /* Be careful to only convert string to int if it looks safe */
-      ok = lcfgresource_valid_integer(value);
+      ;
+      attr_name = "priority";
 
-      if (ok) {
-        int priority = atoi(value);
-        ok = lcfgresource_set_priority( res, priority );
+      if ( value_len > 0 ) {
+        /* Be careful to only convert string to int if it looks safe */
+        ok = lcfgresource_valid_integer(value_copy);
+
+        if (ok) {
+          int priority = atoi(value_copy);
+          ok = lcfgresource_set_priority( res, priority );
+        }
+      } else {
+        ok = lcfgresource_set_priority_default(res);
       }
 
-      if ( !ok )
-        lcfgutils_build_message( msg, "Invalid priority '%s'", value );
+      free_copy = true;
 
       break;
     case  LCFG_RESOURCE_SYMBOL_VALUE:
     default:        /* value line */
       ;
-      char * value2 = strdup(value);
+      attr_name = "value";
 
-      /* Value strings may be html encoded as they can contain
-	 whitespace characters which would otherwise corrupt the status
-	 file formatting. */
+      if ( value_len > 0 ) {
+        /* Value strings may be html encoded as they can contain
+           whitespace characters which would otherwise corrupt the status
+           file formatting. */
 
-      lcfgutils_decode_html_entities_utf8( value2, NULL );
+        lcfgutils_decode_html_entities_utf8( value_copy, NULL );
 
-      ok = lcfgresource_set_value( res, value2 );
-      if (!ok) {
-        lcfgutils_build_message( msg, "Invalid value '%s'", value2 );
-	free(value2);
+        ok = lcfgresource_set_value( res, value_copy );
+      } else {
+        value_copy = strdup("");
+        ok = lcfgresource_set_value( res, value_copy );
       }
 
       break;
     }
+
+  if ( !ok && *msg == NULL ) {
+    lcfgutils_build_message( msg, "Invalid %s '%s'", attr_name,
+			     ( value_len > 0 ? value_copy : "(empty string)" ));
+  }
+
+  if ( free_copy || !ok )
+    free(value_copy);
 
   return ok;
 }

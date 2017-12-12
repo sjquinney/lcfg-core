@@ -380,7 +380,7 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
 
   if ( status == LCFG_STATUS_ERROR ) {
 
-    if ( *msg != NULL )
+    if ( *msg == NULL )
       lcfgxml_error( msg, "Something bad happened whilst processing package at line %d.", linenum );
 
     lcfgpackage_relinquish(pkg);

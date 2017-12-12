@@ -3,8 +3,8 @@
  * @brief Functions for working with lists of LCFG packages
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-08-11 15:09:26 +0100 (Fri, 11 Aug 2017) $
- * $Revision: 33315 $
+ * $Date: 2017-08-17 10:54:37 +0100 (Thu, 17 Aug 2017) $
+ * $Revision: 33355 $
  */
 
 #define _WITH_GETLINE /* for BSD */
@@ -886,6 +886,7 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
  *
  * @param[in] pkglist Pointer to @c LCFGPackageList
  * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] base String to be prepended to all package strings
  * @param[in] style Integer indicating required style of formatting
  * @param[in] options Integer that controls formatting
  * @param[in] out Stream to which the package list should be written
@@ -896,6 +897,7 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist ) {
 
 bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         const char * defarch,
+                        const char * base,
                         LCFGPkgStyle style,
                         LCFGOption options,
                         FILE * out ) {
@@ -953,12 +955,23 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
         ok = false;
       } else {
 
-        if ( fputs( buffer, out ) < 0 )
-          ok = false;
+        /* Optional base string */
+
+        if ( !isempty(base) ) {
+          if ( fputs( base, out ) < 0 )
+            ok = false;
+        }
+
+        /* Package string */
+
+        if (ok) {
+          if ( fputs( buffer, out ) < 0 )
+            ok = false;
+        }
 
       }
-
     }
+
   }
 
   free(buffer);

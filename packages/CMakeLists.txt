@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.6)
 
 # Generate the packagelib shared library.
 
-set(MY_SOURCES package.c list.c rpm.c iterator.c set.c)
+set(MY_SOURCES package.c list.c rpm.c iterator.c set.c setiter.c)
 
 add_library(lcfg_packages SHARED ${MY_SOURCES})
 
@@ -41,8 +41,10 @@ target_link_libraries(lcfg_packages lcfg_utils)
 # Create the pkgspec parser and link it to the pkgtools library.
 
 add_executable(parse_pkgspec parse_pkgspec.c)
-
 target_link_libraries(parse_pkgspec lcfg_packages)
+
+add_executable(translaterpmcfg translaterpmcfg.c)
+target_link_libraries(translaterpmcfg lcfg_packages)
 
 # Specify where various files should be installed.
 
@@ -53,3 +55,4 @@ install(TARGETS parse_pkgspec lcfg_packages lcfg_packages-static
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}
         ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
 
+install(TARGETS translaterpmcfg DESTINATION sbin)

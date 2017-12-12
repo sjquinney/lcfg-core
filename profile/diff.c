@@ -120,7 +120,7 @@ LCFGChange lcfgprofile_diff( const LCFGProfile * profile1,
             ( tag = lcfgtagiter_next(iter) ) != NULL ) {
 
       const char * comp_name = lcfgtag_get_name(tag);
-      fprintf( stderr, "Comparing %s components\n", comp_name );
+
       const LCFGComponent * comp1 =
         lcfgcompset_find_component( comps1, comp_name );
       const LCFGComponent * comp2 =

@@ -3,8 +3,8 @@
  * @brief LCFG package handling library
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-08-11 15:32:28 +0100 (Fri, 11 Aug 2017) $
- * $Revision: 33316 $
+ * $Date: 2017-11-03 15:27:17 +0000 (Fri, 03 Nov 2017) $
+ * $Revision: 33605 $
  */
 
 #ifndef LCFG_CORE_PACKAGES_H
@@ -302,14 +302,14 @@ bool lcfgpkglist_set_merge_rules( LCFGPackageList * pkglist,
   __attribute__((warn_unused_result));
 
 /**
- * @brief Get the number of nodes in the package list
+ * @brief Get the number of packages in the package list
  *
- * This is a simple macro which can be used to get the length of the
- * single-linked package list.
+ * This is a simple macro which can be used to get the number of
+ * packages in the single-linked package list.
  *
  * @param[in] pkglist Pointer to @c LCFGPackageList
  *
- * @return Integer length of the package list
+ * @return Integer Number of packages in the list
  *
  */
 
@@ -357,6 +357,7 @@ void lcfgpkglist_sort( LCFGPackageList * pkglist );
 
 bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         const char * defarch,
+                        const char * base,
                         LCFGPkgStyle style,
                         LCFGOption options,
                         FILE * out )
@@ -399,6 +400,7 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 
 LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
                                    const char * defarch,
+                                   const char * base,
                                    const char * filename,
                                    time_t mtime,
                                    char ** msg )
@@ -439,8 +441,8 @@ LCFGPackage * lcfgpkgiter_next(LCFGPackageIterator * iterator);
 struct LCFGPackageSet {
   /*@{*/
   LCFGPackageList ** packages;
-  size_t buckets;
-  size_t entries;
+  unsigned long buckets;
+  unsigned long entries;
   LCFGPkgListPK primary_key; /**< Controls which package fields are used as primary key */
   LCFGMergeRule merge_rules; /**< Rules which control how packages are merged */
   /*@}*/
@@ -449,8 +451,9 @@ struct LCFGPackageSet {
 
 typedef struct LCFGPackageSet LCFGPackageSet;
 
-#define lcfgpkgset_is_empty(pkgset) (pkgset == NULL || (pkgset)->entries == 0)
-#define lcfgpkgset_size(pkgset) ((pkgset)->entries)
+unsigned int lcfgpkgset_size( const LCFGPackageSet * pkgset );
+
+#define lcfgpkgset_is_empty(pkgset) (pkgset == NULL || lcfgpkgset_size(pkgset) == 0)
 
 LCFGPackageSet * lcfgpkgset_new();
 void lcfgpkgset_destroy(LCFGPackageSet * pkgset);
@@ -492,6 +495,7 @@ bool lcfgpkgset_has_package( const LCFGPackageSet * pkgset,
 
 bool lcfgpkgset_print( const LCFGPackageSet * pkgset,
                        const char * defarch,
+                       const char * base,
                        LCFGPkgStyle style,
                        LCFGOption options,
                        FILE * out )
@@ -510,6 +514,7 @@ LCFGStatus lcfgpkgset_from_rpm_dir( const char * rpmdir,
 
 LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
                                   const char * defarch,
+                                  const char * base,
                                   const char * filename,
                                   time_t mtime,
                                   char ** msg )
@@ -531,11 +536,33 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
                                  char ** msg )
   __attribute__((warn_unused_result));
 
+LCFGStatus lcfgpkgset_from_rpm_db( const char * rootdir,
+                                   LCFGPackageSet ** result,
+                                   char ** msg )
+  __attribute__((warn_unused_result));
+
 LCFGPackageSet * lcfgpkgset_match( const LCFGPackageSet * pkgset,
                                    const char * want_name,
                                    const char * want_arch,
                                    const char * want_ver,
                                    const char * want_rel );
+
+struct LCFGPkgSetIterator {
+  LCFGPackageSet * set;
+  LCFGPackageIterator * listiter;
+  long current;
+};
+typedef struct LCFGPkgSetIterator LCFGPkgSetIterator;
+
+LCFGPkgSetIterator * lcfgpkgsetiter_new( LCFGPackageSet * pkgset );
+
+void lcfgpkgsetiter_destroy( LCFGPkgSetIterator * iterator );
+
+void lcfgpkgsetiter_reset( LCFGPkgSetIterator * iterator );
+
+bool lcfgpkgsetiter_has_next( LCFGPkgSetIterator * iterator );
+
+LCFGPackage * lcfgpkgsetiter_next(LCFGPkgSetIterator * iterator);
 
 #endif /* LCFG_CORE_PACKAGES_H */
 

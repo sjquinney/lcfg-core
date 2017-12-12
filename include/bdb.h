@@ -3,8 +3,8 @@
  * @brief Functions for importing and export profiles to Berkeley DB
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-06-08 15:16:46 +0100 (Thu, 08 Jun 2017) $
- * $Revision: 33029 $
+ * $Date: 2017-11-04 07:55:47 +0000 (Sat, 04 Nov 2017) $
+ * $Revision: 33615 $
  */
 
 #ifndef LCFG_CORE_BDB_H
@@ -36,14 +36,14 @@ DB * lcfgbdb_init_writer( const char * filename,
 
 LCFGStatus lcfgbdb_process_components( DB * dbh,
 				       LCFGComponentSet ** result,
-				       const LCFGTagList * comps_wanted,
+				       LCFGTagList * comps_wanted,
                                        const char * namespace,
 				       char ** errmsg )
    __attribute__((warn_unused_result));
 
 LCFGStatus lcfgprofile_from_bdb( const char * filename,
 				 LCFGProfile ** result,
-				 const LCFGTagList * comps_wanted,
+				 LCFGTagList * comps_wanted,
                                  const char * namespace,
 				 unsigned int options,
 				 char ** errmsg )
@@ -58,9 +58,9 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
-                                     const char * namespace,
-                                     DB * dbh,
-                                     char ** errmsg )
+				 const char * namespace,
+				 DB * dbh,
+				 char ** errmsg )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgcompset_to_bdb( const LCFGComponentSet * components,
