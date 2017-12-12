@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@LIB_INSTALL_DIR@
+includedir=@INCLUDE_INSTALL_DIR@
+modules=1
+
+Name: lcfg-xml
+Version: @LCFG_VERSION@
+Description: LCFG profile XML handling library
+Requires: lcfg-profile = @LCFG_VERSION@, libxml-2.0
+Libs: -L${libdir} -llcfg_xml
+Cflags: -I${includedir}
