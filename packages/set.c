@@ -982,7 +982,7 @@ LCFGStatus lcfgpkgset_from_cpp( const char * filename,
 
   /* Temporary file for cpp output */
 
-  tmpfile = lcfgutils_safe_tmpfile(NULL);
+  tmpfile = lcfgutils_safe_tmpname(NULL);
 
   int tmpfd = mkstemp(tmpfile);
   if ( tmpfd == -1 ) {
@@ -1167,10 +1167,10 @@ LCFGStatus lcfgpkgset_from_cpp( const char * filename,
  cleanup:
 
   if ( fp != NULL )
-    fclose(fp);
+    (void) fclose(fp);
 
   if ( tmpfile != NULL ) {
-    unlink(tmpfile);
+    (void) unlink(tmpfile);
     free(tmpfile);
   }
 

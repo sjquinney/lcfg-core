@@ -270,7 +270,7 @@ bool lcfgdiffprofile_has_component( const LCFGDiffProfile * profdiff,
 
 void lcfgdiffprofile_sort( LCFGDiffProfile * list );
 
-LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
+LCFGChange lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
                                         const char * holdfile,
                                         const char * signature,
                                         char ** msg )

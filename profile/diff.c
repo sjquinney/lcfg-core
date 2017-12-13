@@ -372,7 +372,7 @@ LCFGChange lcfgdiffprofile_remove_next( LCFGDiffProfile    * list,
  * specified file.
  *
  * @param[in] profdiff Pointer to @c LCFGDiffProfile
- * @param[in] holdfile File name to which diff should be written
+ * @param[in] filename File name to which diff should be written
  * @param[out] signature MD5 signature for the profile
  * @param[out] msg Pointer to any diagnostic messages
  *
@@ -380,28 +380,20 @@ LCFGChange lcfgdiffprofile_remove_next( LCFGDiffProfile    * list,
  *
  */
 
-LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
-                                        const char * holdfile,
+LCFGChange lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
+                                        const char * filename,
                                         const char * signature,
                                         char ** msg ) {
+  assert( filename != NULL );
 
-  if ( lcfgdiffprofile_is_empty(profdiff) ) return LCFG_STATUS_OK;
+  LCFGChange change = LCFG_CHANGE_NONE;
 
-  char * tmpfile = lcfgutils_safe_tmpfile(holdfile);
+  char * tmpfile = NULL;
+  FILE * tmpfh = lcfgutils_safe_tmpfile( filename, &tmpfile );
 
-  LCFGStatus status = LCFG_STATUS_OK;
-
-  FILE * out = NULL;
-  int fd = mkstemp(tmpfile);
-  if ( fd >= 0 )
-    out = fdopen( fd, "w" );
-
-  if ( out == NULL ) {
-    if ( fd >= 0 ) close(fd);
-
-    lcfgutils_build_message( msg, "Failed to open temporary status file '%s'",
-                             tmpfile );
-    status = LCFG_STATUS_ERROR;
+  if ( tmpfh == NULL ) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to open hold file" );
     goto cleanup;
   }
 
@@ -411,9 +403,11 @@ LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
 
   /* Iterate through the list of components with differences */
 
+  bool print_ok = true;
+
   const LCFGSListNode * cur_node = NULL;
   for ( cur_node = lcfgdiffprofile_head(profdiff);
-        cur_node != NULL && status != LCFG_STATUS_ERROR;
+        print_ok && cur_node != NULL;
         cur_node = lcfgdiffprofile_next(cur_node) ) {
 
     LCFGDiffComponent * cur_compdiff = lcfgdiffprofile_compdiff(cur_node);
@@ -423,47 +417,47 @@ LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
 
     lcfgdiffcomponent_sort(cur_compdiff);
 
-    status = lcfgdiffcomponent_to_holdfile( cur_compdiff, out );
+    LCFGStatus status = lcfgdiffcomponent_to_holdfile( cur_compdiff, tmpfh );
 
     if ( status == LCFG_STATUS_ERROR ) {
+      print_ok = false;
       lcfgutils_build_message( msg,
-                         "Failed to generate holdfile data for '%s' component",
+                         "Failed to write hold file for '%s' component",
                                lcfgdiffcomponent_get_name(cur_compdiff) );
     }
-
   }
 
   /* Store the signature into the hold file */
 
-  if ( status != LCFG_STATUS_ERROR && signature != NULL ) {
-    if ( fprintf( out, "signature: %s\n", signature ) < 0 )
-      status = LCFG_STATUS_ERROR;
+  if ( print_ok && signature != NULL ) {
+    if ( fprintf( tmpfh, "signature: %s\n", signature ) < 0 )
+      print_ok = false;
   }
 
-  if ( fclose(out) != 0 ) {
+  if (!print_ok)
+    change = LCFG_CHANGE_ERROR;
+
+  /* Always attempt to close temporary file */
+
+  if ( fclose(tmpfh) != 0 ) {
+    change = LCFG_CHANGE_ERROR;
     lcfgutils_build_message( msg, "Failed to close hold file" );
-    status = LCFG_STATUS_ERROR;
   }
 
-  /* Finish by renaming the temporary file to the real hold file */
-
-  if ( status != LCFG_STATUS_ERROR ) {
-    if ( rename( tmpfile, holdfile ) != 0 ) {
-      lcfgutils_build_message( msg,
-                               "Failed to rename temporary hold file to '%s'",
-                               holdfile );
-      status = LCFG_STATUS_ERROR;
-    }
-  }
+  if ( change != LCFG_CHANGE_ERROR )
+    change = lcfgutils_file_update( filename, tmpfile, 0 );
 
  cleanup:
 
+  /* This might have already gone but call unlink to ensure
+     tidiness. Do not care about the result */
+
   if ( tmpfile != NULL ) {
-    unlink(tmpfile);
+    (void) unlink(tmpfile);
     free(tmpfile);
   }
 
-  return status;
+  return change;
 }
 
 /**

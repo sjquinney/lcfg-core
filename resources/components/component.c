@@ -1301,7 +1301,7 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
  *
  */
 
-LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
+LCFGChange lcfgcomponent_to_status_file( const LCFGComponent * comp,
 					 const char * filename,
 					 LCFGOption options,
 					 char ** msg ) {
@@ -1313,26 +1313,19 @@ LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
 
   if ( filename == NULL && compname == NULL ) {
     lcfgutils_build_message( msg, "Either the target file name or component name is required" );
-    return LCFG_STATUS_ERROR;
+    return LCFG_CHANGE_ERROR;
   }
 
   const char * statusfile = filename != NULL ? filename : compname;
 
-  char * tmpfile = lcfgutils_safe_tmpfile(statusfile);
+  LCFGChange change = LCFG_CHANGE_NONE;
 
-  bool ok = true;
+  char * tmpfile = NULL;
+  FILE * tmpfh = lcfgutils_safe_tmpfile( statusfile, &tmpfile );
 
-  FILE * out = NULL;
-  int fd = mkstemp(tmpfile);
-  if ( fd >= 0 )
-    out = fdopen( fd, "w" );
-
-  if ( out == NULL ) {
-    if ( fd >= 0 ) close(fd);
-
-    lcfgutils_build_message( msg, "Failed to open temporary status file '%s'",
-              tmpfile );
-    ok = false;
+  if ( tmpfh == NULL ) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to open status file" );
     goto cleanup;
   }
 
@@ -1348,9 +1341,10 @@ LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
     exit(EXIT_FAILURE);
   }
 
+  bool print_ok = true;
   const LCFGResourceNode * cur_node = NULL;
   for ( cur_node = lcfgcomponent_head(comp);
-	cur_node != NULL;
+	print_ok && cur_node != NULL;
 	cur_node = lcfgcomponent_next(cur_node) ) {
 
     const LCFGResource * res = lcfgcomponent_resource(cur_node);
@@ -1364,43 +1358,43 @@ LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
 
     if ( rc > 0 ) {
 
-      if ( fputs( buffer, out ) < 0 )
-	ok = false;
+      if ( fputs( buffer, tmpfh ) < 0 )
+	print_ok = false;
 
     } else {
-      ok = false;
-    }
-
-    if (!ok) {
-      lcfgutils_build_message( msg, "Failed to write to status file" );
-      break;
+      print_ok = false;
     }
 
   }
 
   free(buffer);
 
-  if ( fclose(out) != 0 ) {
-    lcfgutils_build_message( msg, "Failed to close status file" );
-    ok = false;
+  if (!print_ok) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to write to status file" );
   }
 
-  if (ok) {
-    if ( rename( tmpfile, statusfile ) != 0 ) {
-      lcfgutils_build_message( msg, "Failed to rename temporary status file to '%s'",
-                statusfile );
-      ok = false;
-    }
+  /* Always attempt to close temporary file */
+
+  if ( fclose(tmpfh) != 0 ) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to close status file" );
   }
+
+  if ( change != LCFG_CHANGE_ERROR )
+    change = lcfgutils_file_update( filename, tmpfile, 0 );
 
  cleanup:
 
+  /* This might have already gone but call unlink to ensure
+     tidiness. Do not care about the result */
+
   if ( tmpfile != NULL ) {
-    unlink(tmpfile);
+    (void) unlink(tmpfile);
     free(tmpfile);
   }
 
-  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+  return change;
 }
 
 /**

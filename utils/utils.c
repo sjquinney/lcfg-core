@@ -90,7 +90,7 @@ const char * lcfgutils_tmp_dirname(void) {
 static const char tmp_template[] = ".lcfg.XXXXXX";
 const size_t tmp_template_len = sizeof(tmp_template) - 1;
 
-char * lcfgutils_safe_tmpfile( const char * path ) {
+char * lcfgutils_safe_tmpname( const char * path ) {
 
   size_t base_len = 0;
   if ( path == NULL ) {
@@ -128,6 +128,29 @@ char * lcfgutils_safe_tmpfile( const char * path ) {
   assert( (result + new_len) == to );
 
   return result;
+}
+
+FILE * lcfgutils_safe_tmpfile( const char * path,
+                               char ** tmpfile ) {
+
+  FILE * tmpfh = NULL;
+
+  char * result = lcfgutils_safe_tmpname(path);
+
+  int tmpfd = mkstemp(result);
+  if ( tmpfd >= 0 )
+    tmpfh = fdopen( tmpfd, "w" );
+
+  if ( tmpfh == NULL ) {
+    if ( tmpfd >= 0 ) close(tmpfd);
+
+    free(result);
+    result = NULL;
+  }
+
+  *tmpfile = result;
+
+  return tmpfh;
 }
 
 /**

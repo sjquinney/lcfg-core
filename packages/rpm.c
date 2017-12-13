@@ -402,21 +402,14 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
   assert( pkglist  != NULL );
   assert( filename != NULL );
 
-  char * tmpfile = lcfgutils_safe_tmpfile(filename);
+  LCFGChange change = LCFG_CHANGE_NONE;
 
-  bool ok = true;
-  LCFGChange change = LCFG_CHANGE_ERROR;
-
-  FILE * tmpfh = NULL;
-  int tmpfd = mkstemp(tmpfile);
-  if ( tmpfd >= 0 )
-    tmpfh = fdopen( tmpfd, "w" );
+  char * tmpfile = NULL;
+  FILE * tmpfh = lcfgutils_safe_tmpfile( filename, &tmpfile );
 
   if ( tmpfh == NULL ) {
-    if ( tmpfd >= 0 ) close(tmpfd);
-
-    lcfgutils_build_message( msg, "Failed to open temporary rpmlist file" );
-    ok = false;
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to open rpmlist file" );
     goto cleanup;
   }
 
@@ -429,67 +422,38 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
 
   lcfgpkglist_sort(pkglist);
 
-  ok = lcfgpkglist_print( pkglist,
-                          defarch, base,
-                          LCFG_PKG_STYLE_RPM,
-                          LCFG_OPT_NEWLINE,
-                          tmpfh );
+  bool print_ok = lcfgpkglist_print( pkglist,
+                                     defarch, base,
+                                     LCFG_PKG_STYLE_RPM,
+                                     LCFG_OPT_NEWLINE,
+                                     tmpfh );
 
-  if (!ok) {
+  if (!print_ok) {
+    change = LCFG_CHANGE_ERROR;
     lcfgutils_build_message( msg, "Failed to write rpmlist file" );
-    goto cleanup;
-  } else {
-
-    if ( fclose(tmpfh) == 0 ) {
-      tmpfh = NULL; /* Avoids a further attempt to close in cleanup */
-    } else {
-      lcfgutils_build_message( msg, "Failed to close rpmlist file" );
-      ok = false;
-    }
-
   }
 
-  /* rename tmpfile to target if different */
+  /* Always attempt to close temporary file */
 
-  if ( ok ) {
-
-    if ( lcfgutils_file_needs_update( filename, tmpfile ) ) {
-
-      if ( rename( tmpfile, filename ) == 0 ) {
-        change = LCFG_CHANGE_MODIFIED;
-      } else {
-        ok = false;
-      }
-
-    } else {
-      change = LCFG_CHANGE_NONE;
-    }
-
+  if ( fclose(tmpfh) != 0 ) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to close rpmlist file" );
   }
 
-  /* Even when the file is not changed the mtime might need to be updated */
-
-  if ( ok && mtime != 0 ) {
-    struct utimbuf times;
-    times.actime  = mtime;
-    times.modtime = mtime;
-    (void) utime( filename, &times );
-  }
+  if ( change != LCFG_CHANGE_ERROR )
+    change = lcfgutils_file_update( filename, tmpfile, mtime );
 
  cleanup:
 
-  /* This might have already gone but call fclose and unlink to ensure
+  /* This might have already gone but call unlink to ensure
      tidiness. Do not care about the result */
-
-  if ( tmpfh != NULL )
-    (void) fclose(tmpfh);
 
   if ( tmpfile != NULL ) {
     (void) unlink(tmpfile);
     free(tmpfile);
   }
 
-  return ( ok ? change : LCFG_CHANGE_ERROR );
+  return change;
 }
 
 /**
@@ -534,21 +498,14 @@ LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
   assert( pkgset  != NULL );
   assert( filename != NULL );
 
-  char * tmpfile = lcfgutils_safe_tmpfile(filename);
+  LCFGChange change = LCFG_CHANGE_NONE;
 
-  bool ok = true;
-  LCFGChange change = LCFG_CHANGE_ERROR;
-
-  FILE * tmpfh = NULL;
-  int tmpfd = mkstemp(tmpfile);
-  if ( tmpfd >= 0 )
-    tmpfh = fdopen( tmpfd, "w" );
+  char * tmpfile = NULL;
+  FILE * tmpfh = lcfgutils_safe_tmpfile( filename, &tmpfile );
 
   if ( tmpfh == NULL ) {
-    if ( tmpfd >= 0 ) close(tmpfd);
-
-    lcfgutils_build_message( msg, "Failed to open temporary rpmlist file" );
-    ok = false;
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to open rpmlist file" );
     goto cleanup;
   }
 
@@ -556,68 +513,39 @@ LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
   if ( defarch == NULL )
     defarch = default_architecture();
 
-  ok = lcfgpkgset_print( pkgset,
-                         defarch,
-                         base,
-                         LCFG_PKG_STYLE_RPM,
-                         LCFG_OPT_NEWLINE,
-                         tmpfh );
+  bool print_ok = lcfgpkgset_print( pkgset,
+                                    defarch,
+                                    base,
+                                    LCFG_PKG_STYLE_RPM,
+                                    LCFG_OPT_NEWLINE,
+                                    tmpfh );
 
-  if (!ok) {
+  if (!print_ok) {
+    change = LCFG_CHANGE_ERROR;
     lcfgutils_build_message( msg, "Failed to write rpmlist file" );
-    goto cleanup;
-  } else {
-
-    if ( fclose(tmpfh) == 0 ) {
-      tmpfh = NULL; /* Avoids a further attempt to close in cleanup */
-    } else {
-      lcfgutils_build_message( msg, "Failed to close rpmlist file" );
-      ok = false;
-    }
-
   }
 
-  /* rename tmpfile to target if different */
+  /* Always attempt to close temporary file */
 
-  if ( ok ) {
-
-    if ( lcfgutils_file_needs_update( filename, tmpfile ) ) {
-
-      if ( rename( tmpfile, filename ) == 0 ) {
-        change = LCFG_CHANGE_MODIFIED;
-      } else {
-        ok = false;
-      }
-
-    } else {
-      change = LCFG_CHANGE_NONE;
-    }
-
+  if ( fclose(tmpfh) != 0 ) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to close rpmlist file" );
   }
 
-  /* Even when the file is not changed the mtime might need to be updated */
-
-  if ( ok && mtime != 0 ) {
-    struct utimbuf times;
-    times.actime  = mtime;
-    times.modtime = mtime;
-    utime( filename, &times );
-  }
+  if ( change != LCFG_CHANGE_ERROR )
+    change = lcfgutils_file_update( filename, tmpfile, mtime );
 
  cleanup:
 
-  /* This might have already gone but call fclose and unlink to ensure
+  /* This might have already gone but call unlink to ensure
      tidiness. Do not care about the result */
 
-  if ( tmpfh != NULL )
-    fclose(tmpfh);
-
   if ( tmpfile != NULL ) {
-    unlink(tmpfile);
+    (void) unlink(tmpfile);
     free(tmpfile);
   }
 
-  return ( ok ? change : LCFG_CHANGE_ERROR );
+  return change;
 }
 
 /**
@@ -1223,20 +1151,13 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
 
   *msg = NULL;
   LCFGChange change = LCFG_CHANGE_ERROR;
-  bool ok = true;
 
-  char * tmpfile = lcfgutils_safe_tmpfile(filename);
+  char * tmpfile = NULL;
+  FILE * tmpfh = lcfgutils_safe_tmpfile( filename, &tmpfile );
 
-  FILE * out = NULL;
-  int tmpfd = mkstemp(tmpfile);
-  if ( tmpfd >= 0 )
-    out = fdopen( tmpfd, "w" );
-
-  if ( out == NULL ) {
-    if ( tmpfd >= 0 ) close(tmpfd);
-
-    ok = false;
-    lcfgutils_build_message( msg, "Failed to open temporary rpmcfg file");
+  if ( tmpfh == NULL ) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to open rpmcfg file" );
     goto cleanup;
   }
 
@@ -1252,12 +1173,14 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
   /* The sort is not just cosmetic - there needs to be a deterministic
      order so that we can compare the RPM list for changes using cmp */
 
+  bool print_ok = true;
+
   if ( !lcfgslist_is_empty(active) ) {
     lcfgpkglist_sort(active);
 
     const LCFGSListNode * cur_node = NULL;
     for ( cur_node = lcfgslist_head(active);
-	  cur_node != NULL && ok;
+	  cur_node != NULL && print_ok;
 	  cur_node = lcfgslist_next(cur_node) ) {
 
       const LCFGPackage * pkg = lcfgslist_data(cur_node);
@@ -1271,16 +1194,11 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
 
       if ( rc > 0 ) {
 
-        if ( fputs( buffer, out ) < 0 )
-          ok = false;
+        if ( fputs( buffer, tmpfh ) < 0 )
+          print_ok = false;
 
       } else {
-        ok = false;
-      }
-
-      if (!ok) {
-        lcfgutils_build_message( msg, "Failed to write to rpmcfg file" );
-        break;
+        print_ok = false;
       }
 
     }
@@ -1291,15 +1209,17 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
     used by the rpm cache stuff because we need to cache all the RPMs,
     regardless of context. */
 
-  if ( fprintf( out, "#ifdef ALL_CONTEXTS\n" ) < 0 )
-    ok = false;
+  if (print_ok) {
+    if ( fprintf( tmpfh, "#ifdef ALL_CONTEXTS\n" ) < 0 )
+      print_ok = false;
+  }
 
-  if ( ok && !lcfgslist_is_empty(inactive) ) {
+  if ( print_ok && !lcfgslist_is_empty(inactive) ) {
     lcfgpkglist_sort(inactive);
 
     const LCFGSListNode * cur_node = NULL;
     for ( cur_node = lcfgslist_head(inactive);
-	  cur_node != NULL && ok;
+	  cur_node != NULL && print_ok;
 	  cur_node = lcfgslist_next(cur_node) ) {
 
       const LCFGPackage * pkg = lcfgslist_data(cur_node);
@@ -1313,16 +1233,11 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
 
       if ( rc > 0 ) {
 
-        if ( fputs( buffer, out ) < 0 )
-          ok = false;
+        if ( fputs( buffer, tmpfh ) < 0 )
+          print_ok = false;
 
       } else {
-        ok = false;
-      }
-
-      if (!ok) {
-        lcfgutils_build_message( msg, "Failed to write to rpmcfg file" );
-        break;
+        print_ok = false;
       }
 
     }
@@ -1331,57 +1246,39 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
 
   free(buffer);
 
-  if (ok) {
-    if ( fprintf( out, "#endif\n\n" ) < 0 )
-      ok = false;
+  if (print_ok) {
+    if ( fprintf( tmpfh, "#endif\n\n" ) < 0 )
+      print_ok = false;
   }
 
-  if ( ok && rpminc != NULL ) {
-    if ( fprintf( out, "#include \"%s\"\n", rpminc ) < 0 )
-      ok = false;
+  if ( print_ok && rpminc != NULL ) {
+    if ( fprintf( tmpfh, "#include \"%s\"\n", rpminc ) < 0 )
+      print_ok = false;
   }
 
-  /* Attempt to close the temporary file whatever happens */
-  if ( fclose(out) != 0 ) {
+  if (!print_ok) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to write rpmcfg file" );
+  }
+
+  /* Always attempt to close temporary file */
+
+  if ( fclose(tmpfh) != 0 ) {
+    change = LCFG_CHANGE_ERROR;
     lcfgutils_build_message( msg, "Failed to close rpmcfg file" );
-    ok = false;
   }
 
-  /* rename tmpfile to target if different */
-
-  if ( ok ) {
-
-    if ( lcfgutils_file_needs_update( filename, tmpfile ) ) {
-
-      if ( rename( tmpfile, filename ) == 0 ) {
-        change = LCFG_CHANGE_MODIFIED;
-      } else {
-        ok = false;
-      }
-
-    } else {
-      change = LCFG_CHANGE_NONE;
-    }
-
-  }
-
-  /* Even when the file is not changed the mtime might need to be updated */
-
-  if ( ok && mtime != 0 ) {
-    struct utimbuf times;
-    times.actime  = mtime;
-    times.modtime = mtime;
-    utime( filename, &times );
-  }
+  if ( change != LCFG_CHANGE_ERROR )
+    change = lcfgutils_file_update( filename, tmpfile, mtime );
 
  cleanup:
 
   if ( tmpfile != NULL ) {
-    unlink(tmpfile);
+    (void) unlink(tmpfile);
     free(tmpfile);
   }
 
-  return ( ok ? change : LCFG_CHANGE_ERROR );
+  return change;
 }
 
 /**
@@ -1427,97 +1324,79 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
   assert( filename != NULL );
 
   *msg = NULL;
-  LCFGChange change = LCFG_CHANGE_ERROR;
-  bool ok = true;
+  LCFGChange change = LCFG_CHANGE_NONE;
 
-  char * tmpfile = lcfgutils_safe_tmpfile(filename);
+  char * tmpfile = NULL;
+  FILE * tmpfh = lcfgutils_safe_tmpfile( filename, &tmpfile );
 
-  FILE * out = NULL;
-  int tmpfd = mkstemp(tmpfile);
-  if ( tmpfd >= 0 )
-    out = fdopen( tmpfd, "w" );
-
-  if ( out == NULL ) {
-    if ( tmpfd >= 0 ) close(tmpfd);
-
-    ok = false;
-    lcfgutils_build_message( msg, "Failed to open temporary rpmcfg file");
+  if ( tmpfh == NULL ) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to open temporary rpmcfg file" );
     goto cleanup;
   }
+
+  bool print_ok = true;
 
   /* The sort is not just cosmetic - there needs to be a deterministic
      order so that we can compare the RPM list for changes using cmp */
 
   if ( !lcfgpkgset_is_empty(active) ) {
-    ok = lcfgpkgset_print( active, defarch, NULL,
-                           LCFG_PKG_STYLE_CPP, LCFG_OPT_USE_META,
-                           out );
+    print_ok = lcfgpkgset_print( active, defarch, NULL,
+                                 LCFG_PKG_STYLE_CPP, LCFG_OPT_USE_META,
+                                 tmpfh );
   }
 
   /* List the RPMs that would be present in other contexts. This is
     used by the rpm cache stuff because we need to cache all the RPMs,
     regardless of context. */
 
-  if ( fprintf( out, "#ifdef ALL_CONTEXTS\n" ) < 0 )
-    ok = false;
-
-  if ( ok && !lcfgpkgset_is_empty(inactive) ) {
-    ok = lcfgpkgset_print( inactive, defarch, NULL,
-                           LCFG_PKG_STYLE_CPP, LCFG_OPT_USE_META,
-                           out );
+  if (print_ok) {
+    if ( fprintf( tmpfh, "#ifdef ALL_CONTEXTS\n" ) < 0 )
+      print_ok = false;
   }
 
-  if (ok) {
-    if ( fprintf( out, "#endif\n\n" ) < 0 )
-      ok = false;
+  if ( print_ok && !lcfgpkgset_is_empty(inactive) ) {
+    print_ok = lcfgpkgset_print( inactive, defarch, NULL,
+                                 LCFG_PKG_STYLE_CPP, LCFG_OPT_USE_META,
+                                 tmpfh );
   }
 
-  if ( ok && rpminc != NULL ) {
-    if ( fprintf( out, "#include \"%s\"\n", rpminc ) < 0 )
-      ok = false;
+  if (print_ok) {
+    if ( fprintf( tmpfh, "#endif\n\n" ) < 0 )
+      print_ok = false;
   }
 
-  /* Attempt to close the temporary file whatever happens */
-  if ( fclose(out) != 0 ) {
+  if ( print_ok && rpminc != NULL ) {
+    if ( fprintf( tmpfh, "#include \"%s\"\n", rpminc ) < 0 )
+      print_ok = false;
+  }
+
+  if (!print_ok) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to write rpmcfg file" );
+  }
+
+  /* Always attempt to close temporary file */
+
+  if ( fclose(tmpfh) != 0 ) {
+    change = LCFG_CHANGE_ERROR;
     lcfgutils_build_message( msg, "Failed to close rpmcfg file" );
-    ok = false;
   }
 
-  /* rename tmpfile to target if different */
-
-  if ( ok ) {
-
-    if ( lcfgutils_file_needs_update( filename, tmpfile ) ) {
-
-      if ( rename( tmpfile, filename ) == 0 ) {
-        change = LCFG_CHANGE_MODIFIED;
-      } else {
-        ok = false;
-      }
-
-    } else {
-      change = LCFG_CHANGE_NONE;
-    }
-
-  }
-
-  /* Even when the file is not changed the mtime might need to be updated */
-
-  if ( ok && mtime != 0 ) {
-    struct utimbuf times;
-    times.actime  = mtime;
-    times.modtime = mtime;
-    utime( filename, &times );
-  }
+  if ( change != LCFG_CHANGE_ERROR )
+    change = lcfgutils_file_update( filename, tmpfile, mtime );
 
  cleanup:
+
+  /* This might have already gone but call unlink to ensure
+     tidiness. Do not care about the result */
 
   if ( tmpfile != NULL ) {
     (void) unlink(tmpfile);
     free(tmpfile);
   }
 
-  return ( ok ? change : LCFG_CHANGE_ERROR );
+  return change;
 }
 
 #ifdef HAVE_RPM

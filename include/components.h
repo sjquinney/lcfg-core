@@ -90,7 +90,7 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
 					   char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
+LCFGChange lcfgcomponent_to_status_file( const LCFGComponent * comp,
 					 const char * filename,
 					 LCFGOption options,
 					 char ** msg )

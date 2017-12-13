@@ -799,10 +799,11 @@ LCFGStatus lcfgcompset_to_status_dir( const LCFGComponentSet * compset,
     lcfgcomponent_sort(cur_comp);
 
     char * comp_msg = NULL;
-    rc = lcfgcomponent_to_status_file( cur_comp, statfile,
-				       options, &comp_msg );
+    LCFGChange change = lcfgcomponent_to_status_file( cur_comp, statfile,
+                                                      options, &comp_msg );
 
-    if ( rc == LCFG_STATUS_ERROR ) {
+    if ( change == LCFG_CHANGE_ERROR ) {
+      rc = LCFG_STATUS_ERROR;
       lcfgutils_build_message( msg, "Failed to write status file for '%s' component: %s",
 		comp_name, comp_msg );
     }

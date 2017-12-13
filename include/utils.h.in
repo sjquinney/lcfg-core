@@ -41,7 +41,9 @@ extern void LCFG_Ack();
 
 /* New functions only available in version 2 of lcfgutils library */
 
-char * lcfgutils_safe_tmpfile( const char * path );
+char * lcfgutils_safe_tmpname( const char * path );
+
+FILE * lcfgutils_safe_tmpfile( const char * path, char ** tmpfile );
 
 const char * lcfgutils_tmp_dirname(void);
 
