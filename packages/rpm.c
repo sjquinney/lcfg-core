@@ -1150,7 +1150,7 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
                                   char ** msg ) {
 
   *msg = NULL;
-  LCFGChange change = LCFG_CHANGE_ERROR;
+  LCFGChange change = LCFG_CHANGE_NONE;
 
   char * tmpfile = NULL;
   FILE * tmpfh = lcfgutils_safe_tmpfile( filename, &tmpfile );
