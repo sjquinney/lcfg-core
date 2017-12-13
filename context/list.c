@@ -662,18 +662,12 @@ LCFGChange lcfgctxlist_to_file( LCFGContextList * ctxlist,
   assert( ctxlist != NULL );
   assert( filename != NULL );
 
-  LCFGChange change = LCFG_CHANGE_ERROR;
+  LCFGChange change = LCFG_CHANGE_NONE;
 
-  char * tmpfile = lcfgutils_safe_tmpfile(filename);
-
-  FILE * tmpfh = NULL;
-  int tmpfd = mkstemp(tmpfile);
-  if ( tmpfd >= 0 )
-    tmpfh = fdopen( tmpfd, "w" );
+  char * tmpfile = NULL;
+  FILE * tmpfh = lcfgutils_safe_tmpfile( filename, &tmpfile );
 
   if ( tmpfh == NULL ) {
-    if ( tmpfd >= 0 ) close(tmpfd);
-
     change = LCFG_CHANGE_ERROR;
     lcfgutils_build_message( msg, "Failed to open context file" );
     goto cleanup;
@@ -681,54 +675,27 @@ LCFGChange lcfgctxlist_to_file( LCFGContextList * ctxlist,
 
   lcfgctxlist_sort_by_priority(ctxlist);
 
-  bool ok = lcfgctxlist_print( ctxlist, tmpfh );
+  bool print_ok = lcfgctxlist_print( ctxlist, tmpfh );
 
-  if (!ok) {
+  if (!print_ok) {
     change = LCFG_CHANGE_ERROR;
     lcfgutils_build_message( msg, "Failed to write context file" );
-  } else {
-
-    if ( fclose(tmpfh) == 0 ) {
-      tmpfh = NULL; /* Avoids a further attempt to close in cleanup */
-    } else {
-      change = LCFG_CHANGE_ERROR;
-      lcfgutils_build_message( msg, "Failed to close context file" );
-    }
   }
 
-  /* Only update file if there are differences */
-  if ( change != LCFG_CHANGE_ERROR ) {
+  /* Always attempt to close temporary file */
 
-    if ( lcfgutils_file_needs_update( filename, tmpfile ) ) {
-
-      if ( rename( tmpfile, filename ) == 0 ) {
-        change = LCFG_CHANGE_MODIFIED;
-      } else {
-        change = LCFG_CHANGE_ERROR;
-      }
-
-    } else {
-      change = LCFG_CHANGE_NONE;
-    }
-
+  if ( fclose(tmpfh) != 0 ) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to close context file" );
   }
 
-  /* Even when the file is not changed the mtime might need to be updated */
-
-  if ( change != LCFG_CHANGE_ERROR && mtime != 0 ) {
-    struct utimbuf times;
-    times.actime  = mtime;
-    times.modtime = mtime;
-    (void) utime( filename, &times );
-  }
+  if ( change != LCFG_CHANGE_ERROR )
+    change = lcfgutils_file_update( filename, tmpfile, mtime );
 
  cleanup:
 
-  /* This might have already gone but call fclose and unlink to ensure
+  /* This might have already gone but call unlink to ensure
      tidiness. Do not care about the result */
-
-  if ( tmpfh != NULL )
-    (void) fclose(tmpfh);
 
   if ( tmpfile != NULL ) {
     (void) unlink(tmpfile);

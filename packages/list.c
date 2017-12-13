@@ -3,8 +3,8 @@
  * @brief Functions for working with lists of LCFG packages
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-08-17 10:54:37 +0100 (Thu, 17 Aug 2017) $
- * $Revision: 33355 $
+ * $Date: 2017-12-13 16:34:15 +0000 (Wed, 13 Dec 2017) $
+ * $Revision: 33883 $
  */
 
 #define _WITH_GETLINE /* for BSD */
@@ -1043,7 +1043,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
   /* Temporary file for cpp output */
 
-  tmpfile = lcfgutils_safe_tmpfile(NULL);
+  tmpfile = lcfgutils_safe_tmpname(NULL);
 
   int tmpfd = mkstemp(tmpfile);
   if ( tmpfd == -1 ) {
@@ -1228,10 +1228,10 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
  cleanup:
 
   if ( fp != NULL )
-    fclose(fp);
+    (void) fclose(fp);
 
   if ( tmpfile != NULL ) {
-    unlink(tmpfile);
+    (void) unlink(tmpfile);
     free(tmpfile);
   }
 

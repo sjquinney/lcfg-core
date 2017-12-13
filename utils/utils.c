@@ -3,23 +3,24 @@
  * @brief Commonly useful functions
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-12-12 15:30:17 +0000 (Tue, 12 Dec 2017) $
- * $Revision: 33875 $
+ * $Date: 2017-12-13 16:38:39 +0000 (Wed, 13 Dec 2017) $
+ * $Revision: 33884 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
 
 #include <ctype.h>
+#include <dirent.h>
+#include <fcntl.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
-#include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <sys/types.h>
 #include <unistd.h>
+#include <utime.h>
 #include <assert.h>
 
 #include "common.h"
@@ -89,7 +90,7 @@ const char * lcfgutils_tmp_dirname(void) {
 static const char tmp_template[] = ".lcfg.XXXXXX";
 const size_t tmp_template_len = sizeof(tmp_template) - 1;
 
-char * lcfgutils_safe_tmpfile( const char * path ) {
+char * lcfgutils_safe_tmpname( const char * path ) {
 
   size_t base_len = 0;
   if ( path == NULL ) {
@@ -127,6 +128,44 @@ char * lcfgutils_safe_tmpfile( const char * path ) {
   assert( (result + new_len) == to );
 
   return result;
+}
+
+/**
+ * @brief Generate a safe temporary file
+ *
+ * Given a target file name this will use @c lcfgutils_safe_tmpname()
+ * to generate a safe temporary file path in the same directory. This
+ * will then be opened as a file stream for writing using
+ * @c mkstemp(3). The particular advantage of being in the same directory
+ * as the target file is that the file can always be renamed atomically.
+ *
+ * @param[in] path Pointer to target file name (may be @c NULL)
+ * @param[out] tmpfile Temporary file name (call @c free(3) when no longer required)
+ * @return Pointer to a FILE stream (close when no longer required)
+ * 
+ */
+
+FILE * lcfgutils_safe_tmpfile( const char * path,
+                               char ** tmpfile ) {
+
+  FILE * tmpfh = NULL;
+
+  char * result = lcfgutils_safe_tmpname(path);
+
+  int tmpfd = mkstemp(result);
+  if ( tmpfd >= 0 )
+    tmpfh = fdopen( tmpfd, "w" );
+
+  if ( tmpfh == NULL ) {
+    if ( tmpfd >= 0 ) close(tmpfd);
+
+    free(result);
+    result = NULL;
+  }
+
+  *tmpfile = result;
+
+  return tmpfh;
 }
 
 /**
@@ -560,6 +599,31 @@ bool lcfgutils_file_needs_update( const char * cur_file,
     (void) fclose(fh2);
 
   return needs_update;
+}
+
+LCFGChange lcfgutils_file_update( const char * cur_file, const char * new_file,
+				  time_t mtime ) {
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+
+  if ( lcfgutils_file_needs_update( cur_file, new_file ) ) {
+
+    if ( rename( cur_file, new_file ) == 0 ) {
+      change = LCFG_CHANGE_MODIFIED;
+    } else {
+      change = LCFG_CHANGE_ERROR;
+    }
+
+  }
+
+  if ( change != LCFG_CHANGE_ERROR && mtime != 0 ) {
+    struct utimbuf times;
+    times.actime  = mtime;
+    times.modtime = mtime;
+    (void) utime( new_file, &times );
+  }
+
+  return change;
 }
 
 void lcfgutils_build_message( char ** strp, const char *fmt, ... ) {

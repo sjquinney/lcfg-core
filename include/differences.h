@@ -3,8 +3,8 @@
  * @brief Functions for finding the differences between resources, components and profiles.
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-06-08 15:16:46 +0100 (Thu, 08 Jun 2017) $
- * $Revision: 33029 $
+ * $Date: 2017-12-13 16:34:15 +0000 (Wed, 13 Dec 2017) $
+ * $Revision: 33883 $
  */
 
 #ifndef LCFG_CORE_DIFFERENCES_H
@@ -270,7 +270,7 @@ bool lcfgdiffprofile_has_component( const LCFGDiffProfile * profdiff,
 
 void lcfgdiffprofile_sort( LCFGDiffProfile * list );
 
-LCFGStatus lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
+LCFGChange lcfgdiffprofile_to_holdfile( LCFGDiffProfile * profdiff,
                                         const char * holdfile,
                                         const char * signature,
                                         char ** msg )

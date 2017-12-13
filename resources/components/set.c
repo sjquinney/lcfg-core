@@ -3,8 +3,8 @@
  * @brief Functions for working with sets of LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-08-11 14:55:09 +0100 (Fri, 11 Aug 2017) $
- * $Revision: 33314 $
+ * $Date: 2017-12-13 16:34:15 +0000 (Wed, 13 Dec 2017) $
+ * $Revision: 33883 $
  */
 
 #include <assert.h>
@@ -799,10 +799,11 @@ LCFGStatus lcfgcompset_to_status_dir( const LCFGComponentSet * compset,
     lcfgcomponent_sort(cur_comp);
 
     char * comp_msg = NULL;
-    rc = lcfgcomponent_to_status_file( cur_comp, statfile,
-				       options, &comp_msg );
+    LCFGChange change = lcfgcomponent_to_status_file( cur_comp, statfile,
+                                                      options, &comp_msg );
 
-    if ( rc == LCFG_STATUS_ERROR ) {
+    if ( change == LCFG_CHANGE_ERROR ) {
+      rc = LCFG_STATUS_ERROR;
       lcfgutils_build_message( msg, "Failed to write status file for '%s' component: %s",
 		comp_name, comp_msg );
     }

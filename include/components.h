@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG components
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-11-04 07:55:47 +0000 (Sat, 04 Nov 2017) $
- * $Revision: 33615 $
+ * $Date: 2017-12-13 16:34:15 +0000 (Wed, 13 Dec 2017) $
+ * $Revision: 33883 $
  */
 
 #ifndef LCFG_CORE_COMPONENT_H
@@ -90,7 +90,7 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
 					   char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgcomponent_to_status_file( const LCFGComponent * comp,
+LCFGChange lcfgcomponent_to_status_file( const LCFGComponent * comp,
 					 const char * filename,
 					 LCFGOption options,
 					 char ** msg )
