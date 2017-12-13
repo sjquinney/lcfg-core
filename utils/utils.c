@@ -130,6 +130,21 @@ char * lcfgutils_safe_tmpname( const char * path ) {
   return result;
 }
 
+/**
+ * @brief Generate a safe temporary file
+ *
+ * Given a target file name this will use @c lcfgutils_safe_tmpname()
+ * to generate a safe temporary file path in the same directory. This
+ * will then be opened as a file stream for writing using
+ * @c mkstemp(3). The particular advantage of being in the same directory
+ * as the target file is that the file can always be renamed atomically.
+ *
+ * @param[in] path Pointer to target file name (may be @c NULL)
+ * @param[out] tmpfile Temporary file name (call @c free(3) when no longer required)
+ * @return Pointer to a FILE stream (close when no longer required)
+ * 
+ */
+
 FILE * lcfgutils_safe_tmpfile( const char * path,
                                char ** tmpfile ) {
 
