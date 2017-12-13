@@ -39,7 +39,8 @@ int main(void) {
       if ( !isspace(*p) ) isempty = false;
 
     if ( isempty || *line == '#' ) {
-      fputs( line, out_fh );
+      if ( fputs( line, out_fh ) < 0 )
+	ok = false;
       continue;
     }
 
