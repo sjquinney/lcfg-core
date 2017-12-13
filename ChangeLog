@@ -1,6 +1,35 @@
-2017-12-12  SVN: new release
+2017-12-13  SVN: new release
 
-	* Release: 1.47.1
+	* Release: 1.47.2
+
+2017-12-13 16:38  squinney@INF.ED.AC.UK
+
+	* utils/utils.c: Added docs for lcfgutils_safe_tmpfile
+
+2017-12-13 16:34  squinney@INF.ED.AC.UK
+
+	* context/list.c, include/components.h, include/differences.h,
+	  include/utils.h.in, lcfg.yml, packages/list.c, packages/rpm.c,
+	  packages/set.c, profile/diff.c, resources/components/component.c,
+	  resources/components/set.c, utils/utils.c: Reworked various
+	  functions which generate files so that they all work in a
+	  standard way
+
+2017-12-12 20:47  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in: need to include lcfg/common.h for LCFGChange
+	  type
+
+2017-12-12 20:46  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, utils/utils.c: Added lcfgutils_file_update
+	  which wraps the usage of lcfgutils_file_needs_update along with
+	  the rename. This currently appears in many places so will help
+	  avoid copy/paste errors
+
+2017-12-12 16:20  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.47.1
 
 2017-12-12 16:19  squinney@INF.ED.AC.UK
 
