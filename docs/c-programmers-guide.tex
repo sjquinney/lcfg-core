@@ -573,6 +573,45 @@ value will be passed directly to the required function.
 
 \subsubsection{Specification string}
 
+This is the standard serialisation format for LCFG
+resources. Depending on the available information it will be
+serialised as a single line like \texttt{comp.res[context]=value}. The
+following options are supported and can be combined:
+
+\begin{minted}[frame=single]{c}
+LCFG_OPT_NOPREFIX  /* do not include component name */
+LCFG_OPT_NOVALUE   /* do not include value */
+LCFG_OPT_NOCONTEXT /* do not include context */
+LCFG_OPT_ENCODE    /* encode significant whitespace in value */
+LCFG_OPT_NEWLINE   /* append newline character */
+\end{minted}
+
+If the component name is \texttt{NULL} it will not be ignored and the
+'.'  (period) separator character will not be added. If the value is
+\texttt{NULL} the '=' (equals) character will still be included. If
+there is no context information the '[]' (square brackets) will not be
+included. When enabled, the value encoding is done using the
+\texttt{lcfgresource\_enc\_value} function which encodes newlines and
+carriage returns to avoid the result appearing as a multi-line
+string. For example:
+
+\begin{minted}[frame=single]{c}
+const char * compname = "client";
+
+size_t size = 0;
+char * result = NULL;
+
+ssize_t length = lcfgresource_to_spec( res, compname,
+                                      LCFG_OPT_ENCODE|LCFG_OPT_NEWLINE,
+                                      &result, &size );
+if ( length > 0 )
+  fputs( result, stdout );
+else
+  fprintf( stderr, "Failed to serialise resource\n" );
+
+free(result);
+\end{minted}
+
 \subsubsection{Status}
 
 \subsubsection{Summary}
