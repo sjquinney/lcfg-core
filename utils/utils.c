@@ -601,18 +601,17 @@ bool lcfgutils_file_needs_update( const char * cur_file,
   return needs_update;
 }
 
-LCFGChange lcfgutils_file_update( const char * cur_file, const char * new_file,
+LCFGChange lcfgutils_file_update( const char * filename, const char * tmpfile,
 				  time_t mtime ) {
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
-  if ( lcfgutils_file_needs_update( cur_file, new_file ) ) {
+  if ( lcfgutils_file_needs_update( filename, tmpfile ) ) {
 
-    if ( rename( cur_file, new_file ) == 0 ) {
+    if ( rename( tmpfile, filename ) == 0 )
       change = LCFG_CHANGE_MODIFIED;
-    } else {
+    else
       change = LCFG_CHANGE_ERROR;
-    }
 
   }
 
@@ -620,7 +619,7 @@ LCFGChange lcfgutils_file_update( const char * cur_file, const char * new_file,
     struct utimbuf times;
     times.actime  = mtime;
     times.modtime = mtime;
-    (void) utime( new_file, &times );
+    (void) utime( filename, &times );
   }
 
   return change;
