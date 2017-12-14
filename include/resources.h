@@ -323,11 +323,11 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
 
 typedef ssize_t (*LCFGResStrFunc) ( LCFG_RES_TOSTR_ARGS );
 
-LCFGStatus lcfgresource_to_string( const LCFGResource * res,
-                                   const char * prefix,
-                                   LCFGResourceStyle style,
-                                   LCFGOption options,
-                                   char ** result, size_t * size )
+ssize_t lcfgresource_to_string( const LCFGResource * res,
+				const char * prefix,
+				LCFGResourceStyle style,
+				LCFGOption options,
+				char ** result, size_t * size )
  __attribute__((warn_unused_result));
 
 ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS )

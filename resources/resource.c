@@ -2301,6 +2301,7 @@ LCFGStatus lcfgresource_from_spec( const char * spec, LCFGResource ** result,
  *   - @c LCFG_RESOURCE_STYLE_SUMMARY - uses @c lcfgresource_to_summary()
  *   - @c LCFG_RESOURCE_STYLE_STATUS - uses @c lcfgresource_to_status()
  *   - @c LCFG_RESOURCE_STYLE_SPEC - uses @c lcfgresource_to_spec()
+ *   - @c LCFG_RESOURCE_STYLE_VALUE - uses @c lcfgresource_to_value()
  *
  * See the documentation for each function to see which options are
  * supported.
@@ -2331,11 +2332,11 @@ LCFGStatus lcfgresource_from_spec( const char * spec, LCFGResource ** result,
  *
  */
 
-LCFGStatus lcfgresource_to_string( const LCFGResource * res,
-                                   const char * prefix,
-                                   LCFGResourceStyle style,
-                                   LCFGOption options,
-                                   char ** result, size_t * size ) {
+ssize_t lcfgresource_to_string( const LCFGResource * res,
+				const char * prefix,
+				LCFGResourceStyle style,
+				LCFGOption options,
+				char ** result, size_t * size ) {
   assert( res != NULL );
 
   /* Select the appropriate string function */
