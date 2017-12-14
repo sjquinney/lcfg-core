@@ -37,10 +37,6 @@ target_link_libraries(lcfg_bdb lcfg_context)
 target_link_libraries(lcfg_bdb lcfg_resources)
 target_link_libraries(lcfg_bdb lcfg_profile)
 
-# Specify where various files should be installed.
-
-SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
-
 install(TARGETS lcfg_bdb lcfg_bdb-static
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}
         ARCHIVE DESTINATION ${LIB_INSTALL_DIR})

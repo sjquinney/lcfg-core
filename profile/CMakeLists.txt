@@ -30,10 +30,6 @@ target_link_libraries(lcfg_profile lcfg_packages)
 target_link_libraries(lcfg_profile lcfg_resources)
 target_link_libraries(lcfg_profile lcfg_utils)
 
-# Specify where various files should be installed.
-
-SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
-
 install(TARGETS lcfg_profile lcfg_profile-static
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}

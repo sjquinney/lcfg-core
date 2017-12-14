@@ -6,6 +6,11 @@ file (STRINGS "lcfg-build-id.txt" LCFG_VERSION)
 
 SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra" )
 
+# Specify where various files should be installed.
+
+SET(LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Output directory for libraries")
+SET(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Output directory for header files")
+
 set(LCFGTMP "/var/tmp/lcfg" CACHE PATH "Default directory for temporary files")
 set(LCFGLOG "/var/log/lcfg" CACHE PATH "Default directory for log files")
 
@@ -39,7 +44,7 @@ add_subdirectory(pc)
 # Headers
 
 install(DIRECTORY ${CMAKE_BINARY_DIR}/include/ include/
-                  DESTINATION "include/lcfg"
+                  DESTINATION "${INCLUDE_INSTALL_DIR}/lcfg"
                   FILES_MATCHING PATTERN "*.h"
                   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 

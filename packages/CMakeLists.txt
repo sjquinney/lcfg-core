@@ -46,10 +46,6 @@ target_link_libraries(parse_pkgspec lcfg_packages)
 add_executable(translaterpmcfg translaterpmcfg.c)
 target_link_libraries(translaterpmcfg lcfg_packages)
 
-# Specify where various files should be installed.
-
-SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
-
 install(TARGETS parse_pkgspec lcfg_packages lcfg_packages-static
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}

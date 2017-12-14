@@ -65,10 +65,6 @@ add_executable(lcfg_xml_reader lcfg_xml_reader.c)
 target_link_libraries(lcfg_xml_reader lcfg_xml)
 target_link_libraries(lcfg_xml_reader lcfg_bdb)
 
-# Specify where various files should be installed.
-
-SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
-
 install(TARGETS lcfg_xml_reader lcfg_xml lcfg_xml-static
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}

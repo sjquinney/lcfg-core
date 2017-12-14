@@ -59,8 +59,6 @@ install(TARGETS ${BIN_TARGETS}
 install(TARGETS ${SBIN_TARGETS}
         DESTINATION sbin)
 
-SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
-
 install(TARGETS lcfg_utils lcfg_utils-static
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}
         ARCHIVE DESTINATION ${LIB_INSTALL_DIR})

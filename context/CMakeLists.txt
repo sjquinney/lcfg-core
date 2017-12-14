@@ -44,10 +44,6 @@ SET_TARGET_PROPERTIES(lcfg_context-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 
 target_link_libraries(lcfg_context lcfg_utils)
 
-# Specify where various files should be installed.
-
-SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
-
 install(TARGETS lcfg_context lcfg_context-static
         RUNTIME DESTINATION sbin
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}
