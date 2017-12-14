@@ -41,6 +41,37 @@ Complete API docs are available in html and PDF formats in
 files are stored in either \texttt{/usr/include/lcfg} or
 \texttt{/usr/local/include/lcfg}
 
+\subsection{pkgconfig}
+
+To help with compiling and linking against the various libraries
+provided in the LCFG core there are pkg-config files for each logical
+unit. The pkg-config files are all named like \texttt{lcfg-unit.pc}
+and are typically stored in the \texttt{/usr/share/pkgconfig}
+directory. It is possible to get a list of all available packages
+(with example output):
+
+\begin{verbatim}
+$ pkg-config --list-all|grep lcfg
+lcfg-utils                     lcfg-utils - LCFG general utilities library
+lcfg-context                   lcfg-context - LCFG context handling library
+lcfg-resources                 lcfg-resources - LCFG resource handling library
+lcfg-bdb                       lcfg-bdb - LCFG profile Berkeley DB handling library
+lcfg-xml                       lcfg-xml - LCFG profile XML handling library
+lcfg-packages                  lcfg-packages - LCFG packages handling library
+lcfg-profile                   lcfg-profile - LCFG profile handling library
+\end{verbatim}
+
+The necessary compiler and linker flags can be retrieved like this
+(with example output):
+
+\begin{verbatim}
+$ pkg-config --libs lcfg-packages
+-Llib -llcfg_packages -llcfg_context -llcfg_utils -lrpm -lrpmio
+$ pkg-config --cflags lcfg-packages
+\end{verbatim}
+
+See \texttt{pkg-config --help} for a full list of supported features.
+
 \section{Resources}
 
 At its most simple an LCFG resource can be considered to be a mapping
