@@ -1,0 +1,598 @@
+%%% programmers_guide.tex --- 
+
+%% Author: Stephen Quinney <squinney@inf.ed.ac.uk>
+%% Version: $Id: programmers_guide.tex,v 0.0 2017/12/05 11:39:27 squinney Exp$
+
+
+\documentclass[11pt,a4paper,titlepage]{article}
+\usepackage{minted}
+\usepackage{tabulary}
+\usepackage{datetime}
+
+\setlength{\voffset}{0in}
+\setlength{\topmargin}{0in}
+\setlength{\headsep}{0in}
+\setlength{\textwidth}{6.26in}
+\setlength{\evensidemargin}{0in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\headheight}{0in}
+\setlength{\textheight}{9.5in}
+
+\title{LCFG Core : C Programmers Guide}
+\author{Stephen Quinney \texttt{<squinney@inf.ed.ac.uk>}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\clearpage
+
+\section{Introduction}
+
+This is a guide for programmers who wish to use the LCFG Core C
+libraries. The aim is not to provide exhaustive detail on all available
+functions but rather the intention is to provide an overview of the
+most commonly useful facilities. 
+
+Complete API docs are available in html and PDF formats in
+\texttt{/usr/share/doc/lcfg-core-doc}. On most Unix systems the header
+files are stored in either \texttt{/usr/include/lcfg} or
+\texttt{/usr/local/include/lcfg}
+
+\section{Resources}
+
+At its most simple an LCFG resource can be considered to be a mapping
+between a name and a value but there are a number of other aspects
+which represent value type, context and derivation information. A
+resource is represented using an \texttt{LCFGResource} structure which
+has the following attributes:
+
+\begin{center}
+  \begin{tabular}{| l l p{7cm}|}
+\hline
+Attribute  & Variable Type & Notes \\ 
+\hline
+name       & string & Name (e.g. ``foo'') - \textit{required}\\
+value      & string & Value \\
+template   & \texttt{LCFGTemplate} & A set of templates used for creating sub-resource names for tag lists \\
+context    & string & Context expression for when resource is valid \\
+derivation & string & Information on where in sources resource value was modified \\
+comment    & string & Type comments \\
+type       & \texttt{LCFGResourceType} & Type ID (i.e. for string, integer, boolean, list) \\
+priority   & integer & Priority is derived from evaluation of context expression \\
+\hline
+\end{tabular}
+\end{center}
+
+Creating a new resource structure from scratch is done using the
+\texttt{lcfgresource\_new} function. This is straightforward and can
+be done like this:
+
+\begin{minted}[frame=single]{c}
+LCFGResource * res = lcfgresource_new();
+
+char * resname = strdup("foo");
+lcfgresource_set_name( res, resname );
+
+char * resvalue = strdup("bar");
+lcfgresource_set_value( res, resvalue );
+
+/* Avoid memory leaks */
+
+lcfgresource_relinquish(res);
+\end{minted}
+
+In this example it is particularly important to note that the
+\textit{name} and \textit{value} strings are duplicated before being
+passed to the set functions. When a string is passed to any of these
+functions the resource structure assumes ``ownership'' of the
+memory. If a resource structure is no longer required it should be
+destroyed to avoid memory leaks (using
+\texttt{lcfgresource\_relinquish}) and this will also free the
+memory for the string attributes. One consequence of this is that only
+strings which are allocated on the heap can be used, values on the
+stack will cause weird behaviour.
+
+\subsection{Attributes}
+
+\subsubsection{Name}
+\label{subsec:res_name}
+
+To be considered valid a resource MUST have a name. The first
+character of a resource name MUST be in the set \mintinline{c}|[A-Za-z]| and
+all subsequent characters MUST be in the set
+\mintinline{c}|[A-Za-z0-9_]|. The main reason for this restriction is so that
+the resource name can be safely used as a variable name in shell
+scripts and in templates. If a name is invalid the
+\texttt{lcfgresource\_set\_name} function will return a false value
+and the \texttt{errno} will be set to \texttt{EINVAL}.
+
+The following functions are available for accessing and manipulating
+the resource name:
+
+\begin{minted}[frame=single]{c}
+bool lcfgresource_valid_name( const char * name );
+bool lcfgresource_has_name( const LCFGResource * res );
+const char * lcfgresource_get_name( const LCFGResource * res );
+bool lcfgresource_set_name( LCFGResource * res, char * new_value );
+\end{minted}
+
+It is important to note that the string returned by
+\texttt{lcfgresource\_get\_name} is not a copy. It should NOT be
+modified since that will also affect the name for the resource, to
+change the name of a resource use the \texttt{lcfgresource\_set\_name}
+function. Note that when a string is passed in as the name the
+resource will assume ``ownership'' and the memory will be freed when
+the resource is destroyed.
+
+\subsubsection{Value}
+\label{subsec:res_value}
+
+A resource value is validated according to the current type for the
+resource (see \ref{subsec:res_type} for full details). By default a resource
+value is considered to be a string which can hold any value. If a value
+is invalid the \texttt{lcfgresource\_set\_value} function will return a
+false value and the \texttt{errno} will be set to \texttt{EINVAL}.
+
+The following functions are available for accessing and manipulating
+the resource value:
+
+\begin{minted}[frame=single]{c}
+bool lcfgresource_valid_value( const LCFGResource * res,
+                               const char * value );
+bool lcfgresource_has_value( const LCFGResource * res );
+const char * lcfgresource_get_value( const LCFGResource * res );
+bool lcfgresource_set_value( LCFGResource * res, char * new_value );
+bool lcfgresource_unset_value( LCFGResource * res );
+\end{minted}
+
+The type checking does not permit \texttt{NULL} as a valid value so
+the \texttt{lcfgresource\_unset\_value} function is particularly useful
+when it is necessary to reset a resource value (which frees any memory
+for the previous value string).
+
+It is important to note that the string returned by
+\texttt{lcfgresource\_get\_value} is not a copy. It should NOT be
+modified since that will also affect the value for the resource, to
+change the value of a resource use the \texttt{lcfgresource\_set\_value}
+function. Note that when a string is passed in as the value the
+resource will assume ``ownership'' and the memory will be freed when
+the resource is destroyed.
+
+\subsubsection{Type}
+\label{subsec:res_type}
+
+There are currently only a few resource \textit{types} supported by
+LCFG, these are \textit{boolean}, \textit{integer}, \textit{list} and
+\textit{string} (the default). These \textit{types} are used to
+restrict the set of valid values for a resource. This is not a
+full-blown type system and internally the resource values are always
+stored as strings with the type checking actually being just simple
+checks on the characters in the string.
+
+\begin{enumerate}
+
+\item \textbf{String} This is the default type which may hold any
+  value. An LCFG component schema supports further limiting the
+  permitted values for a string, that is currently only handled by
+  the server as the information is not exported to the client.
+
+\item \textbf{Boolean} This can be used to represent a binary state
+  (e.g. true/false, yes/no, on/off). The valid values are \mintinline{c}|""|
+  (empty string) for false values and \mintinline{c}|"yes"| for true values. A
+  \texttt{lcfgresource\_canon\_boolean} function is provided which can
+  be used to translate various other supported strings to these two
+  standard strings.
+
+\item \textbf{Integer} This can be used to represent an integer value,
+  note that internally it is still stored as a string.
+
+\item \textbf{List} This can be used to hold a space-separated list of
+  LCFG \textit{tags}. Note that this is NOT a generic list structure,
+  that can usually be simulated using a string with space-separated
+  values. All characters in a \textit{tag} string MUST be in the set
+  \mintinline{c}|[A-Za-z0-9_]|. Typically for each tag there will be associated
+  sub-resources, the names of which are assembled using the templates
+  for the parent resource.
+
+\end{enumerate}
+
+The current type of a resource can be easily checked using one of the
+following functions. There is also support for checking if a value is
+true (which may vary depending upon the type).
+
+\begin{minted}[frame=single]{c}
+bool lcfgresource_is_string(  const LCFGResource * res );
+bool lcfgresource_is_integer( const LCFGResource * res );
+bool lcfgresource_is_boolean( const LCFGResource * res );
+bool lcfgresource_is_list(    const LCFGResource * res );
+bool lcfgresource_is_true( const LCFGResource * res );
+\end{minted}
+
+To check if a string holds a valid value for the type the following
+functions are provided:
+
+\begin{minted}[frame=single]{c}
+bool lcfgresource_valid_boolean( const char * value );
+bool lcfgresource_valid_integer( const char * value );
+bool lcfgresource_valid_list(    const char * value );
+bool lcfgresource_valid_value( const LCFGResource * res,
+                               const char * value );
+\end{minted}
+
+Note that there is no function for checking the validity of
+strings. The \texttt{lcfgresource\_valid\_value} function supports
+checking if a value is acceptable for a particular resource before an
+attempt is made to actually set the value. That is often a good way to
+make invalid value handling somewhat simpler.
+
+The following functions are available for accessing and manipulating
+the resource type:
+
+\begin{minted}[frame=single]{c}
+LCFGResourceType lcfgresource_get_type( const LCFGResource * res );
+bool lcfgresource_set_type( LCFGResource * res,
+                            LCFGResourceType new_type );
+char * lcfgresource_get_type_as_string( const LCFGResource * res,
+                                        LCFGOption options );
+bool lcfgresource_set_type_as_string( LCFGResource * res,
+                                      const char * new_type,
+                                      char ** msg );
+\end{minted}
+
+Note that if a resource already has a value then the type can only be
+changed if the value is valid for the new type. If a type
+is invalid the \texttt{lcfgresource\_set\_type} function will return a
+false value and the \texttt{errno} will be set to \texttt{EINVAL}. 
+
+The \texttt{LCFGResourceType} is an enum which holds the following
+values:
+
+\begin{minted}[frame=single]{c}
+LCFG_RESOURCE_TYPE_STRING    /* String, can hold any value */
+LCFG_RESOURCE_TYPE_INTEGER   /* Integer */
+LCFG_RESOURCE_TYPE_BOOLEAN   /* Boolean */
+LCFG_RESOURCE_TYPE_LIST      /* List of tag names */
+LCFG_RESOURCE_TYPE_PUBLISH   /* Published to spanning map, like String */
+LCFG_RESOURCE_TYPE_SUBSCRIBE /* Subscribed from spanning map, like String*/
+\end{minted}
+
+The \texttt{lcfgresource\_get\_type\_as\_string} function can be used
+to assemble a new type string which will contain not just the type
+name but also any associated comments and, for lists, any
+templates. The inclusion of templates can be avoided by specifying the
+\texttt{LCFG\_OPT\_NOTEMPLATES} option. Note that when no longer
+required the memory for the generated type string will need to be
+freed.
+
+Typically the type for a resource will be set using the
+\texttt{lcfgresource\_set\_type\_as\_string} function and that will
+also process any templates (see \ref{subsec:res_template}) and comments (see
+\ref{subsec:res_comment}). A type string may begin with the $\%$ (percent)
+symbol. After the type name there may be a comment string enclosed in
+parentheses. For list types there will typically also be a list of
+templates. The following strings are valid type declarations:
+
+\begin{verbatim}
+%boolean
+string(comment string describing value)
+list: run_$ user_$ args_$ object_$ method_$
+\end{verbatim}
+
+\subsubsection{Template}
+\label{subsec:res_template}
+
+If a resource is an LCFG tag list then it may have a list of
+associated templates which are used to generate the names of
+sub-resources. For example the \texttt{ng\_plugins} tag list resource
+(which is part of \textit{ngeneric}) is defined like this:
+
+\begin{verbatim}
+@ng_plugins ng_plugin_params_$ ng_plugin_methods_$ ng_plugin_module_$
+ng_plugins
+\end{verbatim}
+
+It has templates for 3 sub-resource names, the \$ (dollar) placeholder
+character is replaced with the tag name. For example a tag named
+\texttt{foo} would result in sub-resources named:
+
+\begin{verbatim}
+ng_plugin_params_foo
+ng_plugin_methods_foo
+ng_plugin_module_foo
+\end{verbatim}
+
+The complete set of functions which can be used for manipulating LCFG
+templates can be found in the \texttt{lcfg/templates.h} header
+file. The basic functions are:
+
+\begin{minted}[frame=single]{c}
+bool lcfgresource_has_template( const LCFGResource * res );
+LCFGTemplate * lcfgresource_get_template( const LCFGResource * res );
+bool lcfgresource_set_template( LCFGResource * res,
+                                LCFGTemplate * new_value );
+char * lcfgresource_get_template_as_string( const LCFGResource * res );
+bool lcfgresource_set_template_as_string( LCFGResource * res,
+                                         const char * new_value,
+                                         char ** msg );
+\end{minted}
+
+A sub-resource name can be assembled using the
+\texttt{lcfgresource\_build\_name} function. Here is an example which
+loads an \texttt{LCFGTemplate} structure from a string and then uses
+it to build a child resource name.
+
+\begin{minted}[frame=single]{c}
+const char * tmpl_str =
+  "ng_plugin_params_$ ng_plugin_methods_$ ng_plugin_module_$";
+
+LCFGStatus rc = LCFG_STATUS_OK;
+LCFGTemplate * tmpl = NULL;
+char * msg = NULL;
+
+rc = lcfgtemplate_from_string( tmpl_str, &tmpl, &msg );
+
+const char * tags_str = "foo";
+LCFGTagList * taglist = NULL;
+rc = lcfgtaglist_from_string( tags_str, &taglist, &msg );
+
+const char * field = "ng_plugin_params"; /* base of name */
+char * resname = lcfgresource_build_name( tmpl, taglist, field,
+                                          &msg );
+printf( "Resource name is '%s'\n", resname );
+
+/* Avoid memory leaks */
+
+lcfgtaglist_relinquish(taglist);
+lcfgtemplate_destroy(tmpl);
+free(resname);
+free(msg);
+\end{minted}
+
+This will result in a sub-resource name of
+\texttt{ng\_plugin\_params\_foo}. There can be multiple levels of
+placeholders (e.g. a template like \mintinline{c}|foobar_$_$_$|) in
+which case the tag list needs to contain sufficient tags for each
+placeholder. It is also important to note that the tag list is
+processed backwards so a tag list of \mintinline{c}|a,b,c| would give
+a sub-resource name of \mintinline{c}|foobar_c_b_a|.
+
+\subsubsection{Comment}
+\label{subsec:res_comment}
+
+\begin{minted}[frame=single]{c}
+bool lcfgresource_has_comment( const LCFGResource * res );
+const char * lcfgresource_get_comment( const LCFGResource * res );
+bool lcfgresource_set_comment( LCFGResource * res, char * new_value );
+\end{minted}
+
+\subsubsection{Context}
+\label{subsec:res_context}
+
+\begin{minted}[frame=single]{c}
+bool lcfgresource_valid_context( const char * expr );
+bool lcfgresource_has_context( const LCFGResource * res );
+const char * lcfgresource_get_context( const LCFGResource * res );
+bool lcfgresource_set_context( LCFGResource * res, char * new_value );
+bool lcfgresource_add_context( LCFGResource * res,
+                               const char * extra_context );
+\end{minted}
+
+\subsubsection{Priority}
+\label{subsec:res_priority}
+
+\begin{minted}[frame=single]{c}
+int lcfgresource_get_priority( const LCFGResource * res );
+char * lcfgresource_get_priority_as_string( const LCFGResource * res );
+bool lcfgresource_set_priority( LCFGResource * res, int priority );
+bool lcfgresource_set_priority_default( LCFGResource * res );
+
+bool lcfgresource_is_active( const LCFGResource * res );
+
+bool lcfgresource_eval_priority( LCFGResource * res,
+                                 const LCFGContextList * ctxlist,
+				 char ** msg );
+\end{minted}
+
+\subsubsection{Derivation}
+\label{subsec:res_derivation}
+
+\begin{minted}[frame=single]{c}
+bool lcfgresource_has_derivation( const LCFGResource * res );
+const char * lcfgresource_get_derivation( const LCFGResource * res );
+bool lcfgresource_set_derivation( LCFGResource * res, char * new_value );
+bool lcfgresource_add_derivation( LCFGResource * resource,
+                                  const char * extra_deriv );
+\end{minted}
+
+\subsection{Import}
+
+Resource information can be loaded from various formats. Functions are
+provided for parsing resource specification strings
+(\ref{subsec:res_spec}) and loading resource information from the
+environment (\ref{subsec:res_env}).
+
+\subsubsection{Specification string}
+\label{subsec:res_spec}
+
+Typically new \texttt{LCFGResource} structures are created from a
+specification string which contains information on the resource name
+and value in the standard form \texttt{key=value}. The key may also
+contain information on the node and component names in the form
+\texttt{node.comp.res}. The following are all valid resource
+specifications:
+
+\begin{verbatim}
+host.client.ack=yes
+client.ack=yes
+ack=yes
+\end{verbatim}
+
+These strings can all be parsed using the
+\texttt{lcfgresource\_from\_spec} function. Here is an example which
+reads the specification and then prints the resource information to
+stdout in a different ``summary'' style.
+
+\begin{minted}[frame=single]{c}
+const char * spec = "host.client.ack=yes";
+
+LCFGResource * res = NULL;
+char * nodename = NULL;    /* 'host'   */
+char * compname = NULL;    /* 'client' */
+char * msg = NULL;         /* error message */
+
+LCFGStatus rc = lcfgresource_from_spec( spec, &res,
+                                       &nodename,
+                                       &compname,
+                                       &msg );
+
+if ( rc == LCFG_STATUS_ERROR ) {
+  fprintf( stderr, "Failed to parse spec '%s': %s\n",
+                   spec, msg );
+} else {
+  lcfgresource_print( res, compname,
+                      LCFG_RESOURCE_STYLE_SUMMARY,
+                      LCFG_OPT_NONE, stdout );
+}
+
+/* Avoid memory leaks */
+
+lcfgresource_relinquish(res);
+free(nodename);
+free(compname);
+free(msg);
+\end{minted}
+
+If the specification does not contain information for the node or
+component name the variable value will be \texttt{NULL}.
+
+\subsubsection{Environment}
+\label{subsec:res_env}
+
+Resource information can also be loaded directly from shell
+environment variables using the \texttt{lcfgresource\_from\_env}
+function. This is used by LCFG components written in shell when
+calling tools such as qxprof and sxprof.
+
+For example, to load the \texttt{client.ack} resource from the environment:
+
+\begin{minted}[frame=single]{c}
+const char * compname = "client";
+const char * resname = "ack";
+LCFGResource * res = NULL;
+LCFGStatus rc = lcfgresource_from_env( resname, compname,
+                                       NULL, NULL,
+                                       &res, LCFG_OPT_NONE, &msg );
+
+if ( rc == LCFG_STATUS_ERROR ) {
+  fprintf( stderr, "Failed to load %s.%s resource from environment: %s\n",
+                   compname, resname, msg );
+} else {
+  lcfgresource_print( res, compname,
+                      LCFG_RESOURCE_STYLE_SUMMARY,
+                      LCFG_OPT_NONE, stdout );
+}
+
+/* Avoid memory leaks */
+
+lcfgresource_relinquish(res);
+free(msg);
+\end{minted}
+
+This checks the environment for variables which hold resource value
+and type information for the given name and creates a new
+\texttt{LCFGResource}. The variable names are a simple concatenation
+of the resource name and any prefix specified.  By default the value
+prefix will be \texttt{LCFG\_\%s\_} and the type prefix will be
+\texttt{LCFGTYPE\_\%s\_}. The \texttt{\%s} is replaced with the name
+of the component so in this example the function checks for
+environment variables named \texttt{LCFG\_client\_ack} and
+\texttt{LCFGTYPE\_client\_ack}.
+
+If there is no environment variable for the resource value in the
+environment an error will be returned unless the
+\texttt{LCFG\_OPT\_ALLOW\_NOEXIST} option is specified. When this
+option is specified and there is no environment variable the value is
+assumed to be an empty string. Note that this may not be a valid value
+for some resource types.
+
+\subsection{Export}
+
+Resource information can be serialised into various formats. Some of
+the serialisation formats are also supported for importing data
+(e.g. spec strings, status and environment) and others are for human
+consumption (e.g. summary).
+
+Most of the serialisation functions conform to a standard interface
+and write to a string buffer which may be already initialised. The
+buffer will be grown when necessary with the size parameter being
+updated. The length of the generated string is returned or if an error
+occurs a negative value will be returned. The advantage of this
+approach is that a large string buffer can be pre-allocated which can
+be repeatedly used for serialising a large number of resources
+(e.g. when serialising data for an entire component or profile). When
+no longer required the string buffer must be freed to avoid leaking
+memory.
+
+There is an \texttt{lcfgresource\_to\_string} function which provides
+a standard wrapper interface to most of the serialisation
+functions. The output style can be selected using the
+\texttt{LCFGResourceStyle} enum.
+
+\begin{minted}[frame=single]{c}
+const char * compname = "client";
+
+size_t size = 0;
+char * result = NULL;
+
+ssize_t length = lcfgresource_to_string( res, compname,
+                                        LCFG_RESOURCE_STYLE_SPEC,
+                                        LCFG_OPT_NEWLINE,
+                                        &result, &size );
+if ( length > 0 )
+  fputs( result, stdout );
+else
+  fprintf( stderr, "Failed to serialise resource\n" );
+
+free(result);
+\end{minted}
+
+The supported styles are:
+
+\begin{minted}[frame=single]{c}
+LCFG_RESOURCE_STYLE_SPEC    /**< Standard LCFG resource specification */
+LCFG_RESOURCE_STYLE_STATUS  /**< LCFG status block (as used by components) */
+LCFG_RESOURCE_STYLE_SUMMARY /**< qxprof style summary */
+LCFG_RESOURCE_STYLE_VALUE   /**< Value only (possibly encoded) */
+\end{minted}
+
+The different serialisation functions support different options, that
+value will be passed directly to the required function.
+
+\subsubsection{Specification string}
+
+\subsubsection{Status}
+
+\subsubsection{Summary}
+
+\subsubsection{Value}
+
+\subsubsection{Export}
+
+\subsubsection{Environment}
+
+\section{Components}
+
+\section{Packages}
+
+\subsection{Attributes}
+
+\section{Package Lists}
+
+\section{Contexts}
+
+\section{Profiles}
+
+\end{document}
