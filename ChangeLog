@@ -1,6 +1,19 @@
-2017-12-13  SVN: new release
+2017-12-14  SVN: new release
 
-	* Release: 1.47.2
+	* Release: 1.47.3
+
+2017-12-13 18:38  squinney@INF.ED.AC.UK
+
+	* packages/translaterpmcfg.c: Check return value of fputs
+
+2017-12-13 18:19  squinney@INF.ED.AC.UK
+
+	* packages/rpm.c: fixed initialisation of change return value
+	  CID#1462752
+
+2017-12-13 16:38  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.47.2
 
 2017-12-13 16:38  squinney@INF.ED.AC.UK
 
