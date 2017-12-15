@@ -1,6 +1,37 @@
-2017-12-14  SVN: new release
+2017-12-15  SVN: new release
 
-	* Release: 1.47.4
+	* Release: 1.47.5
+
+2017-12-14 17:53  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, bdb/CMakeLists.txt, context/CMakeLists.txt,
+	  packages/CMakeLists.txt, profile/CMakeLists.txt,
+	  resources/CMakeLists.txt, utils/CMakeLists.txt,
+	  xml/CMakeLists.txt: Moved setting of LIB_INSTALL_DIR into main
+	  cmake file. Added support for INCLUDE_INSTALL_DIR. This makes it
+	  easier to build on different platforms
+
+2017-12-14 17:29  squinney@INF.ED.AC.UK
+
+	* docs/c-programmers-guide.tex: Added notes about using pkg-config
+
+2017-12-14 17:14  squinney@INF.ED.AC.UK
+
+	* docs/c-programmers-guide.tex: more work on guide
+
+2017-12-14 16:56  squinney@INF.ED.AC.UK
+
+	* docs/c-programmers-guide.tex: Started work on nC programmers
+	  guide
+
+2017-12-14 16:45  squinney@INF.ED.AC.UK
+
+	* include/resources.h, resources/resource.c: Fixed return type for
+	  lcfgresource_to_string
+
+2017-12-14 10:01  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.47.4
 
 2017-12-14 10:01  squinney@INF.ED.AC.UK
 
