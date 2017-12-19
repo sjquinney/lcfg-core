@@ -219,7 +219,7 @@ ssize_t lcfgtemplate_to_string( const LCFGTemplate * head_template,
 
     *result = realloc( *result, ( *size * sizeof(char) ) );
     if ( *result == NULL ) {
-      perror("Failed to allocate memory for LCFG tag string");
+      perror("Failed to allocate memory for LCFG template string");
       exit(EXIT_FAILURE);
     }
 
