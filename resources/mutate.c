@@ -18,8 +18,8 @@
 #include "resources.h"
 #include "utils.h"
 
-static const char[] allowed_separators     = " \t\r\n";
-static const char[] standard_separator = " ";
+static const char allowed_separators[] = " \t\r\n";
+static const char standard_separator[] = " ";
 static const size_t standard_sep_len = sizeof(standard_separator) - 1;
 
 typedef bool (*LCFGResourceTagFunc)( LCFGResource * res, const char * tag );
