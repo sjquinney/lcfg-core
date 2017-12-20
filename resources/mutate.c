@@ -16,8 +16,11 @@
 #include <assert.h>
 
 #include "resources.h"
+#include "utils.h"
 
-static const char * tag_separators = " \t\r\n";
+static const char[] allowed_separators     = " \t\r\n";
+static const char[] standard_separator = " ";
+static const size_t standard_sep_len = sizeof(standard_separator) - 1;
 
 typedef bool (*LCFGResourceTagFunc)( LCFGResource * res, const char * tag );
 
@@ -35,13 +38,13 @@ static bool lcfgresource_value_map_tagstring( LCFGResource * res,
 
   char * input = strdup(tagstring);
   char * saveptr;
-  const char * tag = strtok_r( input, tag_separators, &saveptr );
+  const char * tag = strtok_r( input, allowed_separators, &saveptr );
   while (tag != NULL) {
     if ( ! (*fn)( res, tag ) ) {
       ok = false;
       break;
     }
-    tag = strtok_r( NULL, tag_separators, &saveptr );
+    tag = strtok_r( NULL, allowed_separators, &saveptr );
   }
   free(input);
 
@@ -50,35 +53,13 @@ static bool lcfgresource_value_map_tagstring( LCFGResource * res,
 
 static const char * lcfgresource_value_find_tag( const LCFGResource * res,
                                                  const char * tag ) {
+  assert( tag != NULL );
 
   if ( !lcfgresource_has_value(res) ) return NULL;
 
   const char * cur_value = lcfgresource_get_value(res);
 
-  const char * location = NULL;
-  size_t tag_len = strlen(tag);
-
-  const char * match = strstr( cur_value, tag );
-  while ( match != NULL ) {
-
-    /* string starts with tag or space before tag */
-    if ( cur_value == match || isspace( *( match - 1 ) ) ) {
-
-      size_t match_len = strlen(match);
-
-      /* string ends with tag or space after tag */
-      if ( tag_len == match_len || isspace( *( match + tag_len ) ) ) {
-        location = match;
-        break;
-      }
-
-    }
-
-    /* Move past the current (failed) match */
-    match = strstr( match + tag_len, tag );
-  }
-
-  return location;
+  return lcfgutils_string_finditem( cur_value, tag, allowed_separators );
 }
 
 /**
@@ -176,19 +157,21 @@ bool lcfgresource_value_replace_tag( LCFGResource * res,
 
   /* If the new tag is empty then this becomes a "removal"
      operation. That needs to not only remove the tag but any
-     subsequent whitespace separator. */
+     subsequent separator characters. */
 
   size_t new_tag_len = 0;
   if ( removal ) {
 
-    size_t whitecount=0;
+    size_t sepcount=0;
 
-    const char * after = location + old_tag_len;
-    while( *after != '\0' && isspace(*after) ) {
-      whitecount++;
-      after++;
+    const char * after = NULL;
+    for ( after = location + old_tag_len;
+          *after != '\0' && strchr( allowed_separators, *after ) != NULL;
+          after++ ) {
+      sepcount++;
     }
-    old_tag_len += whitecount;
+
+    old_tag_len += sepcount;
 
   } else {
     new_tag_len = strlen(new_tag);
@@ -394,11 +377,11 @@ bool lcfgresource_value_append_tag( LCFGResource * res,
   size_t extra_len = strlen( extra_tag );
   size_t new_len   = cur_len + extra_len;
 
-  /* Check if the final character in the string is already a space */
-  bool add_space=false;
-  if ( cur_len > 0 && !isspace( *( cur_value + cur_len - 1 ) ) ) {
-    add_space=true;
-    new_len++;  /* +1 for single space */
+  /* Check if the final character in the string is already a separator */
+  bool add_sep=false;
+  if ( cur_len > 0 && strchr( allowed_separators, *( cur_value + cur_len - 1 ) ) == NULL ) {
+    add_sep=true;
+    new_len += standard_sep_len;  /* +1 for single space */
   }
 
   char * result = calloc( ( new_len + 1 ), sizeof(char) );
@@ -412,10 +395,8 @@ bool lcfgresource_value_append_tag( LCFGResource * res,
   if ( cur_len > 0 )
     to = stpncpy( to, cur_value, cur_len );
 
-  if (add_space) {
-    *to = ' ';
-    to++;
-  }
+  if (add_sep)
+    to = stpncpy( to, standard_separator, standard_sep_len );
 
   to = stpncpy( to, extra_tag, extra_len );
 
@@ -541,11 +522,11 @@ bool lcfgresource_value_prepend_tag( LCFGResource * res,
   size_t extra_len = strlen( extra_tag );
   size_t new_len   = extra_len + cur_len;
 
-  /* Check if the first character in the string is already a space */
-  bool add_space=false;
-  if ( cur_len > 0 && !isspace( *cur_value ) ) {
-    add_space=true;
-    new_len++;  /* +1 for single space */
+  /* Check if the first character in the string is already a separator */
+  bool add_sep=false;
+  if ( cur_len > 0 && strchr( allowed_separators, *cur_value ) == NULL ) {
+    add_sep=true;
+    new_len += standard_sep_len;  /* +1 for single space */
   }
 
   char * result = calloc( ( new_len + 1 ), sizeof(char) );
@@ -558,10 +539,8 @@ bool lcfgresource_value_prepend_tag( LCFGResource * res,
 
   to = stpncpy( to, extra_tag, extra_len );
 
-  if (add_space) {
-    *to = ' ';
-    to++;
-  }
+  if (add_sep)
+    to = stpncpy( to, standard_separator, standard_sep_len );
 
   if ( cur_len > 0 )
     to = stpncpy( to, cur_value, cur_len );
