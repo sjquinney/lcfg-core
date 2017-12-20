@@ -290,6 +290,87 @@ void lcfgutils_string_trim( char * str ) {
 }
 
 /**
+ * @brief Find an item in a list-string.
+ *
+ * This provides support for locating the first occurrence of the
+ * sub-string @c needle in the string @c haystack. This behaves in a
+ * similar way to @c strstr(3) but with additional support for list
+ * item separators (e.g. comma or space characters). When a
+ * separator(s) - single or multiple - is specified the item in the
+ * list must match exactly. So searching for @c foo in @c
+ * "foobar,baz,quux" will return nothing if the separator is set to @c
+ * "," (comma). It should be noted that there is no support for
+ * quoting list items or escaping the separators, i.e. this does not
+ * provide full CSV support...
+ *
+ * @param[in] haystack Pointer to the string to be searched
+ * @param[in] needle Pointer to the sub-string to be found
+ * @param[in] separator Pointer to the list item separator
+ *
+ * @return Pointer to the location of the sub-string
+ *
+ */
+
+const char * lcfgutils_string_finditem( const char * haystack,
+					const char * needle,
+					const char * separator ) {
+  assert( needle != NULL );
+
+  if ( isempty(haystack) ) return false;
+
+  const char * location = NULL;
+
+  const char * match = strstr( haystack, needle );
+  if ( isempty(separator) ) {
+    location = match;
+  } else {
+    size_t needle_len = strlen(needle);
+
+    while ( match != NULL ) {
+
+      /* string starts with needle or separator before match */
+      if ( haystack == match || strchr( separator, *( match - 1 ) ) ) {
+
+	/* string ends with needle or separator after tag */
+	if ( *( match + needle_len ) == '\0' ||
+	     strchr( separator, *( match + needle_len ) ) ) {
+	  location = match;
+	  break;
+	}
+
+      }
+
+      /* Move past the current (failed) match */
+      match = strstr( match + needle_len, needle );
+    }
+
+  }
+
+  return location;
+}
+
+/**
+ * @brief Check if a list-string contains an item
+ *
+ * This uses the @c lcfgutils_string_finditem() function to search a
+ * string for the specified item. For full details see the
+ * documentation for that function.
+ *
+ * @param[in] haystack Pointer to the string to be searched
+ * @param[in] needle Pointer to the sub-string to be found
+ * @param[in] separator Pointer to the list item separator
+ *
+ * @return Boolean which indicates if the string contains the item
+ *
+ */
+
+bool lcfgutils_string_hasitem( const char * haystack,
+			       const char * needle,
+			       const char * separator ) {
+  return ( lcfgutils_string_finditem( haystack, needle, separator ) != NULL );
+}
+
+/**
  * @brief Combine directory and file name to create full path.
  *
  * This combines a directory path and a file name to create a full

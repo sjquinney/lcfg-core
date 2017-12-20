@@ -53,6 +53,14 @@ char * lcfgutils_string_join( const char * sep,
 
 bool lcfgutils_string_endswith( const char * str, const char * suffix );
 
+const char * lcfgutils_string_finditem( const char * haystack,
+					const char * needle,
+					const char * separator );
+
+bool lcfgutils_string_hasitem( const char * haystack,
+			       const char * needle,
+			       const char * separator );
+
 char * lcfgutils_basename( const char * path, const char * suffix );
 
 char * lcfgutils_dirname( const char * path);
