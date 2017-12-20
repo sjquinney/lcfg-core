@@ -8,5 +8,5 @@ Name: lcfg-resources
 Version: @LCFG_VERSION@
 Description: LCFG resource handling library
 Requires: lcfg-utils = @LCFG_VERSION@, lcfg-context = @LCFG_VERSION@
-Libs: -L${libdir} -llcfg_resources
+Libs: -L${libdir} -llcfg_resources -llcfg_utils
 Cflags: -I${includedir}
