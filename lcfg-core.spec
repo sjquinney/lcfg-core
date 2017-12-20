@@ -65,6 +65,8 @@ make -C docs/latex
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT/usr/share/doc/
+ln -s lcfg-core-doc-%{version} $RPM_BUILD_ROOT/usr/share/doc/lcfg-core 
 
 %post -p /sbin/ldconfig
 
@@ -110,6 +112,7 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %files doc
 %doc docs/html
 %doc docs/latex/refman.pdf
+/usr/share/doc/lcfg-core
 
 %clean
 rm -rf $RPM_BUILD_ROOT
