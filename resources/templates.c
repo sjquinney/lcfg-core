@@ -363,13 +363,31 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
     return NULL;
   }
 
+  size_t size = 0;
+  char * result = NULL;
+  ssize_t len = lcfgtemplate_substitute( res_tmpl, taglist,
+					 &result, &size, msg );
+
+  if ( len < 0 ) {
+    free(result);
+    result = NULL;
+  }
+
+  return result;
+}
+
+ssize_t lcfgtemplate_substitute( const LCFGTemplate * res_tmpl,
+				 LCFGTagList * taglist,
+				 char ** result, size_t * size,
+				 char ** msg ) {
+
   const char * template  = lcfgtemplate_get_tmpl(res_tmpl);
 
   unsigned int pcount = res_tmpl->pcount;
   if ( taglist == NULL || lcfgtaglist_size(taglist) < pcount ) {
     lcfgutils_build_message( msg, "Insufficient tags for template '%s'\n",
                              template );
-    return NULL;
+    return -1;
   }
 
   /* Find the required length of the resource name */
@@ -387,13 +405,21 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
     new_len += ( lcfgtag_get_length(cur_tag) - 1 );
   }
 
-  /* Allocate the necessary memory */
+  /* Allocate the required space */
 
-  char * result = calloc( ( new_len + 1 ), sizeof(char) );
-  if ( result == NULL ) {
-    perror( "Failed to allocate memory for LCFG resource name" );
-    exit(EXIT_FAILURE);
+  if ( *result == NULL || *size < ( new_len + 1 ) ) {
+    *size = new_len + 1;
+
+    *result = realloc( *result, ( *size * sizeof(char) ) );
+    if ( *result == NULL ) {
+      perror("Failed to allocate memory for LCFG resource string");
+      exit(EXIT_FAILURE);
+    }
+
   }
+
+  /* Always initialise the characters of the full space to nul */
+  memset( *result, '\0', *size );
 
   /* Build the resource name from the template and tags */
 
@@ -415,7 +441,7 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
     if ( after_len > 0 ) {
       offset -= after_len;
 
-      memcpy( result + offset, template + after, after_len );
+      memcpy( *result + offset, template + after, after_len );
     }
 
     end = place;
@@ -429,7 +455,7 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
 
     offset -= taglen;
 
-    memcpy( result + offset, tagname, taglen );
+    memcpy( *result + offset, tagname, taglen );
 
   }
 
@@ -437,11 +463,11 @@ char * lcfgresource_build_name( const LCFGTemplate * templates,
 
   /* Copy the rest which is static */
 
-  memcpy( result, template, offset );
+  memcpy( *result, template, offset );
 
-  *( result + new_len ) = '\0';
+  *( *result + new_len ) = '\0';
 
-  return result;
+  return new_len;
 }
 
 /* eof */
