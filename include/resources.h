@@ -150,6 +150,12 @@ bool lcfgresource_set_template_as_string( LCFGResource * res,
                                           char ** msg )
   __attribute__((warn_unused_result));
 
+LCFGStatus lcfgresource_child_names( const LCFGResource * res,
+				     LCFGTagList * tags,
+				     LCFGTagList ** result,
+				     char ** msg )
+  __attribute__((warn_unused_result));
+
 /* Resources: Values */
 
 bool lcfgresource_valid_boolean( const char * value )

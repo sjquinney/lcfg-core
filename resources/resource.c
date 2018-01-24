@@ -4370,5 +4370,68 @@ unsigned long lcfgresource_hash( const LCFGResource * res ) {
   return lcfgutils_string_djbhash( res->name, NULL );
 }
 
+/**
+ * @brief Get a list of all child resources for a specific tag
+ *
+ * This generates an @c LCFGTagList of all possible child resource
+ * names for an @c LCFGResource. Note that no test is done to see if
+ * the resources actually exist. The tags passed in are applied to
+ * each template for the resource to generate the names. It thus only
+ * makes sense to call this on a @e list resource which has a set of
+ * templates.
+ *
+ * @param[in] res Pointer to @c LCFGResource
+ * @param[in] tags  Pointer to @c LCFGTagList of tags
+ * @params[out] result Reference to pointer to @LCFGTagList of child names
+ * @params[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success
+ *
+ */
+
+LCFGStatus lcfgresource_child_names( const LCFGResource * res,
+				     LCFGTagList * tags,
+				     LCFGTagList ** result,
+				     char ** msg ) {
+  assert( res != NULL );
+
+  size_t size = 64;
+  char * child_name = calloc( size, sizeof(char) );
+  if ( child_name == NULL ) {
+    perror("Failed to allocate memory for LCFG resource name");
+    exit(EXIT_FAILURE);
+  }
+
+  LCFGTagList * child_list = lcfgtaglist_new();
+
+  LCFGStatus status = LCFG_STATUS_OK;
+  const LCFGTemplate * cur_tmpl = NULL;
+  for ( cur_tmpl = lcfgresource_get_template(res);
+        cur_tmpl != NULL && status != LCFG_STATUS_ERROR;
+        cur_tmpl = cur_tmpl->next ) {
+
+    ssize_t len = lcfgtemplate_substitute( cur_tmpl, tags,
+					   &child_name, &size, msg );
+
+    if ( len > 0 ) {
+      LCFGChange rc = lcfgtaglist_mutate_append( child_list, child_name, msg );
+      if ( rc == LCFG_CHANGE_ERROR )
+	status = LCFG_STATUS_ERROR;
+    } else {
+      status = LCFG_STATUS_ERROR;
+    }
+  }
+
+  free(child_name);
+
+  if ( status == LCFG_STATUS_ERROR ) {
+    lcfgtaglist_relinquish(child_list);
+    child_list = NULL;
+  }
+  
+  *result = child_list;
+
+  return status;
+}
 
 /* eof */
