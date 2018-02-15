@@ -1,6 +1,70 @@
-2017-12-15  SVN: new release
+2018-02-15  SVN: new release
 
-	* Release: 1.47.5
+	* Release: 1.47.6
+
+2018-02-15 16:05  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, Doxyfile.in, bdb/CMakeLists.txt,
+	  context/CMakeLists.txt, docs/parse_pkgspec.pod.cin,
+	  include/utils.h.in, lcfg-core.spec, lcfg.yml,
+	  packages/CMakeLists.txt, pc/lcfg-bdb.pc.in,
+	  pc/lcfg-context.pc.in, pc/lcfg-packages.pc.in,
+	  pc/lcfg-profile.pc.in, pc/lcfg-resources.pc.in,
+	  pc/lcfg-utils.pc.in, pc/lcfg-xml.pc.in, profile/CMakeLists.txt,
+	  resources/CMakeLists.txt, utils/CMakeLists.txt,
+	  xml/CMakeLists.txt: Introduced new PROJECT_VERSION variables. Use
+	  the variables to set the library versions
+
+2018-02-15 15:07  squinney@INF.ED.AC.UK
+
+	* context/list.c, include/context.h, lcfg.yml: Moved
+	  lcfgctxlist_append macro as it calls static functions
+
+2018-01-24 11:41  squinney@INF.ED.AC.UK
+
+	* include/resources.h, resources/resource.c: Added
+	  lcfgresource_child_names which can be used to generate a list of
+	  all possible child resources for a list resource
+
+2018-01-24 11:40  squinney@INF.ED.AC.UK
+
+	* include/templates.h, resources/templates.c: Extracted
+	  lcfgtemplate_substitute from lcfgresource_build_name so that it
+	  can be used elsewhere.
+
+2017-12-20 12:47  squinney@INF.ED.AC.UK
+
+	* resources/mutate.c: fixed syntax error
+
+2017-12-20 12:45  squinney@INF.ED.AC.UK
+
+	* resources/mutate.c: Tidied the handling of the item separators
+
+2017-12-20 12:23  squinney@INF.ED.AC.UK
+
+	* pc/lcfg-resources.pc.in: ensure lcfg_utils is also linked in when
+	  linking against lcfg_resources
+
+2017-12-20 12:22  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec: Added symlink so that /usr/share/doc/lcfg-core
+	  always points to the correct docs directory
+
+2017-12-20 12:03  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, utils/utils.c: Added
+	  lcfgutils_string_finditem and lcfgutils_string_hasitem which can
+	  be used to search a delimited list of items (e.g. like a tag
+	  list)
+
+2017-12-19 10:42  squinney@INF.ED.AC.UK
+
+	* resources/templates.c: Minor correction to error message for
+	  string allocation failure
+
+2017-12-15 11:47  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.47.5
 
 2017-12-14 17:53  squinney@INF.ED.AC.UK
 
