@@ -4,7 +4,7 @@ parse_pkgspec - Parse LCFG package specifications
 
 =head1 VERSION
 
-This documentation refers to parse_pkgspec version @LCFG_VERSION@
+This documentation refers to parse_pkgspec version @PROJECT_VERSION@
 
 =head1 SYNOPSIS
 

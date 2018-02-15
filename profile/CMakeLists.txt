@@ -8,7 +8,7 @@ set(MY_SOURCES profile.c diff.c)
 
 add_library(lcfg_profile SHARED ${MY_SOURCES})
 
-set_target_properties(lcfg_profile PROPERTIES VERSION 1.0.1 SOVERSION 1)
+set_target_properties(lcfg_profile PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 
 # Cannot have two targets with the same name so the static version has
 # '-static' appended and then the name of the output file is set

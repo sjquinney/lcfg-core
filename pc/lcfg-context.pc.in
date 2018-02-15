@@ -5,8 +5,8 @@ includedir=@INCLUDE_INSTALL_DIR@
 modules=1
 
 Name: lcfg-context
-Version: @LCFG_VERSION@
+Version: @PROJECT_VERSION@
 Description: LCFG context handling library
-Requires: lcfg-utils = @LCFG_VERSION@
+Requires: lcfg-utils = @PROJECT_VERSION@
 Libs: -L${libdir} -llcfg_context
 Cflags: -I${includedir}

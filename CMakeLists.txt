@@ -2,7 +2,14 @@ cmake_minimum_required(VERSION 2.6)
 
 project (lcfg-core C)
 
-file (STRINGS "lcfg-build-id.txt" LCFG_VERSION)
+file (STRINGS "lcfg-build-id.txt" PROJECT_VERSION)
+
+# Support for these variables appears in CMake 3.something
+
+string(REPLACE "." ";" VERSION_LIST ${PROJECT_VERSION})
+list(GET VERSION_LIST 0 PROJECT_VERSION_MAJOR)
+list(GET VERSION_LIST 1 PROJECT_VERSION_MINOR)
+list(GET VERSION_LIST 2 PROJECT_VERSION_PATCH)
 
 SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra" )
 

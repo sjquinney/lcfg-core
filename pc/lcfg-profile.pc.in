@@ -5,8 +5,8 @@ includedir=@INCLUDE_INSTALL_DIR@
 modules=1
 
 Name: lcfg-profile
-Version: @LCFG_VERSION@
+Version: @PROJECT_VERSION@
 Description: LCFG profile handling library
-Requires: lcfg-resources = @LCFG_VERSION@, lcfg-packages = @LCFG_VERSION@
+Requires: lcfg-resources = @PROJECT_VERSION@, lcfg-packages = @PROJECT_VERSION@
 Libs: -L${libdir} -llcfg_profile
 Cflags: -I${includedir}

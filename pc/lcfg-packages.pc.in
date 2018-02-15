@@ -5,8 +5,8 @@ includedir=@INCLUDE_INSTALL_DIR@
 modules=1
 
 Name: lcfg-packages
-Version: @LCFG_VERSION@
+Version: @PROJECT_VERSION@
 Description: LCFG packages handling library
-Requires: lcfg-utils = @LCFG_VERSION@, lcfg-context = @LCFG_VERSION@, @PACKAGES_DEPS@
+Requires: lcfg-utils = @PROJECT_VERSION@, lcfg-context = @PROJECT_VERSION@, @PACKAGES_DEPS@
 Libs: -L${libdir} -llcfg_packages
 Cflags: -I${includedir}

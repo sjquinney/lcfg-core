@@ -6,7 +6,7 @@ License:        GPLv2
 Group:          LCFG/Components
 Packager:       Stephen Quinney <squinney@inf.ed.ac.uk>
 Source:         %{name}-%{version}.tar.gz
-Provides:       lcfg-utils
+Provides:       lcfg-utils = %{version}-%{release}
 BuildRequires:  cmake >= 2.6.0, pkgconfig
 BuildRequires:  libxml2-devel
 BuildRequires:  bison, flex

@@ -5,8 +5,8 @@ includedir=@INCLUDE_INSTALL_DIR@
 modules=1
 
 Name: lcfg-bdb
-Version: @LCFG_VERSION@
+Version: @PROJECT_VERSION@
 Description: LCFG profile Berkeley DB handling library
-Requires: lcfg-profile = @LCFG_VERSION@
+Requires: lcfg-profile = @PROJECT_VERSION@
 Libs: -L${libdir} -ldb -llcfg_bdb
 Cflags: -I${includedir}
