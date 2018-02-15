@@ -1,6 +1,14 @@
 2018-02-15  SVN: new release
 
-	* Release: 1.47.6
+	* Release: 1.47.7
+
+2018-02-15 16:18  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec, lcfg.yml: Marked doc subpackage as noarch
+
+2018-02-15 16:05  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.47.6
 
 2018-02-15 16:05  squinney@INF.ED.AC.UK
 
