@@ -182,22 +182,6 @@ void lcfgctxlist_destroy(LCFGContextList * ctxlist);
 
 #define lcfgctxlist_is_empty(ctxlist) ( ctxlist == NULL || (ctxlist)->size == 0)
 
-/**
- * @brief Append a context to a list
- *
- * This is a simple macro wrapper around the
- * @c lcfgctxlist_insert_next() function which can be used to append
- * a context structure on to the end of the specified context list.
- *
- * @param[in] ctxlist Pointer to @c LCFGContextList
- * @param[in] ctx Pointer to @c LCFGContext
- * 
- * @return Integer value indicating type of change
- *
- */
-
-#define lcfgctxlist_append(ctxlist, ctx) ( lcfgctxlist_insert_next( ctxlist, lcfgslist_tail(ctxlist), ctx ) )
-
 LCFGChange lcfgctxlist_update( LCFGContextList * ctxlist,
                                LCFGContext     * new_ctx )
   __attribute__((warn_unused_result));
