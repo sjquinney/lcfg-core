@@ -37,6 +37,7 @@ This package contains the libraries and header files necessary for
 building software and linking against the LCFG core libraries.
 
 %package doc
+BuildArch: noarch
 Group: LCFG/Devel
 Summary: Documentation files for the LCFG core libraries
 
