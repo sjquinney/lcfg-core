@@ -1031,6 +1031,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
   LCFGPackageList * pkglist = NULL;
   char * tmpfile = NULL;
   FILE * fp = NULL;
+  char * line = NULL;
 
   /* Simple check to see if the file is readable at this point */
 
@@ -1096,7 +1097,7 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
   /* Setup the getline buffer */
 
   size_t line_len = 128;
-  char * line = malloc( line_len * sizeof(char) );
+  line = calloc( line_len, sizeof(char) );
   if ( line == NULL ) {
     perror( "Failed to allocate memory whilst processing package list file" );
     exit(EXIT_FAILURE);
@@ -1241,9 +1242,9 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
 
   free(pkg_deriv);
   free(pkg_context);
-  free(line);
 
  cleanup:
+  free(line);
 
   if ( fp != NULL )
     (void) fclose(fp);
