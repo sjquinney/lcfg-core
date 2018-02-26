@@ -47,6 +47,10 @@ FILE * lcfgutils_safe_tmpfile( const char * path, char ** tmpfile );
 
 const char * lcfgutils_tmp_dirname(void);
 
+char ** lcfgutils_string_split( const char * string,
+                                const char * delimiter,
+                                unsigned int max_tokens );
+
 char * lcfgutils_string_join( const char * sep,
                               const char * str1,
                               const char * str2 );

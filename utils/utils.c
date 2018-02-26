@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -809,4 +810,66 @@ unsigned long lcfgutils_string_djbhash( const char * str, ... ) {
 
   return hash;
 }
+
+/*
+ * @brief Split a string on a delimiter
+ *
+ * Splits a #string into a maximum of #max_tokens pieces, using the
+ * given #delimiter . If #max_tokens is reached, the remainder of
+ * string is appended to the last token.
+ *
+ * A NULL-terminated array of the pieces will be returned. To avoid
+ * memory leaks, when no longer required the pieces and the array
+ * should be freed.
+ *
+ * @param[in] string Pointer to string to split
+ * @param[in] delimiter String which specifies the places at which to split the string. 
+ * @param[in] max_tokens Number of parts to split into (zero for all)
+ *
+ * @return A newly allocated NULL-terminated array of strings (use free(3) when no longer required).
+ *
+ */
+
+char ** lcfgutils_string_split( const char * string, const char * delimiter,
+                                unsigned int max_tokens ) {
+
+  if ( isempty(string) ) return NULL;
+
+  if ( max_tokens == 0 ) max_tokens = INT_MAX;
+
+  size_t delimiter_len = strlen(delimiter);
+  unsigned int count = 1;
+
+  const char * ptr = string;
+  while ( ( ptr = strstr( ptr, delimiter ) ) != NULL ) {
+    ptr += delimiter_len;
+    if ( *ptr != '\0' ) count++;
+  }
+
+  /* +1 for final NULL so it is easy to iterate through list */
+  size_t size = ( max_tokens < count ? max_tokens : count ) + 1;
+
+  char ** result = calloc( size, sizeof(char *) );
+  if ( result == NULL ) {
+    perror("Failed to allocate memory for list of strings");
+    exit(EXIT_FAILURE);
+  }
+
+  unsigned int n = 0;
+  const char * remainder = string;
+
+  while ( n + 1 < max_tokens &&
+          ( ptr = strstr( remainder, delimiter ) ) != NULL ) {
+
+    result[n++] = strndup( remainder, ptr - remainder );
+
+    remainder = ptr + delimiter_len;
+  }
+
+  if ( *remainder != '\0' )
+    result[n] = strdup(remainder);
+
+  return result;
+}
+
 /* eof */
