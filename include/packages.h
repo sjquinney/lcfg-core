@@ -264,6 +264,29 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
 
 unsigned long lcfgpackage_hash( const LCFGPackage * pkg );
 
+/* CPP package list stuff */
+
+typedef enum {
+  LCFG_PKG_PRAGMA_CATEGORY,
+  LCFG_PKG_PRAGMA_CONTEXT,
+  LCFG_PKG_PRAGMA_DERIVE
+} LCFGPkgPragma;
+
+bool lcfgpackage_parse_pragma( const char * line,
+			       LCFGPkgPragma * key, char ** value )
+  __attribute__((warn_unused_result));
+
+size_t lcfgpackage_pragma_length( LCFGPkgPragma key, const char * value,
+                                  LCFGOption options );
+
+ssize_t lcfgpackage_build_pragma( LCFGPkgPragma key, const char * value,
+				  LCFGOption options,
+				  char ** result, size_t * size )
+  __attribute__((warn_unused_result));
+
+bool lcfgpackage_store_options( char ** file, ...  )
+  __attribute__((warn_unused_result));
+
 /* Package Lists */
 
 typedef enum {

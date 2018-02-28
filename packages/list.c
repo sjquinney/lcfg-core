@@ -1129,38 +1129,33 @@ LCFGStatus lcfgpkglist_from_cpp( const char * filename,
     if ( *line == '\0' ) continue;
 
     if ( *line == '#' ) {
-      static const size_t prefix_len = 13;
-      if ( include_meta &&
-           strncmp( line, "#pragma LCFG ", prefix_len ) == 0 ) {
-        const char * meta = line + prefix_len;
 
-        static const size_t drv_key_len = 8;
-        static const size_t ctx_key_len = 9;
-        if ( strncmp( meta, "derive \"", drv_key_len ) == 0 ) {
-          free(pkg_deriv);
-          pkg_deriv = NULL;
+      if ( include_meta ) {
+	LCFGPkgPragma meta_key;
+	char * meta_value = NULL;
 
-          const char * value = meta + drv_key_len;
-          size_t value_len = strlen(value);
-          if ( value_len > 0 && *( value + value_len - 1 ) == '"' )
-            value_len--; /* Ignore final '"' */
+	bool meta_ok = lcfgpackage_parse_pragma( line, &meta_key, &meta_value );
+	if ( meta_ok && !isempty(meta_value) ) {
 
-          if ( value_len > 0 )
-            pkg_deriv = strndup( value, value_len );
-
-        } else if ( strncmp( meta, "context \"", ctx_key_len ) == 0 ) {
-          free(pkg_context);
-          pkg_context = NULL;
-
-          const char * value = meta + ctx_key_len;
-          size_t value_len = strlen(value);
-          if ( value_len > 0 && *( value + value_len - 1 ) == '"' )
-            value_len--; /* Ignore final '"' */
-
-          if ( value_len > 0 )
-            pkg_context = strndup( value, value_len );
+	  switch(meta_key)
+	    {
+	    case LCFG_PKG_PRAGMA_DERIVE:
+	      free(pkg_deriv);
+	      pkg_deriv = meta_value;
+	      meta_value = NULL;
+	      break;
+	    case LCFG_PKG_PRAGMA_CONTEXT:
+	      free(pkg_context);
+	      pkg_context = meta_value;
+	      meta_value = NULL;
+	      break;
+	    case LCFG_PKG_PRAGMA_CATEGORY:
+	    default:
+	      break; /* no op */
+	    }
         }
 
+	free(meta_value);
       }
 
       continue;
