@@ -872,4 +872,52 @@ char ** lcfgutils_string_split( const char * string, const char * delimiter,
   return result;
 }
 
+bool lcfgutils_parse_cpp_derivation( const char * line,
+				     char ** file, unsigned int * linenum,
+				     unsigned int * flags ) {
+
+  *flags   = 0;
+  *linenum = 0;
+  *file    = NULL;
+
+  if ( strncmp( line, "# ", 2 ) != 0 ||
+       !isdigit( *( line + 2 ) ) ) return false;
+
+  char * file_start = NULL;
+  *linenum = strtoul( line + 2, &file_start, 0 );
+
+  if ( strncmp( file_start, " \"", 2 ) != 0 ) return false;
+  file_start += 2;
+
+  char * file_end = strrchr( file_start, '"' );
+  if ( file_end == NULL ) return false;
+
+  if ( strncmp( file_end, "\" ", 2 ) != 0 ||
+       !isdigit( *( file_end + 2 ) ) ) return false;
+
+  char * flags_start = file_end + 2;
+
+  unsigned int flag = 0;
+  while ( ( flag = strtoul( flags_start, &flags_start, 0 ) ) != 0 ) {
+    switch (flag) {
+    case 1:
+      *flags |= LCFG_CPP_FLAG_ENTRY;
+      break;
+    case 2:
+      *flags |= LCFG_CPP_FLAG_RETURN;
+      break;
+    case 3:
+      *flags |= LCFG_CPP_FLAG_SYSHDR;
+      break;
+    case 4:
+      *flags |= LCFG_CPP_FLAG_EXTERN;
+      break;
+    }
+  }
+
+  *file = strndup( file_start, file_end - file_start );
+
+  return true;
+}
+
 /* eof */

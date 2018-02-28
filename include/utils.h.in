@@ -140,6 +140,22 @@ void lcfgslistnode_destroy(LCFGSListNode * node);
 #define lcfgslist_next(node) ((node)->next)
 #define lcfgslist_data(node) ((node)->data)
 
+/**
+ * @brief CPP flags that appear in derivation information
+ */
+
+typedef enum {
+  LCFG_CPP_FLAG_ENTRY  = 1,
+  LCFG_CPP_FLAG_RETURN = 2,
+  LCFG_CPP_FLAG_SYSHDR = 4,
+  LCFG_CPP_FLAG_EXTERN = 8
+} LCFGCppFlag;
+
+bool lcfgutils_parse_cpp_derivation( const char * line,
+				     char ** file, unsigned int * linenum,
+				     unsigned int * flags )
+  __attribute_warn_unused_result__;
+
 #endif /* LCFG_UTILS_H */
 
 /* eof */
