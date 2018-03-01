@@ -56,6 +56,9 @@ typedef enum {
   LCFG_CHANGE_REMOVED     =  16  /**< Success - Removal */
 } LCFGChange;
 
+#define LCFGChangeOK(CHANGE)    ( CHANGE != LCFG_CHANGE_ERROR )
+#define LCFGChangeError(CHANGE) ( CHANGE == LCFG_CHANGE_ERROR )
+
 /**
  * @brief Various options for functions which read in or write out
  */
