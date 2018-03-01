@@ -295,6 +295,11 @@ typedef enum {
   LCFG_PKGLIST_PK_CTX  = 2
 } LCFGPkgListPK;
 
+typedef enum {
+  LCFG_PKG_CONTAINER_LIST,
+  LCFG_PKG_CONTAINER_SET
+} LCFGPkgContainer;
+
 /**
  * @brief A structure for storing LCFG packages as a single-linked list
  */
