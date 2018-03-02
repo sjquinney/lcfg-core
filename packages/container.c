@@ -1,3 +1,14 @@
+/**
+ * @file packages/container.c
+ * @brief Generic functions for working with LCFG package lists and sets
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2014-2018 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date$
+ * $Revision$
+ */
+
+#define _GNU_SOURCE /* for asprintf */
+
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>

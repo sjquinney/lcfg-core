@@ -15,6 +15,14 @@ typedef enum {
   LCFG_PKG_CONTAINER_LIST, /**< LCFGPackageList */
   LCFG_PKG_CONTAINER_SET   /**< LCFGPackageSet */
 } LCFGPkgContainerType;
+/**
+ * @file container.h
+ * @brief Generic functions for working with LCFG package lists and sets
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2014-2018 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date$
+ * $Revision$
+ */
 
 /**
  * @brief Union for passing package container
