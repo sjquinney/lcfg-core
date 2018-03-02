@@ -58,7 +58,7 @@ static LCFGStatus invalid_package( char ** msg, const char * base, ... ) {
   return LCFG_STATUS_ERROR;
 }
 
-/* Currently there are five supported prefixes for LCFG package
+/* Currently there are six supported prefixes for LCFG package
    specifications:
 
    +  Insert package into list, replaces any existing package of same name/arch
@@ -66,9 +66,10 @@ static LCFGStatus invalid_package( char ** msg, const char * base, ... ) {
    -  Remove any package from list which matches this name/arch
    ?  Replace any existing package in list which matches this name/arch
    ~  Add package to list if name/arch is not already present
+   >  Use the package with the greater version
 */
 
-static const char * permitted_prefixes = "?+-=~";
+static const char * permitted_prefixes = "?+-=~>";
 
 /**
  * @brief Create and initialise a new package
@@ -766,6 +767,7 @@ bool lcfgpackage_set_release( LCFGPackage * pkg, char * new_release ) {
  *   - @c -  Remove any package from list which matches this name/arch
  *   - @c ?  Replace any existing package in list which matches this name/arch
  *   - @c ~  Add package to list if name/arch is not already present
+ *   - @c >  Add package if version is greater
  *
  * @param[in] prefix Character to be tested
  *
@@ -2332,6 +2334,158 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
   return new_len;
 }
 
+static ssize_t lcfgpackage_build_pragma( LCFGPkgPragma key, const char * value,
+                                         LCFGOption options,
+                                         char ** result, size_t * size ) {
+
+  /* Select appropriate key name */
+  const char * key_name = NULL;
+  size_t key_len;
+  switch(key)
+    {
+    case LCFG_PKG_PRAGMA_CATEGORY:
+      key_name = "category";
+      key_len  = 8;
+      break;
+    case LCFG_PKG_PRAGMA_CONTEXT:
+      key_name = "context";
+      key_len  = 7;
+      break;
+    case LCFG_PKG_PRAGMA_DERIVE:
+      key_name = "derive";
+      key_len  = 6;
+      break;
+    default:
+      key_len = 0;
+      break;
+    }
+
+  if ( key_len == 0 ) return -1;
+
+  size_t value_len = value == NULL ? 0 : strlen(value);
+
+  /* + 4 for ' ' (single space) + ' "' + '"' (quotes/spaces around value) */ 
+  size_t new_len = pragma_len + key_len + value_len + 4;
+
+  if ( options&LCFG_OPT_NEWLINE ) new_len += 1;
+
+  /* Allocate the required space */
+
+  if ( *result == NULL || *size < ( new_len + 1 ) ) {
+    *size = new_len + 1;
+
+    char * new_buf = realloc( *result, ( *size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
+      perror("Failed to allocate memory for LCFG pragma string");
+      exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+    }
+
+  }
+
+  /* Always initialise the characters of the full space to nul */
+  memset( *result, '\0', *size );
+
+  char * to = *result;
+
+  /* Build the new string */
+
+  to = stpncpy( to, pragma, pragma_len );
+
+  *to = ' ';
+  to++;
+
+  to = stpncpy( to, key_name, key_len );
+
+  to = stpncpy( to, " \"", 2 );
+
+  if ( value_len > 0 )
+    to = stpncpy( to, value, value_len );
+
+  *to = '"';
+  to++;
+
+  if ( options&LCFG_OPT_NEWLINE )
+    to = stpncpy( to, "\n", 1 );
+
+  *to = '\0';
+
+  assert( ( *result + new_len ) == to ) ;
+
+  return new_len;
+}
+
+static size_t lcfgpackage_pragma_length( LCFGPkgPragma key, const char * value,
+                                         LCFGOption options ) {
+
+  size_t key_len;
+  switch(key)
+    {
+    case LCFG_PKG_PRAGMA_CATEGORY:
+      key_len = 8;
+      break;
+    case LCFG_PKG_PRAGMA_CONTEXT:
+      key_len = 7;
+      break;
+    case LCFG_PKG_PRAGMA_DERIVE:
+      key_len = 6;
+      break;
+    default:
+      key_len = 0;
+      break;
+    }
+
+  size_t value_len = value == NULL ? 0 : strlen(value);
+
+  /* + 4 for ' ' (single space) + ' "' + '"' (quotes/spaces around value) */ 
+  size_t new_len = pragma_len + key_len + value_len + 4;
+
+  if ( options&LCFG_OPT_NEWLINE ) new_len += 1;
+
+  return new_len;
+}
+
+static const char pragma[] = "#pragma LCFG";
+static size_t pragma_len = sizeof(pragma) - 1;
+
+bool lcfgpackage_parse_pragma( const char * line,
+			       LCFGPkgPragma * key, char ** value ) {
+
+  if ( isempty(line) || strncmp( line, pragma, pragma_len ) != 0 )
+    return false;
+
+  const char * key_start = line + pragma_len;
+  while ( isspace(*key_start) ) key_start++;
+
+  const char * value_start = NULL;
+
+  if ( strncmp( key_start, "category", 8 ) == 0 ) {
+    *key = LCFG_PKG_PRAGMA_CATEGORY;
+    value_start = key_start + 8;
+  } else if ( strncmp( key_start, "context", 7 ) == 0 ) {
+    *key = LCFG_PKG_PRAGMA_CONTEXT;
+    value_start = key_start + 7;
+  } else if ( strncmp( key_start, "derive", 6 ) == 0 ) {
+    *key = LCFG_PKG_PRAGMA_DERIVE;
+    value_start = key_start + 6;
+  } else {
+    return false;
+  }
+
+  while ( isspace(*value_start) ) value_start++;
+
+  if ( *value_start != '"' ) return false;
+  value_start++;
+
+  const char * value_end = strrchr( value_start, '"' );
+  if ( value_end == NULL ) return false;
+
+  *value = strndup( value_start, value_end - value_start );
+
+  return true;
+}
+
 static const char meta_start[]     = "#ifdef INCLUDE_META\n";
 static const char meta_end[]       = "#endif\n";
 
@@ -3391,150 +3545,6 @@ bool lcfgpackage_store_options( char ** file, ...  ) {
     ok = false;
 
   return ok;
-}
-
-static const char pragma[] = "#pragma LCFG";
-static size_t pragma_len = sizeof(pragma) - 1;
-
-bool lcfgpackage_parse_pragma( const char * line,
-			       LCFGPkgPragma * key, char ** value ) {
-
-  if ( isempty(line) || strncmp( line, pragma, pragma_len ) != 0 )
-    return false;
-
-  const char * key_start = line + pragma_len;
-  while ( isspace(*key_start) ) key_start++;
-
-  const char * value_start = NULL;
-
-  if ( strncmp( key_start, "category", 8 ) == 0 ) {
-    *key = LCFG_PKG_PRAGMA_CATEGORY;
-    value_start = key_start + 8;
-  } else if ( strncmp( key_start, "context", 7 ) == 0 ) {
-    *key = LCFG_PKG_PRAGMA_CONTEXT;
-    value_start = key_start + 7;
-  } else if ( strncmp( key_start, "derive", 6 ) == 0 ) {
-    *key = LCFG_PKG_PRAGMA_DERIVE;
-    value_start = key_start + 6;
-  } else {
-    return false;
-  }
-
-  while ( isspace(*value_start) ) value_start++;
-
-  if ( *value_start != '"' ) return false;
-  value_start++;
-
-  const char * value_end = strrchr( value_start, '"' );
-  if ( value_end == NULL ) return false;
-
-  *value = strndup( value_start, value_end - value_start );
-
-  return true;
-}
-
-size_t lcfgpackage_pragma_length( LCFGPkgPragma key, const char * value,
-				  LCFGOption options ) {
-
-  size_t key_len;
-  switch(key)
-    {
-    case LCFG_PKG_PRAGMA_CATEGORY:
-      key_len = 8;
-      break;
-    case LCFG_PKG_PRAGMA_CONTEXT:
-      key_len = 7;
-      break;
-    case LCFG_PKG_PRAGMA_DERIVE:
-      key_len = 6;
-    }
-
-  size_t value_len = value == NULL ? 0 : strlen(value);
-
-  /* + 4 for ' ' (single space) + ' "' + '"' (quotes/spaces around value) */ 
-  size_t new_len = pragma_len + key_len + value_len + 4;
-
-  if ( options&LCFG_OPT_NEWLINE )
-    new_len += 1;
-
-  return new_len;
-}
-
-ssize_t lcfgpackage_build_pragma( LCFGPkgPragma key, const char * value,
-				  LCFGOption options,
-				  char ** result, size_t * size ) {
-
-  /* Select appropriate key name */
-  const char * key_name = NULL;
-  size_t key_len;
-  switch(key)
-    {
-    case LCFG_PKG_PRAGMA_CATEGORY:
-      key_name = "category";
-      key_len  = 8;
-      break;
-    case LCFG_PKG_PRAGMA_CONTEXT:
-      key_name = "context";
-      key_len  = 7;
-      break;
-    case LCFG_PKG_PRAGMA_DERIVE:
-      key_name = "derive";
-      key_len  = 6;
-    }
-
-  size_t value_len = value == NULL ? 0 : strlen(value);
-
-  /* + 4 for ' ' (single space) + ' "' + '"' (quotes/spaces around value) */ 
-  size_t new_len = pragma_len + key_len + value_len + 4;
-
-  if ( options&LCFG_OPT_NEWLINE )
-    new_len += 1;
-
-  /* Allocate the required space */
-
-  if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
-
-    char * new_buf = realloc( *result, ( *size * sizeof(char) ) );
-    if ( new_buf == NULL ) {
-      perror("Failed to allocate memory for LCFG pragma string");
-      exit(EXIT_FAILURE);
-    } else {
-      *result = new_buf;
-    }
-
-  }
-
-  /* Always initialise the characters of the full space to nul */
-  memset( *result, '\0', *size );
-
-  char * to = *result;
-
-  /* Build the new string */
-
-  to = stpncpy( to, pragma, pragma_len );
-
-  *to = ' ';
-  to++;
-
-  to = stpncpy( to, key_name, key_len );
-
-  to = stpncpy( to, " \"", 2 );
-
-  if ( value_len > 0 )
-    to = stpncpy( to, value, value_len );
-
-  *to = '"';
-  to++;
-
-  if ( options&LCFG_OPT_NEWLINE )
-    to = stpncpy( to, "\n", 1 );
-
-  *to = '\0';
-
-  assert( ( *result + new_len ) == to ) ;
-
-  return new_len;
 }
 
 /* eof */

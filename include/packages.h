@@ -276,14 +276,6 @@ bool lcfgpackage_parse_pragma( const char * line,
 			       LCFGPkgPragma * key, char ** value )
   __attribute__((warn_unused_result));
 
-size_t lcfgpackage_pragma_length( LCFGPkgPragma key, const char * value,
-                                  LCFGOption options );
-
-ssize_t lcfgpackage_build_pragma( LCFGPkgPragma key, const char * value,
-				  LCFGOption options,
-				  char ** result, size_t * size )
-  __attribute__((warn_unused_result));
-
 bool lcfgpackage_store_options( char ** file, ...  )
   __attribute__((warn_unused_result));
 
@@ -294,11 +286,6 @@ typedef enum {
   LCFG_PKGLIST_PK_ARCH = 1,
   LCFG_PKGLIST_PK_CTX  = 2
 } LCFGPkgListPK;
-
-typedef enum {
-  LCFG_PKG_CONTAINER_LIST,
-  LCFG_PKG_CONTAINER_SET
-} LCFGPkgContainer;
 
 /**
  * @brief A structure for storing LCFG packages as a single-linked list
@@ -391,11 +378,19 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         FILE * out )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgpkglist_from_cpp( const char * filename,
-				 LCFGPackageList ** result,
-				 const char * defarch,
-                                 LCFGOption options,
-				 char ** msg )
+LCFGChange lcfgpkglist_from_pkgsfile( const char * filename,
+                                      LCFGPackageList ** result,
+                                      const char * defarch,
+                                      const char * macros_file,
+                                      char ** incpath,
+                                      LCFGOption options,
+                                      char ** msg );
+
+LCFGChange lcfgpkglist_from_rpmcfg( const char * filename,
+				    LCFGPackageList ** result,
+				    const char * defarch,
+				    LCFGOption options,
+				    char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
@@ -548,11 +543,20 @@ LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
                                   char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgpkgset_from_cpp( const char * filename,
-                                LCFGPackageSet ** result,
-                                const char * defarch,
-                                LCFGOption options,
-                                char ** msg )
+LCFGChange lcfgpkgset_from_pkgsfile( const char * filename,
+                                     LCFGPackageSet ** result,
+                                     const char * defarch,
+                                     const char * macros_file,
+                                     char ** incpath,
+                                     LCFGOption options,
+                                     char ** msg)
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgpkgset_from_rpmcfg( const char * filename,
+				   LCFGPackageSet ** result,
+				   const char * defarch,
+				   LCFGOption options,
+				   char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
