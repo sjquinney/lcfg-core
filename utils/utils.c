@@ -876,15 +876,11 @@ bool lcfgutils_parse_cpp_derivation( const char * line,
 				     char ** file, unsigned int * linenum,
 				     unsigned int * flags ) {
 
-  *flags   = 0;
-  *linenum = 0;
-  *file    = NULL;
-
   if ( strncmp( line, "# ", 2 ) != 0 ||
        !isdigit( *( line + 2 ) ) ) return false;
 
   char * file_start = NULL;
-  *linenum = strtoul( line + 2, &file_start, 0 );
+  unsigned int new_linenum = strtoul( line + 2, &file_start, 0 );
 
   if ( strncmp( file_start, " \"", 2 ) != 0 ) return false;
   file_start += 2;
@@ -892,30 +888,45 @@ bool lcfgutils_parse_cpp_derivation( const char * line,
   char * file_end = strrchr( file_start, '"' );
   if ( file_end == NULL ) return false;
 
-  if ( strncmp( file_end, "\" ", 2 ) != 0 ||
-       !isdigit( *( file_end + 2 ) ) ) return false;
+  unsigned int new_flags = 0;
 
-  char * flags_start = file_end + 2;
+  /* Flags are optional, there may be none or a space-separated list */
+  if ( strncmp( file_end, "\" ", 2 ) == 0 && isdigit( *( file_end + 2 ) ) ) {
 
-  unsigned int flag = 0;
-  while ( ( flag = strtoul( flags_start, &flags_start, 0 ) ) != 0 ) {
-    switch (flag) {
-    case 1:
-      *flags |= LCFG_CPP_FLAG_ENTRY;
-      break;
-    case 2:
-      *flags |= LCFG_CPP_FLAG_RETURN;
-      break;
-    case 3:
-      *flags |= LCFG_CPP_FLAG_SYSHDR;
-      break;
-    case 4:
-      *flags |= LCFG_CPP_FLAG_EXTERN;
-      break;
+    char * flags_start = file_end + 2;
+
+    unsigned int flag = 0;
+    while ( ( flag = strtoul( flags_start, &flags_start, 0 ) ) != 0 ) {
+      switch (flag) {
+      case 1:
+        new_flags |= LCFG_CPP_FLAG_ENTRY;
+        break;
+      case 2:
+        new_flags |= LCFG_CPP_FLAG_RETURN;
+        break;
+      case 3:
+        new_flags |= LCFG_CPP_FLAG_SYSHDR;
+        break;
+      case 4:
+        new_flags |= LCFG_CPP_FLAG_EXTERN;
+        break;
+      }
     }
+
   }
 
-  *file = strndup( file_start, file_end - file_start );
+  /* Only update output params at this point, that way if there is a
+     parse failure they won't be changed. Also, for efficiency, make a
+     new copy of the filename only when really necessary. */
+
+  *linenum = new_linenum;
+  *flags   = new_flags;
+
+  if ( isempty(*file) ||
+       strncmp( *file, file_start, file_end - file_start ) != 0 ) {
+    free(*file);
+    *file = strndup( file_start, file_end - file_start );
+  }
 
   return true;
 }
