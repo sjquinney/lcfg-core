@@ -2334,6 +2334,9 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
   return new_len;
 }
 
+static const char pragma[] = "#pragma LCFG";
+static size_t pragma_len = sizeof(pragma) - 1;
+
 static ssize_t lcfgpackage_build_pragma( LCFGPkgPragma key, const char * value,
                                          LCFGOption options,
                                          char ** result, size_t * size ) {
@@ -2445,9 +2448,6 @@ static size_t lcfgpackage_pragma_length( LCFGPkgPragma key, const char * value,
 
   return new_len;
 }
-
-static const char pragma[] = "#pragma LCFG";
-static size_t pragma_len = sizeof(pragma) - 1;
 
 bool lcfgpackage_parse_pragma( const char * line,
 			       LCFGPkgPragma * key, char ** value ) {
