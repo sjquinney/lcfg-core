@@ -17,6 +17,7 @@
 #include <unistd.h>
 
 #include "packages.h"
+#include "container.h"
 #include "utils.h"
 
 static unsigned long lcfgpkgset_hash_string( const LCFGPackageSet * pkgset,
@@ -946,260 +947,143 @@ bool lcfgpkgset_print( const LCFGPackageSet * pkgset,
  * @param[in] options Controls the behaviour of the process.
  * @param[out] msg Pointer to any diagnostic messages.
  *
- * @return Status value indicating success of the process
+ * @return Integer value indicating type of change
  *
  */
 
-LCFGStatus lcfgpkgset_from_cpp( const char * filename,
-                                LCFGPackageSet ** result,
-                                const char * defarch,
-                                LCFGOption options,
-                                char ** msg ) {
+LCFGChange lcfgpkgset_from_rpmcfg( const char * filename,
+				   LCFGPackageSet ** result,
+				   const char * defarch,
+				   LCFGOption options,
+				   char ** msg ) {
 
-  if ( isempty(filename) ) {
-    lcfgutils_build_message( msg, "Invalid filename" );
-    return LCFG_STATUS_ERROR;
-  }
-
-  bool include_meta = options & LCFG_OPT_USE_META;
-  bool all_contexts = options & LCFG_OPT_ALL_CONTEXTS;
-  bool ok = true;
-
-  /* Variables which need to be declared ahead of any jumps to 'cleanup' */
-
-  LCFGPackageSet * pkgset = NULL;
-  char * tmpfile = NULL;
-  FILE * fp = NULL;
-  char * line = NULL;
-
-  /* Simple check to see if the file is readable at this point */
-
-  if ( !lcfgutils_file_readable(filename) ) {
-    ok = false;
-    lcfgutils_build_message( msg, "File '%s' does not exist or is not readable",
-	      filename );
-    goto cleanup;
-  }
-
-  /* Temporary file for cpp output */
-
-  tmpfile = lcfgutils_safe_tmpname(NULL);
-
-  int tmpfd = mkstemp(tmpfile);
-  if ( tmpfd == -1 ) {
-    ok = false;
-    lcfgutils_build_message( msg, "Failed to create temporary file '%s'", tmpfile );
-    goto cleanup;
-  }
-
-  pid_t pid = fork();
-  if ( pid == -1 ) {
-    perror("Failed to fork");
-    exit(EXIT_FAILURE);
-  } else if ( pid == 0 ) {
-
-    char * cpp_cmd[] = { "cpp", "-undef", "-nostdinc", 
-                         "-Wall", "-Wundef",
-			 NULL, NULL, NULL, NULL, NULL };
-    int i = 4;
-
-    if ( all_contexts )
-      cpp_cmd[++i] = "-DALL_CONTEXTS";
-
-    if ( include_meta )
-      cpp_cmd[++i] = "-DINCLUDE_META";
-
-    cpp_cmd[++i] = (char *) filename; /* input */
-    cpp_cmd[++i] = tmpfile;           /* output */
-
-    execvp( cpp_cmd[0], cpp_cmd ); 
-
-    _exit(errno); /* Not normally reached */
-  }
-
-  int status = 0;
-  waitpid( pid, &status, 0 );
-  if ( WIFEXITED(status) && WEXITSTATUS(status) != 0 ) {
-    ok = false;
-    lcfgutils_build_message( msg, "Failed to process '%s' using cpp",
-              filename );
-    goto cleanup;
-  }
-
-  fp = fdopen( tmpfd, "r" );
-  if ( fp == NULL ) {
-    ok = false;
-    lcfgutils_build_message( msg, "Failed to open temporary file '%s'", tmpfile );
-    goto cleanup;
-  }
-
-  /* Setup the getline buffer */
-
-  size_t line_len = 128;
-  line = calloc( line_len, sizeof(char) );
-  if ( line == NULL ) {
-    perror( "Failed to allocate memory whilst processing package list file" );
-    exit(EXIT_FAILURE);
-  }
-
-  /* Results */
-
-  pkgset = lcfgpkgset_new();
+  LCFGPackageSet * pkgs = lcfgpkgset_new();
 
   LCFGMergeRule merge_rules = LCFG_MERGE_RULE_SQUASH_IDENTICAL;
-  if (all_contexts)
+  if ( options & LCFG_OPT_ALL_CONTEXTS )
     merge_rules = merge_rules | LCFG_MERGE_RULE_KEEP_ALL;
 
-  if ( !lcfgpkgset_set_merge_rules( pkgset, merge_rules ) ) {
-    ok = false;
+  LCFGChange change = LCFG_CHANGE_NONE;
+  if ( !lcfgpkgset_set_merge_rules( pkgs, merge_rules ) ) {
+    change = LCFG_CHANGE_ERROR;
     lcfgutils_build_message( msg, "Failed to set package merge rules" );
-    goto cleanup;
+  } else {
+    LCFGPkgContainer ctr;
+    ctr.set = pkgs;
+
+    change = lcfgpackages_from_cpp( filename,
+				    &ctr, LCFG_PKG_CONTAINER_SET,
+				    defarch, NULL, NULL, options, msg );
   }
 
-  char * pkg_deriv   = NULL;
-  char * pkg_context = NULL;
+  if ( LCFGChangeOK(change) ) {
 
-  unsigned int linenum = 0;
-  while( ok && getline( &line, &line_len, fp ) != -1 ) {
-    linenum++;
-
-    lcfgutils_string_trim(line);
-
-    if ( *line == '\0' ) continue;
-
-    if ( *line == '#' ) {
-
-      if ( include_meta ) {
-	LCFGPkgPragma meta_key;
-	char * meta_value = NULL;
-
-	bool meta_ok = lcfgpackage_parse_pragma( line, &meta_key, &meta_value );
-	if ( meta_ok && !isempty(meta_value) ) {
-
-	  switch(meta_key)
-	    {
-	    case LCFG_PKG_PRAGMA_DERIVE:
-	      free(pkg_deriv);
-	      pkg_deriv = meta_value;
-	      meta_value = NULL;
-	      break;
-	    case LCFG_PKG_PRAGMA_CONTEXT:
-	      free(pkg_context);
-	      pkg_context = meta_value;
-	      meta_value = NULL;
-	      break;
-	    case LCFG_PKG_PRAGMA_CATEGORY:
-	    default:
-	      break; /* no op */
-	    }
-        }
-
-	free(meta_value);
-      }
-
-      continue;
+    if ( *result == NULL ) {
+      *result = pkgs;
+    } else {
+      change = lcfgpkgset_merge_set( *result, pkgs, msg );
+      lcfgpkgset_relinquish(pkgs);
     }
 
-    char * error_msg = NULL;
-
-    LCFGPackage * pkg = NULL;
-    LCFGStatus parse_status
-      = lcfgpackage_from_spec( line, &pkg, &error_msg );
-
-    ok = ( parse_status != LCFG_STATUS_ERROR );
-
-    if ( ok && !lcfgpackage_has_arch(pkg) && !isempty(defarch) ) {
-      free(error_msg);
-      error_msg = NULL;
-
-      char * pkg_arch = strdup(defarch);
-      if ( !lcfgpackage_set_arch( pkg, pkg_arch ) ) {
-        free(pkg_arch);
-	ok = false;
-	lcfgutils_build_message( &error_msg,
-                                 "Failed to set package architecture to '%s'",
-                                 defarch );
-      }
-    }
-
-    if ( ok && include_meta ) {
-      free(error_msg);
-      error_msg = NULL;
-
-      if ( ok && pkg_deriv != NULL ) {
-        if ( lcfgpackage_set_derivation( pkg, pkg_deriv ) ) {
-          pkg_deriv = NULL; /* Ensure memory is NOT immediately freed */
-        } else {
-          ok = false;
-          lcfgutils_build_message( &error_msg, "Invalid derivation '%s'",
-                                   pkg_deriv );
-        }
-      }
-
-      if ( ok && pkg_context != NULL ) {
-        if ( lcfgpackage_set_context( pkg, pkg_context ) ) {
-          pkg_context = NULL; /* Ensure memory is NOT immediately freed */
-        } else {
-          ok = false;
-          lcfgutils_build_message( &error_msg, "Invalid context '%s'",
-                                   pkg_context );
-        }
-      }
-
-    }
-
-    if (ok) {
-      free(error_msg);
-      error_msg = NULL;
-
-      LCFGChange merge_status =
-        lcfgpkgset_merge_package( pkgset, pkg, &error_msg );
-
-      if ( merge_status == LCFG_CHANGE_ERROR )
-        ok = false;
-
-    }
-
-    if (!ok) {
-
-      if ( error_msg == NULL )
-        lcfgutils_build_message( msg, "Error at line %u", linenum );
-      else
-        lcfgutils_build_message( msg, "Error at line %u: %s", linenum, error_msg );
-
-    }
-
-    lcfgpackage_relinquish(pkg);
-
-    free(error_msg);
+  } else {
+    lcfgpkgset_relinquish(pkgs);
+    pkgs = NULL;
   }
 
-  free(pkg_deriv);
-  free(pkg_context);
+  return change;
+}
 
- cleanup:
-  free(line);
+/**
+ * @brief Read package set from CPP file (as used by LCFG server)
+ *
+ * This processes an LCFG packages file (as used by the LCFG server)
+ * and either generates a new @c LCFGPackageSet or updates an existing
+ * set. Packages are merged into the set according to any prefixes
+ * with any identical duplicates being squashed. Multiple instances of
+ * packages (based on name/architecture) are allowed for different
+ * contexts. Any conflicts resulting from this would be resolved by
+ * the client by applying local context information.
+ *
+ * Optionally the path to a file of macros can be specified which will
+ * be passed to the cpp command using the @c -imacros option. If the
+ * path does not exist or is not a file it will be ignored. That file
+ * can be generated using the @c lcfgpackage_store_options function.
+ *
+ * Optionally a list of directories may also be specified, these will
+ * be passed to the cpp command using the @c -I option. Any paths
+ * which do not exist or are not directories will be ignored.
+ *
+ * The file is pre-processed using the C Pre-Processor so the cpp tool
+ * must be available.
+ *
+ * An error is returned if the input file does not exist or is not
+ * readable.
+ *
+ * The following options are supported:
+ *   - @c LCFG_OPT_USE_META - include any metadata (category information)
+ *
+ * To avoid memory leaks, when the package set is no longer required
+ * the @c lcfgpkgset_relinquish() function should be called.
+ *
+ * @param[in] filename Path to CPP package file
+ * @param[out] result Reference to pointer for @c LCFGPackageSet
+ * @param[in] defarch Default architecture string (may be @c NULL)
+ * @param[in] macros_file Optional file of CPP macros (may be @c NULL)
+ * @param[in] incpath Optional list of include directories for CPP (may be @c NULL)
+ * @param[in] options Controls the behaviour of the process.
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Integer value indicating type of change
+ *
+ */
 
-  if ( fp != NULL )
-    (void) fclose(fp);
+LCFGChange lcfgpkgset_from_pkgsfile( const char * filename,
+                                     LCFGPackageSet ** result,
+                                     const char * defarch,
+                                     const char * macros_file,
+                                     char ** incpath,
+                                     LCFGOption options,
+                                     char ** msg ) {
 
-  if ( tmpfile != NULL ) {
-    (void) unlink(tmpfile);
-    free(tmpfile);
+  LCFGPackageSet * pkgs = lcfgpkgset_new();
+
+  /* Allow multiple instances of a name/arch package for different
+     contexts */
+
+  pkgs->primary_key = LCFG_PKGLIST_PK_NAME | LCFG_PKGLIST_PK_ARCH | LCFG_PKGLIST_PK_CTX;
+
+  LCFGMergeRule merge_rules =
+    LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_USE_PREFIX;
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+  if ( !lcfgpkgset_set_merge_rules( pkgs, merge_rules ) ) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to set package merge rules" );
+  } else {
+    LCFGPkgContainer ctr;
+    ctr.set = pkgs;
+
+    change = lcfgpackages_from_cpp( filename,
+				    &ctr, LCFG_PKG_CONTAINER_SET,
+				    defarch, macros_file, incpath,
+                                    options, msg );
   }
 
-  if ( !ok ) {
+  if ( LCFGChangeOK(change) ) {
 
-    if ( *msg == NULL )
-      lcfgutils_build_message( msg, "Failed to process package list file" );
+    if ( *result == NULL ) {
+      *result = pkgs;
+    } else {
+      change = lcfgpkgset_merge_set( *result, pkgs, msg );
+      lcfgpkgset_relinquish(pkgs);
+    }
 
-    lcfgpkgset_destroy(pkgset);
-    pkgset = NULL;
+  } else {
+    lcfgpkgset_relinquish(pkgs);
+    pkgs = NULL;
   }
 
-  *result = pkgset;
-
-  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+  return change;
 }
 
 #include <fnmatch.h>

@@ -35,7 +35,8 @@
  *
  * Optionally the path to a file of macros can be specified which will
  * be passed to the cpp command using the @c -imacros option. If the
- * path does not exist or is not a file it will be ignored.
+ * path does not exist or is not a file it will be ignored. That file
+ * can be generated using the @c lcfgpackage_store_options function.
  *
  * Optionally a list of directories may also be specified, these will
  * be passed to the cpp command using the @c -I option. Any paths
