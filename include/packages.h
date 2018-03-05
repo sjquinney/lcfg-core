@@ -384,6 +384,7 @@ LCFGChange lcfgpkglist_from_pkgsfile( const char * filename,
                                       const char * macros_file,
                                       char ** incpath,
                                       LCFGOption options,
+				      char *** deps,
                                       char ** msg );
 
 LCFGChange lcfgpkglist_from_rpmcfg( const char * filename,
@@ -549,6 +550,7 @@ LCFGChange lcfgpkgset_from_pkgsfile( const char * filename,
                                      const char * macros_file,
                                      char ** incpath,
                                      LCFGOption options,
+				     char *** deps,
                                      char ** msg)
   __attribute__((warn_unused_result));
 

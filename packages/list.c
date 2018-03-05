@@ -1039,6 +1039,8 @@ LCFGChange lcfgpkglist_from_rpmcfg( const char * filename,
   if ( options & LCFG_OPT_ALL_CONTEXTS )
     merge_rules = merge_rules | LCFG_MERGE_RULE_KEEP_ALL;
 
+  char ** deps = NULL;
+
   LCFGChange change = LCFG_CHANGE_NONE;
   if ( !lcfgpkglist_set_merge_rules( pkgs, merge_rules ) ) {
     change = LCFG_CHANGE_ERROR;
@@ -1049,7 +1051,8 @@ LCFGChange lcfgpkglist_from_rpmcfg( const char * filename,
 
     change = lcfgpackages_from_cpp( filename,
 				    &ctr, LCFG_PKG_CONTAINER_LIST,
-				    defarch, NULL, NULL, options, msg );
+				    defarch, NULL, NULL, options,
+				    &deps, msg );
   }
 
   if ( LCFGChangeOK(change) ) {
@@ -1065,6 +1068,11 @@ LCFGChange lcfgpkglist_from_rpmcfg( const char * filename,
     lcfgpkglist_relinquish(pkgs);
     pkgs = NULL;
   }
+
+  /* Not interested in keeping the list of dependencies */
+  char ** ptr;
+  for ( ptr=deps; *ptr!=NULL; ptr++ ) free(*ptr);
+  free(deps);
 
   return change;
 }
@@ -1107,6 +1115,7 @@ LCFGChange lcfgpkglist_from_rpmcfg( const char * filename,
  * @param[in] macros_file Optional file of CPP macros (may be @c NULL)
  * @param[in] incpath Optional list of include directories for CPP (may be @c NULL)
  * @param[in] options Controls the behaviour of the process.
+ * @param[out] Reference to list of file dependencies
  * @param[out] msg Pointer to any diagnostic messages.
  *
  * @return Integer value indicating type of change
@@ -1119,6 +1128,7 @@ LCFGChange lcfgpkglist_from_pkgsfile( const char * filename,
                                       const char * macros_file,
                                       char ** incpath,
                                       LCFGOption options,
+				      char *** deps,
                                       char ** msg ) {
 
   LCFGPackageList * pkgs = lcfgpkglist_new();
@@ -1142,7 +1152,7 @@ LCFGChange lcfgpkglist_from_pkgsfile( const char * filename,
     change = lcfgpackages_from_cpp( filename,
 				    &ctr, LCFG_PKG_CONTAINER_LIST,
 				    defarch, macros_file, incpath,
-                                    options, msg );
+                                    options, deps, msg );
   }
 
   if ( LCFGChangeOK(change) ) {

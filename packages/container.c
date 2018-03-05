@@ -59,6 +59,7 @@
  * @param[in] macros_file Optional file of CPP macros (may be @c NULL)
  * @param[in] incpath Optional list of include directories for CPP (may be @c NULL)
  * @param[in] Controls the behaviour of the process.
+ * @param[out] Reference to list of file dependencies
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return Integer value indicating type of change
@@ -72,6 +73,7 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
                                   const char * macros_file,
 				  char ** incpath,
                                   LCFGOption options,
+				  char *** deps,
                                   char ** msg ) {
 
   /* Ensure we have a filename and do a simple readability test */
@@ -244,6 +246,15 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
   char * meta_context  = NULL;
   char * meta_category = NULL;
 
+  /* Keep a list of all files included */
+  size_t deps_size = 64; /* sufficient for all but the most extreme cases */
+  size_t deps_item = 0;
+  *deps = calloc( deps_size, sizeof(char *) );
+  if ( *deps == NULL ) {
+    perror("Failed to allocate dependency list");
+    exit(EXIT_FAILURE);
+  }
+
   char * cur_file = NULL;
   unsigned int cur_line = 0;
   while( LCFGChangeOK(change) && getline( &line, &line_len, fp ) != -1 ) {
@@ -261,6 +272,33 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
                                                         &cpp_flags );
       if ( cpp_derive ) {
         cur_line--; /* next time around it will be incremented */
+
+	if ( cpp_flags & LCFG_CPP_FLAG_ENTRY ) {  /* Dependency tracking */
+
+	  bool found = false;
+	  char ** ptr;
+	  for ( ptr=*deps; !found && *ptr!=NULL; ptr++ )
+	    if ( strcmp( *ptr, cur_file ) == 0 ) found = true;
+
+	  if ( !found )
+	    (*deps)[deps_item++] = strdup(cur_file);
+
+	  if ( deps_item == deps_size ) {
+	    size_t new_size = deps_size * 2;
+	    char ** deps_new = realloc( deps, new_size * sizeof(char *) );
+	    if ( deps_new == NULL ) {
+	      perror("Failed to resize dependency list");
+	      exit(EXIT_FAILURE);
+	    } else {
+	      memset( deps_new + deps_size, 0, deps_size );
+
+	      *deps     = deps_new;
+	      deps_size = new_size;
+	    }
+	  }
+
+	}
+
       } else if ( include_meta ) {
         LCFGPkgPragma meta_key;
         char * meta_value = NULL;
