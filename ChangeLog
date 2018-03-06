@@ -1,6 +1,29 @@
-2018-03-02  SVN: new release
+2018-03-06  SVN: new release
 
-	* Release: 1.48.0
+	* Release: 1.49.0
+
+2018-03-06 10:41  squinney@INF.ED.AC.UK
+
+	* packages/container.c: Added support for package categories and
+	  fixed handling of derivation information for when USE_META is
+	  enabled
+
+2018-03-06 10:40  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/package.c: Added support for package
+	  categories, only used by things like the website to group related
+	  packages
+
+2018-03-05 20:51  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/container.c, packages/container.h,
+	  packages/list.c, packages/set.c: Added support to the
+	  from_pkgsfile functions to also return a list of file
+	  dependencies
+
+2018-03-02 16:45  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.48.0
 
 2018-03-02 16:30  squinney@INF.ED.AC.UK
 
