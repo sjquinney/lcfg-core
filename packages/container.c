@@ -339,13 +339,16 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
     LCFGPackage * pkg = NULL;
     LCFGStatus parse_status = lcfgpackage_from_spec( line, &pkg, &error_msg );
 
-    if ( parse_status == LCFG_STATUS_ERROR ) {
+    if ( parse_status == LCFG_STATUS_ERROR )
       change = LCFG_CHANGE_ERROR;
-    } else {
+
+    /* Architecture */
+
+    if ( LCFGChangeOK(change) ) {
+      free(error_msg);
+      error_msg = NULL;
 
       if ( !lcfgpackage_has_arch(pkg) && !isempty(defarch) ) {
-        free(error_msg);
-        error_msg = NULL;
 
         char * pkg_arch = strdup(defarch);
         if ( !lcfgpackage_set_arch( pkg, pkg_arch ) ) {
@@ -356,33 +359,23 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
                                    defarch );
         }
       }
+    }
 
-      if ( include_meta ) {
-        free(error_msg);
-        error_msg = NULL;
+    /* Derivation */
 
-        if ( LCFGChangeOK(change) && meta_deriv != NULL ) {
-          if ( lcfgpackage_set_derivation( pkg, meta_deriv ) ) {
-            meta_deriv = NULL; /* Ensure memory is NOT immediately freed */
-          } else {
-            change = LCFG_CHANGE_ERROR;
-            lcfgutils_build_message( &error_msg, "Invalid derivation '%s'",
-                                     meta_deriv );
-          }
+    if ( LCFGChangeOK(change) ) {
+      free(error_msg);
+      error_msg = NULL;
+        
+      if ( include_meta && !isempty(meta_deriv) ) {
+
+        if ( lcfgpackage_set_derivation( pkg, meta_deriv ) ) {
+          meta_deriv = NULL; /* Ensure memory is NOT immediately freed */
+        } else {
+          change = LCFG_CHANGE_ERROR;
+          lcfgutils_build_message( &error_msg, "Invalid derivation '%s'",
+                                   meta_deriv );
         }
-
-        if ( LCFGChangeOK(change) && meta_context != NULL ) {
-          if ( lcfgpackage_set_context( pkg, meta_context ) ) {
-            meta_context = NULL; /* Ensure memory is NOT immediately freed */
-          } else {
-            change = LCFG_CHANGE_ERROR;
-            lcfgutils_build_message( &error_msg, "Invalid context '%s'",
-                                     meta_context );
-          }
-        }
-
-        /* TODO: set the category for the package */
-
       } else {
         char * derivation = NULL;
         int rc = asprintf( &derivation, "%s:%u", cur_file, cur_line );
@@ -395,7 +388,44 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
         if ( !lcfgpackage_set_derivation( pkg, derivation ) )
           free(derivation);
       }
+
     }
+
+    /* All other metadata */
+
+    if ( include_meta ) {
+
+      /* Context */
+
+      if ( LCFGChangeOK(change) && !isempty(meta_context) ) {
+        if ( lcfgpackage_set_context( pkg, meta_context ) ) {
+          meta_context = NULL; /* Ensure memory is NOT immediately freed */
+        } else {
+          change = LCFG_CHANGE_ERROR;
+          lcfgutils_build_message( &error_msg, "Invalid context '%s'",
+                                     meta_context );
+        }
+      }
+
+      /* Category */
+
+      if ( LCFGChangeOK(change) && !isempty(meta_category) ) {
+
+        /* Once a category is set it applies to all subsequent
+           packages until a new category is specified */
+
+        char * category_copy = strdup(meta_category);
+        if ( !lcfgpackage_set_category( pkg, category_copy ) ) {
+          free(category_copy);
+          change = LCFG_CHANGE_ERROR;
+          lcfgutils_build_message( &error_msg, "Invalid category '%s'",
+                                   meta_category );
+        }
+      }
+
+    }
+
+    /* Merge package into container (set or list) */
 
     if ( LCFGChangeOK(change) ) {
       free(error_msg);
