@@ -37,6 +37,7 @@ struct LCFGPackage {
   char * flags;      /**< Flags - controls behaviour of package tool (e.g. updaterpms) */
   char * context;    /**< Context expression - when this package is applicable */
   char * derivation; /**< Derivation - where this package was specified */
+  char * category;   /**< Category - group to which this package belongs */
   char prefix;       /**< Prefix - primary merge conflict resolution for multiple specifications (single alpha-numeric character) */
   int priority;      /**< Priority - result of evaluating context expression, secondary merge conflict resolution */
   /*@}*/
@@ -162,6 +163,17 @@ bool lcfgpackage_set_derivation( LCFGPackage * pkg, char * new_value )
 
 bool lcfgpackage_add_derivation( LCFGPackage * pkg,
                                  const char * extra_deriv )
+  __attribute__((warn_unused_result));
+
+/* Category */
+
+bool lcfgpackage_valid_category( const char * category );
+
+bool lcfgpackage_has_category( const LCFGPackage * pkg );
+
+const char * lcfgpackage_get_category( const LCFGPackage * pkg );
+
+bool lcfgpackage_set_category( LCFGPackage * pkg, char * new_value )
   __attribute__((warn_unused_result));
 
 /* Priority */

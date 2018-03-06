@@ -90,7 +90,7 @@ static const char * permitted_prefixes = "?+-=~>";
 
 LCFGPackage * lcfgpackage_new(void) {
 
-  LCFGPackage * pkg = malloc( sizeof(LCFGPackage) );
+  LCFGPackage * pkg = calloc( 1, sizeof(LCFGPackage) );
   if ( pkg == NULL ) {
     perror( "Failed to allocate memory for LCFG package spec" );
     exit(EXIT_FAILURE);
@@ -103,6 +103,7 @@ LCFGPackage * lcfgpackage_new(void) {
   pkg->flags      = NULL;
   pkg->context    = NULL;
   pkg->derivation = NULL;
+  pkg->category   = NULL;
   pkg->prefix     = '\0';
   pkg->priority   = 0;
   pkg->_refcount  = 1;
@@ -159,6 +160,9 @@ void lcfgpackage_destroy(LCFGPackage * pkg) {
 
   free(pkg->derivation);
   pkg->derivation = NULL;
+
+  free(pkg->category);
+  pkg->category = NULL;
 
   free(pkg);
   pkg = NULL;
@@ -286,6 +290,13 @@ LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkg ) {
     ok = lcfgpackage_set_derivation( clone, new_deriv );
     if (!ok)
       free(new_deriv);
+  }
+
+  if ( ok && !isempty(pkg->category) ) {
+    char * new_cat = strdup(pkg->category);
+    ok = lcfgpackage_set_category( clone, new_cat );
+    if (!ok)
+      free(new_cat);
   }
 
   clone->prefix   = pkg->prefix;
@@ -1411,6 +1422,114 @@ bool lcfgpackage_add_derivation( LCFGPackage * pkg,
 
     if ( !ok )
       free(new_deriv);
+  }
+
+  return ok;
+}
+
+/* Category */
+
+/**
+ * @brief Check if a string is a valid LCFG package category
+ *
+ * Checks the contents of a specified string against the specification
+ * for an LCFG package category
+ *
+ * An LCFG package category MUST be at least one character in
+ * length. Also the string MUST NOT contain any whitespace characters.
+ *
+ * @param[in] value String to be tested
+ *
+ * @return boolean which indicates if string is a valid package category
+ *
+ */
+
+bool lcfgpackage_valid_category( const char * value ) {
+
+  /* MUST be at least one character long and MUST NOT contain whitespace. */
+
+  bool valid = !isempty(value);
+
+  const char * ptr;
+  for ( ptr = value; valid && *ptr != '\0'; ptr++ )
+    if ( isspace(*ptr) ) valid = false;
+
+  return valid;
+}
+
+/**
+ * @brief Check if the package has category information
+ *
+ * Checks if the specified @c LCFGPackage currently has a
+ * value set for the @e category attribute. 
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackage
+ *
+ * @return boolean which indicates if the package has a category
+ *
+ */
+
+bool lcfgpackage_has_category( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
+  return !isempty(pkg->category);
+}
+
+/**
+ * @brief Get the category for the package
+ *
+ * This returns the value of the @e category parameter for the
+ * @c LCFGPackage. If the package does not currently have a
+ * @e category then the pointer returned will be @c NULL.
+ *
+ * It is important to note that this is NOT a copy of the string,
+ * changing the returned string will modify the @e category for the
+ * package.
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackage
+ *
+ * @return The category for the package (possibly NULL).
+ */
+
+const char * lcfgpackage_get_category( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
+  return pkg->category;
+}
+
+/**
+ * @brief Set the category for the package
+ *
+ * Sets the value of the @e category parameter for the @c LCFGPackage
+ * to that specified. This is used to group related packages. This may
+ * be defined in LCFG package list files (as used by the LCFG server)
+ * using the @e category LCFG pragma (e.g. @e core, @e standard or @e
+ * contrib). Mainly this is used for listing the packages by category,
+ * as on the LCFG website. Currently any 
+ *
+ * It is important to note that this does NOT take a copy of the
+ * string. Furthermore, once the value is set the package assumes
+ * "ownership", the memory will be freed if the category is further
+ * modified or the package is destroyed.
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackage
+ * @param[in] new_value String which is the new category
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgpackage_set_category( LCFGPackage * pkg, char * new_value ) {
+  assert( pkg != NULL );
+
+  bool ok = false;
+  if ( lcfgpackage_valid_category(new_value) ) {
+    free(pkg->category);
+
+    pkg->category = new_value;
+    ok = true;
+  } else {
+    errno = EINVAL;
   }
 
   return ok;
