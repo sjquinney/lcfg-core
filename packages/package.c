@@ -2209,14 +2209,15 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    char * new_buf = realloc( *result, ( *size * sizeof(char) ) );
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
     if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG package string");
       exit(EXIT_FAILURE);
     } else {
       *result = new_buf;
+      *size   = new_size;
     }
 
   }
@@ -2391,14 +2392,15 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    char * new_buf = realloc( *result, ( *size * sizeof(char) ) );
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
     if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG package string");
       exit(EXIT_FAILURE);
     } else {
       *result = new_buf;
+      *size   = new_size;
     }
 
   }
@@ -2494,14 +2496,15 @@ static ssize_t lcfgpackage_build_pragma( LCFGPkgPragma key, const char * value,
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    char * new_buf = realloc( *result, ( *size * sizeof(char) ) );
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
     if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG pragma string");
       exit(EXIT_FAILURE);
     } else {
       *result = new_buf;
+      *size   = new_size;
     }
 
   }
@@ -2701,14 +2704,15 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    char * new_buf = realloc( *result, ( *size * sizeof(char) ) );
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
     if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG package string");
       exit(EXIT_FAILURE);
     } else {
       *result = new_buf;
+      *size   = new_size;
     }
 
   }
@@ -2889,14 +2893,15 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    char * new_buf = realloc( *result, ( *size * sizeof(char) ) );
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
     if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG package string");
       exit(EXIT_FAILURE);
     } else {
       *result = new_buf;
+      *size   = new_size;
     }
 
   }

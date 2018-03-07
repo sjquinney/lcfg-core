@@ -2395,14 +2395,16 @@ ssize_t lcfgresource_build_env_var( const char * resname,
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG resource string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
-
   }
 
   /* Always initialise the characters of the full space to nul */
@@ -2767,14 +2769,16 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG resource string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
-
   }
 
   /* Always initialise the characters of the full space to nul */
@@ -2964,14 +2968,16 @@ ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG resource string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
-
   }
 
   /* Build the new string - start at offset from the value line which
@@ -3122,12 +3128,15 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG resource string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
 
   }
@@ -3288,14 +3297,16 @@ ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG resource string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
-
   }
 
   /* Always initialise the characters of the full space to nul */
@@ -3408,14 +3419,16 @@ ssize_t lcfgresource_to_value( LCFG_RES_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG resource string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
-
   }
 
   /* Always initialise the characters of the full space to nul */
@@ -4027,12 +4040,15 @@ ssize_t lcfgresource_build_key( const char * resource,
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( (size_t) need_len + 1 ) ) {
-    *size = need_len + 1;
+    size_t new_size = need_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
     if ( *result == NULL ) {
       perror("Failed to allocate memory for LCFG resource key");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
 
   }
