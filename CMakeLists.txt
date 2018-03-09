@@ -34,7 +34,7 @@ link_directories(${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
 
 add_subdirectory(utils)
 
-add_subdirectory(context)
+add_subdirectory(common)
 
 add_subdirectory(resources)
 

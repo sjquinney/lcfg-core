@@ -1,12 +1,20 @@
+/**
+ * @file derivation/derivation.c
+ * @brief Functions for working with lists of LCFG derivations
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2018 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date$
+ * $Revision$
+ */
+
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#include <lcfg/common.h>
-#include <lcfg/utils.h>
 #include <assert.h>
 
+#include "common.h"
+#include "utils.h"
 #include "derivation.h"
 
 static LCFGChange lcfgderivlist_insert_next( LCFGDerivationList * list,

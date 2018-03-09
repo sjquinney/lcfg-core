@@ -526,15 +526,15 @@ bool lcfgcontext_set_priority( LCFGContext * ctx, int priority ) {
  * name and @c = (equals) are required, the value is optional. Any
  * whitespace will be ignored.
  *
- * To avoid memory leaks, when the newly created context struct is no
- * longer required you should call the @c lcfgcontext_relinquish()
- * function.
+ * To avoid memory leaks, when the newly created @c LCFGContext struct
+ * is no longer required you should call the @c
+ * lcfgcontext_relinquish() function.
  *
  * @param[in] ctx_str The context specification string.
  * @param[in] priority The integer priority to be set for the new context.
  * @param[out] result Reference to the pointer for the @c LCFGContext struct.
  * @param[out] msg Pointer to any diagnostic messages.
-
+ *
  * @return Status value indicating success of the process
  *
  */
@@ -724,15 +724,16 @@ ssize_t lcfgcontext_to_string( const LCFGContext * ctx,
 /**
  * @brief Write formatted context to file stream
  *
- * This uses @c lcfgcontext_to_string() to format the context as a
- * string with a trailing newline character. The generated string is
- * written to the specified file stream which must have already been
- * opened for writing.
+ * This uses @c lcfgcontext_to_string() to format the @c LCFGContext
+ * as a string with a trailing newline character. The generated string
+ * is written to the specified file stream which must have already
+ * been opened for writing.
  *
  * @param[in] ctx Pointer to @c LCFGContext
  * @param[in] out Stream to which the context string should be written
  *
  * @return boolean indicating success
+ *
  */
  
 bool lcfgcontext_print( const LCFGContext * ctx,

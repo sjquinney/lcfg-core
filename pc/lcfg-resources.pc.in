@@ -7,6 +7,6 @@ modules=1
 Name: lcfg-resources
 Version: @PROJECT_VERSION@
 Description: LCFG resource handling library
-Requires: lcfg-utils = @PROJECT_VERSION@, lcfg-context = @PROJECT_VERSION@
+Requires: lcfg-utils = @PROJECT_VERSION@, lcfg-common = @PROJECT_VERSION@
 Libs: -L${libdir} -llcfg_resources -llcfg_utils
 Cflags: -I${includedir}

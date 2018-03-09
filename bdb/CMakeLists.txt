@@ -31,9 +31,9 @@ endif(NOT DB_LIBRARY)
 
 target_link_libraries(lcfg_bdb ${DB_LIBRARY})
 
-# Also need to link against the lcfg profile, context and resources libraries
+# Also need to link against the lcfg profile, common and resources libraries
 
-target_link_libraries(lcfg_bdb lcfg_context)
+target_link_libraries(lcfg_bdb lcfg_common)
 target_link_libraries(lcfg_bdb lcfg_resources)
 target_link_libraries(lcfg_bdb lcfg_profile)
 

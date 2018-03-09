@@ -86,7 +86,7 @@ ln -s lcfg-core-doc-%{version} $RPM_BUILD_ROOT/usr/share/doc/lcfg-core
 %{_bindir}/lcfg_xml_reader
 %{_libdir}/liblcfg_bdb.so.*
 %{_libdir}/liblcfg_utils.so.*
-%{_libdir}/liblcfg_context.so.*
+%{_libdir}/liblcfg_common.so.*
 %{_libdir}/liblcfg_profile.so.*
 %{_libdir}/liblcfg_packages.so.*
 %{_libdir}/liblcfg_resources.so.*
@@ -99,8 +99,8 @@ ln -s lcfg-core-doc-%{version} $RPM_BUILD_ROOT/usr/share/doc/lcfg-core
 %{_libdir}/liblcfg_bdb.so
 %{_libdir}/liblcfg_utils.a
 %{_libdir}/liblcfg_utils.so
-%{_libdir}/liblcfg_context.a
-%{_libdir}/liblcfg_context.so
+%{_libdir}/liblcfg_common.a
+%{_libdir}/liblcfg_common.so
 %{_libdir}/liblcfg_profile.a
 %{_libdir}/liblcfg_profile.so
 %{_libdir}/liblcfg_packages.a

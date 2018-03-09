@@ -53,7 +53,7 @@ target_link_libraries(lcfg_xml ${LIBXML2_LIBRARIES})
 
 # Also need to link against the lcfg profile, packages and resources libraries
 
-target_link_libraries(lcfg_xml lcfg_context)
+target_link_libraries(lcfg_xml lcfg_common)
 target_link_libraries(lcfg_xml lcfg_packages)
 target_link_libraries(lcfg_xml lcfg_resources)
 target_link_libraries(lcfg_xml lcfg_profile)

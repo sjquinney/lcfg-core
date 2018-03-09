@@ -53,7 +53,7 @@ directory. It is possible to get a list of all available packages
 \begin{verbatim}
 $ pkg-config --list-all|grep lcfg
 lcfg-utils                     lcfg-utils - LCFG general utilities library
-lcfg-context                   lcfg-context - LCFG context handling library
+lcfg-common                    lcfg-common - LCFG context and derivation library
 lcfg-resources                 lcfg-resources - LCFG resource handling library
 lcfg-bdb                       lcfg-bdb - LCFG profile Berkeley DB handling library
 lcfg-xml                       lcfg-xml - LCFG profile XML handling library
@@ -66,7 +66,7 @@ The necessary compiler and linker flags can be retrieved like this
 
 \begin{verbatim}
 $ pkg-config --libs lcfg-packages
--Llib -llcfg_packages -llcfg_context -llcfg_utils -lrpm -lrpmio
+-Llib -llcfg_packages -llcfg_common -llcfg_utils -lrpm -lrpmio
 $ pkg-config --cflags lcfg-packages
 \end{verbatim}
 

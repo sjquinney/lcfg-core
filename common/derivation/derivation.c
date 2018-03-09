@@ -7,7 +7,7 @@
  * $Revision$
  */
 
-#define _GNU_SOURCE
+#define _GNU_SOURCE /* asprintf */
 
 #include <stdlib.h>
 #include <stdio.h>

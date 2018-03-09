@@ -35,7 +35,7 @@ add_definitions(-DHAVE_RPM)
 target_link_libraries(lcfg_packages ${RPM_LIBRARY} ${RPMIO_LIBRARY})
 endif(RPM_LIBRARY AND RPMIO_LIBRARY)
 
-target_link_libraries(lcfg_packages lcfg_context)
+target_link_libraries(lcfg_packages lcfg_common)
 target_link_libraries(lcfg_packages lcfg_utils)
 
 # Create the pkgspec parser and link it to the pkgtools library.

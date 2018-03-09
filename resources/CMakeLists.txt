@@ -24,7 +24,7 @@ set_target_properties(lcfg_resources-static PROPERTIES OUTPUT_NAME "lcfg_resourc
 SET_TARGET_PROPERTIES(lcfg_resources PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 SET_TARGET_PROPERTIES(lcfg_resources-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 
-target_link_libraries(lcfg_resources lcfg_context)
+target_link_libraries(lcfg_resources lcfg_common)
 target_link_libraries(lcfg_resources lcfg_utils)
 
 install(TARGETS lcfg_resources lcfg_resources-static
