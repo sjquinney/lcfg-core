@@ -132,9 +132,13 @@ LCFGDerivation * lcfgderivlist_find_derivation( const LCFGDerivationList * drvli
 bool lcfgderivlist_contains( const LCFGDerivationList * drvlist,
                              const char * want_file );
 
-LCFGChange lcfgderivlist_update( LCFGDerivationList * drvlist,
-                                 LCFGDerivation     * new_drv )
+LCFGChange lcfgderivlist_merge_derivation( LCFGDerivationList * drvlist,
+                                           LCFGDerivation     * new_drv )
   __attribute__((warn_unused_result));
+
+LCFGChange lcfgderivlist_merge_list( LCFGDerivationList * drvlist1,
+                                     const LCFGDerivationList * drvlist2 )
+   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgderivlist_from_string( const char * input,
                                       LCFGDerivationList ** result,

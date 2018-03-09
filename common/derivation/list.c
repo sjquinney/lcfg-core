@@ -231,8 +231,8 @@ bool lcfgderivlist_contains( const LCFGDerivationList * drvlist,
   return ( lcfgderivlist_find_node( drvlist, want_file ) != NULL );
 }
 
-LCFGChange lcfgderivlist_update( LCFGDerivationList * drvlist,
-                                 LCFGDerivation     * new_drv ) {
+LCFGChange lcfgderivlist_merge_derivation( LCFGDerivationList * drvlist,
+                                           LCFGDerivation     * new_drv ) {
   assert( drvlist != NULL );
   assert( new_drv != NULL );
 
@@ -242,13 +242,43 @@ LCFGChange lcfgderivlist_update( LCFGDerivationList * drvlist,
     lcfgderivlist_find_derivation( drvlist, lcfgderivation_get_file(new_drv) );
 
   LCFGChange result = LCFG_CHANGE_ERROR;
-  if ( cur_drv == NULL ) {
+  if ( cur_drv == NULL )
     result = lcfgderivlist_append( drvlist, new_drv );
-  } else {
+  else
     result = lcfgderivation_merge_lines( cur_drv, new_drv );
-  }
 
   return result;
+}
+
+LCFGChange lcfgderivlist_merge_list( LCFGDerivationList * drvlist1,
+                                     const LCFGDerivationList * drvlist2 ) {
+  assert( drvlist1 != NULL );
+
+  if ( drvlist2 == NULL || lcfgderivlist_is_empty(drvlist2) )
+    return LCFG_CHANGE_NONE;
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(drvlist2);
+        LCFGChangeOK(change) && cur_node != NULL;
+        cur_node = lcfgslist_next(cur_node) ) {
+
+    LCFGDerivation * drv = lcfgslist_data(cur_node);
+
+    /* Ignore any derivations which do not have a name or value */
+    if ( !lcfgderivation_is_valid(drv) ) continue;
+
+    LCFGChange merge_rc = lcfgderivlist_merge_derivation( drvlist1, drv );
+
+    if ( merge_rc == LCFG_CHANGE_ERROR )
+      change = LCFG_CHANGE_ERROR;
+    else if ( merge_rc != LCFG_CHANGE_NONE )
+      change = LCFG_CHANGE_MODIFIED;
+
+  }
+
+  return change;
 }
 
 LCFGStatus lcfgderivlist_from_string( const char * input,
@@ -285,7 +315,7 @@ LCFGStatus lcfgderivlist_from_string( const char * input,
                                token, parse_msg );
       status = LCFG_STATUS_ERROR;
     } else {
-      LCFGChange change = lcfgderivlist_update( drvlist, drv );
+      LCFGChange change = lcfgderivlist_merge_derivation( drvlist, drv );
       if ( LCFGChangeError(change) ) {
         lcfgutils_build_message( msg, "Failed to add derivation '%s' to list",
                                  token );
