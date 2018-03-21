@@ -1,3 +1,5 @@
+%global _hardened_build 1
+
 Name:           lcfg-core
 Version:        @LCFG_VERSION@
 Release:        @LCFG_RELEASE@
