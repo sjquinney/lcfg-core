@@ -50,7 +50,7 @@ const char * lcfgderivation_get_file( const LCFGDerivation * drv );
 bool lcfgderivation_has_lines( const LCFGDerivation * drv );
 bool lcfgderivation_has_line( const LCFGDerivation * drv,
                               unsigned int line );
-LCFGChange lcfgderivation_add_line( LCFGDerivation * drv, unsigned int line )
+LCFGChange lcfgderivation_merge_line( LCFGDerivation * drv, unsigned int line )
   __attribute__((warn_unused_result));
 LCFGChange lcfgderivation_merge_lines( LCFGDerivation * drv1,
                                        const LCFGDerivation * drv2 )
@@ -139,6 +139,16 @@ LCFGChange lcfgderivlist_merge_derivation( LCFGDerivationList * drvlist,
 LCFGChange lcfgderivlist_merge_list( LCFGDerivationList * drvlist1,
                                      const LCFGDerivationList * drvlist2 )
    __attribute__((warn_unused_result));
+
+LCFGChange lcfgderivlist_merge_file_line( LCFGDerivationList * drvlist,
+                                          const char * filename,
+                                          int line )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgderivlist_merge_string_list( LCFGDerivationList * drvlist,
+                                            const char * input,
+                                            char ** msg )
+  __attribute__((warn_unused_result));
 
 LCFGStatus lcfgderivlist_from_string( const char * input,
                                       LCFGDerivationList ** result,

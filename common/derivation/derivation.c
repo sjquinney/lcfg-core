@@ -50,7 +50,7 @@
 
 LCFGDerivation * lcfgderivation_new(void) {
 
-  LCFGDerivation * drv = malloc( sizeof(LCFGDerivation) );
+  LCFGDerivation * drv = calloc( 1, sizeof(LCFGDerivation) );
   if ( drv == NULL ) {
     perror( "Failed to allocate memory for LCFG derivation" );
     exit(EXIT_FAILURE);
@@ -214,7 +214,7 @@ bool lcfgderivation_set_file( LCFGDerivation * drv,
 
   free(drv->file);
 
-  drv->file   = new_value;
+  drv->file = new_value;
   ResetLength(drv);
 
   return true;
@@ -291,6 +291,8 @@ bool lcfgderivation_has_line( const LCFGDerivation * drv,
   return found;
 }
 
+#define DEFAULT_LINES_SIZE 4
+
 /**
  * @brief Add a line number to the list for the derivation
  *
@@ -308,7 +310,8 @@ bool lcfgderivation_has_line( const LCFGDerivation * drv,
  * @return Integer value indicating type of change
  */
 
-LCFGChange lcfgderivation_add_line( LCFGDerivation * drv, unsigned int line ) {
+LCFGChange lcfgderivation_merge_line( LCFGDerivation * drv,
+                                      unsigned int line ) {
   assert( drv != NULL );
 
   if ( lcfgderivation_has_line( drv, line ) ) return LCFG_CHANGE_NONE;
@@ -316,11 +319,10 @@ LCFGChange lcfgderivation_add_line( LCFGDerivation * drv, unsigned int line ) {
   /* Avoid reallocating too frequently */
 
   unsigned int new_size = drv->lines_count + 1;
-  if ( drv->lines == NULL || drv->lines_size == 0 ) {
-    new_size = 4;
-  } else if ( new_size > drv->lines_size ) {
+  if ( drv->lines == NULL || drv->lines_size == 0 )
+    new_size = DEFAULT_LINES_SIZE;
+  else if ( new_size > drv->lines_size )
     new_size = 2 * drv->lines_size;
-  }
 
   if ( new_size > drv->lines_size ) {
     unsigned int * new_lines = realloc( drv->lines,
@@ -379,7 +381,7 @@ LCFGChange lcfgderivation_merge_lines( LCFGDerivation * drv1,
   for ( i=0; LCFGChangeOK(change) && i<drv2->lines_count; i++ ) {
     unsigned int line = (drv2->lines)[i];
 
-    LCFGChange add_change = lcfgderivation_add_line( drv1, line );
+    LCFGChange add_change = lcfgderivation_merge_line( drv1, line );
 
     if ( add_change == LCFG_CHANGE_ERROR )
       change = LCFG_CHANGE_ERROR;
@@ -659,7 +661,7 @@ LCFGStatus lcfgderivation_from_string( const char * input,
         *end = '\0';
         if ( uint_valid(start) ) {
           unsigned int line = strtoul( start, NULL, 0 );
-          LCFGChange add_rc = lcfgderivation_add_line( drv, line );
+          LCFGChange add_rc = lcfgderivation_merge_line( drv, line );
           if ( LCFGChangeError(add_rc) ) {
             lcfgutils_build_message( msg,
                                      "Invalid derivation line number '%s'",
@@ -674,7 +676,7 @@ LCFGStatus lcfgderivation_from_string( const char * input,
 
       if ( status != LCFG_STATUS_ERROR && uint_valid(start) ) {
         unsigned int line = strtoul( start, NULL, 0 );
-        LCFGChange add_rc = lcfgderivation_add_line( drv, line );
+        LCFGChange add_rc = lcfgderivation_merge_line( drv, line );
         if ( LCFGChangeError(add_rc) ) {
           lcfgutils_build_message( msg,
                                    "Invalid derivation line number '%s'",

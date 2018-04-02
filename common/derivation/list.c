@@ -31,7 +31,7 @@ static LCFGChange lcfgderivlist_remove_next( LCFGDerivationList * list,
 
 LCFGDerivationList * lcfgderivlist_new(void) {
 
-  LCFGDerivationList * drvlist = malloc( sizeof(LCFGDerivationList) );
+  LCFGDerivationList * drvlist = calloc( 1, sizeof(LCFGDerivationList) );
   if ( drvlist == NULL ) {
     perror( "Failed to allocate memory for LCFG derivation list" );
     exit(EXIT_FAILURE);
@@ -250,6 +250,42 @@ LCFGChange lcfgderivlist_merge_derivation( LCFGDerivationList * drvlist,
   return result;
 }
 
+LCFGChange lcfgderivlist_merge_file_line( LCFGDerivationList * drvlist,
+                                          const char * filename,
+                                          int line ) {
+  assert( drvlist != NULL );
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+
+  const LCFGDerivation * drv =
+    lcfgderivlist_find_derivation( drvlist, filename );
+
+  if ( drv != NULL ) {
+
+    if ( line >= 0 )
+      change = lcfgderivation_merge_line( drv, line );
+
+  } else {
+    LCFGDerivation * new_deriv = lcfgderivation_new();
+
+    change = LCFG_CHANGE_ERROR;
+    if ( lcfgderivation_set_file( new_deriv, filename ) ) {
+
+      LCFGChange line_change = LCFG_CHANGE_NONE;
+      if ( line >= 0 )
+        line_change = lcfgderivation_merge_line( new_deriv, line );
+
+      if ( LCFGChangeOK(line_change) )
+        change = lcfgderivlist_merge_derivation( drvlist, new_deriv );
+        
+    }
+
+    lcfgderivation_relinquish(new_deriv);
+  }
+
+  return change;
+}
+
 LCFGChange lcfgderivlist_merge_list( LCFGDerivationList * drvlist1,
                                      const LCFGDerivationList * drvlist2 ) {
   assert( drvlist1 != NULL );
@@ -340,6 +376,28 @@ LCFGStatus lcfgderivlist_from_string( const char * input,
   *result = drvlist;
 
   return status;
+}
+
+LCFGChange lcfgderivlist_merge_string_list( LCFGDerivationList * drvlist,
+                                            const char * input,
+                                            char ** msg ) {
+  assert( drvlist != NULL );
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+
+  LCFGDerivationList * extra_drvlist = NULL;
+  LCFGStatus parse_status = lcfgderivlist_from_string( input,
+                                                       &extra_drvlist,
+                                                       msg );
+
+  if ( parse_status == LCFG_STATUS_ERROR )
+    change = LCFG_CHANGE_ERROR;
+  else
+    change = lcfgderivlist_merge_list( pkg->derivation, extra_drvlist );
+
+  lcfgderivlist_relinquish(extra_drvlist);
+
+  return change;
 }
 
 ssize_t lcfgderivlist_to_string( const LCFGDerivationList * drvlist,
