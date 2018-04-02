@@ -257,8 +257,7 @@ LCFGChange lcfgderivlist_merge_file_line( LCFGDerivationList * drvlist,
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
-  const LCFGDerivation * drv =
-    lcfgderivlist_find_derivation( drvlist, filename );
+  LCFGDerivation * drv = lcfgderivlist_find_derivation( drvlist, filename );
 
   if ( drv != NULL ) {
 
@@ -269,8 +268,11 @@ LCFGChange lcfgderivlist_merge_file_line( LCFGDerivationList * drvlist,
     LCFGDerivation * new_deriv = lcfgderivation_new();
 
     change = LCFG_CHANGE_ERROR;
-    if ( lcfgderivation_set_file( new_deriv, filename ) ) {
 
+    char * filename_copy = strdup(filename);
+    if ( !lcfgderivation_set_file( new_deriv, filename_copy ) ) {
+      free(filename_copy);
+    } else {
       LCFGChange line_change = LCFG_CHANGE_NONE;
       if ( line >= 0 )
         line_change = lcfgderivation_merge_line( new_deriv, line );
@@ -393,7 +395,7 @@ LCFGChange lcfgderivlist_merge_string_list( LCFGDerivationList * drvlist,
   if ( parse_status == LCFG_STATUS_ERROR )
     change = LCFG_CHANGE_ERROR;
   else
-    change = lcfgderivlist_merge_list( pkg->derivation, extra_drvlist );
+    change = lcfgderivlist_merge_list( drvlist, extra_drvlist );
 
   lcfgderivlist_relinquish(extra_drvlist);
 
