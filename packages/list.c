@@ -951,7 +951,7 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
 
   char * buffer = calloc( buf_size, sizeof(char) );
   if ( buffer == NULL ) {
-    perror( "Failed to allocate memory for LCFG resource buffer" );
+    perror( "Failed to allocate memory for LCFG package buffer" );
     exit(EXIT_FAILURE);
   }
 
