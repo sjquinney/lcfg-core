@@ -11,7 +11,7 @@
 #define LCFG_CORE_DERIVATION_H
 
 #include "common.h"
-#include <lcfg/utils.h>
+#include "utils.h"
 
 #include <stdbool.h>
 #include <stdio.h>
