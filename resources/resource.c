@@ -126,16 +126,21 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
      source string. */
 
   if ( ok && lcfgresource_has_template(res) ) {
-    char * tmpl_as_str = lcfgresource_get_template_as_string(res);
-    char * tmpl_msg = NULL;
-    ok = lcfgresource_set_template_as_string( clone, tmpl_as_str, &tmpl_msg );
+    char * tmpl_as_str = NULL;
+    size_t tmpl_size = 0;
+    ssize_t tmpl_len = lcfgresource_get_template_as_string( res, LCFG_OPT_NONE,
+                                                    &tmpl_as_str, &tmpl_size );
+    if ( tmpl_len > 0 ) {
+      char * tmpl_msg = NULL;
+      ok = lcfgresource_set_template_as_string( clone, tmpl_as_str, &tmpl_msg );
+
+      /* Should be impossible to get an error since the template will
+         have been previously validated so just throw away any error message */
+
+      free(tmpl_msg);
+    }
 
     free(tmpl_as_str);
-
-    /* Should be impossible to get an error since the template will
-       have been previously validated so just throw away any error message */
-
-    free(tmpl_msg);
   }
 
   clone->priority = res->priority;
@@ -804,7 +809,7 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
   /* A list resource might have a template */
 
   char * tmpl_as_str = NULL;
-  size_t tmpl_len = 0;
+  ssize_t tmpl_len = 0;
   if ( lcfgresource_is_list(res) &&
        !(options&LCFG_OPT_NOTEMPLATES) ) {
 
@@ -813,12 +818,12 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
     new_len += 2;  /* +2 for ': ' separator */
 
     if ( lcfgresource_has_template(res) ) {
-      tmpl_as_str = lcfgresource_get_template_as_string(res);
+      size_t tmpl_size = 0;
+      tmpl_len = lcfgresource_get_template_as_string( res, LCFG_OPT_NONE,
+                                                     &tmpl_as_str, &tmpl_size );
 
-      if ( tmpl_as_str != NULL ) {
-	tmpl_len = strlen(tmpl_as_str);
+      if ( tmpl_len > 0 ) /* Avoid adding negative number */
         new_len += tmpl_len;
-      }
     }
 
   }
@@ -852,7 +857,7 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
 
     to = stpncpy( to, ": ", 2 );
 
-    if ( tmpl_as_str != NULL )
+    if ( tmpl_len > 0 )
       to = stpncpy( to, tmpl_as_str, tmpl_len );
   }
 
@@ -912,39 +917,50 @@ LCFGTemplate * lcfgresource_get_template( const LCFGResource * res ) {
 /**
  * @brief Get the template for the resource as a string
  *
- * If the @c LCFGResource has a value for the @e template
- * attribute it will be transformed into a new string using the @c
- * lcfgtemplate_to_string() function. When this string is no longer
- * required it must be freed.
+ * If the @c LCFGResource has a value for the @e template attribute it
+ * will be transformed into a new string using the @c
+ * lcfgtemplate_to_string() function. If the resource does not have a
+ * template then zero will be returned and the buffer will not have
+ * been modified.
  *
- * If the resource does not have a template then a @c NULL value will
- * be returned.
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many resource strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated.
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required. If an error occurs this function will return -1.
  *
  * @param[in] res Pointer to an @c LCFGResource
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
  *
- * @return New string containing resource type information (call @c free() when no longer required) or a @c NULL value
+ * @return The length of the new string (or -1 for an error).
+ *
  */
 
-char * lcfgresource_get_template_as_string( const LCFGResource * res ) {
+ssize_t lcfgresource_get_template_as_string( const LCFGResource * res,
+                                             LCFGOption options,
+                                             char ** result, size_t * size ) {
   assert( res != NULL );
-
-  char * as_str = NULL;
 
   if ( lcfgresource_has_template(res) ) {
 
-    size_t buf_size = 0;
-    ssize_t rc = lcfgtemplate_to_string( lcfgresource_get_template(res),
-                                         NULL, LCFG_OPT_NONE,
-                                         &as_str, &buf_size );
-
-    if ( rc < 0 ) {
-      free(as_str);
-      as_str = NULL;
-    }
-
+    return lcfgtemplate_to_string( lcfgresource_get_template(res),
+                                   NULL, options,
+                                   result, size );
+  } else {
+    return 0;
   }
 
-  return as_str;
 }
 
 /**
@@ -1925,21 +1941,71 @@ int lcfgresource_get_priority( const LCFGResource * res ) {
  * the context expression for the resource (if any) along with the
  * current active set of contexts for the system.
  *
- * @param[in] res Pointer to an @c LCFGResource
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many resource strings, this can be a
+ * huge performance benefit. If the buffer is initially unallocated
+ * then it MUST be set to @c NULL. The current size of the buffer must
+ * be passed and should be specified as zero if the buffer is
+ * initially unallocated. If the generated string would be too long
+ * for the current buffer then it will be resized and the size
+ * parameter is updated.
  *
- * @return The priority for the resource as a string
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required. If an error occurs this function will return -1.
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
  *
  */
 
-char * lcfgresource_get_priority_as_string( const LCFGResource * res ) {
+ssize_t lcfgresource_get_priority_as_string( const LCFGResource * res,
+                                             LCFGOption options,
+                                             char ** result, size_t * size ) {
   assert( res != NULL );
 
-  char * as_str = NULL;
-  if ( asprintf( &as_str, "%d", lcfgresource_get_priority(res) ) == -1 ) {
-    as_str = NULL;
+  size_t new_len = 0;
+
+  int priority = lcfgresource_get_priority(res);
+  if ( priority < 0 ) {
+    new_len++;
+    priority *= -1;
+  }
+  while ( priority > 9 ) { new_len++; priority/=10; }
+  new_len++;
+
+  /* Allocate the required space */
+
+  if ( *result == NULL || *size < ( new_len + 1 ) ) {
+    size_t new_size = new_len + 1;
+
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
+      perror("Failed to allocate memory for LCFG priority string");
+      exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
+    }
   }
 
-  return as_str;
+  /* Always initialise the characters of the full space to nul */
+  memset( *result, '\0', *size );
+
+  /* Build the new string */
+
+  int rc =
+    snprintf( *result, new_len, "%d", lcfgresource_get_priority(res) );
+
+  assert( rc > 0 && (size_t) rc == new_len );
+
+  return new_len;
 }
 
 /**
@@ -2501,8 +2567,8 @@ bool lcfgresource_valid_env_var( const char * name ) {
 
 LCFGStatus lcfgresource_to_env( const LCFGResource * res,
                                 const char * compname,
-				const char * val_pfx, const char * type_pfx,
-				LCFGOption options ) {
+                                const char * val_pfx, const char * type_pfx,
+                                LCFGOption options ) {
   assert( res != NULL );
 
   /* Name is required */
@@ -2578,7 +2644,7 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
       }
 
       if ( setenv( env_key, type_as_str, 1 ) != 0 ) {
-	status = LCFG_STATUS_ERROR;
+        status = LCFG_STATUS_ERROR;
         goto cleanup;
       }
 
@@ -3803,8 +3869,8 @@ char * lcfgresource_build_message( const LCFGResource * res,
 					     &res_as_str, &buf_size );
 
       if ( str_rc < 0 ) {
-	perror("Failed to build LCFG resource message");
-	exit(EXIT_FAILURE);
+        perror("Failed to build LCFG resource message");
+        exit(EXIT_FAILURE);
       }
 
     }

@@ -140,7 +140,11 @@ bool lcfgresource_is_true( const LCFGResource * res );
 
 bool lcfgresource_has_template( const LCFGResource * res );
 LCFGTemplate * lcfgresource_get_template( const LCFGResource * res );
-char * lcfgresource_get_template_as_string( const LCFGResource * res );
+ssize_t lcfgresource_get_template_as_string( const LCFGResource * res,
+                                             LCFGOption options,
+                                             char ** result, size_t * size )
+  __attribute__((warn_unused_result));
+
 bool lcfgresource_set_template( LCFGResource * res,
                                 LCFGTemplate * new_value )
   __attribute__((warn_unused_result));
@@ -273,7 +277,10 @@ bool lcfgresource_set_comment( LCFGResource * res, char * new_value );
 /* Resources: priority */
 
 int lcfgresource_get_priority( const LCFGResource * res );
-char * lcfgresource_get_priority_as_string( const LCFGResource * res );
+ssize_t lcfgresource_get_priority_as_string( const LCFGResource * res,
+                                             LCFGOption options,
+                                             char ** result, size_t * size )
+    __attribute__((warn_unused_result));
 bool lcfgresource_set_priority( LCFGResource * res, int priority )
   __attribute__((warn_unused_result));
 bool lcfgresource_set_priority_default( LCFGResource * res )

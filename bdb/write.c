@@ -188,7 +188,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       key.size = (u_int32_t) keylen;
 
       char * type_as_str =
-	lcfgresource_get_type_as_string( resource, LCFG_OPT_NONE );
+        lcfgresource_get_type_as_string( resource, LCFG_OPT_NONE );
       data.data = type_as_str;
       data.size = (u_int32_t) strlen(type_as_str);
 
@@ -261,18 +261,30 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
                                        &res_buf, &buf_size );
 
       if ( keylen < 0 ) {
-	status = LCFG_STATUS_ERROR;
-	*msg = lcfgresource_build_message( resource, compname,
-					   "Failed to build priority key" );
-	break;
+        status = LCFG_STATUS_ERROR;
+        *msg = lcfgresource_build_message( resource, compname,
+                                           "Failed to build priority key" );
+        break;
       }
 
       key.data = res_buf;
       key.size = (u_int32_t) keylen;
 
-      char * prio_as_str = lcfgresource_get_priority_as_string(resource);
+      size_t prio_size = 0;
+      char * prio_as_str = NULL;
+      ssize_t prio_len =
+        lcfgresource_get_priority_as_string( resource, LCFG_OPT_NONE,
+                                             &prio_as_str, &prio_size );
+
+      if ( prio_len <= 0 ) {
+        free(prio_as_str);
+        status = LCFG_STATUS_ERROR;
+        lcfgutils_build_message( msg, "Failed to build priority value" );
+        break;
+      }
+
       data.data = prio_as_str;
-      data.size = (u_int32_t) strlen(prio_as_str);
+      data.size = (u_int32_t) prio_len;
 
       ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
 
