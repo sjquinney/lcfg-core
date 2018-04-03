@@ -101,14 +101,14 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
   /* This is used (and reused) as a buffer for all the resource keys
      to avoid allocating and freeing lots of memory. */
 
-  size_t buf_size = 64;
-  char * res_buf = calloc( buf_size, sizeof(char) );
-  if ( res_buf == NULL ) {
+  size_t key_size = 64;
+  char * key_buf = calloc( key_size, sizeof(char) );
+  if ( key_buf == NULL ) {
     perror("Failed to allocate memory for data buffer");
     exit(EXIT_FAILURE);
   }
 
-  ssize_t keylen = 0;
+  ssize_t key_len = 0;
 
   int ret;
   DBT key, data;
@@ -132,21 +132,21 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       memset( &key,  0, sizeof(DBT) );
       memset( &data, 0, sizeof(DBT) );
 
-      keylen = lcfgresource_build_key( resource->name,
+      key_len = lcfgresource_build_key( resource->name,
                                        compname,
                                        namespace,
                                        LCFG_RESOURCE_SYMBOL_DERIVATION,
-                                       &res_buf, &buf_size );
+                                       &key_buf, &key_size );
 
-      if ( keylen < 0 ) {
-	status = LCFG_STATUS_ERROR;
-	*msg = lcfgresource_build_message( resource, compname,
-					   "Failed to build derivation key" );
-	break;
+      if ( key_len < 0 ) {
+        status = LCFG_STATUS_ERROR;
+        *msg = lcfgresource_build_message( resource, compname,
+                                           "Failed to build derivation key" );
+        break;
       }
 
-      key.data = res_buf;
-      key.size = (u_int32_t) keylen;
+      key.data = key_buf;
+      key.size = (u_int32_t) key_len;
 
       const char * deriv = lcfgresource_get_derivation(resource);
 
@@ -171,21 +171,21 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       memset( &key,  0, sizeof(DBT) );
       memset( &data, 0, sizeof(DBT) );
 
-      keylen = lcfgresource_build_key( resource->name,
+      key_len = lcfgresource_build_key( resource->name,
                                        compname,
                                        namespace,
                                        LCFG_RESOURCE_SYMBOL_TYPE,
-                                       &res_buf, &buf_size );
+                                       &key_buf, &key_size );
 
-      if ( keylen < 0 ) {
-	status = LCFG_STATUS_ERROR;
-	*msg = lcfgresource_build_message( resource, compname,
-					   "Failed to build type key" );
-	break;
+      if ( key_len < 0 ) {
+        status = LCFG_STATUS_ERROR;
+        *msg = lcfgresource_build_message( resource, compname,
+                                           "Failed to build type key" );
+        break;
       }
 
-      key.data = res_buf;
-      key.size = (u_int32_t) keylen;
+      key.data = key_buf;
+      key.size = (u_int32_t) key_len;
 
       char * type_as_str =
         lcfgresource_get_type_as_string( resource, LCFG_OPT_NONE );
@@ -213,21 +213,21 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       memset( &key,  0, sizeof(DBT) );
       memset( &data, 0, sizeof(DBT) );
 
-      keylen = lcfgresource_build_key( resource->name,
+      key_len = lcfgresource_build_key( resource->name,
                                        compname,
                                        namespace,
                                        LCFG_RESOURCE_SYMBOL_CONTEXT,
-                                       &res_buf, &buf_size );
+                                       &key_buf, &key_size );
 
-      if ( keylen < 0 ) {
-	status = LCFG_STATUS_ERROR;
-	*msg = lcfgresource_build_message( resource, compname,
-					   "Failed to build context key" );
-	break;
+      if ( key_len < 0 ) {
+        status = LCFG_STATUS_ERROR;
+        *msg = lcfgresource_build_message( resource, compname,
+                                           "Failed to build context key" );
+        break;
       }
 
-      key.data = res_buf;
-      key.size = (u_int32_t) keylen;
+      key.data = key_buf;
+      key.size = (u_int32_t) key_len;
 
       const char * context = lcfgresource_get_context(resource);
       data.data = (char *) context;
@@ -254,21 +254,21 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       memset( &key,  0, sizeof(DBT) );
       memset( &data, 0, sizeof(DBT) );
 
-      keylen = lcfgresource_build_key( resource->name,
+      key_len = lcfgresource_build_key( resource->name,
                                        compname,
                                        namespace,
                                        LCFG_RESOURCE_SYMBOL_PRIORITY,
-                                       &res_buf, &buf_size );
+                                       &key_buf, &key_size );
 
-      if ( keylen < 0 ) {
+      if ( key_len < 0 ) {
         status = LCFG_STATUS_ERROR;
         *msg = lcfgresource_build_message( resource, compname,
                                            "Failed to build priority key" );
         break;
       }
 
-      key.data = res_buf;
-      key.size = (u_int32_t) keylen;
+      key.data = key_buf;
+      key.size = (u_int32_t) key_len;
 
       size_t prio_size = 0;
       char * prio_as_str = NULL;
@@ -305,21 +305,21 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
     memset( &key,  0, sizeof(DBT) );
     memset( &data, 0, sizeof(DBT) );
 
-    keylen = lcfgresource_build_key( resource->name,
+    key_len = lcfgresource_build_key( resource->name,
                                      compname,
                                      namespace,
                                      LCFG_RESOURCE_SYMBOL_VALUE,
-                                     &res_buf, &buf_size );
+                                     &key_buf, &key_size );
 
-    if ( keylen < 0 ) {
+    if ( key_len < 0 ) {
       status = LCFG_STATUS_ERROR;
       *msg = lcfgresource_build_message( resource, compname,
 					 "Failed to build value key" );
       break;
     }
 
-    key.data = res_buf;
-    key.size = (u_int32_t) keylen;
+    key.data = key_buf;
+    key.size = (u_int32_t) key_len;
 
     const char * value = lcfgresource_has_value(resource) ?
                          lcfgresource_get_value(resource) : "";
@@ -358,7 +358,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
     lcfgtaglist_sort(stored_res);
 
     ssize_t len = lcfgtaglist_to_string( stored_res, LCFG_OPT_NONE,
-                                         &res_buf, &buf_size );
+                                         &key_buf, &key_size );
 
     if ( len > 0 ) {
 
@@ -368,7 +368,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       key.data = (char *) compname;
       key.size = (u_int32_t) strlen(compname);
 
-      data.data = res_buf;
+      data.data = key_buf;
       data.size = (u_int32_t) len;
 
       int ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
@@ -387,7 +387,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
  cleanup:
 
   lcfgtaglist_relinquish(stored_res);
-  free(res_buf);
+  free(key_buf);
 
   return status;
 }
