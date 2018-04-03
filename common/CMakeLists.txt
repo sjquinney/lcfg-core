@@ -1,4 +1,4 @@
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(BISON)
 if(NOT BISON_FOUND)
@@ -10,9 +10,9 @@ if(NOT FLEX_FOUND)
   message(FATAL_ERROR "Could not find flex")
 endif(NOT FLEX_FOUND)
 
-BISON_TARGET(CtxParser context/parser.y ${CMAKE_CURRENT_BINARY_DIR}/context/parser.c
+BISON_TARGET(CtxParser context/parser.y ${CMAKE_CURRENT_BINARY_DIR}/context_parser.c
              COMPILE_FLAGS -Wall)
-FLEX_TARGET(CtxScanner context/lexer.l  ${CMAKE_CURRENT_BINARY_DIR}/context/lexer.c)
+FLEX_TARGET(CtxScanner context/lexer.l  ${CMAKE_CURRENT_BINARY_DIR}/context_lexer.c)
 ADD_FLEX_BISON_DEPENDENCY(CtxScanner CtxParser)
 
 # Generate the lcfg context shared library.
