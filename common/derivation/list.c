@@ -83,6 +83,10 @@ void lcfgderivlist_relinquish( LCFGDerivationList * drvlist ) {
 
 }
 
+bool lcfgderivlist_is_shared( const LCFGDerivationList * drvlist ) {
+  return ( drvlist->_refcount > 1 );
+}
+
 ssize_t lcfgderivlist_get_string_length( const LCFGDerivationList * drvlist ) {
   if ( lcfgderivlist_is_empty(drvlist) ) return 0;
 
@@ -106,7 +110,7 @@ ssize_t lcfgderivlist_get_string_length( const LCFGDerivationList * drvlist ) {
 }
 
 LCFGDerivationList * lcfgderivlist_clone( const LCFGDerivationList * drvlist ) {
-  assert( drvlist != NULL );
+  /* This is designed to be safe when called with NULL */
 
   LCFGDerivationList * clone = lcfgderivlist_new();
 
