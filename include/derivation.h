@@ -35,9 +35,11 @@ struct LCFGDerivation {
 typedef struct LCFGDerivation LCFGDerivation;
 
 LCFGDerivation * lcfgderivation_new(void);
+LCFGDerivation * lcfgderivation_clone( const LCFGDerivation * drv );
 void lcfgderivation_destroy( LCFGDerivation * drv );
 void lcfgderivation_acquire( LCFGDerivation * drv );
 void lcfgderivation_relinquish( LCFGDerivation * drv );
+bool lcfgderivation_is_shared( const LCFGDerivation * drv );
 
 bool lcfgderivation_is_valid( const LCFGDerivation * drv );
 
@@ -123,6 +125,8 @@ LCFGDerivationList * lcfgderivlist_new(void);
 void lcfgderivlist_destroy(LCFGDerivationList * drvlist);
 void lcfgderivlist_acquire( LCFGDerivationList * drvlist );
 void lcfgderivlist_relinquish( LCFGDerivationList * drvlist );
+bool lcfgderivlist_is_shared( const LCFGDerivationList * drvlist );
+
 LCFGDerivationList * lcfgderivlist_clone( const LCFGDerivationList * drvlist );
 
 ssize_t lcfgderivlist_get_string_length( const LCFGDerivationList * drvlist );
