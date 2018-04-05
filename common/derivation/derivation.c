@@ -152,6 +152,37 @@ void lcfgderivation_relinquish( LCFGDerivation * drv ) {
 
 }
 
+bool lcfgderivation_is_shared( const LCFGDerivation * drv ) {
+  return ( drv->_refcount > 1 );
+}
+
+LCFGDerivation * lcfgderivation_clone( const LCFGDerivation * drv ) {
+  assert( drv != NULL );
+
+  LCFGDerivation * clone = lcfgderivation_new();
+
+  bool ok = true;
+
+  if ( !isempty(drv->file) ) {
+    char * file_copy = strdup(drv->file);
+    ok = lcfgderivation_set_file( clone, file_copy );
+    if (!ok)
+      free(file_copy);
+  }
+
+  if (ok) {
+    LCFGChange change = lcfgderivation_merge_lines( clone, drv );
+    ok = LCFGChangeOK(change);
+  }
+
+  if (!ok) {
+    lcfgderivation_relinquish(clone);
+    clone = NULL;
+  }
+
+  return clone;
+}
+
 /**
  * @brief Check validity of derivation
  *
