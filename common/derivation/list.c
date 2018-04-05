@@ -272,16 +272,22 @@ LCFGChange lcfgderivlist_merge_derivation( LCFGDerivationList * drvlist,
     result = lcfgderivlist_append( drvlist, new_drv );
   } else {
     LCFGDerivation * cur_drv = lcfgslist_data(node);
-    LCFGDerivation * clone   = lcfgderivation_clone(cur_drv);
 
-    result = lcfgderivation_merge_lines( clone, new_drv );
-
-    /* Only keep the clone if it was modified */
-    if ( LCFGChangeOK(result) && result != LCFG_CHANGE_NONE ) {
-      node->data = (void *) clone;
-      lcfgderivation_relinquish(cur_drv);
+    if ( !lcfgderivation_is_shared(cur_drv) ) {
+      result = lcfgderivation_merge_lines( cur_drv, new_drv );
     } else {
-      lcfgderivation_relinquish(clone);
+      LCFGDerivation * clone = lcfgderivation_clone(cur_drv);
+
+      if ( clone != NULL )
+        result = lcfgderivation_merge_lines( clone, new_drv );
+
+      /* Only keep the clone if it was modified */
+      if ( LCFGChangeOK(result) && result != LCFG_CHANGE_NONE ) {
+        node->data = (void *) clone;
+        lcfgderivation_relinquish(cur_drv);
+      } else {
+        lcfgderivation_relinquish(clone);
+      }
     }
 
   }
@@ -323,15 +329,22 @@ LCFGChange lcfgderivlist_merge_file_line( LCFGDerivationList * drvlist,
   } else if ( line >= 0 ) {
 
     LCFGDerivation * cur_drv = lcfgslist_data(node);
-    LCFGDerivation * clone   = lcfgderivation_clone(cur_drv);
 
-    result = lcfgderivation_merge_line( clone, line );
+    if ( lcfgderivation_has_line( cur_drv, line ) ) {
+      result = LCFG_CHANGE_NONE;
+    } else if ( lcfgderivation_is_shared(cur_drv) ) {
+      LCFGDerivation * clone = lcfgderivation_clone(cur_drv);
 
-    if ( LCFGChangeOK(result) && result != LCFG_CHANGE_NONE ) {
-      node->data = (void *) clone;
-      lcfgderivation_relinquish(cur_drv);
+      result = lcfgderivation_merge_line( clone, line );
+
+      if ( LCFGChangeOK(result) && result != LCFG_CHANGE_NONE ) {
+        node->data = (void *) clone;
+        lcfgderivation_relinquish(cur_drv);
+      } else {
+        lcfgderivation_relinquish(clone);
+      }
     } else {
-      lcfgderivation_relinquish(clone);
+      result = lcfgderivation_merge_line( cur_drv, line );
     }
 
   }
