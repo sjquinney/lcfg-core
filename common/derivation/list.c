@@ -264,14 +264,27 @@ LCFGChange lcfgderivlist_merge_derivation( LCFGDerivationList * drvlist,
 
   if ( !lcfgderivation_is_valid(new_drv) ) return LCFG_CHANGE_ERROR;
 
-  LCFGDerivation * cur_drv =
-    lcfgderivlist_find_derivation( drvlist, lcfgderivation_get_file(new_drv) );
+  LCFGSListNode * node =
+    lcfgderivlist_find_node( drvlist, lcfgderivation_get_file(new_drv) );
 
   LCFGChange result = LCFG_CHANGE_ERROR;
-  if ( cur_drv == NULL )
+  if ( node == NULL ) {
     result = lcfgderivlist_append( drvlist, new_drv );
-  else
-    result = lcfgderivation_merge_lines( cur_drv, new_drv );
+  } else {
+    LCFGDerivation * cur_drv = lcfgslist_data(node);
+    LCFGDerivation * clone   = lcfgderivation_clone(cur_drv);
+
+    result = lcfgderivation_merge_lines( clone, new_drv );
+
+    /* Only keep the clone if it was modified */
+    if ( LCFGChangeOK(result) && result != LCFG_CHANGE_NONE ) {
+      node->data = (void *) clone;
+      lcfgderivation_relinquish(cur_drv);
+    } else {
+      lcfgderivation_relinquish(clone);
+    }
+
+  }
 
   return result;
 }
@@ -281,45 +294,56 @@ LCFGChange lcfgderivlist_merge_file_line( LCFGDerivationList * drvlist,
                                           int line ) {
   assert( drvlist != NULL );
 
-  LCFGChange change = LCFG_CHANGE_NONE;
+  if ( isempty(filename) ) return LCFG_CHANGE_NONE;
 
-  LCFGDerivation * drv = lcfgderivlist_find_derivation( drvlist, filename );
+  LCFGChange result = LCFG_CHANGE_NONE;
 
-  if ( drv != NULL ) {
+  LCFGSListNode * node = lcfgderivlist_find_node( drvlist, filename );
+  if ( node == NULL ) {
 
-    if ( line >= 0 )
-      change = lcfgderivation_merge_line( drv, line );
-
-  } else {
-    LCFGDerivation * new_deriv = lcfgderivation_new();
-
-    change = LCFG_CHANGE_ERROR;
+    LCFGDerivation * new_drv = lcfgderivation_new();
 
     char * filename_copy = strdup(filename);
-    if ( !lcfgderivation_set_file( new_deriv, filename_copy ) ) {
+    bool set_ok = lcfgderivation_set_file( new_drv, filename_copy );
+    if ( !set_ok ) {
+      result = LCFG_CHANGE_ERROR;
       free(filename_copy);
     } else {
-      LCFGChange line_change = LCFG_CHANGE_NONE;
-      if ( line >= 0 )
-        line_change = lcfgderivation_merge_line( new_deriv, line );
 
-      if ( LCFGChangeOK(line_change) )
-        change = lcfgderivlist_merge_derivation( drvlist, new_deriv );
-        
+      if ( line >= 0 )
+        result = lcfgderivation_merge_line( new_drv, line );
+
+      if ( LCFGChangeOK(result) )
+        result = lcfgderivlist_append( drvlist, new_drv );
+
     }
 
-    lcfgderivation_relinquish(new_deriv);
+    lcfgderivation_relinquish(new_drv);
+
+  } else if ( line >= 0 ) {
+
+    LCFGDerivation * cur_drv = lcfgslist_data(node);
+    LCFGDerivation * clone   = lcfgderivation_clone(cur_drv);
+
+    result = lcfgderivation_merge_line( clone, line );
+
+    if ( LCFGChangeOK(result) && result != LCFG_CHANGE_NONE ) {
+      node->data = (void *) clone;
+      lcfgderivation_relinquish(cur_drv);
+    } else {
+      lcfgderivation_relinquish(clone);
+    }
+
   }
 
-  return change;
+  return result;
 }
 
 LCFGChange lcfgderivlist_merge_list( LCFGDerivationList * drvlist1,
                                      const LCFGDerivationList * drvlist2 ) {
   assert( drvlist1 != NULL );
 
-  if ( drvlist2 == NULL || lcfgderivlist_is_empty(drvlist2) )
-    return LCFG_CHANGE_NONE;
+  if ( lcfgderivlist_is_empty(drvlist2) ) return LCFG_CHANGE_NONE;
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
@@ -330,7 +354,7 @@ LCFGChange lcfgderivlist_merge_list( LCFGDerivationList * drvlist1,
 
     LCFGDerivation * drv = lcfgslist_data(cur_node);
 
-    /* Ignore any derivations which do not have a name or value */
+    /* Ignore any derivations which do not have a filename */
     if ( !lcfgderivation_is_valid(drv) ) continue;
 
     LCFGChange merge_rc = lcfgderivlist_merge_derivation( drvlist1, drv );

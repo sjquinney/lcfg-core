@@ -157,9 +157,10 @@ bool lcfgderivation_is_shared( const LCFGDerivation * drv ) {
 }
 
 LCFGDerivation * lcfgderivation_clone( const LCFGDerivation * drv ) {
-  assert( drv != NULL );
 
   LCFGDerivation * clone = lcfgderivation_new();
+
+  if ( drv == NULL ) return clone;
 
   bool ok = true;
 
