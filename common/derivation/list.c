@@ -87,10 +87,10 @@ bool lcfgderivlist_is_shared( const LCFGDerivationList * drvlist ) {
   return ( drvlist->_refcount > 1 );
 }
 
-ssize_t lcfgderivlist_get_string_length( const LCFGDerivationList * drvlist ) {
+size_t lcfgderivlist_get_string_length( const LCFGDerivationList * drvlist ) {
   if ( lcfgderivlist_is_empty(drvlist) ) return 0;
 
-  ssize_t length = 0;
+  size_t length = 0;
 
   const LCFGSListNode * cur_node = NULL;
   for ( cur_node = lcfgslist_head(drvlist);
@@ -100,7 +100,7 @@ ssize_t lcfgderivlist_get_string_length( const LCFGDerivationList * drvlist ) {
     LCFGDerivation * drv = lcfgslist_data(cur_node);
 
     if ( lcfgderivation_is_valid(drv) )
-      length += lcfgderivation_get_length(drv) + 1; /* for space sep */
+      length += (size_t) lcfgderivation_get_length(drv) + 1; /* for space sep */
   }
 
   /* n - 1 space separators */

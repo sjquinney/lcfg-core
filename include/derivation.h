@@ -129,7 +129,7 @@ bool lcfgderivlist_is_shared( const LCFGDerivationList * drvlist );
 
 LCFGDerivationList * lcfgderivlist_clone( const LCFGDerivationList * drvlist );
 
-ssize_t lcfgderivlist_get_string_length( const LCFGDerivationList * drvlist );
+size_t lcfgderivlist_get_string_length( const LCFGDerivationList * drvlist );
 
 LCFGSListNode * lcfgderivlist_find_node( const LCFGDerivationList * drvlist,
                                          const char * want_file );
