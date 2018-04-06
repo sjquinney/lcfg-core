@@ -409,89 +409,75 @@ LCFGChange lcfgpkgset_merge_package( LCFGPackageSet * pkgset,
   const char * new_name = new_pkg->name;
   unsigned long hash = lcfgpkgset_hash_string( pkgset, new_name );
 
-  bool new_entry = false;
-
   LCFGPackageList ** packages = pkgset->packages;
-  LCFGPackageList * pkglist_for_name = NULL;
 
-  unsigned long i;
-  for ( i = hash; pkglist_for_name == NULL && i < pkgset->buckets; i++ ) {
-
+  bool done = false;
+  unsigned long i, slot;
+  for ( i = hash; !done && i < pkgset->buckets; i++ ) {
     if ( !packages[i] ) {
-      new_entry = true;
+      done = true;
     } else {
 
-      if ( lcfgpkglist_is_empty(packages[i]) ) {
+      const LCFGPackageList * pkglist = packages[i];
 
-        lcfgpkglist_relinquish(packages[i]);
-        packages[i] = NULL;
-        new_entry = true;
-
-      } else {
-
-        const LCFGPackage * first_pkg =
-          lcfgpkglist_first_package(packages[i]);
+      if ( !lcfgpkglist_is_empty(pkglist) ) {
+        const LCFGPackage * first_pkg = lcfgpkglist_first_package(pkglist);
         if ( lcfgpackage_match( first_pkg, new_name, "*" ) )
-          pkglist_for_name = packages[i];
-
+          done = true;
       }
 
     }
 
-    if ( new_entry ) {
-      pkglist_for_name = lcfgpkglist_new();
-      pkglist_for_name->merge_rules = pkgset->merge_rules;
-      pkglist_for_name->primary_key = pkgset->primary_key;
-
-      packages[i] = pkglist_for_name;
-    }
-
+    if (done) slot = i;
   }
 
-  for ( i = 0; pkglist_for_name == NULL && i < hash; i++ ) {
-
+  for ( i = 0; !done && i < hash; i++ ) {
     if ( !packages[i] ) {
-      new_entry = true;
+      done = true;
     } else {
 
-      if ( lcfgpkglist_is_empty(packages[i]) ) {
+      const LCFGPackageList * pkglist = packages[i];
 
-        lcfgpkglist_relinquish(packages[i]);
-        packages[i] = NULL;
-        new_entry = true;
-
-      } else {
-
-        const LCFGPackage * first_pkg =
-          lcfgpkglist_first_package(packages[i]);
+      if ( !lcfgpkglist_is_empty(pkglist) ) {
+        const LCFGPackage * first_pkg = lcfgpkglist_first_package(pkglist);
         if ( lcfgpackage_match( first_pkg, new_name, "*" ) )
-          pkglist_for_name = packages[i];
-
+          done = true;
       }
 
     }
 
-    if ( new_entry ) {
-      pkglist_for_name = lcfgpkglist_new();
-      pkglist_for_name->merge_rules = pkgset->merge_rules;
-      pkglist_for_name->primary_key = pkgset->primary_key;
-
-      packages[i] = pkglist_for_name;
-    }
-
+    if (done) slot = i;
   }
 
   LCFGChange change = LCFG_CHANGE_NONE;
-  if ( pkglist_for_name == NULL ) {
+  if ( !done ) {
     lcfgutils_build_message( msg,
                              "No free space for new entries in package set" );
     change = LCFG_CHANGE_ERROR;
   } else {
-    change = lcfgpkglist_merge_package( pkglist_for_name, new_pkg, msg );
 
-    if ( new_entry && change != LCFG_CHANGE_ERROR ) {
-      lcfgpkgset_resize(pkgset);
-      pkgset->entries += 1;
+    bool new_entry = false;
+    LCFGPackageList * pkglist = NULL;
+    if ( packages[slot] ) {
+      pkglist = packages[slot];
+    } else {
+      new_entry = true;
+
+      pkglist = lcfgpkglist_new();
+      pkglist->merge_rules = pkgset->merge_rules;
+      pkglist->primary_key = pkgset->primary_key;
+    }
+
+    change = lcfgpkglist_merge_package( pkglist, new_pkg, msg );
+
+    if (new_entry) {
+      if ( LCFGChangeOK(change) && change != LCFG_CHANGE_NONE ) {
+        packages[slot] = pkglist;
+        pkgset->entries += 1;
+        lcfgpkgset_resize(pkgset);
+      } else {
+        lcfgpkglist_relinquish(pkglist);
+      }
     }
 
   }
@@ -952,10 +938,10 @@ bool lcfgpkgset_print( const LCFGPackageSet * pkgset,
  */
 
 LCFGChange lcfgpkgset_from_rpmcfg( const char * filename,
-				   LCFGPackageSet ** result,
-				   const char * defarch,
-				   LCFGOption options,
-				   char ** msg ) {
+                                   LCFGPackageSet ** result,
+                                   const char * defarch,
+                                   LCFGOption options,
+                                   char ** msg ) {
 
   LCFGPackageSet * pkgs = lcfgpkgset_new();
 
@@ -974,9 +960,9 @@ LCFGChange lcfgpkgset_from_rpmcfg( const char * filename,
     ctr.set = pkgs;
 
     change = lcfgpackages_from_cpp( filename,
-				    &ctr, LCFG_PKG_CONTAINER_SET,
-				    defarch, NULL, NULL, options,
-				    &deps, msg );
+                                    &ctr, LCFG_PKG_CONTAINER_SET,
+                                    defarch, NULL, NULL, options,
+                                    &deps, msg );
   }
 
   if ( LCFGChangeOK(change) ) {
@@ -1052,7 +1038,7 @@ LCFGChange lcfgpkgset_from_pkgsfile( const char * filename,
                                      const char * macros_file,
                                      char ** incpath,
                                      LCFGOption options,
-				     char *** deps,
+                                     char *** deps,
                                      char ** msg ) {
 
   LCFGPackageSet * pkgs = lcfgpkgset_new();
