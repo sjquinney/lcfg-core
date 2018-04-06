@@ -510,6 +510,8 @@ ssize_t lcfgderivlist_to_string( const LCFGDerivationList * drvlist,
     /* Ignore any derivations which do not have a name or value */
     if ( !lcfgderivation_is_valid(drv) ) continue;
 
+    lcfgderivation_sort_lines(drv);
+
     ssize_t drv_len = lcfgderivation_get_length(drv);
     if ( drv_len > 0 ) {
       if ( first ) {
