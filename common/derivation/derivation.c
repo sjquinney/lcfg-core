@@ -1,5 +1,5 @@
 /**
- * @file derivation/derivation.c
+ * @file common/derivation/derivation.c
  * @brief Functions for working with single file LCFG derivations
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2018 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
@@ -152,9 +152,40 @@ void lcfgderivation_relinquish( LCFGDerivation * drv ) {
 
 }
 
+/**
+ * @brief Check if there are multiple references to the derivation
+ *
+ * The @c LCFGDerivation structure supports reference counting - see
+ * @c lcfgderivation_acquire() and @c lcfgderivation_relinquish(). This
+ * will return a boolean which indicates if there are multiple
+ * references.
+ *
+ * @param[in] drv Pointer to @c LCFGDerivation
+ *
+ * @return Boolean which indicates if there are multiple references to this derivation
+ *
+ */
+
 bool lcfgderivation_is_shared( const LCFGDerivation * drv ) {
   return ( drv->_refcount > 1 );
 }
+
+/**
+ * @brief Clone the derivation
+ *
+ * This can be used to create a new @c LCFGDerivation structure with
+ * all the attributes set to be the same as the original. The @e file
+ * and @e lines attributes are copied so that subsequent modifications
+ * of the original or the clone will not affect the other.
+ *
+ * If a @c NULL value is passed for the original then this behaves the
+ * same as @c lcfgderivation_new().
+ *
+ * @param[in] drv Pointer to @c LCFGDerivation
+ *
+ * @return Reference to a new @c LCFGDerivation which is identical to original
+ *
+ */
 
 LCFGDerivation * lcfgderivation_clone( const LCFGDerivation * drv ) {
 
