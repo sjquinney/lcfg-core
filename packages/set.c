@@ -478,6 +478,10 @@ LCFGChange lcfgpkgset_merge_package( LCFGPackageSet * pkgset,
       } else {
         lcfgpkglist_relinquish(pkglist);
       }
+    } else if ( lcfgpkglist_is_empty(pkglist) ) {
+      packages[slot] = NULL;
+      pkgset->entries -= 1;
+      lcfgpkglist_relinquish(pkglist);
     }
 
   }
@@ -849,7 +853,7 @@ bool lcfgpkgset_print( const LCFGPackageSet * pkgset,
   /* Derivation information is often enormous so initialise a much
      larger buffer when that option is enabled */
 
-  size_t buf_size = options&LCFG_OPT_USE_META ? 8192 : 512;
+  size_t buf_size = options&LCFG_OPT_USE_META ?  16384 : 512;
 
   char * buffer = calloc( buf_size, sizeof(char) );
   if ( buffer == NULL ) {
