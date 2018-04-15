@@ -1,5 +1,5 @@
 /**
- * @file derivation/derivation.c
+ * @file common/derivation/derivation.c
  * @brief Functions for working with lists of LCFG derivations
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2018 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
