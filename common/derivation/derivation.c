@@ -7,8 +7,6 @@
  * $Revision$
  */
 
-#define _GNU_SOURCE /* asprintf */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
