@@ -505,7 +505,7 @@ ssize_t lcfgderivlist_to_string( const LCFGDerivationList * drvlist,
         cur_node != NULL;
         cur_node = lcfgslist_next(cur_node) ) {
 
-    const LCFGDerivation * drv = lcfgslist_data(cur_node);
+    LCFGDerivation * drv = lcfgslist_data(cur_node);
 
     /* Ignore any derivations which do not have a name or value */
     if ( !lcfgderivation_is_valid(drv) ) continue;
