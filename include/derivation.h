@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 /**
  * @brief Structure to represent LCFG derivation information
@@ -100,7 +101,7 @@ struct LCFGDerivationList {
   LCFGSListNode * head;   /**< The first derivation in the list */
   LCFGSListNode * tail;   /**< The last derivation in the list */
   unsigned int size;      /**< The length of the list */
-  unsigned long id;     /**< Hash of stringified version of list */
+  uint64_t id;            /**< Hash of stringified version of list */
   /*@}*/
   unsigned int _refcount;
 };
@@ -168,6 +169,28 @@ ssize_t lcfgderivlist_to_string( const LCFGDerivationList * drvlist,
 
 bool lcfgderivlist_print( const LCFGDerivationList * drvlist,
                           FILE * out )
+  __attribute__((warn_unused_result));
+
+/* Mapping of lists to IDs */
+
+struct LCFGDerivationMap {
+  /*@{*/
+  LCFGSListNode * head;
+  LCFGSListNode * tail;
+  unsigned int size;
+  /*@}*/
+  unsigned int _refcount;
+};
+
+typedef struct LCFGDerivationMap LCFGDerivationMap;
+
+LCFGDerivationMap * lcfgderivmap_new(void);
+void lcfgderivmap_acquire( LCFGDerivationMap * drvmap );
+void lcfgderivmap_relinquish( LCFGDerivationMap * drvmap );
+LCFGDerivationList * lcfgderivmap_find_or_insert_string(
+                                           LCFGDerivationMap * drvmap,
+                                           const char * deriv_as_str,
+                                           char ** msg )
   __attribute__((warn_unused_result));
 
 #endif /* LCFG_CORE_DERIVATION_H */
