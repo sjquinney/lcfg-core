@@ -191,10 +191,11 @@ LCFGDerivationList * lcfgderivmap_find_or_insert_string(LCFGDerivationMap * drvm
                                                         const char * deriv_as_str,
                                                         char ** msg ) {
   assert( drvmap != NULL );
+  LCFGDerivationList * result = NULL;
 
   if ( isempty(deriv_as_str) ) {
     lcfgutils_build_message( msg, "Empty derivation" );
-    return NULL;
+    return result;
   }
 
   size_t len = strlen(deriv_as_str);
@@ -202,24 +203,27 @@ LCFGDerivationList * lcfgderivmap_find_or_insert_string(LCFGDerivationMap * drvm
 
   LCFGDerivationList * drvlist = lcfgderivmap_find_derivation( drvmap, id );
 
-  if ( drvlist == NULL ) {
-
+  if ( drvlist != NULL ) {
+    result = drvlist;
+  } else {
     bool ok = false;
     LCFGStatus parse_rc = lcfgderivlist_from_string( deriv_as_str,
                                                      &drvlist, msg );
-    if ( parse_rc != LCFG_STATUS_ERROR ) {
+
+    if ( parse_rc != LCFG_STATUS_ERROR && !lcfgderivlist_is_empty(drvlist) ) {
       drvlist->id = id;
+
       LCFGChange append_rc = lcfgderivmap_append( drvmap, drvlist );
       ok = LCFGChangeOK(append_rc);
+      if (ok)
+        result = drvlist;
+
     }
 
     lcfgderivlist_relinquish(drvlist);
-
-    if (!ok)
-      drvlist = NULL;
   }
 
-  return drvlist;
+  return result;
 }
 
 /* eof */
