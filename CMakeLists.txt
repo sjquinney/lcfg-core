@@ -11,7 +11,7 @@ list(GET VERSION_LIST 0 PROJECT_VERSION_MAJOR)
 list(GET VERSION_LIST 1 PROJECT_VERSION_MINOR)
 list(GET VERSION_LIST 2 PROJECT_VERSION_PATCH)
 
-SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra" )
+SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra -std=gnu99" )
 
 # Specify where various files should be installed.
 
