@@ -530,39 +530,12 @@ ssize_t lcfgderivation_to_string( const LCFGDerivation * drv,
 
   if ( !lcfgderivation_is_valid(drv) ) return -1;
 
-  size_t file_len = strlen(drv->file);
-
-  size_t new_len = file_len;
+  size_t new_len = lcfgderivation_get_length(drv);
 
   /* Optional newline at end of string */
 
   if ( options&LCFG_OPT_NEWLINE )
     new_len += 1;
-
-  char ** lines_as_str = NULL;
-  if ( lcfgderivation_has_lines(drv) ) {
-    new_len += 1; /* for ':' (colon) between file and lines */
-    new_len += drv->lines_count - 1; /* for ',' (comma) between numbers */
-
-    lines_as_str = calloc( drv->lines_count, sizeof(char *) );
-    if ( lines_as_str == NULL ) {
-      perror("Failed to allocate memory for list of line numbers");
-      exit(EXIT_FAILURE);
-    }
-
-    unsigned int i;
-    for (i=0; i<drv->lines_count; i++ ) {
-      char * as_str = NULL;
-      int rc = asprintf( &as_str, "%u", (drv->lines)[i] );
-      if ( rc > 0 ) {
-        new_len += rc;
-        lines_as_str[i] = as_str;
-      } else {
-        perror("Failed to allocate memory for line number as string");
-        exit(EXIT_FAILURE);
-      }
-    }
-  }
 
   /* Allocate the required space */
 
@@ -586,7 +559,7 @@ ssize_t lcfgderivation_to_string( const LCFGDerivation * drv,
 
   char * to = *result;
 
-  to = stpncpy( to, drv->file, file_len );
+  to = stpcpy( to, drv->file );
 
   if ( lcfgderivation_has_lines(drv) ) {
 
@@ -594,18 +567,17 @@ ssize_t lcfgderivation_to_string( const LCFGDerivation * drv,
     to++;
 
     unsigned int i;
+    unsigned int last = drv->lines_count - 1;
     for (i=0; i<drv->lines_count; i++ ) {
-      to = stpcpy( to, lines_as_str[i] );
-      free(lines_as_str[i]);
+      size_t inserted_len = sprintf( to, "%u", (drv->lines)[i] );
+      to += inserted_len;
 
-      if ( i < drv->lines_count - 1 ) {
+      if ( i < last ) {
         *to = ',';
         to++;
       }
     }
   }
-
-  free(lines_as_str);
 
   if ( options&LCFG_OPT_NEWLINE )
     to = stpncpy( to, "\n", 1 );
