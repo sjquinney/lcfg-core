@@ -715,40 +715,33 @@ LCFGStatus lcfgderivation_from_string( const char * input,
 
     /* Line numbers */
 
-    if ( *( sep + 1 ) != '\0' ) {
-      char * lines = strdup(sep+1);
-      const char * start = lines;
-      char * end = NULL;
-      while ( status != LCFG_STATUS_ERROR &&
-              ( end = strchr(start, ',' ) ) != NULL ) {
-        *end = '\0';
-        if ( uint_valid(start) ) {
-          unsigned int line = strtoul( start, NULL, 0 );
-          LCFGChange add_rc = lcfgderivation_merge_line( drv, line );
-          if ( LCFGChangeError(add_rc) ) {
-            lcfgutils_build_message( msg,
-                                     "Invalid derivation line number '%s'",
-                                     start );
-            status = LCFG_STATUS_ERROR;
-          }
-        }
-        start = end + 1;
-      }
+    const char * start = sep + 1;
+    while ( *start == ',' ) start++;
 
-      /* Any remaining line number */
+    char * end = NULL;
 
-      if ( status != LCFG_STATUS_ERROR && uint_valid(start) ) {
-        unsigned int line = strtoul( start, NULL, 0 );
+    while ( status != LCFG_STATUS_ERROR && !isempty(start) ) {
+
+      unsigned int line = strtoul( start, &end, 0 );
+
+      if ( start == end ) {
+        lcfgutils_build_message( msg,
+                                 "Invalid derivation line number '%s'",
+                                 start );
+        status = LCFG_STATUS_ERROR;
+      } else {
         LCFGChange add_rc = lcfgderivation_merge_line( drv, line );
         if ( LCFGChangeError(add_rc) ) {
           lcfgutils_build_message( msg,
                                    "Invalid derivation line number '%s'",
                                    start );
           status = LCFG_STATUS_ERROR;
+        } else {
+          start = end;
+          while ( *start == ',' ) start++;
         }
       }
 
-      free(lines);
     }
 
   } else {
