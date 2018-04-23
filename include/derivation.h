@@ -100,7 +100,7 @@ struct LCFGDerivationList {
   LCFGSListNode * head;   /**< The first derivation in the list */
   LCFGSListNode * tail;   /**< The last derivation in the list */
   unsigned int size;      /**< The length of the list */
-  unsigned long hash;     /**< Hash of stringified version of list */
+  unsigned long id;     /**< Hash of stringified version of list */
   /*@}*/
   unsigned int _refcount;
 };

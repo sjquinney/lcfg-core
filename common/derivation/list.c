@@ -42,7 +42,7 @@ LCFGDerivationList * lcfgderivlist_new(void) {
   drvlist->size      = 0;
   drvlist->head      = NULL;
   drvlist->tail      = NULL;
-  drvlist->hash      = 0;
+  drvlist->id        = 0;
   drvlist->_refcount = 1;
 
   return drvlist;
