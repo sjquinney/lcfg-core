@@ -179,7 +179,7 @@ bool lcfgderivation_is_shared( const LCFGDerivation * drv ) {
  * If a @c NULL value is passed for the original then this behaves the
  * same as @c lcfgderivation_new().
  *
- * @param[in] drv Pointer to @c LCFGDerivation
+ * @param[in] drv Pointer to original @c LCFGDerivation
  *
  * @return Reference to a new @c LCFGDerivation which is identical to original
  *
@@ -595,7 +595,11 @@ ssize_t lcfgderivation_to_string( const LCFGDerivation * drv,
  * generated string is written to the specified file stream which must
  * have already been opened for writing.
  *
+ * Any options specified will be passed to the @c
+ * lcfgderivation_to_string() function.
+ *
  * @param[in] drv Pointer to @c LCFGDerivation
+ * @param[in] options Integer for any additional options
  * @param[in] out Stream to which the derivation string should be written
  *
  * @return boolean indicating success
@@ -625,17 +629,6 @@ bool lcfgderivation_print( const LCFGDerivation * drv,
   free(as_str);
 
   return ok;
-}
-
-static bool uint_valid( const char * value ) {
-
-  bool valid = !isempty(value);
-
-  const char * ptr;
-  for ( ptr=value; valid && *ptr!='\0'; ptr++ )
-    if ( !isdigit(*ptr) ) valid = false;
-
-  return valid;
 }
 
 /**
