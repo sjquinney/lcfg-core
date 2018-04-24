@@ -1,3 +1,12 @@
+/**
+ * @file common/derivation/map.c
+ * @brief Functions for working with lists of LCFG derivations
+ * @author Stephen Quinney <squinney@inf.ed.ac.uk>
+ * @copyright 2018 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
+ * $Date$
+ * $Revision$
+ */
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
