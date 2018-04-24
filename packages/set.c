@@ -1029,7 +1029,7 @@ LCFGChange lcfgpkgset_from_rpmcfg( const char * filename,
  * @param[in] macros_file Optional file of CPP macros (may be @c NULL)
  * @param[in] incpath Optional list of include directories for CPP (may be @c NULL)
  * @param[in] options Controls the behaviour of the process.
- * @param[out] Reference to list of file dependencies
+ * @param[out] deps Reference to list of file dependencies
  * @param[out] msg Pointer to any diagnostic messages.
  *
  * @return Integer value indicating type of change
