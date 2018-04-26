@@ -103,13 +103,6 @@ LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
 				       char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
-				    LCFGPackage **result,
-				    const char * base_context,
-				    const char * base_derivation,
-				    char ** msg )
-  __attribute__((warn_unused_result));
-
 LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
 				     LCFGPackageSet ** active,
 				     LCFGPackageSet ** inactive,
