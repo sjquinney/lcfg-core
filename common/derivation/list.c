@@ -781,7 +781,6 @@ LCFGChange lcfgderivlist_merge_string_list( LCFGDerivationList * drvlist,
 ssize_t lcfgderivlist_to_string( const LCFGDerivationList * drvlist,
                                  LCFGOption options,
                                  char ** result, size_t * size ) {
-  assert( drvlist != NULL );
 
   size_t new_len = lcfgderivlist_get_string_length(drvlist);
 
