@@ -20,6 +20,26 @@
 
 #define LCFG_DRVMAP_DEFAULT_SIZE 1000
 
+/**
+  * @brief Create and initialise a new derivation map
+  *
+  * Creates a new @c LCFGDerivationMap and initialises the parameters
+  * to the default values.
+  *
+  * This is used as a fast lookup store for a set of @c
+  * LCFGDerivationList structures.
+  *
+  * If the memory allocation for the new structure is not successful
+  * the @c exit() function will be called with a non-zero value.
+  *
+  * The reference count for the structure is initialised to 1. To avoid
+  * memory leaks, when it is no longer required the
+  * @c lcfgderivmap_relinquish() function should be called.
+  *
+  * @return Pointer to new @c LCFGDerivationMap
+  *
+  */
+
 LCFGDerivationMap * lcfgderivmap_new(void) {
 
   LCFGDerivationMap * drvmap = calloc( 1, sizeof(LCFGDerivationMap) );
@@ -107,6 +127,7 @@ LCFGDerivationList * lcfgderivmap_find_or_insert_string(LCFGDerivationMap * drvm
   }
 
   if ( result == NULL ) {
+    /* Not previously stored, parse it and stash it now */
 
     if ( entry == drvmap->buckets ) {
 
@@ -121,11 +142,12 @@ LCFGDerivationList * lcfgderivmap_find_or_insert_string(LCFGDerivationMap * drvm
 
       drvmap->buckets     = new_size;
       drvmap->derivations = new_list;
+      derivations         = drvmap->derivations;
 
       /* initialise new entries */
       unsigned int i;
       for ( i=entry; i<drvmap->buckets; i++ )
-        (drvmap->derivations)[i] = NULL;
+        derivations[i] = NULL;
     }
 
     LCFGDerivationList * drvlist = NULL;
