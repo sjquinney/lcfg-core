@@ -769,7 +769,7 @@ LCFGChange lcfgderivlist_merge_string_list( LCFGDerivationList * drvlist,
  * size. To avoid memory leaks, call @c free(3) on the buffer when no
  * longer required. If an error occurs this function will return -1.
  *
- * @param[in] pkg Pointer to @c LCFGDerivationList
+ * @param[in] drvlist Pointer to @c LCFGDerivationList
  * @param[in] options Integer that controls formatting
  * @param[in,out] result Reference to the pointer to the string buffer
  * @param[in,out] size Reference to the size of the string buffer
