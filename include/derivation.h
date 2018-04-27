@@ -175,9 +175,8 @@ bool lcfgderivlist_print( const LCFGDerivationList * drvlist,
 
 struct LCFGDerivationMap {
   /*@{*/
-  LCFGSListNode * head;
-  LCFGSListNode * tail;
-  unsigned int size;
+  LCFGDerivationList ** derivations;
+  unsigned long buckets;
   /*@}*/
   unsigned int _refcount;
 };

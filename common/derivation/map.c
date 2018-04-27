@@ -18,17 +18,7 @@
 #include "derivation.h"
 #include "farmhash.h"
 
-static LCFGChange lcfgderivmap_insert_next( LCFGDerivationMap   * map,
-                                            LCFGSListNode       * node,
-                                            LCFGDerivationList  * item )
-  __attribute__((warn_unused_result));
-
-static LCFGChange lcfgderivmap_remove_next( LCFGDerivationMap   * map,
-                                            LCFGSListNode       * node,
-                                            LCFGDerivationList ** item )
-  __attribute__((warn_unused_result));
-
-#define lcfgderivmap_append(drvmap, drvlist) ( lcfgderivmap_insert_next( drvmap, lcfgslist_tail(drvmap), drvlist ) )
+#define LCFG_DRVMAP_DEFAULT_SIZE 1000
 
 LCFGDerivationMap * lcfgderivmap_new(void) {
 
@@ -40,10 +30,15 @@ LCFGDerivationMap * lcfgderivmap_new(void) {
 
   /* Default values */
 
-  drvmap->size      = 0;
-  drvmap->head      = NULL;
-  drvmap->tail      = NULL;
-  drvmap->_refcount = 1;
+  drvmap->buckets     = LCFG_DRVMAP_DEFAULT_SIZE;
+  drvmap->derivations = calloc( (size_t) drvmap->buckets,
+                                sizeof(LCFGDerivationList *) );
+  if ( drvmap->derivations == NULL ) {
+    perror( "Failed to allocate memory for LCFG derivations map" );
+    exit(EXIT_FAILURE);
+  }
+
+  drvmap->_refcount  = 1;
 
   return drvmap;
 }
@@ -52,17 +47,19 @@ void lcfgderivmap_destroy(LCFGDerivationMap * drvmap) {
 
   if ( drvmap == NULL ) return;
 
-  while ( lcfgslist_size(drvmap) > 0 ) {
-    LCFGDerivationList * drvlist = NULL;
-    if ( lcfgderivmap_remove_next( drvmap, NULL,
-                                   &drvlist ) == LCFG_CHANGE_REMOVED ) {
-      lcfgderivlist_relinquish(drvlist);
-    }
+  LCFGDerivationList ** derivations = drvmap->derivations;
+
+  unsigned int i;
+  for ( i=0; i<drvmap->buckets; i++ ) {
+    lcfgderivlist_relinquish( derivations[i] );
+    derivations[i] = NULL;
   }
+
+  free(drvmap->derivations);
+  drvmap->derivations = NULL;
 
   free(drvmap);
   drvmap = NULL;
-
 }
 
 void lcfgderivmap_acquire( LCFGDerivationMap * drvmap ) {
@@ -83,119 +80,6 @@ void lcfgderivmap_relinquish( LCFGDerivationMap * drvmap ) {
 
 }
 
-static LCFGChange lcfgderivmap_insert_next( LCFGDerivationMap  * list,
-                                            LCFGSListNode      * node,
-                                            LCFGDerivationList * item ) {
-  assert( list != NULL );
-  assert( item != NULL );
-
-  LCFGSListNode * new_node = lcfgslistnode_new(item);
-  if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
-
-  lcfgderivlist_acquire(item);
-
-  if ( node == NULL ) { /* HEAD */
-
-    if ( lcfgslist_is_empty(list) )
-      list->tail = new_node;
-
-    new_node->next = list->head;
-    list->head     = new_node;
-
-  } else {
-
-    if ( node->next == NULL )
-      list->tail = new_node;
-
-    new_node->next = node->next;
-    node->next     = new_node;
-
-  }
-
-  list->size++;
-
-  return LCFG_CHANGE_ADDED;
-}
-
-static LCFGChange lcfgderivmap_remove_next( LCFGDerivationMap   * list,
-                                            LCFGSListNode       * node,
-                                            LCFGDerivationList ** item ) {
-  assert( list != NULL );
-
-  if ( lcfgslist_is_empty(list) ) return LCFG_CHANGE_NONE;
-
-  LCFGSListNode * old_node = NULL;
-
-  if ( node == NULL ) { /* HEAD */
-
-    old_node   = list->head;
-    list->head = list->head->next;
-
-    if ( lcfgslist_size(list) == 1 )
-      list->tail = NULL;
-
-  } else {
-
-    if ( node->next == NULL ) return LCFG_CHANGE_ERROR;
-
-    old_node   = node->next;
-    node->next = node->next->next;
-
-    if ( node->next == NULL )
-      list->tail = node;
-
-  }
-
-  list->size--;
-
-  *item = lcfgslist_data(old_node);
-
-  lcfgslistnode_destroy(old_node);
-
-  return LCFG_CHANGE_REMOVED;
-}
-
-LCFGSListNode * lcfgderivmap_find_node( const LCFGDerivationMap * drvmap,
-                                        uint64_t want_id ) {
-
-  if ( lcfgslist_is_empty(drvmap) ) return NULL;
-
-  LCFGSListNode * result = NULL;
-
-  LCFGSListNode * cur_node = NULL;
-  for ( cur_node = lcfgslist_head(drvmap);
-        cur_node != NULL && result == NULL;
-        cur_node = lcfgslist_next(cur_node) ) {
-
-    const LCFGDerivationList * drvlist = lcfgslist_data(cur_node);
-
-    if ( drvlist != NULL && drvlist->id == want_id )
-      result = cur_node;
-
-  }
-
-  return result;
-}
-
-LCFGDerivationList * lcfgderivmap_find_derivation(
-                                              const LCFGDerivationMap * drvmap,
-                                              uint64_t want_id ) {
-
-  LCFGDerivationList * drvlist = NULL;
-
-  const LCFGSListNode * node = lcfgderivmap_find_node( drvmap, want_id );
-  if ( node != NULL )
-    drvlist = lcfgslist_data(node);
-
-  return drvlist;
-}
-
-bool lcfgderivmap_contains( const LCFGDerivationMap * drvmap,
-                            uint64_t want_id ) {
-
-  return ( lcfgderivmap_find_node( drvmap, want_id ) != NULL );
-}
-
 LCFGDerivationList * lcfgderivmap_find_or_insert_string(LCFGDerivationMap * drvmap,
                                                         const char * deriv_as_str,
                                                         char ** msg ) {
@@ -210,26 +94,52 @@ LCFGDerivationList * lcfgderivmap_find_or_insert_string(LCFGDerivationMap * drvm
   size_t len = strlen(deriv_as_str);
   uint64_t id = farmhash64( deriv_as_str, len );
 
-  LCFGDerivationList * drvlist = lcfgderivmap_find_derivation( drvmap, id );
+  LCFGDerivationList ** derivations = drvmap->derivations;
 
-  if ( drvlist != NULL ) {
-    result = drvlist;
-  } else {
-    bool ok = false;
+  unsigned int entry;
+  for ( entry=0; result == NULL && entry<drvmap->buckets; entry++ ) {
+
+    if ( !derivations[entry] )
+      break;
+    else if ( derivations[entry]->id == id )
+      result = derivations[entry];
+
+  }
+
+  if ( result == NULL ) {
+
+    if ( entry == drvmap->buckets ) {
+
+      size_t new_size = drvmap->buckets * 2;
+      LCFGDerivationList ** new_list =
+        realloc( drvmap->derivations,
+                 new_size * sizeof(LCFGDerivationList *) );
+      if ( new_list == NULL ) {
+        perror( "Failed to reallocate memory for LCFG derivation map" );
+        exit(EXIT_FAILURE);
+      }
+
+      drvmap->buckets     = new_size;
+      drvmap->derivations = new_list;
+
+      /* initialise new entries */
+      unsigned int i;
+      for ( i=entry; i<drvmap->buckets; i++ )
+        (drvmap->derivations)[i] = NULL;
+    }
+
+    LCFGDerivationList * drvlist = NULL;
     LCFGStatus parse_rc = lcfgderivlist_from_string( deriv_as_str,
                                                      &drvlist, msg );
 
     if ( parse_rc != LCFG_STATUS_ERROR && !lcfgderivlist_is_empty(drvlist) ) {
       drvlist->id = id;
-
-      LCFGChange append_rc = lcfgderivmap_append( drvmap, drvlist );
-      ok = LCFGChangeOK(append_rc);
-      if (ok)
-        result = drvlist;
-
+      derivations[entry] = drvlist;
+      result = drvlist;
+    } else {
+      lcfgderivlist_relinquish(drvlist);
     }
 
-    lcfgderivlist_relinquish(drvlist);
   }
 
   return result;
