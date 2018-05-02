@@ -173,10 +173,15 @@ bool lcfgderivlist_print( const LCFGDerivationList * drvlist,
 
 /* Mapping of lists to IDs */
 
+#define LCFG_DRVMAP_DEFAULT_SIZE 1999
+#define LCFG_DRVMAP_LOAD_INIT 0.5
+#define LCFG_DRVMAP_LOAD_MAX  0.7
+
 struct LCFGDerivationMap {
   /*@{*/
   LCFGDerivationList ** derivations;
   unsigned long buckets;
+  unsigned long entries;
   /*@}*/
   unsigned int _refcount;
 };
@@ -186,6 +191,10 @@ typedef struct LCFGDerivationMap LCFGDerivationMap;
 LCFGDerivationMap * lcfgderivmap_new(void);
 void lcfgderivmap_acquire( LCFGDerivationMap * drvmap );
 void lcfgderivmap_relinquish( LCFGDerivationMap * drvmap );
+LCFGChange lcfgdrvmap_insert_list( LCFGDerivationMap * drvmap,
+                                   LCFGDerivationList * drvlist,
+                                   char ** msg )
+  __attribute__((warn_unused_result));
 LCFGDerivationList * lcfgderivmap_find_or_insert_string(
                                            LCFGDerivationMap * drvmap,
                                            const char * deriv_as_str,

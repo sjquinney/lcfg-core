@@ -18,7 +18,70 @@
 #include "derivation.h"
 #include "farmhash.h"
 
-#define LCFG_DRVMAP_DEFAULT_SIZE 1000
+static double lcfgderivmap_load_factor( const LCFGDerivationMap * drvmap ) {
+  return ( (double) drvmap->entries / (double) drvmap->buckets );
+}
+
+static void lcfgderivmap_resize( LCFGDerivationMap * drvmap ) {
+
+  double load_factor = lcfgderivmap_load_factor(drvmap);
+
+  size_t want_buckets = drvmap->buckets;
+  if ( load_factor >= LCFG_DRVMAP_LOAD_MAX ) {
+    want_buckets = (size_t) 
+      ( (double) drvmap->entries / LCFG_DRVMAP_LOAD_INIT ) + 1;
+  }
+
+  LCFGDerivationList ** cur_set = drvmap->derivations;
+  size_t cur_buckets = drvmap->buckets;
+
+  /* Decide if a resize is actually required */
+
+  if ( cur_set != NULL && want_buckets <= cur_buckets ) return;
+
+  /* Resize the hash */
+
+  LCFGDerivationList ** new_set = calloc( (size_t) want_buckets,
+                                          sizeof(LCFGDerivationList *) );
+  if ( new_set == NULL ) {
+    perror( "Failed to allocate memory for LCFG derivations map" );
+    exit(EXIT_FAILURE);
+  }
+
+  drvmap->derivations = new_set;
+  drvmap->entries     = 0;
+  drvmap->buckets     = want_buckets;
+
+  if ( cur_set != NULL ) {
+
+    unsigned long i;
+    for ( i=0; i<cur_buckets; i++ ) {
+      LCFGDerivationList * drvlist = cur_set[i];
+
+      if ( !lcfgderivlist_is_empty(drvlist) ) {
+
+        char * insert_msg = NULL;
+
+        LCFGChange insert_rc =
+          lcfgdrvmap_insert_list( drvmap, drvlist, &insert_msg );
+
+        if ( insert_rc == LCFG_CHANGE_ERROR ) {
+          fprintf( stderr, "Failed to resize derivation map: %s\n", insert_msg );
+          free(insert_msg);
+          exit(EXIT_FAILURE);
+        }
+
+        free(insert_msg);
+      }
+
+      lcfgderivlist_relinquish(drvlist);
+      cur_set[i] = NULL;
+    }
+
+    free(cur_set);
+  }
+
+}
 
 /**
   * @brief Create and initialise a new derivation map
@@ -50,15 +113,12 @@ LCFGDerivationMap * lcfgderivmap_new(void) {
 
   /* Default values */
 
+  drvmap->derivations = NULL;
+  drvmap->entries     = 0;
   drvmap->buckets     = LCFG_DRVMAP_DEFAULT_SIZE;
-  drvmap->derivations = calloc( (size_t) drvmap->buckets,
-                                sizeof(LCFGDerivationList *) );
-  if ( drvmap->derivations == NULL ) {
-    perror( "Failed to allocate memory for LCFG derivations map" );
-    exit(EXIT_FAILURE);
-  }
+  drvmap->_refcount   = 1;
 
-  drvmap->_refcount  = 1;
+  lcfgderivmap_resize(drvmap);
 
   return drvmap;
 }
@@ -69,10 +129,12 @@ void lcfgderivmap_destroy(LCFGDerivationMap * drvmap) {
 
   LCFGDerivationList ** derivations = drvmap->derivations;
 
-  unsigned int i;
+  unsigned long i;
   for ( i=0; i<drvmap->buckets; i++ ) {
-    lcfgderivlist_relinquish( derivations[i] );
-    derivations[i] = NULL;
+    if ( derivations[i] ) {
+      lcfgderivlist_relinquish( derivations[i] );
+      derivations[i] = NULL;
+    }
   }
 
   free(drvmap->derivations);
@@ -100,55 +162,109 @@ void lcfgderivmap_relinquish( LCFGDerivationMap * drvmap ) {
 
 }
 
+LCFGChange lcfgdrvmap_insert_list( LCFGDerivationMap * drvmap,
+                                   LCFGDerivationList * drvlist,
+                                   char ** msg ) {
+  assert( drvmap != NULL );
+
+  if ( lcfgderivlist_is_empty(drvlist) ) return LCFG_CHANGE_NONE;
+
+  uint64_t id = drvlist->id;
+  unsigned long hash = id % drvmap->buckets;
+
+  LCFGDerivationList ** derivations = drvmap->derivations;
+
+  bool done = false;
+  unsigned long i, slot;
+  for ( i = hash; !done && i < drvmap->buckets; i++ ) {
+
+    if ( !derivations[i] || derivations[i]->id == id ) {
+      done = true;
+      slot = i;
+    }
+
+  }
+
+  for ( i = 0; !done && i < hash; i++ ) {
+
+    if ( !derivations[i] || derivations[i]->id == id ) {
+      done = true;
+      slot = i;
+    }
+
+  }
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+
+  if ( !done ) {
+    lcfgutils_build_message( msg,
+                             "No free space for new entries in derivation map" );
+    change = LCFG_CHANGE_ERROR;
+  } else if ( derivations[slot] ) {
+
+    LCFGDerivationList * old_drvlist = derivations[slot];
+    lcfgderivlist_acquire(drvlist);
+    derivations[slot] = drvlist;
+    lcfgderivlist_relinquish(old_drvlist);
+    change = LCFG_CHANGE_REPLACED;
+
+  } else {
+
+    lcfgderivlist_acquire(drvlist);
+    derivations[slot] = drvlist;
+    change = LCFG_CHANGE_ADDED;
+
+    drvmap->entries += 1;
+    lcfgderivmap_resize(drvmap);
+  }
+
+  return change;
+}
+  
 LCFGDerivationList * lcfgderivmap_find_or_insert_string(LCFGDerivationMap * drvmap,
                                                         const char * deriv_as_str,
                                                         char ** msg ) {
   assert( drvmap != NULL );
-  LCFGDerivationList * result = NULL;
 
   if ( isempty(deriv_as_str) ) {
     lcfgutils_build_message( msg, "Empty derivation" );
-    return result;
+    return NULL;
   }
 
   size_t len = strlen(deriv_as_str);
   uint64_t id = farmhash64( deriv_as_str, len );
+  unsigned long hash = id % drvmap->buckets;
 
   LCFGDerivationList ** derivations = drvmap->derivations;
 
-  unsigned int entry;
-  for ( entry=0; result == NULL && entry<drvmap->buckets; entry++ ) {
+  bool done = false;
+  unsigned long i, slot;
+  for ( i = hash; !done && i < drvmap->buckets; i++ ) {
 
-    if ( !derivations[entry] )
-      break;
-    else if ( derivations[entry]->id == id )
-      result = derivations[entry];
+    if ( !derivations[i] || derivations[i]->id == id ) {
+      done = true;
+      slot = i;
+    }
 
   }
 
-  if ( result == NULL ) {
-    /* Not previously stored, parse it and stash it now */
+  for ( i = 0; !done && i < hash; i++ ) {
 
-    if ( entry == drvmap->buckets ) {
-
-      size_t new_size = drvmap->buckets * 2;
-      LCFGDerivationList ** new_list =
-        realloc( drvmap->derivations,
-                 new_size * sizeof(LCFGDerivationList *) );
-      if ( new_list == NULL ) {
-        perror( "Failed to reallocate memory for LCFG derivation map" );
-        exit(EXIT_FAILURE);
-      }
-
-      drvmap->buckets     = new_size;
-      drvmap->derivations = new_list;
-      derivations         = drvmap->derivations;
-
-      /* initialise new entries */
-      unsigned int i;
-      for ( i=entry; i<drvmap->buckets; i++ )
-        derivations[i] = NULL;
+    if ( !derivations[i] || derivations[i]->id == id ) {
+      done = true;
+      slot = i;
     }
+
+  }
+
+  LCFGDerivationList * result = NULL;
+
+  if ( !done ) {
+    lcfgutils_build_message( msg,
+                             "No free space for new entries in derivation map" );
+  } else if ( derivations[slot] ) {
+    result = derivations[slot];
+  } else {
 
     LCFGDerivationList * drvlist = NULL;
     LCFGStatus parse_rc = lcfgderivlist_from_string( deriv_as_str,
@@ -156,7 +272,11 @@ LCFGDerivationList * lcfgderivmap_find_or_insert_string(LCFGDerivationMap * drvm
 
     if ( parse_rc != LCFG_STATUS_ERROR && !lcfgderivlist_is_empty(drvlist) ) {
       drvlist->id = id;
-      derivations[entry] = drvlist;
+      derivations[slot] = drvlist;
+
+      drvmap->entries += 1;
+      lcfgderivmap_resize(drvmap);
+
       result = drvlist;
     } else {
       lcfgderivlist_relinquish(drvlist);
