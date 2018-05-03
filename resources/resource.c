@@ -2211,7 +2211,7 @@ ssize_t lcfgresource_get_priority_as_string( const LCFGResource * res,
   /* Build the new string */
 
   int rc =
-    snprintf( *result, new_len, "%d", lcfgresource_get_priority(res) );
+    snprintf( *result, new_len + 1, "%d", lcfgresource_get_priority(res) );
 
   assert( rc > 0 && (size_t) rc == new_len );
 
