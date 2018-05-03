@@ -1,6 +1,282 @@
-2018-03-06  SVN: new release
+2018-05-03  SVN: new release
 
-	* Release: 1.49.0
+	* Release: 1.50.0
+
+2018-05-03 09:50  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, include/packages.h, include/resources.h, lcfg.yml,
+	  packages/container.c, packages/list.c, packages/package.c,
+	  packages/rpm.c, resources/resource.c, xml/packages.c,
+	  xml/resource.c: ** The derivations release **
+	  
+	  This is a complete rewrite of the derivations handling for both
+	  resources and packages. Instead of just treating them as single
+	  strings they are now represented using structures. This is used
+	  as in
+	  the parsing of LCFG header and package list files. As many
+	  packages
+	  have huge long derivations and they are often shared between many
+	  packages some effort has been put into improving efficiency by
+	  only
+	  parsing and storing the structures where absolutely necessary.
+
+2018-05-03 09:45  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c: fixed docs for lcfgdrvmap_insert_list
+
+2018-05-03 09:39  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c, include/derivation.h: Finished docs for
+	  LCFGDerivationMap API
+
+2018-05-02 14:20  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c, include/derivation.h: Reworked map as a
+	  proper hash for speed
+
+2018-04-27 14:32  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c: Fixed stashing of derivations
+
+2018-04-27 13:12  squinney@INF.ED.AC.UK
+
+	* TODO.md, common/derivation/map.c, include/derivation.h: Reworked
+	  derivations map to use an array which should be faster for
+	  searching
+
+2018-04-27 09:05  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: Fixed minor doc error
+
+2018-04-27 09:01  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: Removed an unnecessary assert from
+	  lcfgderivlist_to_string
+
+2018-04-26 12:47  squinney@INF.ED.AC.UK
+
+	* include/xml.h: no need to have lcfgxml_process_package be public
+
+2018-04-24 15:30  squinney@INF.ED.AC.UK
+
+	* packages/set.c: minor doc fix
+
+2018-04-24 14:28  squinney@INF.ED.AC.UK
+
+	* Doxyfile.in: warn about missing param docs
+
+2018-04-24 14:28  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: Added API docs
+
+2018-04-24 12:49  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: minor doc tweaks
+
+2018-04-24 12:49  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c: Added doc header and enabled some svn
+	  keywords
+
+2018-04-23 17:16  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c: minor tweaks to logic in
+	  lcfgderivmap_find_or_insert_string so that it doesn't cache any
+	  empty list
+
+2018-04-23 16:06  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt: use minimum of gnu99 C standard
+
+2018-04-23 16:05  squinney@INF.ED.AC.UK
+
+	* packages/ex/qxpack.c: Updated for latest API. Also ensure no
+	  memory is leaked
+
+2018-04-23 16:04  squinney@INF.ED.AC.UK
+
+	* common/CMakeLists.txt: include derivation/map.c in sources list
+
+2018-04-23 16:03  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: no longer need _GNU_SOURCE to be
+	  defined
+
+2018-04-23 15:58  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: massively improved performance of
+	  to_string by removing need for asprintf
+
+2018-04-23 15:17  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: Avoid an unnecessary copy when
+	  processing the line numbers for a derivation
+
+2018-04-23 13:07  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c, include/derivation.h: Added simple
+	  mapping of derivation lists to ID strings
+
+2018-04-23 12:46  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c, include/derivation.h: Use 'id' for
+	  field name instead of hash to make it clearer that it could be
+	  anything
+
+2018-04-23 09:38  squinney@INF.ED.AC.UK
+
+	* include/farmhash.h: Included support for FarmHash which is a
+	  modern fast hashing algorithm from google
+
+2018-04-23 09:33  squinney@INF.ED.AC.UK
+
+	* common/CMakeLists.txt, common/farmhash,
+	  common/farmhash/farmhash.c: Included support for FarmHash which
+	  is a modern fast hashing algorithm from google
+
+2018-04-23 09:25  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: removed const since list of lines will
+	  be sorted for derivation when printed
+
+2018-04-15 17:58  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: minor doc tweak
+
+2018-04-15 17:43  squinney@INF.ED.AC.UK
+
+	* packages/set.c: if merging a package spec results in there being
+	  no packages left with that name (i.e. for a '-' prefix) then drop
+	  the associated (now empty) package list
+
+2018-04-06 18:08  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: sort list of lines for each file before
+	  emitting string so the output is consistent
+
+2018-04-06 17:59  squinney@INF.ED.AC.UK
+
+	* packages/set.c: reworked lcfgpkgset_merge_package which didn't
+	  work properly when parsing package lists and using prefixes
+
+2018-04-06 12:34  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: Completed docs
+
+2018-04-06 09:48  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c, include/derivation.h: tweaked spec for
+	  lcfgderivlist_get_string_length
+
+2018-04-05 18:19  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: Further work to reduce the amount of
+	  memory used when manipulating lists of derivations
+
+2018-04-05 15:32  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c, common/derivation/list.c:
+	  Copy-on-write support for merging derivations
+
+2018-04-05 11:42  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: cloning a NULL list will now return an
+	  empty one
+
+2018-04-05 11:41  squinney@INF.ED.AC.UK
+
+	* include/derivation.h: Added support for cloning
+
+2018-04-05 11:41  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: Added support for cloning
+
+2018-04-03 15:38  squinney@INF.ED.AC.UK
+
+	* packages/set.c: Error message mentioned resource when it should
+	  be package
+
+2018-04-03 15:38  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Error message mentioned resource when it should
+	  be package
+
+2018-04-03 14:55  squinney@INF.ED.AC.UK
+
+	* include/derivation.h: fixed inclusion of headers from lcfg-core
+
+2018-04-03 11:58  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: Just changed some variable names for clarity
+
+2018-04-03 09:43  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, include/resources.h, resources/resource.c: Reworked
+	  APIs for lcfgresource_get_priority_as_string and
+	  lcfgresource_get_template_as_string. The aim is to eventually
+	  make all stringify functions consistent
+
+2018-04-03 09:41  squinney@INF.ED.AC.UK
+
+	* common/CMakeLists.txt: fixed builds where soure and binary dirs
+	  are different
+
+2018-04-02 15:49  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c, include/derivation.h: Added
+	  lcfgderivlist_get_string_length, tidied stringification
+
+2018-04-02 14:26  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: Minor fixes
+
+2018-04-02 13:22  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c, common/derivation/list.c,
+	  include/derivation.h: Added lcfgderivlist_merge_file_line and
+	  lcfgderivlist_merge_string_list
+
+2018-03-21 16:03  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec: Enabled hardened builds
+
+2018-03-09 16:42  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c, include/derivation.h: Added support for
+	  merging lists of derivations
+
+2018-03-09 12:04  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, bdb/CMakeLists.txt, common,
+	  common/CMakeLists.txt, common/context,
+	  common/context/CMakeLists.txt, common/context/context.c,
+	  common/derivation, common/derivation/derivation.c,
+	  common/derivation/list.c, context, derivation,
+	  docs/c-programmers-guide.tex, include/derivation.h,
+	  lcfg-core.spec, lcfg.yml, packages/CMakeLists.txt,
+	  pc/lcfg-common.pc.in, pc/lcfg-context.pc.in,
+	  pc/lcfg-packages.pc.in, pc/lcfg-resources.pc.in,
+	  resources/CMakeLists.txt, xml/CMakeLists.txt: To avoid a
+	  proliferation of small libraries which are needed for both
+	  resources and packages the 'context' library is renamed as
+	  'common' and the new derivation support is merged into that
+	  library
+
+2018-03-09 11:02  squinney@INF.ED.AC.UK
+
+	* derivation, derivation/derivation.c, derivation/list.c: Added dir
+	  for derivation sources
+
+2018-03-07 09:17  squinney@INF.ED.AC.UK
+
+	* context/context.c, lcfg.yml, packages/package.c, packages/rpm.c,
+	  resources/diff.c, resources/resource.c, resources/tags/list.c,
+	  resources/templates.c: Minor safety improvements for calls to
+	  realloc to resize strings
+
+2018-03-06 10:49  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.49.0
 
 2018-03-06 10:41  squinney@INF.ED.AC.UK
 
