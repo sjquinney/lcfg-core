@@ -5,7 +5,7 @@ author:
 base: ~
 build: 
   gencmake: 0
-date: 03/05/18 09:50:27
+date: 03/05/18 13:00:46
 group: LCFG
 license: GPLv2
 name: lcfg-core
@@ -22,4 +22,4 @@ vcs:
   logname: ChangeLog
   store_version: 1
 vendor: University of Edinburgh
-version: 1.50.0
+version: 1.50.1

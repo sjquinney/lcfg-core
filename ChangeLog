@@ -1,6 +1,16 @@
 2018-05-03  SVN: new release
 
-	* Release: 1.50.0
+	* Release: 1.50.1
+
+2018-05-03 11:49  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Fixed call to snprintf in
+	  lcfgresource_get_priority_as_string so that the length includes
+	  the terminating nul
+
+2018-05-03 09:50  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.0
 
 2018-05-03 09:50  squinney@INF.ED.AC.UK
 
