@@ -15,6 +15,7 @@
 #include <time.h>
 
 #include "common.h"
+#include "derivation.h"
 #include "context.h"
 #include "utils.h"
 
@@ -36,7 +37,7 @@ struct LCFGPackage {
   char * release;    /**< Release (not used on all platforms) */
   char * flags;      /**< Flags - controls behaviour of package tool (e.g. updaterpms) */
   char * context;    /**< Context expression - when this package is applicable */
-  char * derivation; /**< Derivation - where this package was specified */
+  LCFGDerivationList * derivation; /**< Derivation - where this package was specified */
   char * category;   /**< Category - group to which this package belongs */
   char prefix;       /**< Prefix - primary merge conflict resolution for multiple specifications (single alpha-numeric character) */
   int priority;      /**< Priority - result of evaluating context expression, secondary merge conflict resolution */
@@ -156,13 +157,33 @@ bool lcfgpackage_add_context( LCFGPackage * pkg,
 
 bool lcfgpackage_has_derivation( const LCFGPackage * pkg );
 
-const char * lcfgpackage_get_derivation( const LCFGPackage * pkg );
-
-bool lcfgpackage_set_derivation( LCFGPackage * pkg, char * new_value )
+LCFGDerivationList * lcfgpackage_get_derivation( const LCFGPackage * pkg );
+ssize_t lcfgpackage_get_derivation_as_string( const LCFGPackage * pkg,
+                                              LCFGOption options,
+                                              char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
-bool lcfgpackage_add_derivation( LCFGPackage * pkg,
-                                 const char * extra_deriv )
+size_t lcfgpackage_get_derivation_length( const LCFGPackage * pkg );
+
+bool lcfgpackage_set_derivation( LCFGPackage * pkg,
+                                 LCFGDerivationList * new_deriv )
+  __attribute__((warn_unused_result));
+
+bool lcfgpackage_set_derivation_as_string( LCFGPackage * pkg,
+                                           const char * new_value )
+  __attribute__((warn_unused_result));
+
+bool lcfgpackage_add_derivation_string( LCFGPackage * pkg,
+                                        const char * extra_deriv )
+  __attribute__((warn_unused_result));
+
+bool lcfgpackage_add_derivation_file_line( LCFGPackage * res,
+                                           const char * filename,
+                                           int line )
+  __attribute__((warn_unused_result));
+
+bool lcfgpackage_merge_derivation( LCFGPackage * pkg1,
+                                   const LCFGPackage * pkg2 )
   __attribute__((warn_unused_result));
 
 /* Category */
@@ -476,9 +497,9 @@ LCFGPackage * lcfgpkgiter_next(LCFGPackageIterator * iterator);
 
 struct LCFGPackageSet {
   /*@{*/
-  LCFGPackageList ** packages;
-  unsigned long buckets;
-  unsigned long entries;
+  LCFGPackageList ** packages; /**< Array of package lists */
+  unsigned long buckets;       /**< Array of derivation lists */
+  unsigned long entries;       /**< Number of full buckets in map */
   LCFGPkgListPK primary_key; /**< Controls which package fields are used as primary key */
   LCFGMergeRule merge_rules; /**< Rules which control how packages are merged */
   /*@}*/
@@ -593,10 +614,14 @@ LCFGPackageSet * lcfgpkgset_match( const LCFGPackageSet * pkgset,
                                    const char * want_ver,
                                    const char * want_rel );
 
+/**
+ * @brief Iterator for package sets
+ */
+
 struct LCFGPkgSetIterator {
-  LCFGPackageSet * set;
-  LCFGPackageIterator * listiter;
-  long current;
+  LCFGPackageSet * set;           /**< Pointer to the package set */
+  LCFGPackageIterator * listiter; /**< Package list iterator */
+  long current;                   /**< Current location in the set */
 };
 typedef struct LCFGPkgSetIterator LCFGPkgSetIterator;
 

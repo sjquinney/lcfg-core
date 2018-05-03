@@ -313,7 +313,7 @@ ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_TOSTR_ARGS ) {
 
     char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
     if ( new_buf == NULL ) {
-      perror("Failed to allocate memory for LCFG resource string");
+      perror("Failed to allocate memory for LCFG package string");
       exit(EXIT_FAILURE);
     } else {
       *result = new_buf;
@@ -901,17 +901,13 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
     } else {
 
       if ( include_meta ) {
-        /* Simplest to use asprintf here since we have an unsigned int */
-        char * derivation = NULL;
-        int rc = asprintf( &derivation, "%s:%u", filename, linenum );
-        if ( rc < 0 || derivation == NULL ) {
-          perror( "Failed to build LCFG derivation string" );
-          exit(EXIT_FAILURE);
-        }
 
-        /* Ignore any problem with setting the derivation */
-        if ( !lcfgpackage_set_derivation( pkg, derivation ) )
-          free(derivation);
+        /* Generate a new derivation for the current filename and
+           current line number */
+
+        /* Ignoring any problem with setting the derivation */
+
+        (void) lcfgpackage_add_derivation_file_line( pkg, filename, linenum );
       }
 
       char * merge_msg = NULL;
@@ -1061,17 +1057,12 @@ LCFGStatus lcfgpkgset_from_rpmlist( const char * filename,
     } else {
 
       if ( include_meta ) {
-        /* Simplest to use asprintf here since we have an unsigned int */
-        char * derivation = NULL;
-        int rc = asprintf( &derivation, "%s:%u", filename, linenum );
-        if ( rc < 0 || derivation == NULL ) {
-          perror( "Failed to build LCFG derivation string" );
-          exit(EXIT_FAILURE);
-        }
+        /* Generate a new derivation for the current filename and
+           current line number */
 
-        /* Ignore any problem with setting the derivation */
-        if ( !lcfgpackage_set_derivation( pkg, derivation ) )
-          free(derivation);
+        /* Ignoring any problem with setting the derivation */
+
+        (void) lcfgpackage_add_derivation_file_line( pkg, filename, linenum );
       }
 
       char * merge_msg = NULL;

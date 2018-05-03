@@ -101,6 +101,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
   /* This is used (and reused) as a buffer for all the resource keys
      to avoid allocating and freeing lots of memory. */
 
+  ssize_t key_len = 0;
   size_t key_size = 64;
   char * key_buf = calloc( key_size, sizeof(char) );
   if ( key_buf == NULL ) {
@@ -108,7 +109,13 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
     exit(EXIT_FAILURE);
   }
 
-  ssize_t key_len = 0;
+  ssize_t val_len = 0;
+  size_t val_size = 16384;
+  char * val_buf = calloc( val_size, sizeof(char) );
+  if ( val_buf == NULL ) {
+    perror("Failed to allocate memory for data buffer");
+    exit(EXIT_FAILURE);
+  }
 
   int ret;
   DBT key, data;
@@ -148,12 +155,21 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       key.data = key_buf;
       key.size = (u_int32_t) key_len;
 
-      const char * deriv = lcfgresource_get_derivation(resource);
+      val_len = lcfgresource_get_derivation_as_string( resource, LCFG_OPT_NONE,
+                                                       &val_buf, &val_size );
 
-      data.data = (char *) deriv;
-      data.size = (u_int32_t) strlen(deriv);
+      if ( val_len <= 0 ) {
+	status = LCFG_STATUS_ERROR;
+	*msg = lcfgresource_build_message( resource, compname,
+					   "Failed to build derivation value");
+	break;
+      }
+
+      data.data = val_buf;
+      data.size = (u_int32_t) val_len;
 
       ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
+
       if ( ret != 0 ) {
         status = LCFG_STATUS_ERROR;
         lcfgutils_build_message( msg, "Failed to store resource derivation data: %s\n",
@@ -187,14 +203,20 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       key.data = key_buf;
       key.size = (u_int32_t) key_len;
 
-      char * type_as_str =
-        lcfgresource_get_type_as_string( resource, LCFG_OPT_NONE );
-      data.data = type_as_str;
-      data.size = (u_int32_t) strlen(type_as_str);
+      val_len = lcfgresource_get_type_as_string( resource, LCFG_OPT_NONE,
+                                                 &val_buf, &val_size );
+
+      if ( val_len <= 0 ) {
+	status = LCFG_STATUS_ERROR;
+	*msg = lcfgresource_build_message( resource, compname,
+					   "Failed to build type value");
+	break;
+      }
+
+      data.data = val_buf;
+      data.size = (u_int32_t) val_len;
 
       ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
-
-      free(type_as_str);
 
       if ( ret != 0 ) {
         status = LCFG_STATUS_ERROR;
@@ -270,25 +292,19 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       key.data = key_buf;
       key.size = (u_int32_t) key_len;
 
-      size_t prio_size = 0;
-      char * prio_as_str = NULL;
-      ssize_t prio_len =
-        lcfgresource_get_priority_as_string( resource, LCFG_OPT_NONE,
-                                             &prio_as_str, &prio_size );
+      val_len = lcfgresource_get_priority_as_string( resource, LCFG_OPT_NONE,
+                                                     &val_buf, &val_size );
 
-      if ( prio_len <= 0 ) {
-        free(prio_as_str);
+      if ( val_len <= 0 ) {
         status = LCFG_STATUS_ERROR;
         lcfgutils_build_message( msg, "Failed to build priority value" );
         break;
       }
 
-      data.data = prio_as_str;
-      data.size = (u_int32_t) prio_len;
+      data.data = val_buf;
+      data.size = (u_int32_t) val_len;
 
       ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
-
-      free(prio_as_str);
 
       if ( ret != 0 ) {
         status = LCFG_STATUS_ERROR;
@@ -321,11 +337,18 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
     key.data = key_buf;
     key.size = (u_int32_t) key_len;
 
-    const char * value = lcfgresource_has_value(resource) ?
-                         lcfgresource_get_value(resource) : "";
+    const char * value;
+    size_t value_len;
+    if ( lcfgresource_has_value(resource) ) {
+      value     = lcfgresource_get_value(resource);
+      value_len = strlen(value);
+    } else {
+      value     = "";
+      value_len = 0;
+    }
 
     data.data = (char *) value;
-    data.size = (u_int32_t) strlen(value);
+    data.size = (u_int32_t) value_len;
 
     ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
 
@@ -358,7 +381,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
     lcfgtaglist_sort(stored_res);
 
     ssize_t len = lcfgtaglist_to_string( stored_res, LCFG_OPT_NONE,
-                                         &key_buf, &key_size );
+                                         &val_buf, &val_size );
 
     if ( len > 0 ) {
 
@@ -368,7 +391,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       key.data = (char *) compname;
       key.size = (u_int32_t) strlen(compname);
 
-      data.data = key_buf;
+      data.data = val_buf;
       data.size = (u_int32_t) len;
 
       int ret = dbh->put( dbh, NULL, &key, &data, DB_OVERWRITE_DUP );
@@ -388,6 +411,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
 
   lcfgtaglist_relinquish(stored_res);
   free(key_buf);
+  free(val_buf);
 
   return status;
 }

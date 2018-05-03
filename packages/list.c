@@ -513,8 +513,10 @@ ue
  *   - @c +  Add package to list, replace any existing package of same name/arch
  *   - @c =  Similar to @c + but "pins" the version so it cannot be overridden
  *   - @c -  Remove any package from list which matches this name/arch
- *   - @c ?  Replace any existing package in list which matches this name/arch
+ *   - @c ?  Replace existing package in list which matches this name/arch if not pinned
  *   - @c ~  Add package to list if name/arch is not already present
+ *
+ * When prefix mutations occur any derivations for the packages will be merged.
  *
  * <b>Squash identical</b>: If the packages are the same, according to the
  * @c lcfgpackage_equals() function (which compares name,
@@ -638,7 +640,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 	  accept = true;
 	  break;
 	case '?':
-	  if ( cur_pkg != NULL ) {
+	  if ( cur_pkg != NULL && cur_prefix != '=' ) {
 	    remove_old = true;
 	    append_new = true;
 	  }
@@ -661,12 +663,16 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
          the check of the new prefix as some prefixes will not have an
          effect when a version already exists (e.g. '~') */
 
-      if ( remove_old && cur_pkg != NULL && cur_prefix == '=' ) {
-        remove_old = false;
-        append_new = false;
-        accept = false;
+      if ( remove_old && cur_pkg != NULL ) {
+        if ( cur_prefix == '=' ) {
+          remove_old = false;
+          append_new = false;
+          accept = false;
 
-        *msg = lcfgpackage_build_message( cur_pkg, "Version is pinned" );
+          *msg = lcfgpackage_build_message( cur_pkg, "Version is pinned" );
+        } else if ( append_new ) {
+          bool merge_ok = lcfgpackage_merge_derivation( new_pkg, cur_pkg );
+        }
       }
 
       goto apply;
@@ -736,8 +742,8 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
  apply:
   ;
 
-  /* Note that is permissible for a new spec to be "accepted" without
-     any changes occurring to the list */
+  /* Note that it is permissible for a new spec to be "accepted"
+     without any changes occurring to the list */
 
   LCFGChange result = LCFG_CHANGE_NONE;
 
@@ -947,7 +953,7 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
   /* Derivation information is often enormous so initialise a much
      larger buffer when that option is enabled */
 
-  size_t buf_size = options&LCFG_OPT_USE_META ? 8192 : 512;
+  size_t buf_size = options&LCFG_OPT_USE_META ? 16384 : 512;
 
   char * buffer = calloc( buf_size, sizeof(char) );
   if ( buffer == NULL ) {
@@ -1115,7 +1121,7 @@ LCFGChange lcfgpkglist_from_rpmcfg( const char * filename,
  * @param[in] macros_file Optional file of CPP macros (may be @c NULL)
  * @param[in] incpath Optional list of include directories for CPP (may be @c NULL)
  * @param[in] options Controls the behaviour of the process.
- * @param[out] Reference to list of file dependencies
+ * @param[out] deps Reference to list of file dependencies
  * @param[out] msg Pointer to any diagnostic messages.
  *
  * @return Integer value indicating type of change

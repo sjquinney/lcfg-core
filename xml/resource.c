@@ -102,21 +102,8 @@ static LCFGStatus lcfgxml_gather_resource_attributes( xmlTextReaderPtr reader,
     xmlTextReaderGetAttribute( reader, BAD_CAST "cfg:derivation" );
   if ( derivation != NULL && xmlStrlen(derivation) > 0 ) {
 
-    if ( lcfgresource_has_derivation(res) ) {
-
-      if ( !lcfgresource_add_derivation( res, (char *) derivation ) )
-        status = LCFG_STATUS_ERROR;
-
-    } else {
-
-      if ( lcfgresource_set_derivation( res, (char *) derivation ) )
-        derivation = NULL; /* Resource now "owns" derivation string */
-      else
-        status = LCFG_STATUS_ERROR;
-
-    }
-
-    if ( status == LCFG_STATUS_ERROR ) {
+    if ( !lcfgresource_add_derivation_string( res, (char *) derivation ) ) {
+      status = LCFG_STATUS_ERROR;
       *msg = lcfgresource_build_message( res, compname,
                                          "Invalid derivation '%s'",
                                          (char *) derivation );
@@ -465,7 +452,7 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
   }
 
   if ( base_derivation != NULL ) {
-    if ( !lcfgresource_add_derivation( resource, base_derivation ) ) {
+    if ( !lcfgresource_add_derivation_string( resource, base_derivation ) ) {
       status = LCFG_STATUS_ERROR;
       *msg = lcfgresource_build_message( resource, compname,
                 "Failed to set base derivation '%s'", base_derivation );

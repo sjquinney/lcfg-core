@@ -58,8 +58,8 @@
  * @param[in] defarch Default architecture string (may be @c NULL)
  * @param[in] macros_file Optional file of CPP macros (may be @c NULL)
  * @param[in] incpath Optional list of include directories for CPP (may be @c NULL)
- * @param[in] Controls the behaviour of the process.
- * @param[out] Reference to list of file dependencies
+ * @param[in]  options Controls the behaviour of the process.
+ * @param[out] deps Reference to list of file dependencies
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return Integer value indicating type of change
@@ -255,6 +255,13 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
     exit(EXIT_FAILURE);
   }
 
+  /* For efficiency the derivations are stashed in a map once
+     processed. Many packages have the same derivations and they can
+     be quite large so we want to only process them once - saves time
+     and memory */
+
+  LCFGDerivationMap * drvmap = include_meta ? lcfgderivmap_new() : NULL;
+
   char * cur_file = NULL;
   unsigned int cur_line = 0;
   while( LCFGChangeOK(change) && getline( &line, &line_len, fp ) != -1 ) {
@@ -369,26 +376,26 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
         
       if ( include_meta && !isempty(meta_deriv) ) {
 
-        if ( lcfgpackage_set_derivation( pkg, meta_deriv ) ) {
-          meta_deriv = NULL; /* Ensure memory is NOT immediately freed */
-        } else {
+        char * drvmsg = NULL;
+        LCFGDerivationList * drvlist =
+          lcfgderivmap_find_or_insert_string( drvmap, meta_deriv, &drvmsg );
+
+        bool ok = false;
+
+        if ( drvlist != NULL )
+          ok = lcfgpackage_set_derivation( pkg, drvlist );
+
+        if (!ok) {
           change = LCFG_CHANGE_ERROR;
-          lcfgutils_build_message( &error_msg, "Invalid derivation '%s'",
-                                   meta_deriv );
+          lcfgutils_build_message( &error_msg, "Invalid derivation '%s': %s",
+                                   meta_deriv, drvmsg );
         }
+
+        free(drvmsg);
       } else {
-        char * derivation = NULL;
-        int rc = asprintf( &derivation, "%s:%u", cur_file, cur_line );
-        if ( rc < 0 || derivation == NULL ) {
-          perror( "Failed to build LCFG derivation string" );
-          exit(EXIT_FAILURE);
-        }
-
         /* Ignore any problem with setting the derivation */
-        if ( !lcfgpackage_set_derivation( pkg, derivation ) )
-          free(derivation);
+        (void) lcfgpackage_add_derivation_file_line( pkg, cur_file, cur_line );
       }
-
     }
 
     /* All other metadata */
@@ -460,6 +467,7 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
   free(meta_deriv);
   free(meta_context);
   free(meta_category);
+  lcfgderivmap_relinquish(drvmap);
 
  cleanup:
   free(line);

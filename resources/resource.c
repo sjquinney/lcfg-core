@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <assert.h>
 
+#include "derivation.h"
 #include "context.h"
 #include "resources.h"
 #include "utils.h"
@@ -159,12 +160,9 @@ LCFGResource * lcfgresource_clone(const LCFGResource * res) {
       free(new_context);
   }
 
-  if ( ok && !isempty(res->derivation) ) {
-    char * new_deriv = strdup(res->derivation);
-    ok = lcfgresource_set_derivation( clone, new_deriv );
-    if ( !ok )
-      free(new_deriv);
-  }
+  /* Original and clone resources will share the derivation list */
+  if ( ok && lcfgresource_has_derivation(res) )
+    ok = lcfgresource_set_derivation( clone, lcfgresource_get_derivation(res));
 
   /* Cloning should never fail */
   if ( !ok ) {
@@ -260,7 +258,7 @@ void lcfgresource_destroy(LCFGResource * res) {
   free(res->context);
   res->context = NULL;
 
-  free(res->derivation);
+  lcfgderivlist_relinquish(res->derivation);
   res->derivation = NULL;
 
   free(res->comment);
@@ -784,13 +782,16 @@ bool lcfgresource_is_true( const LCFGResource * res ) {
  *
  * @param[in] res Pointer to an @c LCFGResource
  * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
  *
  * @return New string containing resource type information (call @c free() when no longer required)
  *
  */
 
-char * lcfgresource_get_type_as_string( const LCFGResource * res,
-                                        LCFGOption options ) {
+ssize_t lcfgresource_get_type_as_string( const LCFGResource * res,
+                                         LCFGOption options,
+                                         char ** result, size_t * size ) {
   assert( res != NULL );
 
   const char * type_string = lcfgresource_type_names[res->type];
@@ -828,17 +829,30 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
 
   }
 
+  if ( options&LCFG_OPT_NEWLINE )
+    new_len += 1;
+
   /* Allocate the required space */
 
-  char * result = calloc( ( new_len + 1 ), sizeof(char) );
-  if ( result == NULL ) {
-    perror("Failed to allocate memory for LCFG resource type string");
-    exit(EXIT_FAILURE);
+  if ( *result == NULL || *size < ( new_len + 1 ) ) {
+    size_t new_size = new_len + 1;
+
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
+      perror("Failed to allocate memory for LCFG type string");
+      exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
+    }
   }
+
+  /* Always initialise the characters of the full space to nul */
+  memset( *result, '\0', *size );
 
   /* Build the new string */
 
-  char * to = result;
+  char * to = *result;
 
   to = stpncpy( to, type_string, type_len );
 
@@ -863,11 +877,16 @@ char * lcfgresource_get_type_as_string( const LCFGResource * res,
 
   free(tmpl_as_str);
 
+  /* Optional newline at the end of the string */
+
+  if ( options&LCFG_OPT_NEWLINE )
+    to = stpncpy( to, "\n", 1 );
+
   *to = '\0';
 
-  assert( ( result + new_len ) == to );
+  assert( ( *result + new_len ) == to );
 
-  return result;
+  return new_len;
 }
 
 /* Templates */
@@ -1584,41 +1603,126 @@ bool lcfgresource_unset_value( LCFGResource * res ) {
 bool lcfgresource_has_derivation( const LCFGResource * res ) {
   assert( res != NULL );
 
-  return !isempty(res->derivation);
+  return ( res->derivation != NULL &&
+           !lcfgderivlist_is_empty(res->derivation));
 }
 
 /**
  * @brief Get the derivation for the resource
  *
- * This returns the value of the @e derivation parameter for the
- * @c LCFGResource. If the resource does not currently have a
- * value for the @e derivation then the pointer returned will be
- * @c NULL.
- *
- * It is important to note that this is NOT a copy of the string,
- * changing the returned string will modify the @e derivation for the
- * resource.
+ * This returns the value of the @e derivation parameter for the @c
+ * LCFGResource. This will be a pointer to an @c LCFGDerivationList
+ * structure. If the resource does not currently have a @e derivation
+ * then the pointer returned will be @c NULL.
  *
  * @param[in] res Pointer to an @c LCFGResource
  *
  * @return The @e derivation for the resource (possibly NULL).
  */
 
-const char * lcfgresource_get_derivation( const LCFGResource * res ) {
+LCFGDerivationList * lcfgresource_get_derivation( const LCFGResource * res ) {
   assert( res != NULL );
 
   return res->derivation;
 }
 
 /**
+ * @brief Get the derivation for the resource as a string
+ *
+ * This returns the stringified value of the @e derivation parameter
+ * for the @c LCFGResource. The serialisation is done using the @c
+ * lcfgderivlist_to_string() function. If the resource does not
+ * currently have a @e derivation then the pointer returned will be @c
+ * NULL.
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * necessary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many strings, this can be a huge
+ * performance benefit. If the buffer is initially unallocated then it
+ * MUST be set to @c NULL. The current size of the buffer must be
+ * passed and should be specified as zero if the buffer is initially
+ * unallocated. If the generated string would be too long for the
+ * current buffer then it will be resized and the size parameter is
+ * updated.
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required. If an error occurs this function will return -1.
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ * 
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
+
+ssize_t lcfgresource_get_derivation_as_string( const LCFGResource * res,
+                                               LCFGOption options,
+                                               char ** result, size_t * size ){
+  assert( res != NULL );
+
+  const LCFGDerivationList * drvlist = lcfgresource_get_derivation(res);
+  return lcfgderivlist_to_string( drvlist, options, result, size );
+}
+
+/**
+ * @brief Get the length of the resource derivation string
+ *
+ * It is sometimes necessary to know the length of the derivation for
+ * the @c LCFGResource as a string before it is actually stored. This
+ * simply calls the @c lcfgderivlist_get_string_length() function on
+ * the @c LCFGDerivationList structure for the resource.
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ *
+ * @return The length of the derivation string
+ *
+ */
+ 
+size_t lcfgresource_get_derivation_length( const LCFGResource * res ) {
+   assert( res != NULL );
+
+   if ( !lcfgresource_has_derivation(res) ) return 0;
+
+   const LCFGDerivationList * drvlist = lcfgresource_get_derivation(res);
+   return lcfgderivlist_get_string_length(drvlist);
+}
+
+/**
  * @brief Set the derivation for the resource
  *
- * Sets the value of the @e derivation parameter for the
- * @c LCFGResource to that specified. It is important to note that
- * this does NOT take a copy of the string. Furthermore, once the
- * value is set the resource assumes "ownership", the memory will be
- * freed if the derivation is further modified or the resource is
- * destroyed.
+ * Sets the value of the @e derivation parameter for the @c
+ * LCFGResource to the specified @c LCFGDerivationList. 
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ * @param[in] new_deriv Pointer to new @c LCFGDerivationList structure
+ *
+ * @return boolean indicating success
+ *
+ */
+ 
+bool lcfgresource_set_derivation( LCFGResource * res,
+                                  LCFGDerivationList * new_deriv ) {
+
+  lcfgderivlist_relinquish(res->derivation);
+
+  if ( new_deriv != NULL )  /* Supports unsetting the derivation */
+    lcfgderivlist_acquire(new_deriv);
+
+  res->derivation = new_deriv;
+
+  return true;
+}
+
+/**
+ * @brief Set the derivation for the resource as a string
+ *
+ * Sets the value of the @e derivation parameter for the @c
+ * LCFGResource to that specified. The derivation string is parsed
+ * using @c lcfgderivlist_from_string().
  *
  * @param[in] res Pointer to an @c LCFGResource
  * @param[in] new_deriv String which is the new derivation
@@ -1627,30 +1731,94 @@ const char * lcfgresource_get_derivation( const LCFGResource * res ) {
  *
  */
 
-bool lcfgresource_set_derivation( LCFGResource * res, char * new_deriv ) {
+bool lcfgresource_set_derivation_as_string( LCFGResource * res,
+                                            const char * new_deriv ) {
   assert( res != NULL );
 
-  /* Currently no validation of the derivation */
+  bool ok = true;
 
-  free(res->derivation);
+  LCFGDerivationList * new_drvlist = NULL;
+  if ( new_deriv != NULL ) { /* Supports unsetting the derivation */
 
-  res->derivation = new_deriv;
+    char * msg = NULL;
 
-  return true;
+    LCFGStatus status = lcfgderivlist_from_string( new_deriv, &new_drvlist,
+                                                   &msg );
+    if ( status == LCFG_STATUS_ERROR )
+      ok = false;
+
+    free(msg);
+  }
+
+  if (ok)
+    ok = lcfgresource_set_derivation( res, new_drvlist );
+
+  lcfgderivlist_relinquish(new_drvlist);
+
+  return ok;
+}
+
+/**
+ * @brief Merge derivations for one resource into another
+ *
+ * This can be used to merge the @c LCFGDerivationList from one @c
+ * LCFGResource into another. There is support for Copy On Write so
+ * that if a derivation list is shared between multiple resources it
+ * will be cloned before the merging is done. This is used when
+ * merging resource specifications by prefix.
+ *
+ * @param[in] res1 Pointer to @c LCFGResource into which derivation is merged
+ * @param[in] res2 Pointer to @c LCFGResource from which derivation is merged
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgresource_merge_derivation( LCFGResource * res1,
+                                    const LCFGResource * res2 ) {
+  assert( res1 != NULL );
+
+  LCFGDerivationList * drvlist1 = lcfgresource_get_derivation(res1);
+
+  if ( res2 == NULL || !lcfgresource_has_derivation(res2) ) return true;
+  LCFGDerivationList * drvlist2 = lcfgresource_get_derivation(res2);
+
+  if ( lcfgderivlist_is_empty(drvlist1) )
+    return lcfgresource_set_derivation( res1, drvlist2 );
+
+  /* The main aim of the cloning is to provide COW for shared
+     derivations. Keeping it simple by doing the clone for all
+     merges. This also provides extra safety against corruption. */
+
+  bool ok = false;
+
+  LCFGDerivationList * clone = lcfgderivlist_clone(drvlist1);
+  if ( clone != NULL ) {
+    LCFGChange merge_rc = lcfgderivlist_merge_list( clone, drvlist2 );
+
+    if ( LCFGChangeOK(merge_rc) ) {
+      /* Only keep the clone if it was modified */
+      if ( merge_rc == LCFG_CHANGE_NONE )
+        ok = true;
+      else
+        ok = lcfgresource_set_derivation( res1, clone );
+    }
+
+    lcfgderivlist_relinquish(clone);
+  }
+
+  return ok;
 }
 
 /**
  * @brief Add extra derivation information for the resource
  *
  * Adds the extra derivation information to the value for the @e
- * derivation parameter in the @c LCFGResource if it is not
- * already found in the string.
- *
- * If not already present in the existing information a new derivation
- * string is built which is the combination of any existing string
- * with the new string appended. The new string is passed to @c
- * lcfgresource_set_derivation(), unlike that function this does NOT
- * assume "ownership" of the string specified.
+ * derivation parameter in the @c LCFGResource if it is not already
+ * found. This is done using the @c lcfgderivlist_merge_string_list()
+ * function. There is support for Copy On Write so that if a
+ * derivation list is shared between multiple resources it will be
+ * cloned before the merging is done.
 
  * @param[in] res Pointer to an @c LCFGResource
  * @param[in] extra_deriv String which is the additional derivation
@@ -1659,35 +1827,77 @@ bool lcfgresource_set_derivation( LCFGResource * res, char * new_deriv ) {
  *
  */
 
-bool lcfgresource_add_derivation( LCFGResource * res,
-                                  const char * extra_deriv ) {
+bool lcfgresource_add_derivation_string( LCFGResource * res,
+                                         const char * extra_deriv ) {
   assert( res != NULL );
 
   if ( isempty(extra_deriv) ) return true;
 
-  char * new_deriv = NULL;
-  if ( !lcfgresource_has_derivation(res) ) {
-    new_deriv = strdup(extra_deriv);
-  } else if ( strstr( res->derivation, extra_deriv ) == NULL ) {
+  bool ok = true;
+  LCFGDerivationList * drvlist = lcfgresource_get_derivation(res);
+  LCFGDerivationList * clone   = lcfgderivlist_clone(drvlist);
+  if ( clone != NULL ) {
+    char * merge_msg = NULL;
+    LCFGChange merge_rc = 
+      lcfgderivlist_merge_string_list( clone, extra_deriv, &merge_msg );
+    free(merge_msg);
 
-    new_deriv =
-      lcfgutils_string_join( " ", res->derivation, extra_deriv );
-    if ( new_deriv == NULL ) {
-      perror( "Failed to build LCFG derivation string" );
-      exit(EXIT_FAILURE);
+    if ( LCFGChangeOK(merge_rc) ) {
+      /* Only keep the clone if it was modified */
+      if ( merge_rc == LCFG_CHANGE_NONE )
+        ok = true;
+      else
+        ok = lcfgresource_set_derivation( res, clone );
     }
+
+    lcfgderivlist_relinquish(clone);
   }
 
-  /* If the extra derivation does not need to be added (since it is
-     already present) then new_deriv will be NULL which means ok needs
-     to be true. */
+  return ok;
+}
+
+/**
+ * @brief Add extra derivation information for the resource
+ *
+ * Adds the extra filename to the @c LCFGDerivationList for the @c
+ * LCFGResource if it is not already found. If the specified line
+ * number is non-negative it will be added to the list of line numbers
+ * for the specified file. This is done using the @c
+ * lcfgderivlist_merge_file_line() function. There is support for Copy
+ * On Write so that if a derivation list is shared between multiple
+ * resources it will be cloned before the merging is done.
+ *
+ * @param[in] res Pointer to an @c LCFGResource
+ * @param[in] filename Name of derivation file
+ * @param[in] line Line number of derivation
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgresource_add_derivation_file_line( LCFGResource * res,
+                                            const char * filename,
+                                            int line ) {
+  assert( res != NULL );
+
+  if ( isempty(filename) ) return true;
 
   bool ok = true;
-  if ( new_deriv != NULL ) {
-    ok = lcfgresource_set_derivation( res, new_deriv );
+  LCFGDerivationList * drvlist = lcfgresource_get_derivation(res);
+  LCFGDerivationList * clone   = lcfgderivlist_clone(drvlist);
+  if ( clone != NULL ) {
+    LCFGChange merge_rc =
+      lcfgderivlist_merge_file_line( clone, filename, line );
 
-    if ( !ok )
-      free(new_deriv);
+    if ( LCFGChangeOK(merge_rc) ) {
+      /* Only keep the clone if it was modified */
+      if ( merge_rc == LCFG_CHANGE_NONE )
+        ok = true;
+      else
+        ok = lcfgresource_set_derivation( res, clone );
+    }
+
+    lcfgderivlist_relinquish(clone);
   }
 
   return ok;
@@ -2620,7 +2830,14 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
     if ( lcfgresource_get_type(res) != LCFG_RESOURCE_TYPE_STRING ||
 	 lcfgresource_has_comment(res) ) {
 
-      type_as_str = lcfgresource_get_type_as_string( res, LCFG_OPT_NONE );
+      size_t type_size = 0;
+      ssize_t type_len =
+        lcfgresource_get_type_as_string( res, LCFG_OPT_NONE,
+                                         &type_as_str, &type_size );
+      if ( type_len <= 0 ) {
+        free(type_as_str);
+        type_as_str = NULL;
+      }
     }
 
     if ( !isempty(type_as_str) ) {
@@ -2781,19 +2998,23 @@ ssize_t lcfgresource_to_export( const LCFGResource * res,
 
   /* Type - optional */
 
-  size_t type_len = 0;
+  ssize_t type_len = 0;
   ssize_t type_key_len = 0;
 
   if ( options&LCFG_OPT_USE_META ) {
 
     if ( lcfgresource_get_type(res) != LCFG_RESOURCE_TYPE_STRING ||
          lcfgresource_has_comment(res) ) {
-
-      type_as_str = lcfgresource_get_type_as_string( res, LCFG_OPT_NONE );
+      size_t type_size = 0;
+      type_len = lcfgresource_get_type_as_string( res, LCFG_OPT_NONE,
+                                                  &type_as_str, &type_size );
+      if ( type_len <= 0 ) {
+        free(type_as_str);
+        type_as_str = NULL;
+      }
     }
 
     if ( !isempty(type_as_str) ) {
-      type_len = strlen(type_as_str);
 
       size_t type_key_size = 0;
       type_key_len = lcfgresource_build_env_var( name, compname,
@@ -2991,24 +3212,33 @@ ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS ) {
 
   /* Type */
 
-  size_t type_len = 0;
   const char * type = "default";
+  size_t type_len = 7;
+
   char * type_as_str = NULL;
   if ( lcfgresource_get_type(res) != LCFG_RESOURCE_TYPE_STRING ||
        lcfgresource_has_comment(res) ) {
 
-    type_as_str = lcfgresource_get_type_as_string( res, LCFG_OPT_NONE );
+    size_t type_size = 0;
+    ssize_t type_str_len =
+      lcfgresource_get_type_as_string( res, LCFG_OPT_NONE,
+                                       &type_as_str, &type_size );
 
-    if ( type_as_str != NULL )
-      type = type_as_str;
+    if ( type_len > 0 ) {
+      type     = type_as_str;
+      type_len = (size_t) type_str_len;
+    } else {
+      free(type_as_str);
+      type_as_str = NULL;
+    }
   }
-  type_len = strlen(type);
+
   new_len += ( base_len + type_len );
 
   /* Optional meta-data */
 
-  const char * derivation = NULL;
-  size_t deriv_len = 0;
+  char * deriv_as_str = NULL;
+  ssize_t deriv_len = 0;
 
   const char * context = NULL;
   size_t ctx_len = 0;
@@ -3016,10 +3246,12 @@ ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS ) {
   if ( options&LCFG_OPT_USE_META ) {
 
     if ( lcfgresource_has_derivation(res) ) {
-      derivation = lcfgresource_get_derivation(res);
-      deriv_len  = strlen(derivation);
+      size_t deriv_size = 0;
+      deriv_len = lcfgresource_get_derivation_as_string( res, LCFG_OPT_NONE,
+                                                         &deriv_as_str,
+                                                         &deriv_size );
       if ( deriv_len > 0 )
-        new_len += ( base_len + deriv_len);
+        new_len += ( base_len + deriv_len );
     }
 
     if ( lcfgresource_has_context(res) ) {
@@ -3068,7 +3300,7 @@ ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS ) {
   /* Derivation */
 
   if ( deriv_len > 0 ) {
-    rc = sprintf( to, format, "derive", derivation );
+    rc = sprintf( to, format, "derive", deriv_as_str );
     to += rc;
   }
 
@@ -3082,6 +3314,7 @@ ssize_t lcfgresource_to_summary( LCFG_RES_TOSTR_ARGS ) {
   *to = '\0';
 
   free(type_as_str);
+  free(deriv_as_str);
 
   assert( (*result + new_len ) == to );
 
@@ -3157,31 +3390,33 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
   /* Type - Only output the type when the resource is NOT a string */
 
   char * type_as_str = NULL;
-  size_t type_len = 0;
+  ssize_t type_len = 0;
   if ( lcfgresource_get_type(res) != LCFG_RESOURCE_TYPE_STRING ||
        lcfgresource_has_comment(res) ) {
 
-    type_as_str = lcfgresource_get_type_as_string( res, LCFG_OPT_NONE );
+    size_t type_size = 0;
+    type_len = lcfgresource_get_type_as_string( res, LCFG_OPT_NONE,
+                                                &type_as_str, &type_size );
 
-    if ( type_as_str != NULL ) {
-      type_len = strlen(type_as_str);
+    if ( type_len > 0 ) {
 
       ssize_t key_len =
         lcfgresource_compute_key_length( res->name, prefix, NULL,
                                          LCFG_RESOURCE_SYMBOL_TYPE );
 
       new_len += ( key_len + type_len + 2 ); /* +2 for '=' and newline */
+
+    } else {
+      free(type_as_str);
+      type_as_str = NULL;
     }
   }
 
   /* Derivation */
 
-  const char * derivation = NULL;
   size_t deriv_len = 0;
   if ( options&LCFG_OPT_USE_META && lcfgresource_has_derivation(res) ) {
-    derivation = lcfgresource_get_derivation(res);
-    deriv_len = strlen(derivation);
-
+    deriv_len = lcfgresource_get_derivation_length(res);
     if ( deriv_len > 0 ) {
       ssize_t key_len =
 	lcfgresource_compute_key_length( res->name, prefix, NULL,
@@ -3248,7 +3483,13 @@ ssize_t lcfgresource_to_status( LCFG_RES_TOSTR_ARGS ) {
       *to = '=';
       to++;
 
-      to = stpncpy( to, derivation, deriv_len );
+      deriv_len++; /* include nul-terminator */
+      ssize_t inserted_len =
+        lcfgresource_get_derivation_as_string( res, LCFG_OPT_NONE,
+                                               &to, &deriv_len );
+
+      if ( inserted_len > 0 )
+        to += inserted_len;
 
       to = stpcpy( to, "\n" );
     }
@@ -3858,8 +4099,15 @@ char * lcfgresource_build_message( const LCFGResource * res,
 
     /* Not interested in the resource type if it is the default 'string' */
     if ( lcfgresource_get_type(res) != LCFG_RESOURCE_TYPE_STRING ) {
-      type_as_str = 
-        lcfgresource_get_type_as_string( res, LCFG_OPT_NOTEMPLATES );
+      size_t type_size = 0;
+      ssize_t type_len = 
+        lcfgresource_get_type_as_string( res, LCFG_OPT_NOTEMPLATES,
+                                         &type_as_str, &type_size );
+
+      if ( type_len <= 0 ) {
+        free(type_as_str);
+        type_as_str = NULL;
+      }
     }
 
     if ( lcfgresource_has_name(res) ) {
@@ -3916,14 +4164,25 @@ char * lcfgresource_build_message( const LCFGResource * res,
 
   /* Final string, possibly with derivation information */
 
+  char * deriv_as_str = NULL;
+  ssize_t deriv_len = 0;
   if ( res != NULL && lcfgresource_has_derivation(res) ) {
+    size_t deriv_size = 0;
+    deriv_len = lcfgresource_get_derivation_as_string( res, LCFG_OPT_NONE,
+                                                       &deriv_as_str,
+                                                       &deriv_size );
+  }
+
+  if ( deriv_len > 0 ) {
     rc = asprintf( &result, "%s %s at %s",
                    msg_base, msg_mid,
-                   lcfgresource_get_derivation(res) );
+                   deriv_as_str );
   } else {
     rc = asprintf( &result, "%s %s",
                    msg_base, msg_mid );
   }
+
+  free(deriv_as_str);
 
   if ( rc < 0 ) {
     perror("Failed to build LCFG resource message");
@@ -4347,7 +4606,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
   if ( value_len > 0 )
     value_copy = strndup( value, value_len );
 
-  bool free_copy = false; /* Will value_copy need freeing at end? */
+  bool free_copy = true; /* Will value_copy need freeing at end? */
 
   const char * attr_name = NULL; /* used for error messages */
 
@@ -4358,9 +4617,9 @@ bool lcfgresource_set_attribute( LCFGResource * res,
       attr_name = "derivation";
 
       if ( value_len > 0 )
-        ok = lcfgresource_set_derivation( res, value_copy );
+        ok = lcfgresource_set_derivation_as_string( res, value_copy );
       else
-        ok = lcfgresource_set_derivation( res, NULL ); /* unset */
+        ok = lcfgresource_set_derivation_as_string( res, NULL ); /* unset */
 
       break;
     case LCFG_RESOURCE_SYMBOL_TYPE:
@@ -4372,16 +4631,17 @@ bool lcfgresource_set_attribute( LCFGResource * res,
       else
         ok = lcfgresource_set_type_default(res);
 
-      free_copy = true;
       break;
     case LCFG_RESOURCE_SYMBOL_CONTEXT:
       ;
       attr_name = "context";
 
-      if ( value_len > 0 )
+      if ( value_len > 0 ) {
         ok = lcfgresource_set_context( res, value_copy );
-      else
+        if (ok) free_copy = false;
+      } else {
         ok = lcfgresource_set_context( res, NULL ); /* unset */
+      }
 
       break;
     case LCFG_RESOURCE_SYMBOL_PRIORITY:
@@ -4399,8 +4659,6 @@ bool lcfgresource_set_attribute( LCFGResource * res,
       } else {
         ok = lcfgresource_set_priority_default(res);
       }
-
-      free_copy = true;
 
       break;
     case  LCFG_RESOURCE_SYMBOL_VALUE:
@@ -4421,6 +4679,8 @@ bool lcfgresource_set_attribute( LCFGResource * res,
         ok = lcfgresource_set_value( res, value_copy );
       }
 
+      if (ok) free_copy = false;
+
       break;
     }
 
@@ -4429,7 +4689,7 @@ bool lcfgresource_set_attribute( LCFGResource * res,
 			     ( value_len > 0 ? value_copy : "(empty string)" ));
   }
 
-  if ( free_copy || !ok )
+  if (free_copy)
     free(value_copy);
 
   return ok;
@@ -4464,8 +4724,8 @@ unsigned long lcfgresource_hash( const LCFGResource * res ) {
  *
  * @param[in] res Pointer to @c LCFGResource
  * @param[in] tags  Pointer to @c LCFGTagList of tags
- * @params[out] result Reference to pointer to @LCFGTagList of child names
- * @params[out] msg Pointer to any diagnostic messages
+ * @param[out] result Reference to pointer to @c LCFGTagList of child names
+ * @param[out] msg Pointer to any diagnostic messages
  *
  * @return Status value indicating success
  *
