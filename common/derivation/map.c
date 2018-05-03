@@ -1,6 +1,6 @@
 /**
  * @file common/derivation/map.c
- * @brief Functions for working with lists of LCFG derivations
+ * @brief Functions for working with maps of LCFG derivation lists.
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2018 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
  * $Date$
@@ -123,6 +123,26 @@ LCFGDerivationMap * lcfgderivmap_new(void) {
   return drvmap;
 }
 
+/**
+ * @brief Destroy the derivation map
+ *
+ * When the specified @c LCFGDerivationMap is no longer required this
+ * will free all associated memory. There is support for reference
+ * counting so typically the @c lcfgderivmap_relinquish() function
+ * should be used.
+ *
+ * This will call @c free() on each parameter of the structure and
+ * then set each value to be @c NULL.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * derivation map which has already been destroyed (or potentially was
+ * never created).
+ *
+ * @param[in] drvmap Pointer to @c LCFGDerivationMap to be destroyed.
+ *
+ */
+
 void lcfgderivmap_destroy(LCFGDerivationMap * drvmap) {
 
   if ( drvmap == NULL ) return;
@@ -144,11 +164,42 @@ void lcfgderivmap_destroy(LCFGDerivationMap * drvmap) {
   drvmap = NULL;
 }
 
+/**
+ * @brief Acquire reference to derivation map
+ *
+ * This is used to record a reference to the @c LCFGDerivationMap, it
+ * does this by simply incrementing the reference count.
+ *
+ * To avoid memory leaks, once the reference to the structure is no
+ * longer required the @c lcfgderivmap_relinquish() function should
+ * be called.
+ *
+ * @param[in] drvmap Pointer to @c LCFGDerivationMap
+ *
+ */
+
 void lcfgderivmap_acquire( LCFGDerivationMap * drvmap ) {
   assert( drvmap != NULL );
 
   drvmap->_refcount += 1;
 }
+
+/**
+ * @brief Release reference to derivation map
+ *
+ * This is used to release a reference to the @c LCFGDerivationMap,
+ * it does this by simply decrementing the reference count. If the
+ * reference count reaches zero the @c lcfgderivmap_destroy() function
+ * will be called to clean up the memory associated with the structure.
+ *
+ * If the value of the pointer passed in is @c NULL then the function
+ * has no affect. This means it is safe to call with a pointer to a
+ * derivation map which has already been destroyed (or potentially
+ * was never created).
+ *
+ * @param[in] drvmap Pointer to @c LCFGDerivationMap
+ *
+ */
 
 void lcfgderivmap_relinquish( LCFGDerivationMap * drvmap ) {
 
@@ -161,6 +212,41 @@ void lcfgderivmap_relinquish( LCFGDerivationMap * drvmap ) {
     lcfgderivmap_destroy(drvmap);
 
 }
+
+/**
+ * @brief Check if there are multiple references to the derivation map
+ *
+ * The @c LCFGDerivationMap structure supports reference counting - see
+ * @c lcfgderivmap_acquire() and @c lcfgderivmap_relinquish(). This
+ * will return a boolean which indicates if there are multiple
+ * references.
+ *
+ * @param[in] drvmap Pointer to @c LCFGDerivationMap
+ *
+ * @return Boolean which indicates if there are multiple references to this derivation map
+ *
+ */
+
+bool lcfgderivmap_is_shared( const LCFGDerivationMap * drvmap ) {
+  return ( drvmap->_refcount > 1 );
+}
+
+/**
+ * @brief Insert derivation list into map
+ *
+ * This can be used to merge an @c LCFGDerivationList into a @c
+ * LCFGDerivationMap. If there is not currently any entry in the map
+ * with the same id then it will be inserted and @c LCFG_CHANGE_ADDED
+ * will be returned. If an entry already exists in the map with the
+ * same id it will simply be replaced and @c LCFG_CHANGE_REPLACED will
+ * be returned.
+ *
+ * @param[in] drvmap Pointer to @c LCFGDerivationMap
+ * @param[in] drvlist Pointer to @c LCFGDerivationList to be inserted
+ *
+ * @return Integer value indicating type of change
+ *
+ */
 
 LCFGChange lcfgdrvmap_insert_list( LCFGDerivationMap * drvmap,
                                    LCFGDerivationList * drvlist,
@@ -220,7 +306,35 @@ LCFGChange lcfgdrvmap_insert_list( LCFGDerivationMap * drvmap,
 
   return change;
 }
-  
+
+/**
+ * @brief Insert derivation string into map
+ *
+ * This takes a list of derivations in string form and does a lookup
+ * in the @c LCFGDerivationMap to see if a @c LCFGDerivationList
+ * already exists. The id for the string is found by hashing the
+ * entire string using the @c farmhash64() function. If no entry with
+ * the same id is found in the map then the string is parsed and a new
+ * @c LCFGDerivationList is created which is stored into the map and
+ * also returned to the caller.
+ *
+ * If the returned @c LCFGDerivationList must remain available after
+ * the @c LCFGDerivationMap is destroyed the @c
+ * lcfgderivlist_acquire() function must be used to register a
+ * reference (and thus @c lcfgderivlist_relinquish() would need to be
+ * called when the list is no longer required).
+ *
+ * If an error occurs this function will return a @c NULL value and a
+ * diagnostic message will be given.
+ *
+ * @param[in] drvmap Pointer to @c LCFGDerivationMap
+ * @param[in] deriv_as_str String of derivations
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Pointer to an @c LCFGDerivationList for the string
+ *
+ */
+
 LCFGDerivationList * lcfgderivmap_find_or_insert_string(LCFGDerivationMap * drvmap,
                                                         const char * deriv_as_str,
                                                         char ** msg ) {

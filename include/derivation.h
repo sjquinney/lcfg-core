@@ -19,7 +19,7 @@
 #include <stdint.h>
 
 /**
- * @brief Structure to represent LCFG derivation information
+ * @brief Structure to represent LCFG derivation information for a single file
  */
 
 struct LCFGDerivation {
@@ -93,7 +93,7 @@ bool lcfgderivation_match( const LCFGDerivation * drv,
 /* Lists */
 
 /**
- * @brief Structure for storing LCFG derivations as a single-linked list
+ * @brief Structure to represent LCFG derivation information for multiple files
  */
 
 struct LCFGDerivationList {
@@ -171,17 +171,21 @@ bool lcfgderivlist_print( const LCFGDerivationList * drvlist,
                           FILE * out )
   __attribute__((warn_unused_result));
 
-/* Mapping of lists to IDs */
+/* Maps */
 
 #define LCFG_DRVMAP_DEFAULT_SIZE 1999
 #define LCFG_DRVMAP_LOAD_INIT 0.5
 #define LCFG_DRVMAP_LOAD_MAX  0.7
 
+/**
+ * @brief Structure to for fast lookup of LCFG derivation lists
+ */
+
 struct LCFGDerivationMap {
   /*@{*/
-  LCFGDerivationList ** derivations;
-  unsigned long buckets;
-  unsigned long entries;
+  LCFGDerivationList ** derivations; /**< Array of derivation lists */
+  unsigned long buckets;             /**< Number of buckets in map */
+  unsigned long entries;             /**< Number of full buckets in map */
   /*@}*/
   unsigned int _refcount;
 };
@@ -191,6 +195,7 @@ typedef struct LCFGDerivationMap LCFGDerivationMap;
 LCFGDerivationMap * lcfgderivmap_new(void);
 void lcfgderivmap_acquire( LCFGDerivationMap * drvmap );
 void lcfgderivmap_relinquish( LCFGDerivationMap * drvmap );
+bool lcfgderivmap_is_shared( const LCFGDerivationMap * drvmap );
 LCFGChange lcfgdrvmap_insert_list( LCFGDerivationMap * drvmap,
                                    LCFGDerivationList * drvlist,
                                    char ** msg )
