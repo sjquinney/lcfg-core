@@ -243,6 +243,7 @@ bool lcfgderivmap_is_shared( const LCFGDerivationMap * drvmap ) {
  *
  * @param[in] drvmap Pointer to @c LCFGDerivationMap
  * @param[in] drvlist Pointer to @c LCFGDerivationList to be inserted
+ * @param[out] msg Pointer to any diagnostic messages.
  *
  * @return Integer value indicating type of change
  *
