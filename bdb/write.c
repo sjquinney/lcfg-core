@@ -40,7 +40,7 @@ DB * lcfgbdb_init_writer( const char * filename,
                           char ** msg ) {
   assert( filename != NULL );
 
-  return lcfgbdb_open_db( filename, DB_CREATE | DB_EXCL, msg );
+  return lcfgbdb_open_db( filename, DB_CREATE, msg );
 }
 
 /**
@@ -501,6 +501,7 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
   /* Early declarations so available if jumping to cleanup */
   LCFGStatus status = LCFG_STATUS_OK;
   char * tmpfile = NULL;
+  FILE * tmpfh = NULL;
 
   /* Only use the value for profile.node when the namespace has not
      been specified */
@@ -513,24 +514,8 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
     }
   }
 
-  /* This generates a 'safe' temporary file name in the same directory
-     as the target DB file so that a rename will work. Note that this
-     does not actually open the temporary file so there is a tiny
-     chance something else will do so before it is opened by BDB. To
-     avoid that being a security issue the DB is opened with the
-     DB_EXCL flag. */
-
-  char * dirname = lcfgutils_dirname(dbfile);
-  if ( dirname == NULL ) {
-    status = LCFG_STATUS_ERROR;
-    lcfgutils_build_message( msg, "Failed to get directory part of path '%s'", dbfile );
-    goto cleanup;
-  }
-
-  tmpfile = tempnam( dirname, ".lcfg" );
-  free(dirname);
-
-  if ( tmpfile == NULL ) {
+  tmpfh = lcfgutils_safe_tmpfile( dbfile, &tmpfile );
+  if ( tmpfh == NULL ) {
     status = LCFG_STATUS_ERROR;
     lcfgutils_build_message( msg, "Failed to generate safe temporary file name");
     goto cleanup;
@@ -580,6 +565,9 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
   }
 
  cleanup:
+
+  if ( tmpfh != NULL )
+    fclose(tmpfh);
 
   if ( tmpfile != NULL ) {
     unlink(tmpfile);
