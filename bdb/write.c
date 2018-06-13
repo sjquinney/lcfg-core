@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <utime.h>
 #include <assert.h>
+#include <errno.h>
 
 #include <db.h>
 
@@ -570,8 +571,10 @@ LCFGStatus lcfgprofile_to_bdb( const LCFGProfile * profile,
       }
 
     } else {
+      char * errmsg = strerror(errno);
       status = LCFG_STATUS_ERROR;
-      lcfgutils_build_message( msg, "Failed to rename DB file to '%s'", dbfile );
+      lcfgutils_build_message( msg, "Failed to rename DB file to '%s': %s",
+                               dbfile, errmsg );
     }
 
   }
