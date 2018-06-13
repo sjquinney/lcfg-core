@@ -1,6 +1,26 @@
-2018-05-03  SVN: new release
+2018-06-13  SVN: new release
 
-	* Release: 1.50.1
+	* Release: 1.50.2
+
+2018-06-13 09:33  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, lcfg.yml: Also need DB_TRUNCATE flag for bdb to open
+	  reviously created temporary file for writing
+
+2018-06-13 08:54  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: Altered lcfgprofile_to_bdb to use
+	  lcfgutils_safe_tmpfile instead of tempnam which has unexpected
+	  behaviour when the TMPDIR env variable is set
+
+2018-06-13 08:25  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: use strerror to get reason for db file rename
+	  problems
+
+2018-05-03 13:00  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.1
 
 2018-05-03 11:49  squinney@INF.ED.AC.UK
 
