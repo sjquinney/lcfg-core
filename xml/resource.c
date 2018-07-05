@@ -330,11 +330,11 @@ static LCFGStatus lcfgxml_process_record( xmlTextReaderPtr reader,
         if ( xmlStrcmp( nodename, record_name ) == 0 ) {
           done = true; /* Successfully finished this block */
         } else {
-          status = lcfgxml_error( msg, "Unexpected end element '%s' at line '%d' whilst processing package.", nodename, linenum );
+          status = lcfgxml_error( msg, "Unexpected end element '%s' at line '%d' whilst processing record.", nodename, linenum );
         }
 
       } else {
-        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing package.", nodename, nodetype, linenum);
+        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing record.", nodename, nodetype, linenum);
       }
 
       xmlFree(nodename);
@@ -625,7 +625,7 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
       } else {
 
         xmlChar * nodename  = xmlTextReaderName(reader);
-        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing record.", nodename, nodetype, linenum);
+        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing resource.", nodename, nodetype, linenum);
         xmlFree(nodename);
         nodename = NULL;
 
@@ -639,11 +639,11 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
         if ( xmlStrcmp( nodename, resnodename ) == 0 ) {
           done = true; /* Successfully finished this block */
         } else {
-          status = lcfgxml_error( msg, "Unexpected end element '%s' at line '%d' whilst processing package.", nodename, linenum );
+          status = lcfgxml_error( msg, "Unexpected end element '%s' at line '%d' whilst processing resource.", nodename, linenum );
         }
 
       } else {
-        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing package.", nodename, nodetype, linenum );
+        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing resource.", nodename, nodetype, linenum );
 
       }
 
