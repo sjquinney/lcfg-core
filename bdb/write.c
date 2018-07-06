@@ -40,7 +40,7 @@ DB * lcfgbdb_init_writer( const char * filename,
                           char ** msg ) {
   assert( filename != NULL );
 
-  return lcfgbdb_open_db( filename, DB_CREATE|DB_TRUNCATE|DB_EXCL, msg );
+  return lcfgbdb_open_db( filename, DB_CREATE|DB_TRUNCATE, msg );
 }
 
 /**
