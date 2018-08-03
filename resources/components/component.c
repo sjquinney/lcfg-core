@@ -42,7 +42,7 @@
  *
  */
 
-LCFGResourceNode * lcfgresourcenode_new(LCFGResource * res) {
+static LCFGResourceNode * lcfgresourcenode_new(LCFGResource * res) {
   assert( res != NULL );
 
   LCFGResourceNode * resnode = malloc( sizeof(LCFGResourceNode) );
@@ -83,7 +83,7 @@ LCFGResourceNode * lcfgresourcenode_new(LCFGResource * res) {
  *
  */
 
-void lcfgresourcenode_destroy(LCFGResourceNode * resnode) {
+static void lcfgresourcenode_destroy(LCFGResourceNode * resnode) {
 
   if ( resnode == NULL ) return;
 

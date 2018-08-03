@@ -28,10 +28,6 @@ struct LCFGResourceNode {
 
 typedef struct LCFGResourceNode LCFGResourceNode;
 
-LCFGResourceNode * lcfgresourcenode_new(LCFGResource * res);
-
-void lcfgresourcenode_destroy(LCFGResourceNode * resnode);
-
 /**
  * @brief A structure to represent an LCFG Component
  */
