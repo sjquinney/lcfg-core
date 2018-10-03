@@ -4036,6 +4036,31 @@ bool lcfgresource_same_type( const LCFGResource * res1,
 }
 
 /**
+ * @brief Test if resources have same context
+ *
+ * Compares the @e context for the two resources. Note that this only
+ * does a string comparison, it does NOT evaluate the context
+ * expressions thus two logically equivalent expressions with
+ * different string representations will be considered to be
+ * different.
+ *
+ * @param[in] res1 Pointer to @c LCFGResource
+ * @param[in] res2 Pointer to @c LCFGResource
+ *
+ * @return boolean indicating equality of contexts
+ *
+ */
+
+bool lcfgresource_same_context( const LCFGResource * res1,
+                                const LCFGResource * res2 ) {
+
+  const char * ctx1 = or_default( res1->context, "" );
+  const char * ctx2 = or_default( res2->context, "" );
+
+  return ( strcmp( ctx1, ctx2 ) == 0 );
+}
+
+/**
  * @brief Test if resources are considered equal
  *
  * Compares the two resources using the @c lcfgresource_compare()

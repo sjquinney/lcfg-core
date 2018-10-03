@@ -404,6 +404,9 @@ bool lcfgresource_same_value( const LCFGResource * res1,
 bool lcfgresource_same_type( const LCFGResource * res1,
                              const LCFGResource * res2 );
 
+bool lcfgresource_same_context( const LCFGResource * res1,
+                                const LCFGResource * res2 );
+
 bool lcfgresource_equals( const LCFGResource * res1,
                           const LCFGResource * res2 );
 

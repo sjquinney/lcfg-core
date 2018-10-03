@@ -1098,4 +1098,32 @@ bool lcfgcontext_match( const LCFGContext * ctx, const char * want_name ) {
   return ( strcmp( ctx_name, want_name ) == 0 );
 }
 
+/**
+ * @brief Compare context expressions
+ *
+ * Compares two context expressions. Note that this only
+ * does a string comparison, it does NOT evaluate the context
+ * expressions thus two logically equivalent expressions with
+ * different string representations will be considered to be
+ * different. 
+ *
+ * If a @c NULL value is passed for either parameter that expression
+ * will be compared as an empty string.
+ *
+ * @param[in] ctx1 Context expression string
+ * @param[in] ctx2 Context expression string
+ *
+ * @return boolean indicating equality of contexts
+ *
+ */
+
+int lcfgcontext_compare_expressions( const char * ctx1,
+                                     const char * ctx2 ) {
+
+  if ( ctx1 == NULL ) ctx1 = "";
+  if ( ctx2 == NULL ) ctx2 = "";
+
+  return strcmp( ctx1, ctx2 );
+}
+
 /* eof */

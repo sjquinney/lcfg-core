@@ -3872,4 +3872,27 @@ bool lcfgpackage_store_options( char ** file, ...  ) {
   return ok;
 }
 
+/**
+ * @brief Test if packages have same context
+ *
+ * Compares the @e context for the two packages. Note that this only
+ * does a string comparison, it does NOT evaluate the context
+ * expressions thus two logically equivalent expressions with
+ * different string representations will be considered to be
+ * different.
+ *
+ * @param[in] pkg1 Pointer to @c LCFGPackage
+ * @param[in] pkg2 Pointer to @c LCFGPackage
+ *
+ * @return boolean indicating equality of contexts
+ *
+ */
+
+bool lcfgpackage_same_context( const LCFGPackage * pkg1,
+                               const LCFGPackage * pkg2 ) {
+
+  return ( lcfgcontext_compare_expressions( pkg1->context,
+                                            pkg2->context ) == 0 );
+}
+
 /* eof */

@@ -464,14 +464,6 @@ bool lcfgpkglist_has_package( const LCFGPackageList * list,
   return ( lcfgpkglist_find_node( list, name, arch ) != NULL );
 }
 
-static bool same_context( const LCFGPackage * pkg1, const LCFGPackage * pkg2 ) {
-
-  const char * ctx1 = or_default( pkg1->context, "" );
-  const char * ctx2 = or_default( pkg2->context, "" );
-
-  return ( strcmp( ctx1, ctx2 ) == 0 );
-}
-
 /**
  * @brief Merge package into a list
  *
@@ -580,7 +572,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
     if ( lcfgpackage_match( pkg, match_name, match_arch ) &&
          ( !(pkglist->primary_key&LCFG_PKGLIST_PK_CTX) ||
-           same_context( pkg, new_pkg ) ) ) {
+           lcfgpackage_same_context( pkg, new_pkg ) ) ) {
       cur_node = node;
       break;
     } else {

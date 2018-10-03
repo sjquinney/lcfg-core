@@ -230,6 +230,10 @@ bool lcfgctxlist_eval_expression( const LCFGContextList * ctxlist,
                                   const char * expr,
                                   int * result, char ** msg );
 
+int lcfgcontext_compare_expressions( const char * ctx1,
+                                     const char * ctx2 )
+  __attribute__((const));
+
 /* Tools */
 
 bool lcfgcontext_check_cfgdir( const char * contextdir, char ** msg )
