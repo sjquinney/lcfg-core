@@ -143,7 +143,7 @@ LCFGDerivationMap * lcfgderivmap_new(void) {
  *
  */
 
-void lcfgderivmap_destroy(LCFGDerivationMap * drvmap) {
+static void lcfgderivmap_destroy(LCFGDerivationMap * drvmap) {
 
   if ( drvmap == NULL ) return;
 
@@ -228,6 +228,7 @@ void lcfgderivmap_relinquish( LCFGDerivationMap * drvmap ) {
  */
 
 bool lcfgderivmap_is_shared( const LCFGDerivationMap * drvmap ) {
+  assert( drvmap != NULL );
   return ( drvmap->_refcount > 1 );
 }
 
