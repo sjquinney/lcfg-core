@@ -545,7 +545,10 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
                                       char ** msg ) {
   assert( pkglist != NULL );
 
-  if ( !lcfgpackage_is_valid(new_pkg) ) return LCFG_CHANGE_ERROR;
+  if ( !lcfgpackage_is_valid(new_pkg) ) {
+    lcfgutils_build_message( msg, "Package is invalid" );
+    return LCFG_CHANGE_ERROR;
+  }
 
   /* Define these ahead of any jumps to the "apply" label */
 
