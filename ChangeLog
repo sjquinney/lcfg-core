@@ -1,6 +1,52 @@
-2018-06-13  SVN: new release
+2018-10-04  SVN: new release
 
-	* Release: 1.50.2
+	* Release: 1.50.3
+
+2018-10-04 09:37  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Tweaked lcfgpkglist_merge_package to return a
+	  helpful error message when an invalid package is passed in
+
+2018-10-03 15:08  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c: lcfgderivmap_is_shared should verify
+	  that drvmap is not NULL
+
+2018-10-03 09:36  squinney@INF.ED.AC.UK
+
+	* common/context/context.c, include/context.h, include/packages.h,
+	  include/resources.h, lcfg.yml, packages/list.c,
+	  packages/package.c, resources/resource.c: Added same_context
+	  functions for both packages and resources, these are simple
+	  wrappers around a new lcfgcontext_compare_expressions function.
+	  This makes it easier to improve comparisons of context
+	  expressions at some later date
+
+2018-08-03 15:36  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/components/component.c: Made the
+	  resourcenode functions static as they are not used anywhere else
+
+2018-07-06 09:43  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: changed flags for opening bdb for write
+
+2018-07-06 08:41  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: Another attempt to replace the use of tempnam
+
+2018-07-05 10:59  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: Reverted failed attempt to remove tmpnam
+
+2018-07-05 10:56  squinney@INF.ED.AC.UK
+
+	* xml/resource.c: Corrected some error messages so they refer to
+	  resources not packages
+
+2018-06-13 17:43  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.2
 
 2018-06-13 09:33  squinney@INF.ED.AC.UK
 
