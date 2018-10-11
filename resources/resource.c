@@ -3947,9 +3947,11 @@ bool lcfgresource_match( const LCFGResource * res, const char * name ) {
 /**
  * @brief Compare resources
  *
- * This compares two resources using the @e name, @e value and @e
- * context. This is mostly useful for sorting lists of resources. All
- * comparisons are done simply using strcmp().
+ * This compares two resources using the values for the @e name,
+ * @e priority, @e value and @e context attributes (in that order). This
+ * is mostly useful for sorting lists of resources. Priorities are
+ * compared as integers, all other comparisons are done simply using
+ * strcmp().
  *
  * @param[in] res1 Pointer to @c LCFGResource
  * @param[in] res2 Pointer to @c LCFGResource
@@ -3966,6 +3968,14 @@ int lcfgresource_compare( const LCFGResource * res1,
   /* Name */
 
   int result = lcfgresource_compare_names( res1, res2 );
+
+  /* Priority */
+
+  if ( result == 0 ) {
+    int prio1 = res1->priority;
+    int prio2 = res2->priority;
+    result = prio1 == prio2 ? 0 : ( prio1 < prio2 ? -1 : 1 );
+  }
 
   /* Value - explicitly doing a string comparison rather than type-based */
 
