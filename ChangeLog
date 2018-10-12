@@ -1,6 +1,24 @@
 2018-10-12  SVN: new release
 
-	* Release: 1.50.4
+	* Release: 1.50.5
+
+2018-10-12 09:45  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, lcfg.yml: When loading resource information from the
+	  berkeley DB we now only load value and type by default. The
+	  LCFG_OPT_USE_META option must be specified to load derivation,
+	  context and priority information. Typically the extra meta-data
+	  is not required and it takes a long time to load so we now avoid
+	  it where possible
+
+2018-10-12 09:44  squinney@INF.ED.AC.UK
+
+	* include/bdb.h: lcfgbdb_process_components is now static so
+	  removed from public header
+
+2018-10-12 08:42  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.4
 
 2018-10-12 08:42  squinney@INF.ED.AC.UK
 
