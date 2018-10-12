@@ -34,13 +34,6 @@ DB * lcfgbdb_init_writer( const char * filename,
                           char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgbdb_process_components( DB * dbh,
-				       LCFGComponentSet ** result,
-				       LCFGTagList * comps_wanted,
-                                       const char * namespace,
-				       char ** errmsg )
-   __attribute__((warn_unused_result));
-
 LCFGStatus lcfgprofile_from_bdb( const char * filename,
 				 LCFGProfile ** result,
 				 LCFGTagList * comps_wanted,
