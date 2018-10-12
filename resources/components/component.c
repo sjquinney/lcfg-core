@@ -1016,6 +1016,8 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
     exit(EXIT_FAILURE);
   }
 
+  LCFGResource * recent = NULL;
+
   int linenum = 1;
   while( getline( &statusline, &line_len, fp ) != -1 ) {
 
@@ -1057,15 +1059,19 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
 
     /* Grab the resource or create a new one if necessary */
 
-    LCFGResource * res =
-      lcfgcomponent_find_or_create_resource( comp, this_resname, true );
+    LCFGResource * res = NULL;
+    if ( recent != NULL && lcfgresource_match( recent, this_resname ) ) {
+      res = recent;
+    } else {
+      res = lcfgcomponent_find_or_create_resource( comp, this_resname, true );
 
-    if ( res == NULL ) {
-      lcfgutils_build_message( msg,
-			       "Failed to parse line %d of status file '%s'",
-			       linenum, statusfile );
-      ok = false;
-      break;
+      if ( res == NULL ) {
+        lcfgutils_build_message( msg,
+                                 "Failed to parse line %d of status file '%s'",
+                                 linenum, statusfile );
+        ok = false;
+        break;
+      }
     }
 
     /* Apply the action which matches with the symbol at the start of
@@ -1094,6 +1100,7 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
       break;
     }
 
+    recent = res;
     linenum++;
   }
 
