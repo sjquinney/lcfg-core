@@ -953,6 +953,8 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
 					   char ** msg ) {
   assert( filename != NULL );
 
+  bool ignore_meta = ! ( options & LCFG_OPT_USE_META );
+
   *result = NULL;
 
   LCFGComponent * comp = NULL;
@@ -1018,18 +1020,19 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
 
   LCFGResource * recent = NULL;
 
+  const char * this_hostname = NULL;
+  const char * this_compname = NULL;
+  const char * this_resname  = NULL;
+  const char * status_value  = NULL;
+  char this_type             = LCFG_RESOURCE_SYMBOL_VALUE;
+
   int linenum = 1;
   while( getline( &statusline, &line_len, fp ) != -1 ) {
 
     lcfgutils_string_chomp(statusline);
 
-    const char * this_hostname = NULL;
-    const char * this_compname = NULL;
-    const char * this_resname  = NULL;
-    const char * status_value  = NULL;
-    char this_type             = LCFG_RESOURCE_SYMBOL_VALUE;
-
     char * parse_msg = NULL;
+
     LCFGStatus parse_status = lcfgresource_parse_spec( statusline,
                                                        &this_hostname,
                                                        &this_compname,
@@ -1045,6 +1048,12 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
       break;
     }
     free(parse_msg);
+
+    if ( ignore_meta &&
+         this_type != LCFG_RESOURCE_SYMBOL_VALUE &&
+         this_type != LCFG_RESOURCE_SYMBOL_TYPE ) {
+      goto next_line;
+    }
 
     /* Insist on the component names matching */
 
@@ -1101,6 +1110,9 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
     }
 
     recent = res;
+
+    next_line:
+
     linenum++;
   }
 
