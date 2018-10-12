@@ -1,6 +1,16 @@
 2018-10-12  SVN: new release
 
-	* Release: 1.50.5
+	* Release: 1.50.6
+
+2018-10-12 11:08  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/components/component.c: Only load meta-data
+	  (e.g. derivation and context) from status files when
+	  LCFG_OPT_USE_META is specified
+
+2018-10-12 09:46  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.5
 
 2018-10-12 09:45  squinney@INF.ED.AC.UK
 
