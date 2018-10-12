@@ -791,22 +791,25 @@ LCFGChange lcfgcomponent_diff( const LCFGComponent * comp1,
     LCFGResource * res2 = comp2 != NULL ?
       lcfgcomponent_find_resource( comp2, res1_name, false ) : NULL;
 
-    LCFGDiffResource * resdiff = NULL;
-    LCFGChange res_change = lcfgresource_diff( res1, res2, &resdiff );
+    if ( res2 == NULL || !lcfgresource_same_value( res1, res2 ) ) {
 
-    /* Just ignore anything where there are no differences */
+      LCFGDiffResource * resdiff = NULL;
+      LCFGChange res_change = lcfgresource_diff( res1, res2, &resdiff );
 
-    if ( res_change == LCFG_CHANGE_ERROR ) {
-      ok = false;
-    } else if ( res_change != LCFG_CHANGE_NONE ) {
+      /* Just ignore anything where there are no differences */
 
-      LCFGChange append_rc = lcfgdiffcomponent_append( compdiff, resdiff );
-      if ( append_rc == LCFG_CHANGE_ERROR )
+      if ( res_change == LCFG_CHANGE_ERROR ) {
         ok = false;
+      } else if ( res_change != LCFG_CHANGE_NONE ) {
 
+        LCFGChange append_rc = lcfgdiffcomponent_append( compdiff, resdiff );
+        if ( append_rc == LCFG_CHANGE_ERROR )
+          ok = false;
+
+      }
+
+      lcfgdiffresource_relinquish(resdiff);
     }
-
-    lcfgdiffresource_relinquish(resdiff);
   }
 
   /* Look for resources which have been added */
