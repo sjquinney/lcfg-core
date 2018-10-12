@@ -1,6 +1,28 @@
-2018-10-04  SVN: new release
+2018-10-12  SVN: new release
 
-	* Release: 1.50.3
+	* Release: 1.50.4
+
+2018-10-12 08:42  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/components/diff.c: Avoid generating resource
+	  diff objects where there is no change in value, these won't be
+	  stored so it's just a waste of effort
+
+2018-10-12 08:41  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: When reading in from a status
+	  file hang on to the most recent resource to avoid having to
+	  repeatedly search the resource list for something which is
+	  inevitably right at the end
+
+2018-10-11 12:56  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: compare resources using priorities when
+	  names match
+
+2018-10-04 09:37  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.3
 
 2018-10-04 09:37  squinney@INF.ED.AC.UK
 
