@@ -318,9 +318,9 @@ bool lcfgpackage_store_options( char ** file, ...  )
 /* Package Lists */
 
 typedef enum {
-  LCFG_PKGLIST_PK_NAME = 0,
-  LCFG_PKGLIST_PK_ARCH = 1,
-  LCFG_PKGLIST_PK_CTX  = 2
+  LCFG_PKGLIST_PK_NAME = 1,
+  LCFG_PKGLIST_PK_ARCH = 2,
+  LCFG_PKGLIST_PK_CTX  = 4
 } LCFGPkgListPK;
 
 /**
