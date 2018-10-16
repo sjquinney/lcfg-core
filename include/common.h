@@ -64,17 +64,17 @@ typedef enum {
  */
 
 typedef enum {
-  LCFG_OPT_NONE           =   0, /**< Null option */
-  LCFG_OPT_NOCONTEXT      =   1, /**< Ignore context */
-  LCFG_OPT_NOPREFIX       =   2, /**< Ignore prefix */
-  LCFG_OPT_NEWLINE        =   4, /**< Include newline */
-  LCFG_OPT_NOVALUE        =   8, /**< Ignore value */
-  LCFG_OPT_NOTEMPLATES    =  16, /**< Ignore templates */
-  LCFG_OPT_ALLOW_NOEXIST  =  32, /**< Allow object to not exist */
-  LCFG_OPT_ENCODE         =  64, /**< Encode data */
-  LCFG_OPT_ALL_CONTEXTS   = 128, /**< Include all contexts */
-  LCFG_OPT_ALL_PRIORITIES = 256, /**< Include all priorities */
-  LCFG_OPT_USE_META       = 512, /**< Include metadata */
+  LCFG_OPT_NONE           =    0, /**< Null option */
+  LCFG_OPT_NOCONTEXT      =    1, /**< Ignore context */
+  LCFG_OPT_NOPREFIX       =    2, /**< Ignore prefix */
+  LCFG_OPT_NEWLINE        =    4, /**< Include newline */
+  LCFG_OPT_NOVALUE        =    8, /**< Ignore value */
+  LCFG_OPT_NOTEMPLATES    =   16, /**< Ignore templates */
+  LCFG_OPT_ALLOW_NOEXIST  =   32, /**< Allow object to not exist */
+  LCFG_OPT_ENCODE         =   64, /**< Encode data */
+  LCFG_OPT_ALL_CONTEXTS   =  128, /**< Include all contexts */
+  LCFG_OPT_ALL_PRIORITIES =  256, /**< Include all priorities */
+  LCFG_OPT_USE_META       =  512, /**< Include metadata */
   LCFG_OPT_ALL_VALUES     = 1024,/**< Include all values */
   LCFG_OPT_COMPAT         = 2048 /**< Compatibility mode */
 } LCFGOption;
