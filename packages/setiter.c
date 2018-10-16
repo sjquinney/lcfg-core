@@ -95,6 +95,8 @@ void lcfgpkgsetiter_destroy( LCFGPkgSetIterator * iterator ) {
  */
 
 void lcfgpkgsetiter_reset( LCFGPkgSetIterator * iterator ) {
+  assert( iterator != NULL );
+
   lcfgpkgiter_destroy(iterator->listiter);
   iterator->listiter = NULL;
 
@@ -114,6 +116,7 @@ void lcfgpkgsetiter_reset( LCFGPkgSetIterator * iterator ) {
  */
 
 bool lcfgpkgsetiter_has_next( LCFGPkgSetIterator * iterator ) {
+  assert( iterator != NULL );
 
   bool has_next = ( iterator->listiter != NULL &&
 		    lcfgpkgiter_has_next(iterator->listiter) );
@@ -146,6 +149,7 @@ bool lcfgpkgsetiter_has_next( LCFGPkgSetIterator * iterator ) {
  */
 
 LCFGPackage * lcfgpkgsetiter_next(LCFGPkgSetIterator * iterator) {
+  assert( iterator != NULL );
 
   LCFGPackage * next = NULL;
 
