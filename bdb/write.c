@@ -121,17 +121,11 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
   int ret;
   DBT key, data;
 
-  const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(component);
-	cur_node != NULL && status != LCFG_STATUS_ERROR;
-	cur_node = lcfgcomponent_next(cur_node) ) {
+  LCFGComponentIterator * compiter =
+    lcfgcompiter_new( (LCFGComponent *) component, false );
 
-    const LCFGResource * resource = lcfgcomponent_resource(cur_node);
-
-    /* Only want to store active resources (priority >= 0).
-       They MUST have a name. */
-    if ( !lcfgresource_is_active(resource) || !lcfgresource_is_valid(resource) )
-      continue;
+  const LCFGResource * resource = NULL;
+  while ( ( resource = lcfgcompiter_next(compiter) ) != NULL ) {
 
     /* Derivation */
 
@@ -141,10 +135,10 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
       memset( &data, 0, sizeof(DBT) );
 
       key_len = lcfgresource_build_key( resource->name,
-                                       compname,
-                                       namespace,
-                                       LCFG_RESOURCE_SYMBOL_DERIVATION,
-                                       &key_buf, &key_size );
+                                        compname,
+                                        namespace,
+                                        LCFG_RESOURCE_SYMBOL_DERIVATION,
+                                        &key_buf, &key_size );
 
       if ( key_len < 0 ) {
         status = LCFG_STATUS_ERROR;
@@ -410,6 +404,7 @@ LCFGStatus lcfgcomponent_to_bdb( const LCFGComponent * component,
 
  cleanup:
 
+  lcfgcompiter_destroy(compiter);
   lcfgtaglist_relinquish(stored_res);
   free(key_buf);
   free(val_buf);

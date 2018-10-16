@@ -452,11 +452,8 @@ bool lcfgcompset_print( const LCFGComponentSet * compset,
     if ( comp_name != NULL )
       comp = lcfgcompset_find_component( compset, comp_name );
 
-    if ( comp != NULL ) {
-      lcfgcomponent_sort(comp);
-
+    if ( comp != NULL )
       ok = lcfgcomponent_print( comp, style, options, out );
-    }
 
   }
 
@@ -793,11 +790,6 @@ LCFGStatus lcfgcompset_to_status_dir( const LCFGComponentSet * compset,
 
     char * statfile = lcfgutils_catfile( status_dir, comp_name );
 
-    /* Sort the list of resources so that the status file is always
-       produced in the same order - makes comparisons simpler. */
-
-    lcfgcomponent_sort(cur_comp);
-
     char * comp_msg = NULL;
     LCFGChange change = lcfgcomponent_to_status_file( cur_comp, statfile,
                                                       options, &comp_msg );
@@ -1127,46 +1119,34 @@ char * lcfgcompset_signature( const LCFGComponentSet * compset ) {
 
   LCFGComponent ** components = compset->components;
 
+  bool ok = true;
+
   unsigned int i;
-  for ( i=0; i < compset->buckets; i++ ) {
+  for ( i=0; ok && i < compset->buckets; i++ ) {
 
     const LCFGComponent * comp = components[i];
 
-    if (!comp) continue;
-
-    const char * comp_name = lcfgcomponent_get_name(comp);
-
-    const LCFGResourceNode * res_node = NULL;
-    for ( res_node = lcfgcomponent_head(comp);
-	  res_node != NULL;
-	  res_node = lcfgcomponent_next(res_node) ) {
-
-      const LCFGResource * res = lcfgcomponent_resource(res_node);
-
-      if ( lcfgresource_is_valid(res) && lcfgresource_is_active(res) ) {
-
-	ssize_t rc = lcfgresource_to_status( res, comp_name, LCFG_OPT_USE_META,
-					     &buffer, &buf_size );
-	if ( rc > 0 ) {
-	  lcfgutils_md5_append( &md5state,
-				(const md5_byte_t *) buffer, rc );
-	}
-
-      }
-
+    if (comp) {
+      ok = lcfgcomponent_update_signature( comp, &md5state,
+                                           &buffer, &buf_size );
     }
-  }
 
-  md5_byte_t digest[16];
-  lcfgutils_md5_finish( &md5state, digest );
-
-  char * hex_digest = NULL;
-  if ( !lcfgutils_md5_hexdigest( digest, &hex_digest ) ) {
-    free(hex_digest);
-    hex_digest = NULL;
   }
 
   free(buffer);
+
+  char * hex_digest = NULL;
+  if (ok) {
+    md5_byte_t digest[16];
+    lcfgutils_md5_finish( &md5state, digest );
+
+    ok = lcfgutils_md5_hexdigest( digest, &hex_digest );
+  }
+
+  if ( !ok ) {
+    free(hex_digest);
+    hex_digest = NULL;
+  }
 
   return hex_digest;
 }

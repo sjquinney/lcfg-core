@@ -17,81 +17,118 @@
 
 #include "components.h"
 #include "utils.h"
+#include "farmhash.h"
+#include "reslist.h"
 
-/**
- * @brief Create and initialise a new resource node
- *
- * This creates a simple wrapper @c LCFGResourceNode node which
- * is used to hold a pointer to an @c LCFGResource as an item in a
- * @c LCFGComponent data structure.
- *
- * It is typically not necessary to call this function. The usual
- * approach is to use the @c lcfgcomponent_insert_next() or
- * @c lcfgcomponent_append() functions to add @c LCFGResource structures
- * to the list.
- *
- * If the memory allocation for the new structure is not successful
- * the @c exit() function will be called with a non-zero value.
- *
- * To avoid memory leaks, when the new structure is no longer required
- * the @c lcfgresourcenode_destroy() function should be called.
- *
- * @param[in] res Pointer to @c LCFGResource
- *
- * @return Pointer to new @c LCFGResourceNode
- *
- */
+/* Component internal functions */
 
-static LCFGResourceNode * lcfgresourcenode_new(LCFGResource * res) {
-  assert( res != NULL );
+static unsigned long lcfgcomponent_hash_string( const LCFGComponent * comp,
+                                                const char * string ) {
+  assert( comp != NULL );
+  assert( string != NULL );
 
-  LCFGResourceNode * resnode = malloc( sizeof(LCFGResourceNode) );
-  if ( resnode == NULL ) {
-    perror( "Failed to allocate memory for LCFG resource node" );
+  size_t len = strlen(string);
+  return farmhash64( string, len ) % comp->buckets;
+}
+
+static double lcfgcomponent_load_factor( const LCFGComponent * comp ) {
+  return ( (double) comp->entries / (double) comp->buckets );
+}
+
+static LCFGChange lcfgcomponent_merge_list( LCFGComponent * comp,
+                                            const LCFGResourceList * list,
+                                            char ** msg ) {
+  assert( comp != NULL );
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(list);
+        cur_node != NULL && change != LCFG_CHANGE_ERROR;
+        cur_node = lcfgslist_next(cur_node) ) {
+
+    LCFGResource * resource = lcfgslist_data(cur_node);
+
+    char * merge_msg = NULL;
+    LCFGChange merge_rc = lcfgcomponent_merge_resource( comp,
+                                                        resource,
+                                                        &merge_msg );
+
+    if ( merge_rc == LCFG_CHANGE_ERROR ) {
+      change = LCFG_CHANGE_ERROR;
+
+      *msg = lcfgresource_build_message( resource,
+                                         "Failed to merge resource: %s",
+                                         merge_msg );
+
+    } else if ( merge_rc != LCFG_CHANGE_NONE ) {
+      change = LCFG_CHANGE_MODIFIED;
+    }
+
+    free(merge_msg);
+  }
+
+  return change;
+}
+
+static void lcfgcomponent_resize( LCFGComponent * comp ) {
+
+  double load_factor = lcfgcomponent_load_factor(comp);
+
+  size_t want_buckets = comp->buckets;
+  if ( load_factor >= LCFG_COMP_LOAD_MAX ) {
+    want_buckets = (size_t)
+      ( (double) comp->entries / LCFG_COMP_LOAD_INIT ) + 1;
+  }
+
+  LCFGResourceList ** cur_set = comp->resources;
+  size_t cur_buckets = comp->buckets;
+
+  /* Decide if a resize is actually required */
+
+  if ( cur_set != NULL && want_buckets <= cur_buckets ) return;
+
+  /* Resize the hash */
+
+  LCFGResourceList ** new_set = calloc( (size_t) want_buckets,
+                                        sizeof(LCFGResourceList *) );
+  if ( new_set == NULL ) {
+    perror( "Failed to allocate memory for LCFG resources set" );
     exit(EXIT_FAILURE);
   }
 
-  /* Set default values */
+  comp->resources = new_set;
+  comp->entries   = 0;
+  comp->buckets   = want_buckets;
 
-  resnode->resource = res;
-  resnode->next     = NULL;
+  if ( cur_set != NULL ) {
 
-  return resnode;
-}
+    unsigned long i;
+    for ( i=0; i<cur_buckets; i++ ) {
+      LCFGResourceList * list = cur_set[i];
 
-/**
- * @brief Destroy a resource node
- *
- * When the specified @c LCFGResourceNode is no longer required this
- * can be used to free all associated memory. This will call
- * @c free(3) on each parameter of the struct and then set each value to
- * be @c NULL.
- *
- * Note that destroying an @c LCFGResourceNode does not destroy the
- * associated @c LCFGResource, that must be done separately.
- *
- * It is typically not necessary to call this function. The usual
- * approach is to use the @c lcfgcomponent_remove_next() function to
- * remove a @c LCFGResource from the list.
- *
- * If the value of the pointer passed in is @c NULL then the function
- * has no affect. This means it is safe to call with a pointer to a
- * resource node which has already been destroyed (or potentially was
- * never created).
- *
- * @param[in] resnode Pointer to @c LCFGResourceNode to be destroyed.
- *
- */
+      if ( !lcfgreslist_is_empty(list) ) {
 
-static void lcfgresourcenode_destroy(LCFGResourceNode * resnode) {
+        char * merge_msg = NULL;
 
-  if ( resnode == NULL ) return;
+        LCFGChange merge_rc =
+          lcfgcomponent_merge_list( comp, list, &merge_msg );
 
-  resnode->resource = NULL;
-  resnode->next     = NULL;
+        if ( merge_rc == LCFG_CHANGE_ERROR ) {
+          fprintf( stderr, "Failed to resize resources set: %s\n", merge_msg );
+          free(merge_msg);
+          exit(EXIT_FAILURE);
+        }
 
-  free(resnode);
-  resnode = NULL;
+        free(merge_msg);
+      }
+
+      lcfgreslist_relinquish(list);
+      cur_set[i] = NULL;
+    }
+
+    free(cur_set);
+  }
 
 }
 
@@ -113,20 +150,21 @@ static void lcfgresourcenode_destroy(LCFGResourceNode * resnode) {
 
 LCFGComponent * lcfgcomponent_new(void) {
 
-  LCFGComponent * comp = malloc( sizeof(LCFGComponent) );
+  LCFGComponent * comp = calloc( 1, sizeof(LCFGComponent) );
   if ( comp == NULL ) {
     perror( "Failed to allocate memory for LCFG component" );
     exit(EXIT_FAILURE);
   }
 
-  /* Set default values */
-
-  comp->name = NULL;
   comp->merge_rules = LCFG_MERGE_RULE_NONE;
-  comp->size = 0;
-  comp->head = NULL;
-  comp->tail = NULL;
-  comp->_refcount = 1;
+  comp->primary_key = LCFG_COMP_PK_NAME;
+
+  comp->resources   = NULL;
+  comp->entries     = 0;
+  comp->buckets     = LCFG_COMP_DEFAULT_SIZE;
+  comp->_refcount   = 1;
+
+  lcfgcomponent_resize(comp);
 
   return comp;
 }
@@ -145,11 +183,14 @@ LCFGComponent * lcfgcomponent_new(void) {
 
 void lcfgcomponent_remove_all_resources( LCFGComponent * comp ) {
 
-  while ( lcfgcomponent_size(comp) > 0 ) {
-    LCFGResource * resource = NULL;
-    if ( lcfgcomponent_remove_next( comp, NULL, &resource )
-         == LCFG_CHANGE_REMOVED ) {
-      lcfgresource_relinquish(resource);
+  LCFGResourceList ** resources = comp->resources;
+
+  unsigned long i;
+  for (i=0; i < comp->buckets; i++ ) {
+    if ( resources[i] ) {
+      lcfgreslist_relinquish(resources[i]);
+      resources[i] = NULL;
+      comp->entries -= 1;
     }
   }
 
@@ -189,6 +230,9 @@ void lcfgcomponent_destroy(LCFGComponent * comp) {
   if ( comp == NULL ) return;
 
   lcfgcomponent_remove_all_resources(comp);
+
+  free(comp->resources);
+  comp->resources = NULL;
 
   free(comp->name);
   comp->name = NULL;
@@ -247,6 +291,11 @@ void lcfgcomponent_relinquish(LCFGComponent * comp) {
 
 }
 
+bool lcfgcomponent_is_shared( const LCFGComponent * comp ) {
+  assert( comp != NULL );
+  return ( comp->_refcount > 1 );
+}
+
 /**
  * @brief Set the component merge rules
  *
@@ -280,7 +329,19 @@ bool lcfgcomponent_set_merge_rules( LCFGComponent * comp,
 
   comp->merge_rules = new_rules;
 
-  return true;
+  /* Apply to all child resource lists */
+
+  bool ok = true;
+
+  LCFGResourceList ** resources = comp->resources;
+
+  unsigned long i;
+  for ( i=0; ok && i < comp->buckets; i++ ) {
+    if ( resources[i] )
+      ok = lcfgreslist_set_merge_rules( resources[i], new_rules );
+  }
+
+  return ok;
 }
 
 /**
@@ -302,6 +363,32 @@ LCFGMergeRule lcfgcomponent_get_merge_rules( const LCFGComponent * comp ) {
   assert( comp != NULL );
 
   return comp->merge_rules;
+}
+
+unsigned int lcfgcomponent_size( const LCFGComponent * comp ) {
+  assert( comp != NULL );
+
+  unsigned int size = 0;
+
+  /* No point scanning the whole array if there are no entries */
+
+  if ( comp->entries > 0 ) {
+
+    if ( comp->primary_key == LCFG_COMP_PK_NAME ) {
+      size = comp->entries;
+    } else {
+      LCFGResourceList ** resources = comp->resources;
+
+      unsigned long i;
+      for ( i=0; i < comp->buckets; i++ ) {
+        if ( resources[i] )
+          size += lcfgreslist_size(resources[i]);
+      }
+    }
+
+  }
+
+  return size;
 }
 
 /**
@@ -423,128 +510,6 @@ bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name ) {
 }
 
 /**
- * @brief Insert a resource into the list
- *
- * This can be used to insert an @c LCFGResource into the
- * specified component. The resource will be wrapped into an
- * @c LCFGResourceNode using the @c lcfgresourcenode_new() function.
- *
- * The resource will be inserted into the component immediately after
- * the specified @c LCFGResourceNode. To insert the resource at the
- * head of the list the @c NULL value should be passed for the node.
- *
- * If the resource is successfully inserted the @c LCFG_CHANGE_ADDED
- * value is returned, if an error occurs then @c LCFG_CHANGE_ERROR is
- * returned.
- *
- * @param[in] list Pointer to @c LCFGComponent
- * @param[in] node Pointer to @c LCFGResourceNode
- * @param[in] item Pointer to @c LCFGResource
- * 
- * @return Integer value indicating type of change
- *
- */
-
-LCFGChange lcfgcomponent_insert_next( LCFGComponent    * list,
-                                      LCFGResourceNode * node,
-                                      LCFGResource     * item ) {
-  assert( list != NULL );
-
-  LCFGResourceNode * new_node = lcfgresourcenode_new(item);
-  if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
-
-  lcfgresource_acquire(item);
-
-  if ( node == NULL ) { /* HEAD */
-
-    if ( lcfgcomponent_is_empty(list) )
-      list->tail = new_node;
-
-    new_node->next = list->head;
-    list->head     = new_node;
-
-  } else {
-    
-    if ( node->next == NULL )
-      list->tail = new_node;
-
-    new_node->next = node->next;
-    node->next     = new_node;
-
-  }
-
-  list->size++;
-
-  return LCFG_CHANGE_ADDED;
-}
-
-/**
- * @brief Remove a resource from the component
- *
- * This can be used to remove an @c LCFGResource from the specified
- * component.
- *
- * The resource removed from the component is immediately after the
- * specified @c LCFGResourceNode. To remove the resource from the head
- * of the list the @c NULL value should be passed for the node.
- *
- * If the resource is successfully removed the @c LCFG_CHANGE_REMOVED
- * value is returned, if an error occurs then @c LCFG_CHANGE_ERROR is
- * returned. If the list is already empty then the @c LCFG_CHANGE_NONE
- * value is returned.
- *
- * Note that, since a pointer to the @c LCFGResource is returned
- * to the caller, the reference count will still be at least 1. To
- * avoid memory leaks, when the struct is no longer required it should
- * be released by calling @c lcfgresource_relinquish().
- *
- * @param[in] list Pointer to @c LCFGComponent
- * @param[in] node Pointer to @c LCFGResourceNode
- * @param[out] item Pointer to @c LCFGResource
- * 
- * @return Integer value indicating type of change
- *
- */
-
-LCFGChange lcfgcomponent_remove_next( LCFGComponent    * list,
-                                      LCFGResourceNode * node,
-                                      LCFGResource    ** item ) {
-  assert( list != NULL );
-
-  if ( lcfgcomponent_is_empty(list) ) return LCFG_CHANGE_NONE;
-
-  LCFGResourceNode * old_node = NULL;
-
-  if ( node == NULL ) { /* HEAD */
-
-    old_node   = list->head;
-    list->head = list->head->next;
-
-    if ( lcfgcomponent_size(list) == 1 )
-      list->tail = NULL;
-
-  } else {
-
-    if ( node->next == NULL ) return LCFG_CHANGE_ERROR;
-
-    old_node   = node->next;
-    node->next = node->next->next;
-
-    if ( node->next == NULL )
-      list->tail = node;
-
-  }
-
-  list->size--;
-
-  *item = lcfgcomponent_resource(old_node);
-
-  lcfgresourcenode_destroy(old_node);
-
-  return LCFG_CHANGE_REMOVED;
-}
-
-/**
  * @brief Clone a component
  *
  * This will create a clone of the specified component. If the @c
@@ -559,6 +524,8 @@ LCFGChange lcfgcomponent_remove_next( LCFGComponent    * list,
  * @return Pointer to new clone @c LCFGComponent (@c NULL if error occurs)
  *
  */
+
+#ifdef TODO
 
 LCFGComponent * lcfgcomponent_clone( LCFGComponent * comp, bool deep_copy ) {
 
@@ -614,7 +581,58 @@ LCFGComponent * lcfgcomponent_clone( LCFGComponent * comp, bool deep_copy ) {
 
   return comp_clone;
 }
+#endif
 
+/* Use for sorting entries by name */
+struct LCFGComponentEntry {
+  const char * name;
+  unsigned int slot;
+};
+
+typedef struct LCFGComponentEntry LCFGComponentEntry;
+
+static int lcfgcomponent_entry_cmp( const void * a, const void * b ) {
+  const char * a_name = ( (const LCFGComponentEntry *) a )->name;
+  const char * b_name = ( (const LCFGComponentEntry *) b )->name;
+  return strcasecmp( a_name, b_name );
+}
+
+static unsigned int lcfgcomponent_sorted_entries( const LCFGComponent * comp,
+                                                  LCFGComponentEntry ** result ) {
+
+   LCFGComponentEntry * entries =
+     calloc( comp->buckets, sizeof(LCFGComponentEntry) );
+
+   LCFGResourceList ** resources = comp->resources;
+
+   unsigned long count = 0;
+
+   unsigned long i;
+   for (i=0; i < comp->buckets; i++ ) {
+     LCFGResourceList * list = resources[i];
+
+     if ( !lcfgreslist_is_empty(list) ) {
+
+       const LCFGResource * res = lcfgreslist_first_resource(list);
+
+       unsigned int k = count++;
+       entries[k].name = res->name;
+       entries[k].slot = i;
+
+     }
+   }
+
+   if ( count > 0 ) {
+     qsort( entries, count, sizeof(LCFGComponentEntry), lcfgcomponent_entry_cmp );
+   } else {
+     free(entries);
+     entries = NULL;
+   }
+
+   *result = entries;
+
+   return count;
+}
 
 /**
  * @brief Write list of formatted resources to file stream
@@ -649,58 +667,44 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
                           FILE * out ) {
   assert( comp != NULL );
 
-  if ( lcfgcomponent_is_empty(comp) ) return true;
-
   /* Use a separate function for printing in the 'export' style */
-  if ( style == LCFG_RESOURCE_STYLE_EXPORT )
-    return lcfgcomponent_to_export( comp, NULL, NULL, options, out );
+  if ( style == LCFG_RESOURCE_STYLE_EXPORT ) {
+    LCFGStatus export_rc =
+      lcfgcomponent_to_export( comp, NULL, NULL, options, out );
+    return ( export_rc != LCFG_STATUS_ERROR );
+  }
 
-  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
-  bool all_values     = (options&LCFG_OPT_ALL_VALUES);
+  if ( lcfgcomponent_is_empty(comp) ) return true;
 
   options |= LCFG_OPT_NEWLINE;
 
-  const char * comp_name = lcfgcomponent_get_name(comp);
-
   /* Preallocate string buffer for efficiency */
 
-  size_t buf_size = 256;
+  size_t buf_size = 512;
   char * buffer = calloc( buf_size, sizeof(char) );
   if ( buffer == NULL ) {
     perror( "Failed to allocate memory for LCFG resource buffer" );
     exit(EXIT_FAILURE);
   }
 
+  LCFGComponentEntry * entries = NULL;
+  unsigned int count = lcfgcomponent_sorted_entries( comp, &entries );
+
+  const char * comp_name = lcfgcomponent_get_name(comp);
+  LCFGResourceList ** resources = comp->resources;
+
   bool ok = true;
 
-  const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(comp);
-	cur_node != NULL && ok;
-	cur_node = lcfgcomponent_next(cur_node) ) {
+  unsigned long i;
+  for ( i=0; i<count && ok; i++ ) {
 
-    const LCFGResource * res = lcfgcomponent_resource(cur_node);
+    unsigned int slot = entries[i].slot;
 
-    /* Not interested in resources for inactive contexts. Only print
-       resources without values if the print_all option is specified */
-
-    if ( ( all_values     || lcfgresource_has_value(res) ) &&
-         ( all_priorities || lcfgresource_is_active(res) ) ) {
-
-      ssize_t rc = lcfgresource_to_string( res, comp_name, style, options,
-                                           &buffer, &buf_size );
-
-      if ( rc < 0 )
-        ok = false;
-
-      if (ok) {
-        if ( fputs( buffer, out ) < 0 )
-          ok = false;
-      }
-
-    }
+    ok = lcfgreslist_print( resources[slot], comp_name, style, options,
+                            &buffer, &buf_size, out );
   }
-
   free(buffer);
+  free(entries);
 
   return ok;
 }
@@ -733,17 +737,16 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
  *
  */
 
-bool lcfgcomponent_to_export( const LCFGComponent * comp,
-                              const char * val_pfx, const char * type_pfx,
-                              LCFGOption options,
-                              FILE * out ) {
+LCFGStatus lcfgcomponent_to_export( const LCFGComponent * comp,
+                                    const char * val_pfx, const char * type_pfx,
+                                    LCFGOption options,
+                                    FILE * out ) {
   assert( comp != NULL );
 
   if ( !lcfgcomponent_is_valid(comp) ) return LCFG_STATUS_ERROR;
   if ( lcfgcomponent_is_empty(comp) )  return LCFG_STATUS_OK;
 
-  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
-  bool all_values     = (options&LCFG_OPT_ALL_VALUES);
+  bool all_values = (options&LCFG_OPT_ALL_VALUES);
 
   const char * comp_name = lcfgcomponent_get_name(comp);
 
@@ -791,18 +794,17 @@ bool lcfgcomponent_to_export( const LCFGComponent * comp,
 
   LCFGTagList * export_res = lcfgtaglist_new();
 
-  const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(comp);
-	cur_node != NULL && ok;
-	cur_node = lcfgcomponent_next(cur_node) ) {
+  LCFGResourceList ** resources = comp->resources;
 
-    const LCFGResource * res = lcfgcomponent_resource(cur_node);
+  unsigned long i;
+  for ( i=0; i < comp->buckets; i++ ) {
 
-    /* Not interested in resources for inactive contexts. Only print
-       resources without values if the print_all option is specified */
+    const LCFGResourceList * list = resources[i];
+    if ( lcfgreslist_is_empty(list) ) continue;
 
-    if ( ( all_values     || lcfgresource_has_value(res) ) &&
-         ( all_priorities || lcfgresource_is_active(res) ) ) {
+    const LCFGResource * res = lcfgreslist_first_resource(list);
+
+    if ( all_values || lcfgresource_has_value(res) ) {
 
       ssize_t rc = lcfgresource_to_export( res, NULL,
                                            val_pfx2, type_pfx2,
@@ -879,47 +881,52 @@ bool lcfgcomponent_to_export( const LCFGComponent * comp,
   free(val_pfx2);
   free(type_pfx2);
 
-  return ok;
+  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
 
-/**
- * @brief Sort a list of resources for a component
- *
- * This sorts the nodes of the list of resources for an @c
- * LCFGComponent by using the @c lcfgresource_compare() function.
- *
- * @param[in] comp Pointer to @c LCFGComponent
- *
- */
-
-void lcfgcomponent_sort( LCFGComponent * comp ) {
+static LCFGChange lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
+                                                         const char * name,
+                                                         LCFGResource ** result,
+                                                         char ** msg ) {
   assert( comp != NULL );
+  assert( name != NULL );
 
-  if ( lcfgcomponent_size(comp) < 2 ) return;
+  LCFGChange change = LCFG_CHANGE_NONE;
 
-  /* Oo. Oo. bubble sort .oO .oO */
+  const LCFGResource * resource = lcfgcomponent_find_resource( comp, name );
 
-  bool swapped=true;
-  while (swapped) {
-    swapped=false;
+  if ( resource == NULL ) {
 
-    LCFGResourceNode * cur_node = NULL;
-    for ( cur_node = lcfgcomponent_head(comp);
-          cur_node != NULL && cur_node->next != NULL;
-          cur_node = lcfgcomponent_next(cur_node) ) {
+    /* If not found then create new resource and add it to the comp */
 
-      LCFGResource * cur_res  = lcfgcomponent_resource(cur_node);
-      LCFGResource * next_res = lcfgcomponent_resource(cur_node->next);
+    LCFGResource * new_res = lcfgresource_new();
 
-      if ( lcfgresource_compare( cur_res, next_res ) > 0 ) {
-        cur_node->resource       = next_res;
-        cur_node->next->resource = cur_res;
-        swapped = true;
-      }
+    /* Setting name can fail if it is invalid */
+
+    char * new_name = strdup(name);
+    bool ok = lcfgresource_set_name( new_res, new_name );
+
+    if ( !ok ) {
+      change = LCFG_CHANGE_ERROR;
+      free(new_name);
+    } else {
+
+      change = lcfgcomponent_merge_resource( comp, new_res, msg );
+
+      if ( change != LCFG_CHANGE_ERROR )
+        resource = new_res;
 
     }
+
+    lcfgresource_relinquish(new_res);
   }
 
+  if ( change != LCFG_CHANGE_ERROR )
+    *result = (LCFGResource *) resource;
+  else
+    *result = NULL;
+
+  return change;
 }
 
 /**
@@ -947,10 +954,10 @@ void lcfgcomponent_sort( LCFGComponent * comp ) {
  */
 
 LCFGStatus lcfgcomponent_from_status_file( const char * filename,
-					   LCFGComponent ** result,
-					   const char * compname_in,
-					   LCFGOption options,
-					   char ** msg ) {
+                                           LCFGComponent ** result,
+                                           const char * compname_in,
+                                           LCFGOption options,
+                                           char ** msg ) {
   assert( filename != NULL );
 
   bool ignore_meta = ! ( options & LCFG_OPT_USE_META );
@@ -963,12 +970,12 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
   /* Need a copy of the component name to insert into the
      LCFGComponent struct */
 
-  char * compname = NULL;
+  char * comp_name = NULL;
   if ( compname_in != NULL ) {
-    compname = strdup(compname_in);
+    comp_name = strdup(compname_in);
   } else {
     if ( filename != NULL ) {
-      compname = lcfgutils_basename( filename, NULL );
+      comp_name = lcfgutils_basename( filename, NULL );
     } else {
       ok = false;
       lcfgutils_build_message( msg, "Either the component name or status file path MUST be specified" );
@@ -979,16 +986,16 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
   /* Create the new empty component which will eventually be returned */
 
   comp = lcfgcomponent_new();
-  if ( !lcfgcomponent_set_name( comp, compname ) ) {
+  if ( !lcfgcomponent_set_name( comp, comp_name ) ) {
     ok = false;
-    lcfgutils_build_message( msg, "Invalid name for component '%s'", compname );
+    lcfgutils_build_message( msg, "Invalid name for component '%s'", comp_name );
 
-    free(compname);
+    free(comp_name);
 
     goto cleanup;
   }
 
-  const char * statusfile = filename != NULL ? filename : compname;
+  const char * statusfile = filename != NULL ? filename : comp_name;
 
   FILE *fp;
   if ( (fp = fopen(statusfile, "r")) == NULL ) {
@@ -1032,7 +1039,6 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
     lcfgutils_string_chomp(statusline);
 
     char * parse_msg = NULL;
-
     LCFGStatus parse_status = lcfgresource_parse_spec( statusline,
                                                        &this_hostname,
                                                        &this_compname,
@@ -1059,7 +1065,7 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
 
     if ( this_compname != NULL && 
          ( !lcfgcomponent_valid_name( this_compname) ||
-           strcmp( this_compname, compname ) != 0 ) ) {
+           strcmp( this_compname, comp_name ) != 0 ) ) {
       lcfgutils_build_message( msg, "Failed to parse line %d (invalid component name '%s')",
                                linenum, this_compname );
       ok = false;
@@ -1072,9 +1078,10 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
     if ( recent != NULL && lcfgresource_match( recent, this_resname ) ) {
       res = recent;
     } else {
-      res = lcfgcomponent_find_or_create_resource( comp, this_resname, true );
+      LCFGChange find_rc =
+        lcfgcomponent_find_or_create_resource( comp, this_resname, &res, msg );
 
-      if ( res == NULL ) {
+      if ( res == NULL || find_rc == LCFG_CHANGE_ERROR ) {
         lcfgutils_build_message( msg,
                                  "Failed to parse line %d of status file '%s'",
                                  linenum, statusfile );
@@ -1111,7 +1118,7 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
 
     recent = res;
 
-    next_line:
+  next_line:
 
     linenum++;
   }
@@ -1123,8 +1130,12 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
  cleanup:
 
   if ( !ok ) {
-    lcfgcomponent_destroy(comp);
-    comp = NULL;
+    if ( comp == NULL ) {
+      free(comp_name);
+    } else {
+      lcfgcomponent_destroy(comp);
+      comp = NULL;
+    }
   }
 
   *result = comp;
@@ -1177,8 +1188,7 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
   if ( !lcfgcomponent_is_valid(comp) ) return LCFG_STATUS_ERROR;
   if ( lcfgcomponent_is_empty(comp) )  return LCFG_STATUS_OK;
 
-  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
-  bool all_values     = (options&LCFG_OPT_ALL_VALUES);
+  bool all_values = (options&LCFG_OPT_ALL_VALUES);
 
   LCFGStatus status = LCFG_STATUS_OK;
 
@@ -1221,15 +1231,17 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 
   LCFGTagList * export_res = lcfgtaglist_new();
 
-  const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(comp);
-	cur_node != NULL && status != LCFG_STATUS_ERROR;
-	cur_node = lcfgcomponent_next(cur_node) ) {
+  LCFGResourceList ** resources = comp->resources;
 
-    const LCFGResource * res = lcfgcomponent_resource(cur_node);
+  unsigned long i;
+  for ( i=0; i < comp->buckets; i++ ) {
 
-    if ( ( all_values     || lcfgresource_has_value(res) ) &&
-         ( all_priorities || lcfgresource_is_active(res) ) ) {
+    const LCFGResourceList * list = resources[i];
+    if ( lcfgreslist_is_empty(list) ) continue;
+
+    const LCFGResource * res = lcfgreslist_first_resource(list);
+
+    if ( all_values || lcfgresource_has_value(res) ) {
 
       status = lcfgresource_to_env( res, NULL, val_pfx2, type_pfx2, options );
 
@@ -1326,16 +1338,14 @@ LCFGChange lcfgcomponent_to_status_file( const LCFGComponent * comp,
 					 char ** msg ) {
   assert( comp != NULL );
 
-  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
+  const char * comp_name = lcfgcomponent_get_name(comp);
 
-  const char * compname = lcfgcomponent_get_name(comp);
-
-  if ( filename == NULL && compname == NULL ) {
+  if ( filename == NULL && comp_name == NULL ) {
     lcfgutils_build_message( msg, "Either the target file name or component name is required" );
     return LCFG_CHANGE_ERROR;
   }
 
-  const char * statusfile = filename != NULL ? filename : compname;
+  const char * statusfile = filename != NULL ? filename : comp_name;
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
@@ -1348,45 +1358,8 @@ LCFGChange lcfgcomponent_to_status_file( const LCFGComponent * comp,
     goto cleanup;
   }
 
-  /* For efficiency a buffer is pre-allocated. The initial size was
-     chosen by looking at typical resource usage for Informatics. The
-     buffer will be automatically grown when necessary, the aim is to
-     minimise the number of reallocations required.  */
-
-  size_t buf_size = 5120;
-  char * buffer = calloc( buf_size, sizeof(char) );
-  if ( buffer == NULL ) {
-    perror( "Failed to allocate memory for LCFG resource buffer" );
-    exit(EXIT_FAILURE);
-  }
-
-  bool print_ok = true;
-  const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(comp);
-	print_ok && cur_node != NULL;
-	cur_node = lcfgcomponent_next(cur_node) ) {
-
-    const LCFGResource * res = lcfgcomponent_resource(cur_node);
-
-    /* Not interested in resources for inactive contexts */
-
-    if ( !lcfgresource_is_active(res) && !all_priorities ) continue;
-
-    ssize_t rc = lcfgresource_to_status( res, compname, LCFG_OPT_NONE,
-					 &buffer, &buf_size );
-
-    if ( rc > 0 ) {
-
-      if ( fputs( buffer, tmpfh ) < 0 )
-	print_ok = false;
-
-    } else {
-      print_ok = false;
-    }
-
-  }
-
-  free(buffer);
+  bool print_ok = lcfgcomponent_print( comp, LCFG_RESOURCE_STYLE_STATUS,
+                                       options, tmpfh );
 
   if (!print_ok) {
     change = LCFG_CHANGE_ERROR;
@@ -1416,48 +1389,43 @@ LCFGChange lcfgcomponent_to_status_file( const LCFGComponent * comp,
   return change;
 }
 
-/**
- * @brief Find the resource node with a given name
- *
- * This can be used to search through an @c LCFGComponent to find
- * the first resource node which has a matching name. Note that the
- * matching is done using strcmp(3) which is case-sensitive.
- *
- * A @c NULL value is returned if no matching node is found. Also, a
- * @c NULL value is returned if a @c NULL value or an empty component
- * is specified.
- *
- * @param[in] comp Pointer to @c LCFGComponent to be searched
- * @param[in] name The name of the required resource node
- * @param[in] all_priorities Search through all resources (not just active)
- *
- * @return Pointer to an @c LCFGResourceNode (or the @c NULL value).
- *
- */
+static LCFGResourceList * lcfgcomponent_find_list( const LCFGComponent * comp,
+                                                   const char * want_name ) {
 
-LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
-                                            const char * name,
-                                            bool all_priorities ) {
-  assert( name != NULL );
+  assert( want_name != NULL );
 
   if ( lcfgcomponent_is_empty(comp) ) return NULL;
 
-  LCFGResourceNode * result = NULL;
+  unsigned long hash = lcfgcomponent_hash_string( comp, want_name );
 
-  const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(comp);
-	cur_node != NULL && result == NULL;
-	cur_node = lcfgcomponent_next(cur_node) ) {
+  LCFGResourceList ** resources = comp->resources;
+  LCFGResourceList * result = NULL;
 
-    const LCFGResource * res = lcfgcomponent_resource(cur_node); 
+  /* Hitting an empty bucket is an immediate "failure" */
+  bool failed = false;
 
-    if ( !lcfgresource_has_name(res) || 
-         ( !all_priorities && !lcfgresource_is_active(res) ) ) continue;
+  unsigned long i;
+  for ( i = hash; result == NULL && !failed && i < comp->buckets; i++ ) {
 
-    const char * res_name = lcfgresource_get_name(res);
+    if ( !resources[i] ) {
+      failed = true;
+    } else {
+      const LCFGResource * head = lcfgreslist_first_resource(resources[i]);
+      if ( head != NULL && lcfgresource_match( head, want_name ) )
+        result = resources[i];
+    }
 
-    if ( strcmp( res_name, name ) == 0 )
-      result = (LCFGResourceNode *) cur_node;
+  }
+
+  for ( i = 0; result == NULL && !failed && i < hash; i++ ) {
+
+    if ( !resources[i] ) {
+      failed = true;
+    } else {
+      const LCFGResource * head = lcfgreslist_first_resource(resources[i]);
+      if ( head != NULL && lcfgresource_match( head, want_name ) )
+        result = resources[i];
+    }
 
   }
 
@@ -1483,19 +1451,17 @@ LCFGResourceNode * lcfgcomponent_find_node( const LCFGComponent * comp,
  *
  */
 
-LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
-                                            const char * name,
-                                            bool all_priorities ) {
-  assert( name != NULL );
+const LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
+                                                  const char * want_name ) {
+  assert( want_name != NULL );
 
-  LCFGResource * res = NULL;
+  const LCFGResourceList * list = lcfgcomponent_find_list( comp, want_name );
 
-  const LCFGResourceNode * res_node = 
-    lcfgcomponent_find_node( comp, name, all_priorities );
-  if ( res_node != NULL )
-    res = lcfgcomponent_resource(res_node);
+  const LCFGResource * result = NULL;
+  if ( !lcfgreslist_is_empty(list) )
+    result = lcfgreslist_first_resource( list );
 
-  return res;
+  return result;
 }
 
 /**
@@ -1518,67 +1484,10 @@ LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
  */
 
 bool lcfgcomponent_has_resource( const LCFGComponent * comp,
-                                 const char * name,
-                                 bool all_priorities ) {
-  assert( name != NULL );
+                                 const char * want_name ) {
+  assert( want_name != NULL );
 
-  return ( lcfgcomponent_find_node( comp, name, all_priorities ) != NULL );
-}
-
-/**
- * @brief Find or create a new resource
- *
- * Searches the @c LCFGComponent for an @c LCFGResource with the
- * required name. If none is found then a new @c LCFGResource is
- * created and added to the @c LCFGComponent.
- *
- * If an error occurs during the creation of a new resource a @c NULL
- * value will be returned.
- *
- * @param[in] comp Pointer to @c LCFGComponent
- * @param[in] name The name of the required resource
- * @param[in] all_priorities Search through all resources (not just active)
- *
- * @return The required @c LCFGResource (or @c NULL)
- *
- */
-
-LCFGResource * lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
-                                                      const char * name,
-                                                      bool all_priorities ) {
-  assert( comp != NULL );
-  assert( name != NULL );
-
-  /* Only searches 'active' resources */
-
-  LCFGResource * result =
-    lcfgcomponent_find_resource( comp, name, all_priorities );
-
-  if ( result != NULL ) return result;
-
-  /* If not found then create new resource and add it to the component */
-  result = lcfgresource_new();
-
-  /* Setting name can fail if it is invalid */
-
-  char * new_name = strdup(name);
-  bool ok = lcfgresource_set_name( result, new_name );
-
-  if ( !ok ) {
-    free(new_name);
-  } else {
-
-    if ( lcfgcomponent_append( comp, result ) == LCFG_CHANGE_ERROR )
-      ok = false;
-
-  }
-
-  lcfgresource_relinquish(result);
-
-  if (!ok)
-    result = NULL;
-
-  return result;
+  return ( lcfgcomponent_find_resource( comp, want_name ) != NULL );
 }
 
 /**
@@ -1646,177 +1555,93 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
                                          LCFGResource * new_res,
                                          char ** msg ) {
   assert( comp != NULL );
-  assert( new_res != NULL );
 
-  LCFGMergeRule merge_rules = lcfgcomponent_get_merge_rules(comp);
+  if ( !lcfgresource_is_valid(new_res) ) return LCFG_CHANGE_ERROR;
 
-  /* Define these ahead of any jumps to the "apply" label */
+  const char * new_name = new_res->name;
+  unsigned long hash = lcfgcomponent_hash_string( comp, new_name );
 
-  LCFGResourceNode * prev_node = NULL;
-  LCFGResourceNode * cur_node  = NULL;
-  LCFGResource * cur_res  = NULL;
+  LCFGResourceList ** resources = comp->resources;
 
-  /* Actions */
+  /* Find matching resource list or first empty slot */
 
-  bool remove_old = false;
-  bool append_new = false;
-  bool accept     = false;
-
-  if ( !lcfgresource_is_valid(new_res) ) {
-    lcfgutils_build_message( msg, "Resource is invalid" );
-    goto apply;
-  }
-
-  /* Doing a search here rather than calling find_node so that the
-     previous node can also be selected. That is needed for removals. */
-
-  const char * match_name = new_res->name;
-
-  const LCFGResourceNode * node = NULL;
-  for ( node = lcfgcomponent_head(comp);
-        node != NULL && cur_node == NULL;
-        node = lcfgcomponent_next(node) ) {
-
-    const LCFGResource * res = lcfgcomponent_resource(node);
-
-    if ( !lcfgresource_is_valid(res) ) continue;
-
-    if ( lcfgresource_match( res, match_name ) ) {
-      cur_node  = (LCFGResourceNode *) node;
-      cur_res   = lcfgcomponent_resource(cur_node);
+  bool done = false;
+  unsigned long i, slot;
+  for ( i = hash; !done && i < comp->buckets; i++ ) {
+    if ( !resources[i] ) {
+      done = true;
     } else {
-      prev_node = (LCFGResourceNode *) node; /* used later if removal is required */
-    }
 
-  }
+      const LCFGResourceList * list = resources[i];
 
-  /* 0. Merging a pointer to a struct which is already in the list is
-        a no-op. Note that this does not prevent the same resource
-        appearing multiple times in the list if they are in different
-        structs. */
-
-  if ( cur_res == new_res ) {
-    accept = true;
-    goto apply;
-  }
-
-  /* 1. TODO: mutations */
-
-
-  /* 2. If the resource is not currently in the component then just append */
-
-  if ( cur_res == NULL ) {
-    append_new = true;
-    accept     = true;
-    goto apply;
-  }
-
-  /* 3. If the resource in the component is identical then replace
-        (updates the derivation) */
-
-  if ( merge_rules&LCFG_MERGE_RULE_SQUASH_IDENTICAL ) {
-
-    if ( lcfgresource_equals( cur_res, new_res ) ) {
-      remove_old = true;
-      append_new = true;
-      accept     = true;
-      goto apply;
-    }
-  }
-
-  /* 4. Might want to just keep everything */
-
-  if ( merge_rules&LCFG_MERGE_RULE_KEEP_ALL ) {
-    append_new = true;
-    accept     = true;
-    goto apply;
-  }
-
-  /* 5. Just replace existing with new */
-
-  if ( merge_rules&LCFG_MERGE_RULE_REPLACE ) {
-      remove_old = true;
-      append_new = true;
-      accept     = true;
-      goto apply;
-  }
-
-  /* 6. Use the priorities from the context evaluations */
-
-  if ( merge_rules&LCFG_MERGE_RULE_USE_PRIORITY ) {
-
-    int priority  = lcfgresource_get_priority(new_res);
-    int opriority = lcfgresource_get_priority(cur_res);
-
-    /* same priority for both is a conflict */
-
-    if ( priority > opriority ) {
-      remove_old = true;
-      append_new = true;
-      accept     = true;
-    } else if ( priority < opriority ) {
-      accept     = true; /* no change, old res is higher priority */
-    }
-
-    goto apply;
-  }
-
- apply:
-  ;
-
-  /* Note that is permissible for a new resource to be "accepted"
-     without any changes occurring to the component */
-
-  LCFGChange result = LCFG_CHANGE_NONE;
-
-  if ( accept ) {
-
-    if ( remove_old && cur_node != NULL ) {
-
-      LCFGResource * old_res = NULL;
-      LCFGChange remove_rc =
-        lcfgcomponent_remove_next( comp, prev_node, &old_res );
-
-      if ( remove_rc == LCFG_CHANGE_REMOVED ) {
-        lcfgresource_relinquish(old_res);
-        result = LCFG_CHANGE_REMOVED;
-      } else {
-        lcfgutils_build_message( msg, "Failed to remove old resource" );
-        result = LCFG_CHANGE_ERROR;
+      if ( !lcfgreslist_is_empty(list) ) {
+        const LCFGResource * first = lcfgreslist_first_resource(list);
+        if ( lcfgresource_match( first, new_name ) )
+          done = true;
       }
 
     }
 
-    if ( append_new && result != LCFG_CHANGE_ERROR ) {
-      LCFGChange append_rc = lcfgcomponent_append( comp, new_res );
+    if (done) slot = i;
+  }
 
-      if ( append_rc == LCFG_CHANGE_ADDED ) {
+  for ( i = 0; !done && i < hash; i++ ) {
+    if ( !resources[i] ) {
+      done = true;
+    } else {
 
-        if ( result == LCFG_CHANGE_REMOVED ) {
-          result = LCFG_CHANGE_REPLACED;
-        } else {
-          result = LCFG_CHANGE_ADDED;
-        }
+      const LCFGResourceList * list = resources[i];
 
-      } else {
-        lcfgutils_build_message( msg, "Failed to append new resource" );
-        result = LCFG_CHANGE_ERROR;
+      if ( !lcfgreslist_is_empty(list) ) {
+        const LCFGResource * first = lcfgreslist_first_resource(list);
+        if ( lcfgresource_match( first, new_name ) )
+          done = true;
       }
 
     }
 
+    if (done) slot = i;
+  }
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+  if ( !done ) {
+    lcfgutils_build_message( msg,
+                             "No free space for new entries in component" );
+    change = LCFG_CHANGE_ERROR;
   } else {
-    result = LCFG_CHANGE_ERROR;
 
-    if ( *msg == NULL )
-      *msg = lcfgresource_build_message( cur_res, lcfgcomponent_get_name(comp),
-                                         "conflict" );
+    bool new_entry = false;
+    LCFGResourceList * list = NULL;
+    if ( resources[slot] ) {
+      list = resources[slot];
+    } else {
+      new_entry = true;
+
+      list = lcfgreslist_new();
+      list->merge_rules = comp->merge_rules;
+      list->primary_key = comp->primary_key;
+    }
+
+    change = lcfgreslist_merge_resource( list, new_res, msg );
+
+    if (new_entry) {
+      if ( LCFGChangeOK(change) && change != LCFG_CHANGE_NONE ) {
+        resources[slot] = list;
+        comp->entries += 1;
+        lcfgcomponent_resize(comp);
+      } else {
+        lcfgreslist_relinquish(list);
+      }
+    } else if ( lcfgreslist_is_empty(list) ) {
+      resources[slot] = NULL;
+      comp->entries -= 1;
+      lcfgreslist_relinquish(list);
+    }
 
   }
 
-  return result;
+  return change;
 }
-
 
 /**
  * @brief Merge overrides from one component to another
@@ -1833,58 +1658,37 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
  *
  */
 
-LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp,
-					  const LCFGComponent * overrides,
-					  char ** msg ) {
-  assert( comp != NULL );
+LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp1,
+                                          const LCFGComponent * comp2,
+                                          char ** msg ) {
 
-  if ( lcfgcomponent_is_empty(overrides) ) return LCFG_CHANGE_NONE;
-
-  /* Using a (shallow) clone so we don't affect the original list if
-     an error occurs */
-
-  LCFGComponent * comp_clone = lcfgcomponent_clone( comp, false );
-  if ( comp_clone == NULL ) return LCFG_CHANGE_ERROR;
+  assert( comp1 != NULL );
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
-  const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(overrides);
-	cur_node != NULL && change != LCFG_CHANGE_ERROR;
-	cur_node = lcfgcomponent_next(cur_node) ) {
+  if ( !lcfgcomponent_is_empty(comp2) ) {
 
-    LCFGResource * override_res = lcfgcomponent_resource(cur_node);
+    LCFGResourceList ** resources = comp2->resources;
 
-    LCFGChange rc =
-      lcfgcomponent_merge_resource( comp_clone, override_res, msg );
+    unsigned long i;
+    for ( i=0; i<comp2->buckets && change != LCFG_CHANGE_ERROR; i++ ) {
 
-    if ( rc == LCFG_CHANGE_ERROR ) {
-      change = LCFG_CHANGE_ERROR;
-    } else if ( rc != LCFG_CHANGE_NONE ) {
-      change = LCFG_CHANGE_MODIFIED;
+      char * merge_msg = NULL;
+      LCFGChange merge_rc = lcfgcomponent_merge_list( comp1,
+                                                      resources[i],
+                                                      &merge_msg );
+
+      if ( merge_rc == LCFG_CHANGE_ERROR ) {
+        change = LCFG_CHANGE_ERROR;
+        lcfgutils_build_message( msg, "Merge failure: %s", merge_msg );
+      } else if ( merge_rc != LCFG_CHANGE_NONE ) {
+        change = LCFG_CHANGE_MODIFIED;
+      }
+
+      free(merge_msg);
+
     }
-
   }
-
-  if ( change == LCFG_CHANGE_MODIFIED ) {
-    /* push changes back to original list */
-
-    /* For efficiency - empty the original then steal the brains of
-       the clone. */
-
-    lcfgcomponent_remove_all_resources(comp);
-
-    comp->head = comp_clone->head;
-    comp->tail = comp_clone->tail;
-    comp->size = comp_clone->size;
-
-    comp_clone->head = NULL;
-    comp_clone->tail = NULL;
-    comp_clone->size = 0;
-
-  }
-
-  lcfgcomponent_relinquish(comp_clone);
 
   return change;
 }
@@ -1909,36 +1713,31 @@ LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp,
  *
  */
 
-LCFGTagList * lcfgcomponent_get_resources_as_taglist(const LCFGComponent * comp,
-						     LCFGOption options ) {
-  assert( comp != NULL );
-
-  bool all_priorities = (options&LCFG_OPT_ALL_PRIORITIES);
-
-  LCFGTagList * reslist = lcfgtaglist_new();
+LCFGTagList * lcfgcomponent_get_resources_as_taglist(const LCFGComponent * comp) {
 
   bool ok = true;
+  LCFGTagList * reslist = lcfgtaglist_new();
 
-  const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(comp);
-        cur_node != NULL && ok;
-        cur_node = lcfgcomponent_next(cur_node) ) {
+  if ( !lcfgcomponent_is_empty(comp) ) {
 
-    const LCFGResource * res = lcfgcomponent_resource(cur_node);
+    LCFGResourceList ** resources = comp->resources;
 
-    /* Ignore any without names. Ignore inactive unless all_priorities */
-    if ( !lcfgresource_is_valid(res) ||
-	 ( !all_priorities && !lcfgresource_is_active(res) ) )
-      continue;
+    unsigned long i;
+    for ( i=0; i < comp->buckets; i++ ) {
 
-    const char * res_name = lcfgresource_get_name(res);
+      const LCFGResourceList * list = resources[i];
+      if ( lcfgreslist_is_empty(list) ) continue;
 
-    char * msg = NULL;
-    LCFGChange change = lcfgtaglist_mutate_add( reslist, res_name, &msg );
-    if ( change == LCFG_CHANGE_ERROR )
-      ok = false;
+      const LCFGResource * res = lcfgreslist_first_resource(list);
+      const char * res_name = lcfgresource_get_name(res);
 
-    free(msg); /* Just ignoring any message */
+      char * msg = NULL;
+      LCFGChange change = lcfgtaglist_mutate_add( reslist, res_name, &msg );
+      if ( change == LCFG_CHANGE_ERROR )
+        ok = false;
+
+      free(msg); /* Just ignoring any message */
+    }
   }
 
   if (!ok) {
@@ -1966,14 +1765,12 @@ LCFGTagList * lcfgcomponent_get_resources_as_taglist(const LCFGComponent * comp,
  *
  */
 
-char * lcfgcomponent_get_resources_as_string( const LCFGComponent * comp,
-					      LCFGOption options ) {
+char * lcfgcomponent_get_resources_as_string(const LCFGComponent * comp) {
   assert( comp != NULL );
 
   if ( lcfgcomponent_is_empty(comp) ) return strdup("");
 
-  LCFGTagList * reslist =
-    lcfgcomponent_get_resources_as_taglist( comp, options );
+  LCFGTagList * reslist = lcfgcomponent_get_resources_as_taglist(comp);
 
   if ( reslist == NULL ) return NULL;
 
@@ -2097,6 +1894,10 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
     if ( status ==  LCFG_STATUS_ERROR )
       goto cleanup;
 
+    /* Nothing more to do if the list of resources to be imported is empty */
+    if ( lcfgtaglist_is_empty(import_res) )
+      goto cleanup;
+
   } else if ( !(options&LCFG_OPT_ALLOW_NOEXIST) ) {
     lcfgutils_build_message( msg, 
                          "No resources found in environment for '%s' component",
@@ -2114,9 +1915,6 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
     status = LCFG_STATUS_ERROR;
     goto cleanup;
   }
-
-  /* Nothing more to do if the list of resources to be imported is empty */
-  if ( lcfgtaglist_is_empty(import_res) ) goto cleanup;
 
   LCFGTagIterator * tagiter = lcfgtagiter_new(import_res);
   const LCFGTag * restag = NULL;
@@ -2138,13 +1936,16 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
 
     if ( status != LCFG_STATUS_ERROR ) {
 
-      LCFGChange change = lcfgcomponent_append( comp, res );
+      char * merge_msg = NULL;
+
+      LCFGChange change = lcfgcomponent_merge_resource( comp, res, &merge_msg );
       if ( change == LCFG_CHANGE_ERROR ) {
-        lcfgutils_build_message( msg, "Failed to import resource '%s'",
-                                 resname );
+        lcfgutils_build_message( msg, "Failed to import resource '%s': %s",
+                                 resname, merge_msg );
         status = LCFG_STATUS_ERROR;
       }
 
+      free(merge_msg);
     }
 
     lcfgresource_relinquish(res);
@@ -2185,7 +1986,10 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
 
 unsigned long lcfgcomponent_hash( const LCFGComponent * comp ) {
   assert( comp != NULL );
-  return lcfgutils_string_djbhash( comp->name, NULL );
+  assert( comp->name != NULL );
+
+  size_t len = strlen(comp->name);
+  return farmhash64( comp->name, len );
 }
 
 /**
@@ -2331,16 +2135,21 @@ LCFGStatus lcfgcomponent_select( const LCFGComponent * comp,
       break;
     }
 
-    LCFGResource * res = lcfgcomponent_find_resource( comp, resname, false );
+    LCFGResource * res =
+      (LCFGResource *) lcfgcomponent_find_resource( comp, resname );
 
     if ( lcfgresource_is_valid(res) ) {
+      char * merge_msg = NULL;
 
-      LCFGChange append_rc = lcfgcomponent_append( new_comp, res );
+      LCFGChange append_rc = lcfgcomponent_merge_resource( new_comp, res,
+                                                           &merge_msg );
       if ( append_rc == LCFG_CHANGE_ERROR ) {
-        lcfgutils_build_message( msg, "Failed to store resource named '%s'",
-                                 resname );
+        lcfgutils_build_message( msg, "Failed to store resource named '%s': %s",
+                                 resname, merge_msg );
         status = LCFG_STATUS_ERROR;
       }
+
+      free(merge_msg);
 
     } else if ( !allow_noexist ) {
       lcfgutils_build_message( msg, "%s resource does not exist", resname );
@@ -2381,9 +2190,49 @@ LCFGStatus lcfgcomponent_select( const LCFGComponent * comp,
 bool lcfgcomponent_is_ngeneric( const LCFGComponent * comp ) {
 
   const LCFGResource * ng_schema = 
-    lcfgcomponent_find_resource( comp, "ng_schema", false );
+    lcfgcomponent_find_resource( comp, "ng_schema" );
 
   return ( ng_schema != NULL && lcfgresource_has_value(ng_schema) );
+}
+
+
+bool lcfgcomponent_update_signature( const LCFGComponent * comp,
+                                     md5_state_t * md5state,
+                                     char ** buffer, size_t * buf_size ) {
+  assert( comp != NULL );
+
+  LCFGComponentEntry * entries = NULL;
+  unsigned int count = lcfgcomponent_sorted_entries( comp, &entries );
+
+  const char * comp_name = lcfgcomponent_get_name(comp);
+  LCFGResourceList ** resources = comp->resources;
+
+  bool ok = true;
+
+  unsigned long i;
+  for ( i=0; i<count && ok; i++ ) {
+
+    unsigned int slot = entries[i].slot;
+    const LCFGResourceList * list = resources[slot];
+
+    if ( !lcfgreslist_is_empty(list) ) {
+
+      const LCFGResource * res = lcfgreslist_first_resource(list);
+
+      ssize_t rc = lcfgresource_to_status( res, comp_name, LCFG_OPT_USE_META,
+                                           buffer, buf_size );
+
+      if ( rc > 0 )
+        lcfgutils_md5_append( md5state, (const md5_byte_t *) *buffer, rc );
+      else
+        ok = false;
+
+    }
+  }
+
+  free(entries);
+
+  return ok;
 }
 
 /* eof */
