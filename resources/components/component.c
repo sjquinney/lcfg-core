@@ -525,8 +525,6 @@ bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name ) {
  *
  */
 
-#ifdef TODO
-
 LCFGComponent * lcfgcomponent_clone( LCFGComponent * comp, bool deep_copy ) {
 
   bool ok = true;
