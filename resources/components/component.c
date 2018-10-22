@@ -550,38 +550,31 @@ LCFGComponent * lcfgcomponent_clone( LCFGComponent * comp, bool deep_copy ) {
 				      lcfgcomponent_get_merge_rules(comp) );
   if (!ok) goto cleanup;
 
-  /* Copy the resources */
+  /* Avoid multiple calls to resize() by increasing the size of the set
+     of buckets in the clone before starting to merge resources */
 
-  const LCFGResourceNode * cur_node = NULL;
-  for ( cur_node = lcfgcomponent_head(comp);
-	cur_node != NULL && ok;
-	cur_node = lcfgcomponent_next(cur_node) ) {
-
-    LCFGResource * res = lcfgcomponent_resource(cur_node);
-
-    LCFGResource * res_clone = NULL;
-    if ( deep_copy ) {
-      res_clone = lcfgresource_clone(res);
-      res = res_clone;
-    }
-
-    LCFGChange change = lcfgcomponent_append( comp_clone, res );
-    if ( change == LCFG_CHANGE_ERROR ) ok = false;
-
-    if ( res_clone != NULL )
-      lcfgresource_relinquish(res_clone);
+  if ( comp->buckets > comp_clone->buckets ) {
+    comp_clone->buckets = comp->buckets;
+    lcfgcomponent_resize(comp_clone);
   }
-  
+
+  /* Copy over the resources */
+
+  char * merge_msg = NULL;
+  LCFGChange merge_rc = lcfgcomponent_merge_component( comp_clone,
+                                                       comp,
+                                                       &merge_msg );
+  free(merge_msg);
+
  cleanup:
 
-  if ( !ok ) {
+  if ( LCFGChangeError(merge_rc) ) {
     lcfgcomponent_relinquish(comp_clone);
     comp_clone = NULL;
   }
 
   return comp_clone;
 }
-#endif
 
 /* Use for sorting entries by name */
 struct LCFGComponentEntry {
