@@ -176,6 +176,16 @@ const LCFGResource * lcfgreslist_first_resource(const LCFGResourceList * list) {
   return item;
 }
 
+const char * lcfgreslist_name( const LCFGResourceList * list ) {
+  const LCFGResource * first = lcfgreslist_first_resource(list);
+
+  const char * name = NULL;
+  if ( first != NULL )
+    name = lcfgresource_name(first);
+
+  return name;
+}
+
 LCFGChange lcfgreslist_merge_resource( LCFGResourceList * list,
                                        LCFGResource * new_res,
                                        char ** msg ) {
@@ -352,6 +362,41 @@ LCFGChange lcfgreslist_merge_resource( LCFGResourceList * list,
   }
 
   return result;
+}
+
+LCFGChange lcfgreslist_merge_list( LCFGResourceList * list1,
+                                   const LCFGResourceList * list2 ) {
+  assert( list1 != NULL );
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(list2);
+        cur_node != NULL && change != LCFG_CHANGE_ERROR;
+        cur_node = lcfgslist_next(cur_node) ) {
+
+    LCFGResource * resource = lcfgslist_data(cur_node);
+
+    char * merge_msg = NULL;
+    LCFGChange merge_rc = lcfgreslist_merge_resource( list1,
+                                                      resource,
+                                                      &merge_msg );
+
+    if ( merge_rc == LCFG_CHANGE_ERROR ) {
+      change = LCFG_CHANGE_ERROR;
+
+      *msg = lcfgresource_build_message( resource,
+                                         "Failed to merge resource: %s",
+                                         merge_msg );
+
+    } else if ( merge_rc != LCFG_CHANGE_NONE ) {
+      change = LCFG_CHANGE_MODIFIED;
+    }
+
+    free(merge_msg);
+  }
+
+  return change;
 }
 
 void lcfgreslist_sort_by_priority( LCFGResourceList * list ) {
