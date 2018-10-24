@@ -13,6 +13,8 @@
 #define lcfgreslist_is_empty(LIST) (LIST == NULL || (LIST)->size == 0)
 
 LCFGResourceList * lcfgreslist_new(void);
+LCFGResourceList * lcfgreslist_clone( const LCFGResourceList * list );
+
 void lcfgreslist_acquire( LCFGResourceList * list );
 void lcfgreslist_relinquish( LCFGResourceList * list );
 bool lcfgreslist_is_shared( const LCFGResourceList * list );

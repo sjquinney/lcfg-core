@@ -37,6 +37,31 @@ LCFGResourceList * lcfgreslist_new(void) {
   return list;
 }
 
+LCFGResourceList * lcfgreslist_clone( const LCFGResourceList * list ) {
+
+  LCFGResourceList * clone = lcfgreslist_new();
+  clone->merge_rules = list->merge_rules;
+  clone->primary_key = list->primary_key;
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(list);
+        cur_node != NULL && change != LCFG_CHANGE_ERROR;
+        cur_node = lcfgslist_next(cur_node) ) {
+
+    LCFGResource * resource = lcfgslist_data(cur_node);
+    change = lcfgreslist_append( clone, resource );
+  }
+
+  if ( LCFGChangeError(change) ) {
+    lcfgreslist_relinquish(clone);
+    clone = NULL;
+  }
+
+  return clone;
+}
+
 static void lcfgreslist_destroy(LCFGResourceList * list) {
 
   if ( list == NULL ) return;
