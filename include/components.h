@@ -70,7 +70,7 @@ bool lcfgcomponent_set_merge_rules( LCFGComponent * comp,
                                     LCFGMergeRule new_rules )
   __attribute__((warn_unused_result));
 
-LCFGComponent * lcfgcomponent_clone( LCFGComponent * comp, bool deep_copy );
+LCFGComponent * lcfgcomponent_clone( const LCFGComponent * comp );
 
 bool lcfgcomponent_is_valid( const LCFGComponent * comp );
 
