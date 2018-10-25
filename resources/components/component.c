@@ -22,6 +22,10 @@
 
 /* Component internal functions */
 
+static unsigned long want_buckets( unsigned long entries ) {
+  return (unsigned long) ( (double) entries / LCFG_COMP_LOAD_INIT ) + 1;
+}
+
 static unsigned long lcfgcomponent_hash_string( const LCFGComponent * comp,
                                                 const char * string ) {
   assert( comp != NULL );
@@ -93,10 +97,12 @@ static const LCFGResourceList * lcfgcomponent_find_list( const LCFGComponent * c
 
   assert( want_name != NULL );
 
+  if ( lcfgcomponent_is_empty(comp) ) return NULL;
+
   unsigned long slot;
   bool found = lcfgcomponent_find_slot( comp, want_name, &slot );
 
-  LCFGResourceList * result = NULL;
+  const LCFGResourceList * result = NULL;
   if (found)
     result = (comp->resources)[slot];
 
@@ -111,132 +117,77 @@ static LCFGChange lcfgcomponent_set_slot( LCFGComponent * comp,
   LCFGResourceList ** resources = comp->resources;
 
   LCFGResourceList * current = resources[slot];
-  if ( current == new ) return LCFG_CHANGE_NONE;
 
   LCFGChange change = LCFG_CHANGE_NONE;
+  if ( current != new ) {
 
-  resources[slot] = new;
+    resources[slot] = new;
 
-  if ( new != NULL ) {
-    lcfgreslist_acquire(new);
+    if ( new != NULL ) {
+      lcfgreslist_acquire(new);
 
-    if ( current == NULL ) {   /* add */
-      comp->entries++;
+      if ( current == NULL ) {   /* add */
+        comp->entries++;
 
-      change = LCFG_CHANGE_ADDED;
-    } else {                   /* replace */
-      change = LCFG_CHANGE_REPLACED;
+        change = LCFG_CHANGE_ADDED;
+      } else {                   /* replace */
+        change = LCFG_CHANGE_REPLACED;
+      }
+
+    } else {
+
+      if ( current != NULL ) {   /* remove */
+        comp->entries--;
+
+        change = LCFG_CHANGE_REMOVED;
+      }
+
     }
 
-  } else {
-
-    if ( current != NULL ) {   /* remove */
-      comp->entries--;
-
-      change = LCFG_CHANGE_REMOVED;
-    }
-
+    lcfgreslist_relinquish(current);
   }
-
-  lcfgreslist_relinquish(current);
 
   return change;
 }
 
 static LCFGChange lcfgcomponent_insert_list( LCFGComponent * comp,
-                                             const LCFGResourceList * new_list,
-                                             char ** msg ) {
+                                             LCFGResourceList * list ) {
   assert( comp != NULL );
 
-  if ( lcfgreslist_is_empty(new_list) ) return LCFG_CHANGE_NONE;
+  if ( lcfgreslist_is_empty(list) ) return LCFG_CHANGE_NONE;
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
-  const char * name = lcfgreslist_name(list);
+  const char * name = lcfgreslist_get_name(list);
 
   unsigned long slot;
-  if ( lcfgcomponent_find_slot( comp, name, &slot ) ) {
+  if ( lcfgcomponent_find_slot( comp, name, &slot ) )
     change = lcfgcomponent_set_slot( comp, slot, list );
-  } else {
+  else
     change = LCFG_CHANGE_ERROR;
-    lcfgutils_build_message( msg, "Failed to insert resource list into LCFG component" );
-  }
-
-  return change;
-}
-
-static LCFGChange lcfgcomponent_merge_list( LCFGComponent * comp,
-                                            const LCFGResourceList * new_list,
-                                            char ** msg ) {
-  assert( comp != NULL );
-
-  if ( lcfgreslist_is_empty(new_list) ) return LCFG_CHANGE_NONE;
-
-  const char * name = lcfgreslist_name(new_list);
-
-  unsigned long slot;
-  bool ok = lcfgcomponent_find_slot( comp, name, &slot );
-
-  LCFGChange change = LCFG_CHANGE_NONE;
-
-  if ( !ok ) {
-    change = LCFG_CHANGE_ERROR;
-  } else {
-    LCFGResourceList ** resources = comp->resources;
-
-    LCFGResourceList * cur_list = resources[slot];
-    if ( cur_list ) {
-
-      if ( lcfgreslist_is_shared(cur_list) ) { /* COW */
-
-        LCFGResourceList * clone = lcfgreslist_clone(cur_list);
-        change = lcfgreslist_merge_list( clone, new_list, &merge_msg );
-
-        if ( LCFGChangeOK(change) && change != LCFG_CHANGE_NONE ) {
-          LCFGChange set_rc = lcfgcomponent_set_slot( comp, slot, clone );
-          if ( LCFGChangeError(set_rc) ) change = LCFG_CHANGE_ERROR;
-        }
-
-        lcfgreslist_relinquish(clone);
-
-      } else {
-        change = lcfgreslist_merge_list( cur_list, new_list, &merge_msg );
-      }
-
-      free(merge_msg);
-
-    } else {
-
-      LCFGChange set_rc = lcfgcomponent_set_slot( comp, slot, new_list );
-      change = LCFGChangeOK(set_rc) ? LCFG_CHANGE_MODIFIED : LCFG_CHANGE_ERROR;
-
-    }
-
-  }
 
   return change;
 }
 
 static void lcfgcomponent_resize( LCFGComponent * comp ) {
 
-  double load_factor = lcfgcomponent_load_factor(comp);
-
-  size_t want_buckets = comp->buckets;
-  if ( load_factor >= LCFG_COMP_LOAD_MAX ) {
-    want_buckets = (size_t)
-      ( (double) comp->entries / LCFG_COMP_LOAD_INIT ) + 1;
-  }
-
   LCFGResourceList ** cur_set = comp->resources;
-  size_t cur_buckets = comp->buckets;
+  unsigned long cur_buckets   = comp->buckets;
+  unsigned long cur_entries   = comp->entries;
 
   /* Decide if a resize is actually required */
 
-  if ( cur_set != NULL && want_buckets <= cur_buckets ) return;
+  double load_factor = lcfgcomponent_load_factor(comp);
+
+  unsigned long new_buckets = cur_buckets;
+  if ( load_factor >= LCFG_COMP_LOAD_MAX )
+    new_buckets = want_buckets(cur_entries);
+
+  if ( cur_set != NULL && new_buckets <= cur_buckets ) return;
 
   /* Resize the hash */
 
-  LCFGResourceList ** new_set = calloc( (size_t) want_buckets,
+  LCFGResourceList ** new_set = calloc( (size_t) new_buckets,
                                         sizeof(LCFGResourceList *) );
   if ( new_set == NULL ) {
     perror( "Failed to allocate memory for LCFG resources set" );
@@ -245,23 +196,36 @@ static void lcfgcomponent_resize( LCFGComponent * comp ) {
 
   comp->resources = new_set;
   comp->entries   = 0;
-  comp->buckets   = want_buckets;
+  comp->buckets   = new_buckets;
+
+  /* If there are any resources in the hash then they need to be transferred */
 
   if ( cur_set != NULL ) {
 
-    unsigned long i;
-    for ( i=0; i<cur_buckets; i++ ) {
-      LCFGResourceList * list = cur_set[i];
+    LCFGChange change = LCFG_CHANGE_NONE;
 
-      if ( lcfgreslist_is_empty(list) ) {
-        lcfgreslist_relinquish(list);
-      } else {
-        LCFGChange insert_rc = lcfgcomponent_insert_list( comp, list );
-      }
+    unsigned long i;
+    for ( i=0; LCFGChangeOK(change) && i<cur_buckets; i++ )
+      change = lcfgcomponent_insert_list( comp, cur_set[i] );
+
+    if ( LCFGChangeOK(change) ) {
+
+      /* Need to decrement reference count for each resource list in
+         the old hash and free memory for previous hash */
+
+      for ( i=0; LCFGChangeOK(change) && i<cur_buckets; i++ )
+        lcfgreslist_relinquish(cur_set[i]);
+
+      free(cur_set);
+
+    } else { /* Restore previous state if error occurs */
+
+      comp->resources = cur_set;
+      comp->entries   = cur_entries;
+      comp->buckets   = cur_buckets;
 
     }
 
-    free(cur_set);
   }
 
 }
@@ -318,8 +282,8 @@ LCFGComponent * lcfgcomponent_new(void) {
 void lcfgcomponent_remove_all_resources( LCFGComponent * comp ) {
 
   unsigned long i;
-  for (i=0; i < comp->buckets; i++ )
-    LCFGChange rc = lcfgcomponent_set_slot( comp, i, NULL );
+  for ( i=0; i < comp->buckets; i++ )
+    lcfgcomponent_set_slot( comp, i, NULL );
 
 }
 
@@ -493,13 +457,12 @@ LCFGMergeRule lcfgcomponent_get_merge_rules( const LCFGComponent * comp ) {
 }
 
 unsigned int lcfgcomponent_size( const LCFGComponent * comp ) {
-  assert( comp != NULL );
 
   unsigned int size = 0;
 
   /* No point scanning the whole array if there are no entries */
 
-  if ( comp->entries > 0 ) {
+  if ( comp != NULL && comp->entries > 0 ) {
 
     if ( comp->primary_key == LCFG_COMP_PK_NAME ) {
       size = comp->entries;
@@ -675,23 +638,22 @@ LCFGComponent * lcfgcomponent_clone( const LCFGComponent * comp ) {
   /* Avoid multiple calls to resize() by increasing the size of the set
      of buckets in the clone before starting to merge resources */
 
-  if ( comp->buckets > clone->buckets ) {
-    clone->buckets = comp->buckets;
+  unsigned long new_buckets = want_buckets(comp->entries);
+  if ( new_buckets > clone->buckets ) {
+    clone->buckets = new_buckets;
     lcfgcomponent_resize(clone);
   }
 
-  /* Copy over the resource lists */
+  /* Copy over the resource lists - note that the resource lists will
+     be shared between the original and clone components */
+
+  LCFGChange insert_rc = LCFG_CHANGE_NONE;
 
   unsigned long i;
-  for ( i=0; ok && i<comp->buckets; i++ ) {
-    LCFGResourceList * list = (comp->resources)[i];
+  for ( i=0; LCFGChangeOK(insert_rc) && i<comp->buckets; i++ )
+    insert_rc = lcfgcomponent_insert_list( clone, (comp->resources)[i] );
 
-    if ( !lcfgreslist_is_empty(list) ) {
-      LCFGChange insert_rc = lcfgcomponent_insert_list( clone, list );
-      if ( LCFGChangeError(insert_rc) ) ok = false;
-    }
-
-  }
+  ok = LCFGChangeOK(insert_rc);
 
  cleanup:
 
@@ -721,22 +683,18 @@ static unsigned int lcfgcomponent_sorted_entries( const LCFGComponent * comp,
                                                   LCFGComponentEntry ** result ) {
 
    LCFGComponentEntry * entries =
-     calloc( comp->buckets, sizeof(LCFGComponentEntry) );
-
-   LCFGResourceList ** resources = comp->resources;
+     calloc( comp->entries + 1, sizeof(LCFGComponentEntry) );
 
    unsigned long count = 0;
 
    unsigned long i;
    for (i=0; i < comp->buckets; i++ ) {
-     LCFGResourceList * list = resources[i];
+     LCFGResourceList * list = (comp->resources)[i];
 
      if ( !lcfgreslist_is_empty(list) ) {
 
-       const LCFGResource * res = lcfgreslist_first_resource(list);
-
        unsigned int k = count++;
-       entries[k].name = res->name;
+       entries[k].name = lcfgreslist_get_name(list);
        entries[k].slot = i;
 
      }
@@ -942,7 +900,7 @@ LCFGStatus lcfgcomponent_to_export( const LCFGComponent * comp,
         char * add_msg = NULL;
         LCFGChange add_rc = lcfgtaglist_mutate_add( export_res, res_name,
                                                     &add_msg );
-        if ( add_rc == LCFG_CHANGE_ERROR )
+        if ( LCFGChangeError(add_rc) )
           ok = false;
 
         free(add_msg);
@@ -1015,8 +973,9 @@ static LCFGChange lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
 
   const LCFGResource * resource = lcfgcomponent_find_resource( comp, name );
 
-  if ( resource == NULL ) {
-
+  if ( resource != NULL ) {
+    *result = (LCFGResource *) resource;
+  } else {
     /* If not found then create new resource and add it to the comp */
 
     LCFGResource * new_res = lcfgresource_new();
@@ -1028,23 +987,22 @@ static LCFGChange lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
 
     if ( !ok ) {
       change = LCFG_CHANGE_ERROR;
+      lcfgutils_build_message( msg, "Failed to create new resource named '%s'",
+                               new_name );
       free(new_name);
     } else {
 
       change = lcfgcomponent_merge_resource( comp, new_res, msg );
 
-      if ( change != LCFG_CHANGE_ERROR )
-        resource = new_res;
+      if ( LCFGChangeOK(change) )
+        *result = new_res;
+      else
+        *result = NULL;
 
     }
 
     lcfgresource_relinquish(new_res);
   }
-
-  if ( change != LCFG_CHANGE_ERROR )
-    *result = (LCFGResource *) resource;
-  else
-    *result = NULL;
 
   return change;
 }
@@ -1201,7 +1159,7 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
       LCFGChange find_rc =
         lcfgcomponent_find_or_create_resource( comp, this_resname, &res, msg );
 
-      if ( res == NULL || find_rc == LCFG_CHANGE_ERROR ) {
+      if ( res == NULL || LCFGChangeError(find_rc) ) {
         lcfgutils_build_message( msg,
                                  "Failed to parse line %d of status file '%s'",
                                  linenum, statusfile );
@@ -1253,7 +1211,7 @@ LCFGStatus lcfgcomponent_from_status_file( const char * filename,
     if ( comp == NULL ) {
       free(comp_name);
     } else {
-      lcfgcomponent_destroy(comp);
+      lcfgcomponent_relinquish(comp);
       comp = NULL;
     }
   }
@@ -1303,7 +1261,6 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
 				 const char * val_pfx, const char * type_pfx,
 				 LCFGOption options,
                                  char ** msg ) {
-  assert( comp != NULL );
 
   if ( !lcfgcomponent_is_valid(comp) ) return LCFG_STATUS_ERROR;
   if ( lcfgcomponent_is_empty(comp) )  return LCFG_STATUS_OK;
@@ -1374,7 +1331,7 @@ LCFGStatus lcfgcomponent_to_env( const LCFGComponent * comp,
         char * add_msg = NULL;
         LCFGChange add_rc = lcfgtaglist_mutate_add( export_res, res_name,
                                                     &add_msg );
-        if ( add_rc == LCFG_CHANGE_ERROR )
+        if ( LCFGChangeError(add_rc) )
           status = LCFG_STATUS_ERROR;
 
         free(add_msg);
@@ -1493,7 +1450,7 @@ LCFGChange lcfgcomponent_to_status_file( const LCFGComponent * comp,
     lcfgutils_build_message( msg, "Failed to close status file" );
   }
 
-  if ( change != LCFG_CHANGE_ERROR )
+  if ( LCFGChangeOK(change) )
     change = lcfgutils_file_update( filename, tmpfile, 0 );
 
  cleanup:
@@ -1664,12 +1621,15 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
     if ( LCFGChangeOK(change) ) {
       LCFGChange set_rc = LCFG_CHANGE_NONE;
 
-      if ( lcfgreslist_is_empty(list) )
+      if ( lcfgreslist_is_empty(list) ) { /* remove empty list */
         set_rc = lcfgcomponent_set_slot( comp, slot, NULL );
-      else if ( change != LCFG_CHANGE_NONE )
+      } else if ( change != LCFG_CHANGE_NONE ) {
         set_rc = lcfgcomponent_set_slot( comp, slot, list );
 
-      if ( LCFGChangeError(set_rc) ) change = LCFG_CHANGE_ERROR;
+        if ( set_rc == LCFG_CHANGE_ADDED )
+          lcfgcomponent_resize(comp);
+      }
+      if ( LCFGChangeError(set_rc) ) change = set_rc;
     }
 
     lcfgreslist_relinquish(new_list);
@@ -1700,30 +1660,57 @@ LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp1,
 
   assert( comp1 != NULL );
 
+  if ( lcfgcomponent_is_empty(comp2) ) return LCFG_CHANGE_NONE;
+
   LCFGChange change = LCFG_CHANGE_NONE;
 
-  if ( !lcfgcomponent_is_empty(comp2) ) {
+  unsigned long i;
+  for ( i=0; i<comp2->buckets && LCFGChangeOK(change); i++ ) {
 
-    LCFGResourceList ** resources = comp2->resources;
+    const LCFGResourceList * list2 = (comp2->resources)[i];
+    if ( lcfgreslist_is_empty(list2) ) continue;
 
-    unsigned long i;
-    for ( i=0; i<comp2->buckets && change != LCFG_CHANGE_ERROR; i++ ) {
+    const char * name = lcfgreslist_get_name(list2);
 
-      char * merge_msg = NULL;
-      LCFGChange merge_rc = lcfgcomponent_merge_list( comp1,
-                                                      resources[i],
-                                                      &merge_msg );
+    unsigned long slot;
+    bool found = lcfgcomponent_find_slot( comp1, name, &slot );
 
-      if ( merge_rc == LCFG_CHANGE_ERROR ) {
-        change = LCFG_CHANGE_ERROR;
-        lcfgutils_build_message( msg, "Merge failure: %s", merge_msg );
-      } else if ( merge_rc != LCFG_CHANGE_NONE ) {
-        change = LCFG_CHANGE_MODIFIED;
+    if ( !found ) {
+      lcfgutils_build_message( msg,
+                               "No free space for new entries in component" );
+      change = LCFG_CHANGE_ERROR;
+    } else {
+      LCFGResourceList * list1 = (comp1->resources)[slot];
+
+      LCFGResourceList * new_list = NULL;
+      if ( list1 == NULL ) {
+        new_list = lcfgcomponent_empty_list(comp1);
+        list1 = new_list;
+      } else if ( lcfgreslist_is_shared(list1) ) { /* COW */
+        new_list = lcfgreslist_clone(list1);
+        list1 = new_list;
       }
 
-      free(merge_msg);
+      change = lcfgreslist_merge_list( list1, list2, msg );
+
+      if ( LCFGChangeOK(change) ) {
+        LCFGChange set_rc = LCFG_CHANGE_NONE;
+
+        if ( lcfgreslist_is_empty(list1) ) { /* remove empty list */
+          set_rc = lcfgcomponent_set_slot( comp1, slot, NULL );
+        } else if ( change != LCFG_CHANGE_NONE ) {
+          set_rc = lcfgcomponent_set_slot( comp1, slot, list1 );
+
+          if ( set_rc == LCFG_CHANGE_ADDED )
+            lcfgcomponent_resize(comp1);
+        }
+        if ( LCFGChangeError(set_rc) ) change = set_rc;
+      }
+
+      lcfgreslist_relinquish(new_list);
 
     }
+
   }
 
   return change;
@@ -1764,12 +1751,11 @@ LCFGTagList * lcfgcomponent_get_resources_as_taglist(const LCFGComponent * comp)
       const LCFGResourceList * list = resources[i];
       if ( lcfgreslist_is_empty(list) ) continue;
 
-      const LCFGResource * res = lcfgreslist_first_resource(list);
-      const char * res_name = lcfgresource_get_name(res);
+      const char * res_name = lcfgreslist_get_name(list);
 
       char * msg = NULL;
       LCFGChange change = lcfgtaglist_mutate_add( reslist, res_name, &msg );
-      if ( change == LCFG_CHANGE_ERROR )
+      if ( LCFGChangeError(change) )
         ok = false;
 
       free(msg); /* Just ignoring any message */
@@ -1975,7 +1961,7 @@ LCFGStatus lcfgcomponent_from_env( const char * compname_in,
       char * merge_msg = NULL;
 
       LCFGChange change = lcfgcomponent_merge_resource( comp, res, &merge_msg );
-      if ( change == LCFG_CHANGE_ERROR ) {
+      if ( LCFGChangeError(change) ) {
         lcfgutils_build_message( msg, "Failed to import resource '%s': %s",
                                  resname, merge_msg );
         status = LCFG_STATUS_ERROR;
@@ -2152,7 +2138,17 @@ LCFGStatus lcfgcomponent_select( const LCFGComponent * comp,
 
   /* Also clone the merge rules */
 
+  new_comp->primary_key = comp->primary_key;
   new_comp->merge_rules = comp->merge_rules;
+
+  /* Preallocate a sufficiently large hash */
+
+  unsigned long taglist_size = lcfgtaglist_size(res_wanted);
+  unsigned long new_buckets = want_buckets(taglist_size);
+  if ( new_buckets > new_comp->buckets ) {
+    new_comp->buckets = new_buckets;
+    lcfgcomponent_resize(new_comp);
+  }
 
   /* Collect the required subset of resources */
 
@@ -2171,21 +2167,26 @@ LCFGStatus lcfgcomponent_select( const LCFGComponent * comp,
       break;
     }
 
-    LCFGResource * res =
-      (LCFGResource *) lcfgcomponent_find_resource( comp, resname );
+    LCFGResourceList * list =
+      (LCFGResourceList * ) lcfgcomponent_find_list( comp, resname );
 
-    if ( lcfgresource_is_valid(res) ) {
-      char * merge_msg = NULL;
+    if ( !lcfgreslist_is_empty(list) ) {
 
-      LCFGChange append_rc = lcfgcomponent_merge_resource( new_comp, res,
-                                                           &merge_msg );
-      if ( append_rc == LCFG_CHANGE_ERROR ) {
-        lcfgutils_build_message( msg, "Failed to store resource named '%s': %s",
-                                 resname, merge_msg );
+      LCFGChange insert_rc = lcfgcomponent_insert_list( new_comp, list );
+
+      if ( LCFGChangeError(insert_rc) ) {
+        lcfgutils_build_message( msg, "Failed to select resource named '%s'",
+                                 resname );
         status = LCFG_STATUS_ERROR;
-      }
+      } else if ( insert_rc == LCFG_CHANGE_ADDED ) {
 
-      free(merge_msg);
+        /* Should not be strictly necessary since we pre-allocated a
+           hash which should be a suitable size but being
+           careful... This will return immediately if space does not
+           need to be adjusted */
+
+        lcfgcomponent_resize(new_comp);
+      }
 
     } else if ( !allow_noexist ) {
       lcfgutils_build_message( msg, "%s resource does not exist", resname );
