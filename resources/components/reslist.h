@@ -35,7 +35,7 @@ LCFGChange lcfgreslist_merge_list( LCFGResourceList * list1,
 
 const LCFGResource * lcfgreslist_first_resource(const LCFGResourceList * list);
 
-const char * lcfgreslist_name( const LCFGResourceList * list );
+const char * lcfgreslist_get_name( const LCFGResourceList * list );
 
 void lcfgreslist_sort_by_priority( LCFGResourceList * list );
 

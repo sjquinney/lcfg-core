@@ -198,13 +198,13 @@ const LCFGResource * lcfgreslist_first_resource(const LCFGResourceList * list) {
   return resource;
 }
 
-const char * lcfgreslist_name( const LCFGResourceList * list ) {
+const char * lcfgreslist_get_name( const LCFGResourceList * list ) {
 
   const LCFGResource * resource = lcfgreslist_first_resource(list);
 
   const char * name = NULL;
   if ( resource != NULL )
-    name = lcfgresource_name(resource);
+    name = lcfgresource_get_name(resource);
 
   return name;
 }
