@@ -29,7 +29,8 @@ LCFGChange lcfgreslist_merge_resource( LCFGResourceList * list,
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgreslist_merge_list( LCFGResourceList * list1,
-                                   const LCFGResourceList * list2 )
+                                   const LCFGResourceList * list2,
+                                   char ** msg )
   __attribute__((warn_unused_result));
 
 const LCFGResource * lcfgreslist_first_resource(const LCFGResourceList * list);

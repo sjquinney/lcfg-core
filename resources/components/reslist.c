@@ -45,9 +45,11 @@ LCFGResourceList * lcfgreslist_clone( const LCFGResourceList * list ) {
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
+  /* This will result in the resources being shared between the lists */
+
   const LCFGSListNode * cur_node = NULL;
   for ( cur_node = lcfgslist_head(list);
-        cur_node != NULL && change != LCFG_CHANGE_ERROR;
+        cur_node != NULL && LCFGChangeOK(change);
         cur_node = lcfgslist_next(cur_node) ) {
 
     LCFGResource * resource = lcfgslist_data(cur_node);
@@ -62,9 +64,11 @@ LCFGResourceList * lcfgreslist_clone( const LCFGResourceList * list ) {
   return clone;
 }
 
-static void lcfgreslist_destroy(LCFGResourceList * list) {
+static void lcfgreslist_destroy( LCFGResourceList * list ) {
 
   if ( list == NULL ) return;
+
+  /* Remove head until the list is empty */
 
   while ( lcfgslist_size(list) > 0 ) {
     LCFGResource * resource = NULL;
@@ -109,12 +113,6 @@ bool lcfgreslist_set_merge_rules( LCFGResourceList * list,
   list->merge_rules = new_rules;
 
   return true;
-}
-
-static LCFGMergeRule lcfgreslist_get_merge_rules( const LCFGResourceList * list ) {
-  assert( list != NULL );
-
-  return list->merge_rules;
 }
 
 static LCFGChange lcfgreslist_insert_next( LCFGResourceList * list,
@@ -190,23 +188,23 @@ static LCFGChange lcfgreslist_remove_next( LCFGResourceList * list,
 }
 
 const LCFGResource * lcfgreslist_first_resource(const LCFGResourceList * list) {
-  assert( list != NULL );
 
   const LCFGSListNode * head_node = lcfgslist_head(list);
 
-  const LCFGResource * item = NULL;
+  const LCFGResource * resource = NULL;
   if ( head_node != NULL )
-    item = lcfgslist_data(head_node);
+    resource = lcfgslist_data(head_node);
 
-  return item;
+  return resource;
 }
 
 const char * lcfgreslist_name( const LCFGResourceList * list ) {
-  const LCFGResource * first = lcfgreslist_first_resource(list);
+
+  const LCFGResource * resource = lcfgreslist_first_resource(list);
 
   const char * name = NULL;
-  if ( first != NULL )
-    name = lcfgresource_name(first);
+  if ( resource != NULL )
+    name = lcfgresource_name(resource);
 
   return name;
 }
@@ -230,8 +228,6 @@ LCFGChange lcfgreslist_merge_resource( LCFGResourceList * list,
   /* Doing a search here rather than calling find_node so that the
      previous node can also be selected. That is needed for removals. */
 
-  const char * match_name = new_res->name;
-
   bool ignore_context = !( list->primary_key & LCFG_COMP_PK_CTX );
 
   LCFGSListNode * node = NULL;
@@ -241,7 +237,7 @@ LCFGChange lcfgreslist_merge_resource( LCFGResourceList * list,
 
     const LCFGResource * res = lcfgslist_data(node);
 
-    if ( lcfgresource_match( res, match_name ) &&
+    if ( lcfgresource_same_name( res, new_res ) &&
          ( ignore_context || lcfgresource_same_context( res, new_res ) ) ) {
       cur_node = node;
       break;
@@ -251,7 +247,7 @@ LCFGChange lcfgreslist_merge_resource( LCFGResourceList * list,
 
   }
 
-  LCFGMergeRule merge_rules = lcfgreslist_get_merge_rules(list);
+  LCFGMergeRule merge_rules = list->merge_rules;
 
   /* Actions */
 
@@ -360,7 +356,7 @@ LCFGChange lcfgreslist_merge_resource( LCFGResourceList * list,
 
     }
 
-    if ( append_new && result != LCFG_CHANGE_ERROR ) {
+    if ( append_new && LCFGChangeOK(result) ) {
       LCFGChange append_rc = lcfgreslist_append( list, new_res );
 
       if ( append_rc == LCFG_CHANGE_ADDED ) {
@@ -390,35 +386,26 @@ LCFGChange lcfgreslist_merge_resource( LCFGResourceList * list,
 }
 
 LCFGChange lcfgreslist_merge_list( LCFGResourceList * list1,
-                                   const LCFGResourceList * list2 ) {
+                                   const LCFGResourceList * list2,
+                                   char ** msg ) {
   assert( list1 != NULL );
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
   const LCFGSListNode * cur_node = NULL;
   for ( cur_node = lcfgslist_head(list2);
-        cur_node != NULL && change != LCFG_CHANGE_ERROR;
+        cur_node != NULL && LCFGChangeOK(change);
         cur_node = lcfgslist_next(cur_node) ) {
 
     LCFGResource * resource = lcfgslist_data(cur_node);
 
-    char * merge_msg = NULL;
-    LCFGChange merge_rc = lcfgreslist_merge_resource( list1,
-                                                      resource,
-                                                      &merge_msg );
+    LCFGChange merge_rc = lcfgreslist_merge_resource( list1, resource, msg );
 
-    if ( merge_rc == LCFG_CHANGE_ERROR ) {
-      change = LCFG_CHANGE_ERROR;
-
-      *msg = lcfgresource_build_message( resource,
-                                         "Failed to merge resource: %s",
-                                         merge_msg );
-
-    } else if ( merge_rc != LCFG_CHANGE_NONE ) {
+    if ( LCFGChangeError(merge_rc) )
+      change = merge_rc;
+    else if ( merge_rc != LCFG_CHANGE_NONE )
       change = LCFG_CHANGE_MODIFIED;
-    }
 
-    free(merge_msg);
   }
 
   return change;
