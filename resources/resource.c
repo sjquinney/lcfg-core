@@ -4064,10 +4064,8 @@ bool lcfgresource_same_type( const LCFGResource * res1,
 bool lcfgresource_same_context( const LCFGResource * res1,
                                 const LCFGResource * res2 ) {
 
-  const char * ctx1 = or_default( res1->context, "" );
-  const char * ctx2 = or_default( res2->context, "" );
-
-  return ( strcmp( ctx1, ctx2 ) == 0 );
+  return ( lcfgcontext_compare_expressions( res1->context,
+                                            res2->context ) == 0 );
 }
 
 /**
