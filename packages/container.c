@@ -93,6 +93,9 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
 
   /* Variables which need to be declared ahead of any jumps to 'cleanup' */
 
+  /* Any temporary files created must be secure (i.e. 0600) */
+  mode_t mode_mask = umask(S_IXUSR | S_IRWXG | S_IRWXO);
+
   char * tmpfile = NULL;
   FILE * fp = NULL;
   char * line = NULL;
@@ -486,6 +489,8 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
       lcfgutils_build_message( msg, "Failed to process package list file" );
 
   }
+
+  umask(mode_mask);
 
   return change;
 }
