@@ -385,7 +385,19 @@ LCFGChange lcfgderivation_merge_line( LCFGDerivation * drv,
   else if ( new_size > drv->lines_size )
     new_size = 2 * drv->lines_size;
 
-  if ( new_size > drv->lines_size ) {
+  if ( drv->lines == NULL ) {
+    unsigned int * new_lines = calloc( new_size,  sizeof(unsigned int) );
+
+    if ( new_lines == NULL ) {
+      perror("Failed to create array for derivation line numbers");
+      exit(EXIT_FAILURE);
+    } else {
+
+      drv->lines_size = new_size;
+      drv->lines      = new_lines;
+    }
+
+  } else if ( new_size > drv->lines_size ) {
     unsigned int * new_lines = realloc( drv->lines,
                                         new_size * sizeof(unsigned int) );
     if ( new_lines == NULL ) {
