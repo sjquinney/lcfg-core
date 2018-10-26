@@ -3,8 +3,8 @@
  * @brief Functions for importing profiles from XML
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-08-11 15:33:00 +0100 (Fri, 11 Aug 2017) $
- * $Revision: 33317 $
+ * $Date: 2018-04-26 13:47:14 +0100 (Thu, 26 Apr 2018) $
+ * $Revision: 34416 $
  */
 
 #ifndef LCFG_CORE_XML_H
@@ -101,13 +101,6 @@ LCFGStatus lcfgxml_process_components( xmlTextReaderPtr reader,
 				       const LCFGContextList * ctxlist,
 				       const LCFGTagList * comps_wanted,
 				       char ** msg )
-  __attribute__((warn_unused_result));
-
-LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
-				    LCFGPackage **result,
-				    const char * base_context,
-				    const char * base_derivation,
-				    char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,

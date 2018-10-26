@@ -102,21 +102,8 @@ static LCFGStatus lcfgxml_gather_resource_attributes( xmlTextReaderPtr reader,
     xmlTextReaderGetAttribute( reader, BAD_CAST "cfg:derivation" );
   if ( derivation != NULL && xmlStrlen(derivation) > 0 ) {
 
-    if ( lcfgresource_has_derivation(res) ) {
-
-      if ( !lcfgresource_add_derivation( res, (char *) derivation ) )
-        status = LCFG_STATUS_ERROR;
-
-    } else {
-
-      if ( lcfgresource_set_derivation( res, (char *) derivation ) )
-        derivation = NULL; /* Resource now "owns" derivation string */
-      else
-        status = LCFG_STATUS_ERROR;
-
-    }
-
-    if ( status == LCFG_STATUS_ERROR ) {
+    if ( !lcfgresource_add_derivation_string( res, (char *) derivation ) ) {
+      status = LCFG_STATUS_ERROR;
       *msg = lcfgresource_build_message( res, compname,
                                          "Invalid derivation '%s'",
                                          (char *) derivation );
@@ -343,11 +330,11 @@ static LCFGStatus lcfgxml_process_record( xmlTextReaderPtr reader,
         if ( xmlStrcmp( nodename, record_name ) == 0 ) {
           done = true; /* Successfully finished this block */
         } else {
-          status = lcfgxml_error( msg, "Unexpected end element '%s' at line '%d' whilst processing package.", nodename, linenum );
+          status = lcfgxml_error( msg, "Unexpected end element '%s' at line '%d' whilst processing record.", nodename, linenum );
         }
 
       } else {
-        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing package.", nodename, nodetype, linenum);
+        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing record.", nodename, nodetype, linenum);
       }
 
       xmlFree(nodename);
@@ -465,7 +452,7 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
   }
 
   if ( base_derivation != NULL ) {
-    if ( !lcfgresource_add_derivation( resource, base_derivation ) ) {
+    if ( !lcfgresource_add_derivation_string( resource, base_derivation ) ) {
       status = LCFG_STATUS_ERROR;
       *msg = lcfgresource_build_message( resource, compname,
                 "Failed to set base derivation '%s'", base_derivation );
@@ -638,7 +625,7 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
       } else {
 
         xmlChar * nodename  = xmlTextReaderName(reader);
-        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing record.", nodename, nodetype, linenum);
+        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing resource.", nodename, nodetype, linenum);
         xmlFree(nodename);
         nodename = NULL;
 
@@ -652,11 +639,11 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
         if ( xmlStrcmp( nodename, resnodename ) == 0 ) {
           done = true; /* Successfully finished this block */
         } else {
-          status = lcfgxml_error( msg, "Unexpected end element '%s' at line '%d' whilst processing package.", nodename, linenum );
+          status = lcfgxml_error( msg, "Unexpected end element '%s' at line '%d' whilst processing resource.", nodename, linenum );
         }
 
       } else {
-        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing package.", nodename, nodetype, linenum );
+        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line '%d' whilst processing resource.", nodename, nodetype, linenum );
 
       }
 

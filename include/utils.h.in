@@ -1,6 +1,6 @@
 /*************************************************************************
 
-  LCFG Utility Library. Version @LCFG_VERSION@
+  LCFG Utility Library. Version @PROJECT_VERSION@
 
 *************************************************************************/
 
@@ -47,11 +47,23 @@ FILE * lcfgutils_safe_tmpfile( const char * path, char ** tmpfile );
 
 const char * lcfgutils_tmp_dirname(void);
 
+char ** lcfgutils_string_split( const char * string,
+                                const char * delimiter,
+                                unsigned int max_tokens );
+
 char * lcfgutils_string_join( const char * sep,
                               const char * str1,
                               const char * str2 );
 
 bool lcfgutils_string_endswith( const char * str, const char * suffix );
+
+const char * lcfgutils_string_finditem( const char * haystack,
+					const char * needle,
+					const char * separator );
+
+bool lcfgutils_string_hasitem( const char * haystack,
+			       const char * needle,
+			       const char * separator );
 
 char * lcfgutils_basename( const char * path, const char * suffix );
 
@@ -127,6 +139,22 @@ void lcfgslistnode_destroy(LCFGSListNode * node);
 #define lcfgslist_has_next(node) ((node)->next != NULL)
 #define lcfgslist_next(node) ((node)->next)
 #define lcfgslist_data(node) ((node)->data)
+
+/**
+ * @brief CPP flags that appear in derivation information
+ */
+
+typedef enum {
+  LCFG_CPP_FLAG_ENTRY  = 1,
+  LCFG_CPP_FLAG_RETURN = 2,
+  LCFG_CPP_FLAG_SYSHDR = 4,
+  LCFG_CPP_FLAG_EXTERN = 8
+} LCFGCppFlag;
+
+bool lcfgutils_parse_cpp_derivation( const char * line,
+				     char ** file, unsigned int * linenum,
+				     unsigned int * flags )
+  __attribute_warn_unused_result__;
 
 #endif /* LCFG_UTILS_H */
 

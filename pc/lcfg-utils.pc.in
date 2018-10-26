@@ -5,7 +5,7 @@ includedir=@INCLUDE_INSTALL_DIR@
 modules=1
 
 Name: lcfg-utils
-Version: @LCFG_VERSION@
+Version: @PROJECT_VERSION@
 Description: LCFG general utilities library
 Libs: -L${libdir} -llcfg_utils
 Cflags: -I${includedir}

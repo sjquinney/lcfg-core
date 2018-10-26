@@ -3,8 +3,8 @@
  * @brief LCFG package handling library
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-11-03 15:27:17 +0000 (Fri, 03 Nov 2017) $
- * $Revision: 33605 $
+ * $Date: 2018-10-16 16:25:50 +0100 (Tue, 16 Oct 2018) $
+ * $Revision: 34991 $
  */
 
 #ifndef LCFG_CORE_PACKAGES_H
@@ -15,6 +15,7 @@
 #include <time.h>
 
 #include "common.h"
+#include "derivation.h"
 #include "context.h"
 #include "utils.h"
 
@@ -36,7 +37,8 @@ struct LCFGPackage {
   char * release;    /**< Release (not used on all platforms) */
   char * flags;      /**< Flags - controls behaviour of package tool (e.g. updaterpms) */
   char * context;    /**< Context expression - when this package is applicable */
-  char * derivation; /**< Derivation - where this package was specified */
+  LCFGDerivationList * derivation; /**< Derivation - where this package was specified */
+  char * category;   /**< Category - group to which this package belongs */
   char prefix;       /**< Prefix - primary merge conflict resolution for multiple specifications (single alpha-numeric character) */
   int priority;      /**< Priority - result of evaluating context expression, secondary merge conflict resolution */
   /*@}*/
@@ -155,13 +157,44 @@ bool lcfgpackage_add_context( LCFGPackage * pkg,
 
 bool lcfgpackage_has_derivation( const LCFGPackage * pkg );
 
-const char * lcfgpackage_get_derivation( const LCFGPackage * pkg );
-
-bool lcfgpackage_set_derivation( LCFGPackage * pkg, char * new_value )
+LCFGDerivationList * lcfgpackage_get_derivation( const LCFGPackage * pkg );
+ssize_t lcfgpackage_get_derivation_as_string( const LCFGPackage * pkg,
+                                              LCFGOption options,
+                                              char ** result, size_t * size )
   __attribute__((warn_unused_result));
 
-bool lcfgpackage_add_derivation( LCFGPackage * pkg,
-                                 const char * extra_deriv )
+size_t lcfgpackage_get_derivation_length( const LCFGPackage * pkg );
+
+bool lcfgpackage_set_derivation( LCFGPackage * pkg,
+                                 LCFGDerivationList * new_deriv )
+  __attribute__((warn_unused_result));
+
+bool lcfgpackage_set_derivation_as_string( LCFGPackage * pkg,
+                                           const char * new_value )
+  __attribute__((warn_unused_result));
+
+bool lcfgpackage_add_derivation_string( LCFGPackage * pkg,
+                                        const char * extra_deriv )
+  __attribute__((warn_unused_result));
+
+bool lcfgpackage_add_derivation_file_line( LCFGPackage * res,
+                                           const char * filename,
+                                           int line )
+  __attribute__((warn_unused_result));
+
+bool lcfgpackage_merge_derivation( LCFGPackage * pkg1,
+                                   const LCFGPackage * pkg2 )
+  __attribute__((warn_unused_result));
+
+/* Category */
+
+bool lcfgpackage_valid_category( const char * category );
+
+bool lcfgpackage_has_category( const LCFGPackage * pkg );
+
+const char * lcfgpackage_get_category( const LCFGPackage * pkg );
+
+bool lcfgpackage_set_category( LCFGPackage * pkg, char * new_value )
   __attribute__((warn_unused_result));
 
 /* Priority */
@@ -202,6 +235,9 @@ int lcfgpackage_compare( const LCFGPackage * pkg1,
 
 bool lcfgpackage_equals( const LCFGPackage * pkg1,
                          const LCFGPackage * pkg2 );
+
+bool lcfgpackage_same_context( const LCFGPackage * pkg1,
+                               const LCFGPackage * pkg2 );
 
 LCFGStatus lcfgpackage_from_spec( const char * input,
                                     LCFGPackage ** result,
@@ -264,12 +300,27 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
 
 unsigned long lcfgpackage_hash( const LCFGPackage * pkg );
 
+/* CPP package list stuff */
+
+typedef enum {
+  LCFG_PKG_PRAGMA_CATEGORY,
+  LCFG_PKG_PRAGMA_CONTEXT,
+  LCFG_PKG_PRAGMA_DERIVE
+} LCFGPkgPragma;
+
+bool lcfgpackage_parse_pragma( const char * line,
+			       LCFGPkgPragma * key, char ** value )
+  __attribute__((warn_unused_result));
+
+bool lcfgpackage_store_options( char ** file, ...  )
+  __attribute__((warn_unused_result));
+
 /* Package Lists */
 
 typedef enum {
-  LCFG_PKGLIST_PK_NAME = 0,
-  LCFG_PKGLIST_PK_ARCH = 1,
-  LCFG_PKGLIST_PK_CTX  = 2
+  LCFG_PKGLIST_PK_NAME = 1,
+  LCFG_PKGLIST_PK_ARCH = 2,
+  LCFG_PKGLIST_PK_CTX  = 4
 } LCFGPkgListPK;
 
 /**
@@ -363,11 +414,20 @@ bool lcfgpkglist_print( const LCFGPackageList * pkglist,
                         FILE * out )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgpkglist_from_cpp( const char * filename,
-				 LCFGPackageList ** result,
-				 const char * defarch,
-                                 LCFGOption options,
-				 char ** msg )
+LCFGChange lcfgpkglist_from_pkgsfile( const char * filename,
+                                      LCFGPackageList ** result,
+                                      const char * defarch,
+                                      const char * macros_file,
+                                      char ** incpath,
+                                      LCFGOption options,
+				      char *** deps,
+                                      char ** msg );
+
+LCFGChange lcfgpkglist_from_rpmcfg( const char * filename,
+				    LCFGPackageList ** result,
+				    const char * defarch,
+				    LCFGOption options,
+				    char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
@@ -440,9 +500,9 @@ LCFGPackage * lcfgpkgiter_next(LCFGPackageIterator * iterator);
 
 struct LCFGPackageSet {
   /*@{*/
-  LCFGPackageList ** packages;
-  unsigned long buckets;
-  unsigned long entries;
+  LCFGPackageList ** packages; /**< Array of package lists */
+  unsigned long buckets;       /**< Array of derivation lists */
+  unsigned long entries;       /**< Number of full buckets in map */
   LCFGPkgListPK primary_key; /**< Controls which package fields are used as primary key */
   LCFGMergeRule merge_rules; /**< Rules which control how packages are merged */
   /*@}*/
@@ -520,11 +580,21 @@ LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
                                   char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGStatus lcfgpkgset_from_cpp( const char * filename,
-                                LCFGPackageSet ** result,
-                                const char * defarch,
-                                LCFGOption options,
-                                char ** msg )
+LCFGChange lcfgpkgset_from_pkgsfile( const char * filename,
+                                     LCFGPackageSet ** result,
+                                     const char * defarch,
+                                     const char * macros_file,
+                                     char ** incpath,
+                                     LCFGOption options,
+				     char *** deps,
+                                     char ** msg)
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgpkgset_from_rpmcfg( const char * filename,
+				   LCFGPackageSet ** result,
+				   const char * defarch,
+				   LCFGOption options,
+				   char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
@@ -547,10 +617,14 @@ LCFGPackageSet * lcfgpkgset_match( const LCFGPackageSet * pkgset,
                                    const char * want_ver,
                                    const char * want_rel );
 
+/**
+ * @brief Iterator for package sets
+ */
+
 struct LCFGPkgSetIterator {
-  LCFGPackageSet * set;
-  LCFGPackageIterator * listiter;
-  long current;
+  LCFGPackageSet * set;           /**< Pointer to the package set */
+  LCFGPackageIterator * listiter; /**< Package list iterator */
+  long current;                   /**< Current location in the set */
 };
 typedef struct LCFGPkgSetIterator LCFGPkgSetIterator;
 

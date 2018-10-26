@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@LIB_INSTALL_DIR@
+includedir=@INCLUDE_INSTALL_DIR@
+modules=1
+
+Name: lcfg-common
+Version: @PROJECT_VERSION@
+Description: LCFG common library for context and derivation handling
+Requires: lcfg-utils = @PROJECT_VERSION@
+Libs: -L${libdir} -llcfg_common
+Cflags: -I${includedir}

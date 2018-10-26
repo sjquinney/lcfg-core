@@ -3,8 +3,8 @@
  * @brief Functions for finding the differences between LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-06-01 11:41:46 +0100 (Thu, 01 Jun 2017) $
- * $Revision: 33004 $
+ * $Date: 2018-03-07 09:17:01 +0000 (Wed, 07 Mar 2018) $
+ * $Revision: 34101 $
  */
 
 #include <stdbool.h>
@@ -559,12 +559,15 @@ ssize_t lcfgdiffresource_to_string( const LCFGDiffResource * resdiff,
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG resource diff string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
 
   }
@@ -745,12 +748,15 @@ ssize_t lcfgdiffresource_to_hold( const LCFGDiffResource * resdiff,
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG resource string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
 
   }

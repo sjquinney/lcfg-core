@@ -3,8 +3,8 @@
  * @brief Functions for working with lists of LCFG resource tags
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-08-11 14:55:09 +0100 (Fri, 11 Aug 2017) $
- * $Revision: 33314 $
+ * $Date: 2018-03-07 09:17:01 +0000 (Wed, 07 Mar 2018) $
+ * $Revision: 34101 $
  */
 
 #include <stdio.h>
@@ -679,12 +679,15 @@ ssize_t lcfgtaglist_to_string( const LCFGTagList * taglist,
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG tag string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
 
   }

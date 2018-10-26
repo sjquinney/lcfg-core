@@ -8,7 +8,7 @@ set(MY_SOURCES read.c components.c common.c packages.c resource.c)
 
 add_library(lcfg_xml SHARED ${MY_SOURCES})
 
-set_target_properties(lcfg_xml PROPERTIES VERSION 1.0.1 SOVERSION 1)
+set_target_properties(lcfg_xml PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 
 # Cannot have two targets with the same name so the static version has
 # '-static' appended and then the name of the output file is set
@@ -53,7 +53,7 @@ target_link_libraries(lcfg_xml ${LIBXML2_LIBRARIES})
 
 # Also need to link against the lcfg profile, packages and resources libraries
 
-target_link_libraries(lcfg_xml lcfg_context)
+target_link_libraries(lcfg_xml lcfg_common)
 target_link_libraries(lcfg_xml lcfg_packages)
 target_link_libraries(lcfg_xml lcfg_resources)
 target_link_libraries(lcfg_xml lcfg_profile)
@@ -64,10 +64,6 @@ add_executable(lcfg_xml_reader lcfg_xml_reader.c)
 
 target_link_libraries(lcfg_xml_reader lcfg_xml)
 target_link_libraries(lcfg_xml_reader lcfg_bdb)
-
-# Specify where various files should be installed.
-
-SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
 
 install(TARGETS lcfg_xml_reader lcfg_xml lcfg_xml-static
         RUNTIME DESTINATION bin

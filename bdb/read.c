@@ -21,106 +21,6 @@
 #include "utils.h"
 #include "bdb.h"
 
-/**
- * @brief Load LCFG profile from Berkeley DB
- *
- * This will load the components and resources for an LCFG profile
- * from a Berkeley DB file. If the @c comps_wanted parameter is @c
- * NULL then all components are loaded, otherwise the set of
- * components can be restricted by passing in an @c LCFGTagList of the
- * component names.
- *
- * Typically the keys in the DB will be stored with a @e namespace
- * prefix which is the short nodename for a profile (e.g. foo for
- * foo.lcfg.org).
- *
- * By default the function will return an error status if the file
- * does not exist. This behaviour can be altered to returning success
- * and an empty @c LCFGProfile struct by specifying the @c
- * LCFG_OPT_ALLOW_NOEXIST option. This is useful when loading an 'old'
- * profile for comparison with a 'new' one when the old file might
- * legitimately not exist.
- *
- * @param[in] filename Path to the Berkeley DB file.
- * @param[out] result Reference to the pointer for the @c LCFGProfile struct.
- * @param[in] comps_wanted Whitelist for component names.
- * @param[in] namespace Namespace for the DB keys (usually the nodename)
- * @param[in] options Controls the behaviour of the process.
- * @param[out] msg Pointer to any diagnostic messages
- *
- * @return Status value indicating success of the process
- *
- */
-
-LCFGStatus lcfgprofile_from_bdb( const char * filename,
-                                 LCFGProfile ** result,
-                                 LCFGTagList * comps_wanted,
-                                 const char * namespace,
-				 LCFGOption options,
-                                 char ** msg ) {
-  assert( filename != NULL );
-
-  LCFGStatus status = LCFG_STATUS_OK;
-
-  LCFGProfile * profile = lcfgprofile_new();
-
-  struct stat sb;
-  if ( stat( filename, &sb ) == 0 )
-    profile->mtime = sb.st_mtime;
-
-  DB * dbh = lcfgbdb_init_reader( filename, msg );
-
-  if ( dbh == NULL ) {
-    if ( errno != ENOENT || !(options&LCFG_OPT_ALLOW_NOEXIST) )
-      status = LCFG_STATUS_ERROR;
-
-  } else {
-
-    /* Ensure the 'profile' component is always loaded. Empty list
-       means 'load everything' */
- 
-    LCFGTagList * comps_wanted2 = NULL;
-    if ( !lcfgtaglist_is_empty(comps_wanted) && 
-         !lcfgtaglist_contains( comps_wanted, "profile" ) ) {
-
-      comps_wanted2 = lcfgtaglist_clone(comps_wanted);
-
-      char * add_msg = NULL;
-      if ( !lcfgtaglist_mutate_add( comps_wanted2, "profile", &add_msg ) ) {
-        lcfgutils_build_message( msg,
-                                 "Problems with list of components: %s",
-                                 add_msg );
-        status = LCFG_STATUS_ERROR;
-      }
-      free(add_msg);
-
-      comps_wanted = comps_wanted2;
-    }
-
-    if ( status != LCFG_STATUS_ERROR ) {
-
-      status = lcfgbdb_process_components( dbh,
-                                           &profile->components,
-                                           comps_wanted, 
-                                           namespace,
-                                           msg );
-    }
-
-    lcfgtaglist_relinquish(comps_wanted2);
-  }
-
-  lcfgbdb_close_db(dbh);
-
-  if ( status != LCFG_STATUS_OK ) {
-    lcfgprofile_destroy(profile);
-    profile = NULL;
-  }
-
-  *result = profile;
-
-  return status;
-}
-
 static LCFGChange lcfgbdb_get_resource_item( DB * dbh,
                                              LCFGResource * res,
                                              const char * comp_name,
@@ -178,8 +78,11 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
                                              const char * comp_name,
                                              const char * namespace,
                                              LCFGComponent ** result,
+                                             LCFGOption options,
                                              char ** msg ) {
   assert( comp_name != NULL );
+
+  bool use_meta = options&LCFG_OPT_USE_META;
 
   LCFGStatus status = LCFG_STATUS_OK;
   LCFGComponent * component = NULL;
@@ -262,63 +165,67 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
 
     LCFGChange res_change = LCFG_CHANGE_NONE;
 
-    /* Derivation */
+    if ( use_meta ) {
 
-    LCFGChange deriv_change =
-      lcfgbdb_get_resource_item( dbh, res, 
-				 comp_name, namespace,
-				 LCFG_RESOURCE_SYMBOL_DERIVATION,
-				 &keybuf, &keybufsize, msg );
+      /* Derivation */
 
-    if ( deriv_change == LCFG_CHANGE_ERROR ) {
-      res_change = LCFG_CHANGE_ERROR;
-      goto local_cleanup;
-    } else if ( deriv_change == LCFG_CHANGE_MODIFIED ) {
-      res_change = LCFG_CHANGE_MODIFIED;
-    }
+      LCFGChange deriv_change =
+        lcfgbdb_get_resource_item( dbh, res, 
+                                   comp_name, namespace,
+                                   LCFG_RESOURCE_SYMBOL_DERIVATION,
+                                   &keybuf, &keybufsize, msg );
+
+      if ( deriv_change == LCFG_CHANGE_ERROR ) {
+        res_change = LCFG_CHANGE_ERROR;
+        goto local_cleanup;
+      } else if ( deriv_change == LCFG_CHANGE_MODIFIED ) {
+        res_change = LCFG_CHANGE_MODIFIED;
+      }
+
+      /* Context */
+
+      LCFGChange context_change =
+        lcfgbdb_get_resource_item( dbh, res, 
+                                   comp_name, namespace,
+                                   LCFG_RESOURCE_SYMBOL_CONTEXT,
+                                   &keybuf, &keybufsize, msg );
+
+      if ( context_change == LCFG_CHANGE_ERROR ) {
+        res_change = LCFG_CHANGE_ERROR;
+        goto local_cleanup;
+      } else if ( context_change == LCFG_CHANGE_MODIFIED ) {
+        res_change = LCFG_CHANGE_MODIFIED;
+      }
+
+      /* Priority */
+
+      LCFGChange prio_change =
+        lcfgbdb_get_resource_item( dbh, res, 
+                                   comp_name, namespace,
+                                   LCFG_RESOURCE_SYMBOL_PRIORITY,
+                                   &keybuf, &keybufsize, msg );
+
+      if ( prio_change == LCFG_CHANGE_ERROR ) {
+        res_change = LCFG_CHANGE_ERROR;
+        goto local_cleanup;
+      } else if ( prio_change == LCFG_CHANGE_MODIFIED ) {
+        res_change = LCFG_CHANGE_MODIFIED;
+      }
+
+    } /* end of use_meta */
 
     /* Type */
 
     LCFGChange type_change =
       lcfgbdb_get_resource_item( dbh, res, 
-				 comp_name, namespace,
-				 LCFG_RESOURCE_SYMBOL_TYPE,
-				 &keybuf, &keybufsize, msg );
+                                 comp_name, namespace,
+                                 LCFG_RESOURCE_SYMBOL_TYPE,
+                                 &keybuf, &keybufsize, msg );
 
     if ( type_change == LCFG_CHANGE_ERROR ) {
       res_change = LCFG_CHANGE_ERROR;
       goto local_cleanup;
     } else if ( type_change == LCFG_CHANGE_MODIFIED ) {
-      res_change = LCFG_CHANGE_MODIFIED;
-    }
-
-    /* Context */
-
-    LCFGChange context_change =
-      lcfgbdb_get_resource_item( dbh, res, 
-				 comp_name, namespace,
-				 LCFG_RESOURCE_SYMBOL_CONTEXT,
-				 &keybuf, &keybufsize, msg );
-
-    if ( context_change == LCFG_CHANGE_ERROR ) {
-      res_change = LCFG_CHANGE_ERROR;
-      goto local_cleanup;
-    } else if ( context_change == LCFG_CHANGE_MODIFIED ) {
-      res_change = LCFG_CHANGE_MODIFIED;
-    }
-
-    /* Priority */
-
-    LCFGChange prio_change =
-      lcfgbdb_get_resource_item( dbh, res, 
-				 comp_name, namespace,
-				 LCFG_RESOURCE_SYMBOL_PRIORITY,
-				 &keybuf, &keybufsize, msg );
-
-    if ( prio_change == LCFG_CHANGE_ERROR ) {
-      res_change = LCFG_CHANGE_ERROR;
-      goto local_cleanup;
-    } else if ( prio_change == LCFG_CHANGE_MODIFIED ) {
       res_change = LCFG_CHANGE_MODIFIED;
     }
 
@@ -385,84 +292,6 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
 }
 
 /**
- * @brief Load LCFG component from Berkeley DB
- *
- * This will load the resources for the specified LCFG component from
- * a Berkeley DB file.
- *
- * Typically the keys in the DB will be stored with a @e namespace
- * prefix which is the short nodename for a profile (e.g. foo for
- * foo.lcfg.org).
- *
- * By default the function will return an error status if the file
- * does not exist. This behaviour can be altered to returning success
- * by specifying the @c LCFG_OPT_ALLOW_NOEXIST option. This is useful
- * when loading an 'old' profile for comparison with a 'new' one when
- * the old file might legitimately not exist.
- *
- * @param[in] filename Path to the Berkeley DB file.
- * @param[out] result Reference to the pointer for the @c LCFGComponent struct.
- * @param[in] comp_name Name of required component
- * @param[in] namespace Namespace for the DB keys (usually the nodename)
- * @param[in] options Controls the behaviour of the process.
- * @param[out] msg Pointer to any diagnostic messages
- *
- * @return Status value indicating success of the process
- *
- */
-
-LCFGStatus lcfgcomponent_from_bdb( const char * filename,
-                                   LCFGComponent ** result,
-                                   const char * comp_name,
-                                   const char * namespace,
-				   LCFGOption options,
-                                   char ** msg ) {
-  assert( filename != NULL );
-  assert( comp_name != NULL );
-
-  *result = NULL;
-
-  if ( !lcfgcomponent_valid_name(comp_name) ) {
-    lcfgutils_build_message( msg, "Invalid component name '%s'", comp_name );
-    return LCFG_STATUS_ERROR;
-  }
-
-  LCFGStatus status = LCFG_STATUS_OK;
-
-  DB * dbh = lcfgbdb_init_reader( filename, msg );
-
-  if ( dbh != NULL ) {
-    status = lcfgbdb_process_component( dbh, comp_name, namespace,
-                                        result, msg );
-
-    lcfgbdb_close_db(dbh);
-  } else {
-
-    if ( errno != ENOENT || !(options&LCFG_OPT_ALLOW_NOEXIST) ) {
-      status = LCFG_STATUS_ERROR;
-    } else {
-
-      /* Create an empty component with the required name */
-
-      LCFGComponent * comp = lcfgcomponent_new();
-      char * comp_name2 = strdup(comp_name);
-      if ( lcfgcomponent_set_name( comp, comp_name2 ) ) {
-        *result = comp;
-      } else {
-        free(comp_name2);
-
-        status = LCFG_STATUS_ERROR;
-        lcfgcomponent_relinquish(comp);
-      }
-
-    }
-
-  }
-
-  return status;
-}
-
-/**
  * @brief Process DB file to load LCFG components
  *
  * Iterates through all records in the database and loads the LCFG
@@ -485,11 +314,12 @@ LCFGStatus lcfgcomponent_from_bdb( const char * filename,
  *
  */
 
-LCFGStatus lcfgbdb_process_components( DB * dbh,
-                                       LCFGComponentSet ** result,
-                                       LCFGTagList * comps_wanted,
-                                       const char * namespace,
-                                       char ** msg ) {
+static LCFGStatus lcfgbdb_process_components( DB * dbh,
+                                              LCFGComponentSet ** result,
+                                              LCFGTagList * comps_wanted,
+                                              const char * namespace,
+                                              LCFGOption options,
+                                              char ** msg ) {
   assert( dbh != NULL );
 
   *result = NULL;
@@ -572,7 +402,7 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
     LCFGComponent * comp = NULL;
 
     status = lcfgbdb_process_component( dbh, comp_name, namespace,
-                                        &comp, msg );
+                                        &comp, options, msg );
 
     if ( status != LCFG_STATUS_ERROR ) {
 
@@ -604,6 +434,185 @@ LCFGStatus lcfgbdb_process_components( DB * dbh,
   }
 
   *result = compset;
+
+  return status;
+}
+
+/**
+ * @brief Load LCFG profile from Berkeley DB
+ *
+ * This will load the components and resources for an LCFG profile
+ * from a Berkeley DB file. If the @c comps_wanted parameter is @c
+ * NULL then all components are loaded, otherwise the set of
+ * components can be restricted by passing in an @c LCFGTagList of the
+ * component names.
+ *
+ * Typically the keys in the DB will be stored with a @e namespace
+ * prefix which is the short nodename for a profile (e.g. foo for
+ * foo.lcfg.org).
+ *
+ * By default the function will return an error status if the file
+ * does not exist. This behaviour can be altered to returning success
+ * and an empty @c LCFGProfile struct by specifying the @c
+ * LCFG_OPT_ALLOW_NOEXIST option. This is useful when loading an 'old'
+ * profile for comparison with a 'new' one when the old file might
+ * legitimately not exist.
+ *
+ * @param[in] filename Path to the Berkeley DB file.
+ * @param[out] result Reference to the pointer for the @c LCFGProfile struct.
+ * @param[in] comps_wanted Whitelist for component names.
+ * @param[in] namespace Namespace for the DB keys (usually the nodename)
+ * @param[in] options Controls the behaviour of the process.
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgprofile_from_bdb( const char * filename,
+                                 LCFGProfile ** result,
+                                 LCFGTagList * comps_wanted,
+                                 const char * namespace,
+				 LCFGOption options,
+                                 char ** msg ) {
+  assert( filename != NULL );
+
+  LCFGStatus status = LCFG_STATUS_OK;
+
+  LCFGProfile * profile = lcfgprofile_new();
+
+  struct stat sb;
+  if ( stat( filename, &sb ) == 0 )
+    profile->mtime = sb.st_mtime;
+
+  DB * dbh = lcfgbdb_init_reader( filename, msg );
+
+  if ( dbh == NULL ) {
+    if ( errno != ENOENT || !(options&LCFG_OPT_ALLOW_NOEXIST) )
+      status = LCFG_STATUS_ERROR;
+
+  } else {
+
+    /* Ensure the 'profile' component is always loaded. Empty list
+       means 'load everything' */
+ 
+    LCFGTagList * comps_wanted2 = NULL;
+    if ( !lcfgtaglist_is_empty(comps_wanted) && 
+         !lcfgtaglist_contains( comps_wanted, "profile" ) ) {
+
+      comps_wanted2 = lcfgtaglist_clone(comps_wanted);
+
+      char * add_msg = NULL;
+      if ( !lcfgtaglist_mutate_add( comps_wanted2, "profile", &add_msg ) ) {
+        lcfgutils_build_message( msg,
+                                 "Problems with list of components: %s",
+                                 add_msg );
+        status = LCFG_STATUS_ERROR;
+      }
+      free(add_msg);
+
+      comps_wanted = comps_wanted2;
+    }
+
+    if ( status != LCFG_STATUS_ERROR ) {
+
+      status = lcfgbdb_process_components( dbh,
+                                           &profile->components,
+                                           comps_wanted, 
+                                           namespace,
+                                           options,
+                                           msg );
+    }
+
+    lcfgtaglist_relinquish(comps_wanted2);
+  }
+
+  lcfgbdb_close_db(dbh);
+
+  if ( status != LCFG_STATUS_OK ) {
+    lcfgprofile_destroy(profile);
+    profile = NULL;
+  }
+
+  *result = profile;
+
+  return status;
+}
+
+/**
+ * @brief Load LCFG component from Berkeley DB
+ *
+ * This will load the resources for the specified LCFG component from
+ * a Berkeley DB file.
+ *
+ * Typically the keys in the DB will be stored with a @e namespace
+ * prefix which is the short nodename for a profile (e.g. foo for
+ * foo.lcfg.org).
+ *
+ * By default the function will return an error status if the file
+ * does not exist. This behaviour can be altered to returning success
+ * by specifying the @c LCFG_OPT_ALLOW_NOEXIST option. This is useful
+ * when loading an 'old' profile for comparison with a 'new' one when
+ * the old file might legitimately not exist.
+ *
+ * @param[in] filename Path to the Berkeley DB file.
+ * @param[out] result Reference to the pointer for the @c LCFGComponent struct.
+ * @param[in] comp_name Name of required component
+ * @param[in] namespace Namespace for the DB keys (usually the nodename)
+ * @param[in] options Controls the behaviour of the process.
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
+LCFGStatus lcfgcomponent_from_bdb( const char * filename,
+                                   LCFGComponent ** result,
+                                   const char * comp_name,
+                                   const char * namespace,
+				   LCFGOption options,
+                                   char ** msg ) {
+  assert( filename != NULL );
+  assert( comp_name != NULL );
+
+  *result = NULL;
+
+  if ( !lcfgcomponent_valid_name(comp_name) ) {
+    lcfgutils_build_message( msg, "Invalid component name '%s'", comp_name );
+    return LCFG_STATUS_ERROR;
+  }
+
+  LCFGStatus status = LCFG_STATUS_OK;
+
+  DB * dbh = lcfgbdb_init_reader( filename, msg );
+
+  if ( dbh != NULL ) {
+    status = lcfgbdb_process_component( dbh, comp_name, namespace,
+                                        result, options, msg );
+
+    lcfgbdb_close_db(dbh);
+  } else {
+
+    if ( errno != ENOENT || !(options&LCFG_OPT_ALLOW_NOEXIST) ) {
+      status = LCFG_STATUS_ERROR;
+    } else {
+
+      /* Create an empty component with the required name */
+
+      LCFGComponent * comp = lcfgcomponent_new();
+      char * comp_name2 = strdup(comp_name);
+      if ( lcfgcomponent_set_name( comp, comp_name2 ) ) {
+        *result = comp;
+      } else {
+        free(comp_name2);
+
+        status = LCFG_STATUS_ERROR;
+        lcfgcomponent_relinquish(comp);
+      }
+
+    }
+
+  }
 
   return status;
 }

@@ -4,11 +4,11 @@ cmake_minimum_required(VERSION 2.6)
 
 # Generate the packagelib shared library.
 
-set(MY_SOURCES package.c list.c rpm.c iterator.c set.c setiter.c)
+set(MY_SOURCES package.c container.c list.c rpm.c iterator.c set.c setiter.c)
 
 add_library(lcfg_packages SHARED ${MY_SOURCES})
 
-set_target_properties(lcfg_packages PROPERTIES VERSION 1.0.1 SOVERSION 1)
+set_target_properties(lcfg_packages PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 
 # Cannot have two targets with the same name so the static version has
 # '-static' appended and then the name of the output file is set
@@ -35,7 +35,7 @@ add_definitions(-DHAVE_RPM)
 target_link_libraries(lcfg_packages ${RPM_LIBRARY} ${RPMIO_LIBRARY})
 endif(RPM_LIBRARY AND RPMIO_LIBRARY)
 
-target_link_libraries(lcfg_packages lcfg_context)
+target_link_libraries(lcfg_packages lcfg_common)
 target_link_libraries(lcfg_packages lcfg_utils)
 
 # Create the pkgspec parser and link it to the pkgtools library.
@@ -45,10 +45,6 @@ target_link_libraries(parse_pkgspec lcfg_packages)
 
 add_executable(translaterpmcfg translaterpmcfg.c)
 target_link_libraries(translaterpmcfg lcfg_packages)
-
-# Specify where various files should be installed.
-
-SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
 
 install(TARGETS parse_pkgspec lcfg_packages lcfg_packages-static
         RUNTIME DESTINATION bin

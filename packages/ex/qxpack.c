@@ -14,31 +14,36 @@ int main (int argc, char *argv[]) {
 
   const char * defarch = default_architecture();
 
-  LCFGPackageList * pkglist = NULL;
+  LCFGPackageSet * pkgset = NULL;
   char * msg = NULL;
 
-  LCFGStatus rc = lcfgpkglist_from_cpp( filename, &pkglist, defarch, 0,
-                                        &msg );
+  LCFGStatus rc = lcfgpkgset_from_rpmcfg( filename, &pkgset, defarch,
+                                          LCFG_OPT_USE_META, &msg );
   bool ok = true;
   if ( rc == LCFG_STATUS_ERROR ) {
     ok = false;
     fprintf( stderr, "Failed to read packages from '%s': %s\n", filename, msg );
   } else {
-    LCFGPackageList * matches = lcfgpkglist_match( pkglist,
-                                                   pkg_name,
-                                                   pkg_arch,
-                                                   pkg_ver,
-                                                   pkg_rel );
+    LCFGPackageSet * matches = lcfgpkgset_match( pkgset,
+                                                 pkg_name,
+                                                 pkg_arch,
+                                                 pkg_ver,
+                                                 pkg_rel );
 
     if ( matches == NULL ) {
       ok = false;
       fprintf( stderr, "Failed to search packages\n" );
     } else {
-      ok = lcfgpkglist_print( matches, defarch, LCFG_PKG_STYLE_RPM, 0, stdout );
+      ok = lcfgpkgset_print( matches, defarch, NULL,
+                             LCFG_PKG_STYLE_XML, LCFG_OPT_USE_META, stdout );
     }
+
+    lcfgpkgset_relinquish(matches);
   }
 
   free(msg);
+
+  lcfgpkgset_relinquish(pkgset);
 
   return ( ok ? 0 : 1 );
 }

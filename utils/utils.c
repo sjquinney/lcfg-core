@@ -3,8 +3,8 @@
  * @brief Commonly useful functions
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-12-13 16:38:39 +0000 (Wed, 13 Dec 2017) $
- * $Revision: 33884 $
+ * $Date: 2018-03-02 15:38:09 +0000 (Fri, 02 Mar 2018) $
+ * $Revision: 34065 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -287,6 +288,87 @@ void lcfgutils_string_trim( char * str ) {
   for ( ptr = str + len - 1; ptr != str && isspace(*ptr); ptr-- )
     *ptr = '\0';
 
+}
+
+/**
+ * @brief Find an item in a list-string.
+ *
+ * This provides support for locating the first occurrence of the
+ * sub-string @c needle in the string @c haystack. This behaves in a
+ * similar way to @c strstr(3) but with additional support for list
+ * item separators (e.g. comma or space characters). When a
+ * separator(s) - single or multiple - is specified the item in the
+ * list must match exactly. So searching for @c foo in @c
+ * "foobar,baz,quux" will return nothing if the separator is set to @c
+ * "," (comma). It should be noted that there is no support for
+ * quoting list items or escaping the separators, i.e. this does not
+ * provide full CSV support...
+ *
+ * @param[in] haystack Pointer to the string to be searched
+ * @param[in] needle Pointer to the sub-string to be found
+ * @param[in] separator Pointer to the list item separator
+ *
+ * @return Pointer to the location of the sub-string
+ *
+ */
+
+const char * lcfgutils_string_finditem( const char * haystack,
+					const char * needle,
+					const char * separator ) {
+  assert( needle != NULL );
+
+  if ( isempty(haystack) ) return false;
+
+  const char * location = NULL;
+
+  const char * match = strstr( haystack, needle );
+  if ( isempty(separator) ) {
+    location = match;
+  } else {
+    size_t needle_len = strlen(needle);
+
+    while ( match != NULL ) {
+
+      /* string starts with needle or separator before match */
+      if ( haystack == match || strchr( separator, *( match - 1 ) ) ) {
+
+	/* string ends with needle or separator after tag */
+	if ( *( match + needle_len ) == '\0' ||
+	     strchr( separator, *( match + needle_len ) ) ) {
+	  location = match;
+	  break;
+	}
+
+      }
+
+      /* Move past the current (failed) match */
+      match = strstr( match + needle_len, needle );
+    }
+
+  }
+
+  return location;
+}
+
+/**
+ * @brief Check if a list-string contains an item
+ *
+ * This uses the @c lcfgutils_string_finditem() function to search a
+ * string for the specified item. For full details see the
+ * documentation for that function.
+ *
+ * @param[in] haystack Pointer to the string to be searched
+ * @param[in] needle Pointer to the sub-string to be found
+ * @param[in] separator Pointer to the list item separator
+ *
+ * @return Boolean which indicates if the string contains the item
+ *
+ */
+
+bool lcfgutils_string_hasitem( const char * haystack,
+			       const char * needle,
+			       const char * separator ) {
+  return ( lcfgutils_string_finditem( haystack, needle, separator ) != NULL );
 }
 
 /**
@@ -601,18 +683,17 @@ bool lcfgutils_file_needs_update( const char * cur_file,
   return needs_update;
 }
 
-LCFGChange lcfgutils_file_update( const char * cur_file, const char * new_file,
+LCFGChange lcfgutils_file_update( const char * filename, const char * tmpfile,
 				  time_t mtime ) {
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
-  if ( lcfgutils_file_needs_update( cur_file, new_file ) ) {
+  if ( lcfgutils_file_needs_update( filename, tmpfile ) ) {
 
-    if ( rename( cur_file, new_file ) == 0 ) {
+    if ( rename( tmpfile, filename ) == 0 )
       change = LCFG_CHANGE_MODIFIED;
-    } else {
+    else
       change = LCFG_CHANGE_ERROR;
-    }
 
   }
 
@@ -620,7 +701,7 @@ LCFGChange lcfgutils_file_update( const char * cur_file, const char * new_file,
     struct utimbuf times;
     times.actime  = mtime;
     times.modtime = mtime;
-    (void) utime( new_file, &times );
+    (void) utime( filename, &times );
   }
 
   return change;
@@ -729,4 +810,125 @@ unsigned long lcfgutils_string_djbhash( const char * str, ... ) {
 
   return hash;
 }
+
+/*
+ * @brief Split a string on a delimiter
+ *
+ * Splits a #string into a maximum of #max_tokens pieces, using the
+ * given #delimiter . If #max_tokens is reached, the remainder of
+ * string is appended to the last token.
+ *
+ * A NULL-terminated array of the pieces will be returned. To avoid
+ * memory leaks, when no longer required the pieces and the array
+ * should be freed.
+ *
+ * @param[in] string Pointer to string to split
+ * @param[in] delimiter String which specifies the places at which to split the string. 
+ * @param[in] max_tokens Number of parts to split into (zero for all)
+ *
+ * @return A newly allocated NULL-terminated array of strings (use free(3) when no longer required).
+ *
+ */
+
+char ** lcfgutils_string_split( const char * string, const char * delimiter,
+                                unsigned int max_tokens ) {
+
+  if ( isempty(string) ) return NULL;
+
+  if ( max_tokens == 0 ) max_tokens = INT_MAX;
+
+  size_t delimiter_len = strlen(delimiter);
+  unsigned int count = 1;
+
+  const char * ptr = string;
+  while ( ( ptr = strstr( ptr, delimiter ) ) != NULL ) {
+    ptr += delimiter_len;
+    if ( *ptr != '\0' ) count++;
+  }
+
+  /* +1 for final NULL so it is easy to iterate through list */
+  size_t size = ( max_tokens < count ? max_tokens : count ) + 1;
+
+  char ** result = calloc( size, sizeof(char *) );
+  if ( result == NULL ) {
+    perror("Failed to allocate memory for list of strings");
+    exit(EXIT_FAILURE);
+  }
+
+  unsigned int n = 0;
+  const char * remainder = string;
+
+  while ( n + 1 < max_tokens &&
+          ( ptr = strstr( remainder, delimiter ) ) != NULL ) {
+
+    result[n++] = strndup( remainder, ptr - remainder );
+
+    remainder = ptr + delimiter_len;
+  }
+
+  if ( *remainder != '\0' )
+    result[n] = strdup(remainder);
+
+  return result;
+}
+
+bool lcfgutils_parse_cpp_derivation( const char * line,
+				     char ** file, unsigned int * linenum,
+				     unsigned int * flags ) {
+
+  if ( strncmp( line, "# ", 2 ) != 0 ||
+       !isdigit( *( line + 2 ) ) ) return false;
+
+  char * file_start = NULL;
+  unsigned int new_linenum = strtoul( line + 2, &file_start, 0 );
+
+  if ( strncmp( file_start, " \"", 2 ) != 0 ) return false;
+  file_start += 2;
+
+  char * file_end = strrchr( file_start, '"' );
+  if ( file_end == NULL ) return false;
+
+  unsigned int new_flags = 0;
+
+  /* Flags are optional, there may be none or a space-separated list */
+  if ( strncmp( file_end, "\" ", 2 ) == 0 && isdigit( *( file_end + 2 ) ) ) {
+
+    char * flags_start = file_end + 2;
+
+    unsigned int flag = 0;
+    while ( ( flag = strtoul( flags_start, &flags_start, 0 ) ) != 0 ) {
+      switch (flag) {
+      case 1:
+        new_flags |= LCFG_CPP_FLAG_ENTRY;
+        break;
+      case 2:
+        new_flags |= LCFG_CPP_FLAG_RETURN;
+        break;
+      case 3:
+        new_flags |= LCFG_CPP_FLAG_SYSHDR;
+        break;
+      case 4:
+        new_flags |= LCFG_CPP_FLAG_EXTERN;
+        break;
+      }
+    }
+
+  }
+
+  /* Only update output params at this point, that way if there is a
+     parse failure they won't be changed. Also, for efficiency, make a
+     new copy of the filename only when really necessary. */
+
+  *linenum = new_linenum;
+  *flags   = new_flags;
+
+  if ( isempty(*file) ||
+       strncmp( *file, file_start, file_end - file_start ) != 0 ) {
+    free(*file);
+    *file = strndup( file_start, file_end - file_start );
+  }
+
+  return true;
+}
+
 /* eof */

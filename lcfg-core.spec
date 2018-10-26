@@ -1,3 +1,5 @@
+%global _hardened_build 1
+
 Name:           lcfg-core
 Version:        @LCFG_VERSION@
 Release:        @LCFG_RELEASE@
@@ -6,7 +8,7 @@ License:        GPLv2
 Group:          LCFG/Components
 Packager:       Stephen Quinney <squinney@inf.ed.ac.uk>
 Source:         %{name}-%{version}.tar.gz
-Provides:       lcfg-utils
+Provides:       lcfg-utils = %{version}-%{release}
 BuildRequires:  cmake >= 2.6.0, pkgconfig
 BuildRequires:  libxml2-devel
 BuildRequires:  bison, flex
@@ -37,6 +39,7 @@ This package contains the libraries and header files necessary for
 building software and linking against the LCFG core libraries.
 
 %package doc
+BuildArch: noarch
 Group: LCFG/Devel
 Summary: Documentation files for the LCFG core libraries
 
@@ -65,6 +68,8 @@ make -C docs/latex
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT/usr/share/doc/
+ln -s lcfg-core-doc-%{version} $RPM_BUILD_ROOT/usr/share/doc/lcfg-core 
 
 %post -p /sbin/ldconfig
 
@@ -83,7 +88,7 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %{_bindir}/lcfg_xml_reader
 %{_libdir}/liblcfg_bdb.so.*
 %{_libdir}/liblcfg_utils.so.*
-%{_libdir}/liblcfg_context.so.*
+%{_libdir}/liblcfg_common.so.*
 %{_libdir}/liblcfg_profile.so.*
 %{_libdir}/liblcfg_packages.so.*
 %{_libdir}/liblcfg_resources.so.*
@@ -96,8 +101,8 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %{_libdir}/liblcfg_bdb.so
 %{_libdir}/liblcfg_utils.a
 %{_libdir}/liblcfg_utils.so
-%{_libdir}/liblcfg_context.a
-%{_libdir}/liblcfg_context.so
+%{_libdir}/liblcfg_common.a
+%{_libdir}/liblcfg_common.so
 %{_libdir}/liblcfg_profile.a
 %{_libdir}/liblcfg_profile.so
 %{_libdir}/liblcfg_packages.a
@@ -110,6 +115,7 @@ make install DESTDIR=$RPM_BUILD_ROOT
 %files doc
 %doc docs/html
 %doc docs/latex/refman.pdf
+/usr/share/doc/lcfg-core
 
 %clean
 rm -rf $RPM_BUILD_ROOT

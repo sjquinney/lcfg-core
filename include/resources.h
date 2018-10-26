@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG resources
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-12-07 16:42:55 +0000 (Thu, 07 Dec 2017) $
- * $Revision: 33863 $
+ * $Date: 2018-10-03 10:36:00 +0100 (Wed, 03 Oct 2018) $
+ * $Revision: 34955 $
  */
 
 #ifndef LCFG_CORE_RESOURCES_H
@@ -14,6 +14,7 @@
 #include <stdbool.h>
 
 #include "common.h"
+#include "derivation.h"
 #include "context.h"
 #include "tags.h"
 #include "templates.h"
@@ -85,7 +86,7 @@ struct LCFGResource {
   char * value;                   /**< Value - validated according to type */
   LCFGTemplate * template;        /**< Templates - used when list type */
   char * context;                 /**< Context expression - when the resource is applicable */
-  char * derivation;              /**< Derivation - where the resource was specified */
+  LCFGDerivationList * derivation; /**< Derivation - where the resource was specified */
   char * comment;                 /**< Any comments associated with the type information */
   LCFGResourceType type;          /**< Type - see LCFGResourceType for list of supported types */
   int priority;                   /**< Priority - result of evaluating context expression, used for merge conflict resolution */
@@ -127,8 +128,10 @@ bool lcfgresource_set_type_as_string( LCFGResource * res,
                                       char ** msg )
   __attribute__((warn_unused_result));
 
-char * lcfgresource_get_type_as_string( const LCFGResource * res,
-                                        LCFGOption options );
+ssize_t lcfgresource_get_type_as_string( const LCFGResource * res,
+                                         LCFGOption options,
+                                         char ** result, size_t * size )
+  __attribute__((warn_unused_result));
 
 bool lcfgresource_is_string(  const LCFGResource * res );
 bool lcfgresource_is_integer( const LCFGResource * res );
@@ -140,7 +143,11 @@ bool lcfgresource_is_true( const LCFGResource * res );
 
 bool lcfgresource_has_template( const LCFGResource * res );
 LCFGTemplate * lcfgresource_get_template( const LCFGResource * res );
-char * lcfgresource_get_template_as_string( const LCFGResource * res );
+ssize_t lcfgresource_get_template_as_string( const LCFGResource * res,
+                                             LCFGOption options,
+                                             char ** result, size_t * size )
+  __attribute__((warn_unused_result));
+
 bool lcfgresource_set_template( LCFGResource * res,
                                 LCFGTemplate * new_value )
   __attribute__((warn_unused_result));
@@ -148,6 +155,12 @@ bool lcfgresource_set_template( LCFGResource * res,
 bool lcfgresource_set_template_as_string( LCFGResource * res,
                                           const char * new_value,
                                           char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGStatus lcfgresource_child_names( const LCFGResource * res,
+				     LCFGTagList * tags,
+				     LCFGTagList ** result,
+				     char ** msg )
   __attribute__((warn_unused_result));
 
 /* Resources: Values */
@@ -240,11 +253,28 @@ bool lcfgresource_value_add_tags( LCFGResource * res,
 /* Resources: Derivations */
 
 bool lcfgresource_has_derivation( const LCFGResource * res );
-const char * lcfgresource_get_derivation( const LCFGResource * res );
-bool lcfgresource_set_derivation( LCFGResource * res, char * new_value )
+LCFGDerivationList * lcfgresource_get_derivation( const LCFGResource * res );
+ssize_t lcfgresource_get_derivation_as_string( const LCFGResource * res,
+                                               LCFGOption options,
+                                               char ** result, size_t * size )
   __attribute__((warn_unused_result));
-bool lcfgresource_add_derivation( LCFGResource * resource,
+size_t lcfgresource_get_derivation_length( const LCFGResource * res );
+bool lcfgresource_set_derivation( LCFGResource * res,
+                                  LCFGDerivationList * new_deriv )
+  __attribute__((warn_unused_result));
+bool lcfgresource_set_derivation_as_string( LCFGResource * res,
+                                            const char * new_value )
+  __attribute__((warn_unused_result));
+bool lcfgresource_add_derivation_string( LCFGResource * resource,
                                   const char * extra_deriv )
+  __attribute__((warn_unused_result));
+bool lcfgresource_add_derivation_file_line( LCFGResource * res,
+                                            const char * filename,
+                                            int line )
+  __attribute__((warn_unused_result));
+
+bool lcfgresource_merge_derivation( LCFGResource * res1,
+                                    const LCFGResource * res2 )
   __attribute__((warn_unused_result));
 
 /* Resources: Contexts */
@@ -267,7 +297,10 @@ bool lcfgresource_set_comment( LCFGResource * res, char * new_value );
 /* Resources: priority */
 
 int lcfgresource_get_priority( const LCFGResource * res );
-char * lcfgresource_get_priority_as_string( const LCFGResource * res );
+ssize_t lcfgresource_get_priority_as_string( const LCFGResource * res,
+                                             LCFGOption options,
+                                             char ** result, size_t * size )
+    __attribute__((warn_unused_result));
 bool lcfgresource_set_priority( LCFGResource * res, int priority )
   __attribute__((warn_unused_result));
 bool lcfgresource_set_priority_default( LCFGResource * res )
@@ -323,11 +356,11 @@ LCFGStatus lcfgresource_to_env( const LCFGResource * res,
 
 typedef ssize_t (*LCFGResStrFunc) ( LCFG_RES_TOSTR_ARGS );
 
-LCFGStatus lcfgresource_to_string( const LCFGResource * res,
-                                   const char * prefix,
-                                   LCFGResourceStyle style,
-                                   LCFGOption options,
-                                   char ** result, size_t * size )
+ssize_t lcfgresource_to_string( const LCFGResource * res,
+				const char * prefix,
+				LCFGResourceStyle style,
+				LCFGOption options,
+				char ** result, size_t * size )
  __attribute__((warn_unused_result));
 
 ssize_t lcfgresource_to_spec( LCFG_RES_TOSTR_ARGS )
@@ -370,6 +403,9 @@ bool lcfgresource_same_value( const LCFGResource * res1,
 
 bool lcfgresource_same_type( const LCFGResource * res1,
                              const LCFGResource * res2 );
+
+bool lcfgresource_same_context( const LCFGResource * res1,
+                                const LCFGResource * res2 );
 
 bool lcfgresource_equals( const LCFGResource * res1,
                           const LCFGResource * res2 );

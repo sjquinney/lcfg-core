@@ -3,8 +3,8 @@
  * @brief Functions for working with LCFG packages
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-11-21 17:01:57 +0000 (Tue, 21 Nov 2017) $
- * $Revision: 33803 $
+ * $Date: 2018-10-03 10:36:00 +0100 (Wed, 03 Oct 2018) $
+ * $Revision: 34955 $
  */
 
 #define _GNU_SOURCE /* for asprintf */
@@ -24,6 +24,7 @@
 #include <rpm/rpmlib.h>
 #endif
 
+#include "derivation.h"
 #include "context.h"
 #include "packages.h"
 #include "utils.h"
@@ -58,7 +59,7 @@ static LCFGStatus invalid_package( char ** msg, const char * base, ... ) {
   return LCFG_STATUS_ERROR;
 }
 
-/* Currently there are five supported prefixes for LCFG package
+/* Currently there are six supported prefixes for LCFG package
    specifications:
 
    +  Insert package into list, replaces any existing package of same name/arch
@@ -66,9 +67,10 @@ static LCFGStatus invalid_package( char ** msg, const char * base, ... ) {
    -  Remove any package from list which matches this name/arch
    ?  Replace any existing package in list which matches this name/arch
    ~  Add package to list if name/arch is not already present
+   >  Use the package with the greater version
 */
 
-static const char * permitted_prefixes = "?+-=~";
+static const char * permitted_prefixes = "?+-=~>";
 
 /**
  * @brief Create and initialise a new package
@@ -89,7 +91,7 @@ static const char * permitted_prefixes = "?+-=~";
 
 LCFGPackage * lcfgpackage_new(void) {
 
-  LCFGPackage * pkg = malloc( sizeof(LCFGPackage) );
+  LCFGPackage * pkg = calloc( 1, sizeof(LCFGPackage) );
   if ( pkg == NULL ) {
     perror( "Failed to allocate memory for LCFG package spec" );
     exit(EXIT_FAILURE);
@@ -102,6 +104,7 @@ LCFGPackage * lcfgpackage_new(void) {
   pkg->flags      = NULL;
   pkg->context    = NULL;
   pkg->derivation = NULL;
+  pkg->category   = NULL;
   pkg->prefix     = '\0';
   pkg->priority   = 0;
   pkg->_refcount  = 1;
@@ -156,8 +159,11 @@ void lcfgpackage_destroy(LCFGPackage * pkg) {
   free(pkg->context);
   pkg->context = NULL;
 
-  free(pkg->derivation);
+  lcfgderivlist_relinquish(pkg->derivation);
   pkg->derivation = NULL;
+
+  free(pkg->category);
+  pkg->category = NULL;
 
   free(pkg);
   pkg = NULL;
@@ -280,11 +286,15 @@ LCFGPackage * lcfgpackage_clone( const LCFGPackage * pkg ) {
       free(new_context);
   }
 
-  if ( ok && !isempty(pkg->derivation) ) {
-    char * new_deriv = strdup(pkg->derivation);
-    ok = lcfgpackage_set_derivation( clone, new_deriv );
+  /* Original and clone packages will share the derivation list */
+  if ( ok && lcfgpackage_has_derivation(pkg) )
+    ok = lcfgpackage_set_derivation( clone, lcfgpackage_get_derivation(pkg) );
+
+  if ( ok && !isempty(pkg->category) ) {
+    char * new_cat = strdup(pkg->category);
+    ok = lcfgpackage_set_category( clone, new_cat );
     if (!ok)
-      free(new_deriv);
+      free(new_cat);
   }
 
   clone->prefix   = pkg->prefix;
@@ -766,6 +776,7 @@ bool lcfgpackage_set_release( LCFGPackage * pkg, char * new_release ) {
  *   - @c -  Remove any package from list which matches this name/arch
  *   - @c ?  Replace any existing package in list which matches this name/arch
  *   - @c ~  Add package to list if name/arch is not already present
+ *   - @c >  Add package if version is greater
  *
  * @param[in] prefix Character to be tested
  *
@@ -1304,39 +1315,127 @@ bool lcfgpackage_add_context( LCFGPackage * pkg,
 bool lcfgpackage_has_derivation( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
-  return !isempty(pkg->derivation);
+  return ( pkg->derivation != NULL &&
+           !lcfgderivlist_is_empty(pkg->derivation) );
 }
 
 /**
  * @brief Get the derivation for the package
  *
- * This returns the value of the @e derivation parameter for the
- * @c LCFGPackage. If the package does not currently have a
- * @e derivation then the pointer returned will be @c NULL.
- *
- * It is important to note that this is NOT a copy of the string,
- * changing the returned string will modify the @e derivation for the
- * package.
+ * This returns the value of the @e derivation parameter for the @c
+ * LCFGPackage. This will be a pointer to an @c LCFGDerivationList
+ * structure. If the package does not currently have a @e derivation
+ * then the pointer returned will be @c NULL.
  *
  * @param[in] pkg Pointer to an @c LCFGPackage
  *
  * @return The derivation for the package (possibly NULL).
  */
 
-const char * lcfgpackage_get_derivation( const LCFGPackage * pkg ) {
+LCFGDerivationList * lcfgpackage_get_derivation( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
   return pkg->derivation;
 }
 
 /**
+ * @brief Get the derivation for the package as a string
+ *
+ * This returns the stringified value of the @e derivation parameter
+ * for the @c LCFGPackage. The serialisation is done using the @c
+ * lcfgderivlist_to_string() function. If the package does not
+ * currently have a @e derivation then the pointer returned will be @c
+ * NULL.
+ *
+ * This function uses a string buffer which may be pre-allocated if
+ * nececesary to improve efficiency. This makes it possible to reuse
+ * the same buffer for generating many strings, this can be a huge
+ * performance benefit. If the buffer is initially unallocated then it
+ * MUST be set to @c NULL. The current size of the buffer must be
+ * passed and should be specified as zero if the buffer is initially
+ * unallocated. If the generated string would be too long for the
+ * current buffer then it will be resized and the size parameter is
+ * updated.
+ *
+ * If the string is successfully generated then the length of the new
+ * string is returned, note that this is distinct from the buffer
+ * size. To avoid memory leaks, call @c free(3) on the buffer when no
+ * longer required. If an error occurs this function will return -1.
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackage
+ * @param[in] options Integer that controls formatting
+ * @param[in,out] result Reference to the pointer to the string buffer
+ * @param[in,out] size Reference to the size of the string buffer
+ *
+ * @return The length of the new string (or -1 for an error).
+ *
+ */
+
+ssize_t lcfgpackage_get_derivation_as_string( const LCFGPackage * pkg,
+                                              LCFGOption options,
+                                              char ** result, size_t * size ) {
+  assert( pkg != NULL );
+
+  const LCFGDerivationList * drvlist = lcfgpackage_get_derivation(pkg);
+  return lcfgderivlist_to_string( drvlist, options, result, size );
+}
+
+/**
+ * @brief Get the length of the package derivation string
+ *
+ * It is sometimes necessary to know the length of the derivation for
+ * the @c LCFGPackage as a string before it is actually stored. This
+ * simply calls the @c lcfgderivlist_get_string_length() function on
+ * the @c LCFGDerivationList structure for the package.
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackage
+ *
+ * @return The length of the derivation string
+ *
+ */
+
+size_t lcfgpackage_get_derivation_length( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
+  if ( !lcfgpackage_has_derivation(pkg) ) return 0;
+
+  const LCFGDerivationList * drvlist = lcfgpackage_get_derivation(pkg);
+  return lcfgderivlist_get_string_length(drvlist);
+}
+
+/**
  * @brief Set the derivation for the package
  *
- * Sets the value of the @e derivation parameter for the
- * @c LCFGPackage to that specified. It is important to note
- * that this does NOT take a copy of the string. Furthermore, once the
- * value is set the package assumes "ownership", the memory will be
- * freed if the derivation is further modified or the package is destroyed.
+ * Sets the value of the @e derivation parameter for the @c
+ * LCFGPackage to the specified @c LCFGDerivationList. 
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackage
+ * @param[in] new_deriv Pointer to new @c LCFGDerivationList structure
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgpackage_set_derivation( LCFGPackage * pkg,
+                                 LCFGDerivationList * new_deriv ) {
+  assert( pkg != NULL );
+
+  lcfgderivlist_relinquish(pkg->derivation);
+
+  if ( new_deriv != NULL )  /* Supports unsetting the derivation */
+    lcfgderivlist_acquire(new_deriv);
+
+  pkg->derivation = new_deriv;
+
+  return true;
+}
+
+/**
+ * @brief Set the derivation for the package as a string
+ *
+ * Sets the value of the @e derivation parameter for the @c
+ * LCFGPackage to that specified. The derivation string is parsed
+ * using @c lcfgderivlist_from_string().
  *
  * @param[in] pkg Pointer to an @c LCFGPackage
  * @param[in] new_deriv String which is the new derivation
@@ -1345,30 +1444,95 @@ const char * lcfgpackage_get_derivation( const LCFGPackage * pkg ) {
  *
  */
 
-bool lcfgpackage_set_derivation( LCFGPackage * pkg, char * new_deriv ) {
+bool lcfgpackage_set_derivation_as_string( LCFGPackage * pkg,
+                                           const char * new_deriv ) {
   assert( pkg != NULL );
 
-  /* Currently no validation of the derivation */
+  bool ok = true;
 
-  free(pkg->derivation);
+  LCFGDerivationList * new_drvlist = NULL;
+  if ( new_deriv != NULL ) { /* Supports unsetting the derivation */
 
-  pkg->derivation = new_deriv;
-  return true;
+    char * msg = NULL;
+
+    LCFGStatus status = lcfgderivlist_from_string( new_deriv, &new_drvlist,
+                                                   &msg );
+    if ( status == LCFG_STATUS_ERROR )
+      ok = false;
+
+    free(msg);
+  }
+
+  if (ok)
+    ok = lcfgpackage_set_derivation( pkg, new_drvlist );
+
+  lcfgderivlist_relinquish(new_drvlist);
+
+  return ok;
+}
+
+/**
+ * @brief Merge derivations for one package into another
+ *
+ * This can be used to merge the @c LCFGDerivationList from one @c
+ * LCFGPackage into another. There is support for Copy On Write so
+ * that if a derivation list is shared between multiple packages it
+ * will be cloned before the merging is done. This is used when
+ * merging package specifications by prefix.
+ *
+ * @param[in] pkg1 Pointer to @c LCFGPackage into which derivation is merged
+ * @param[in] pkg2 Pointer to @c LCFGPackage from which derivation is merged
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgpackage_merge_derivation( LCFGPackage * pkg1,
+                                   const LCFGPackage * pkg2 ) {
+  assert( pkg1 != NULL );
+
+  LCFGDerivationList * drvlist1 = lcfgpackage_get_derivation(pkg1);
+
+  if ( pkg2 == NULL || !lcfgpackage_has_derivation(pkg2) ) return true;
+  LCFGDerivationList * drvlist2 = lcfgpackage_get_derivation(pkg2);
+
+  if ( lcfgderivlist_is_empty(drvlist1) )
+    return lcfgpackage_set_derivation( pkg1, drvlist2 );
+
+  /* The main aim of the cloning is to provide COW for shared
+     derivations. Keeping it simple by doing the clone for all
+     merges. This also provides extra safety against corruption. */
+
+  bool ok = false;
+
+  LCFGDerivationList * clone = lcfgderivlist_clone(drvlist1);
+  if ( clone != NULL ) {
+    LCFGChange merge_rc = lcfgderivlist_merge_list( clone, drvlist2 );
+
+    if ( LCFGChangeOK(merge_rc) ) {
+      /* Only keep the clone if it was modified */
+      if ( merge_rc == LCFG_CHANGE_NONE )
+        ok = true;
+      else
+        ok = lcfgpackage_set_derivation( pkg1, clone );
+    }
+
+    lcfgderivlist_relinquish(clone);
+  }
+
+  return ok;
 }
 
 /**
  * @brief Add extra derivation information for the package
  *
  * Adds the extra derivation information to the value for the @e
- * derivation parameter in the @c LCFGPackage if it is not
- * already found in the string.
+ * derivation parameter in the @c LCFGPackage if it is not already
+ * found. This is done using the @c lcfgderivlist_merge_string_list()
+ * function. There is support for Copy On Write so that if a
+ * derivation list is shared between multiple packages it will be
+ * cloned before the merging is done.
  *
- * If not already present in the existing information a new derivation
- * string is built which is the combination of any existing string
- * with the new string appended. The new string is passed to @c
- * lcfgpackage_set_derivation(), unlike that function this does NOT
- * assume "ownership" of the input string.
-
  * @param[in] pkg Pointer to an @c LCFGPackage
  * @param[in] extra_deriv String which is the additional derivation
  *
@@ -1376,39 +1540,186 @@ bool lcfgpackage_set_derivation( LCFGPackage * pkg, char * new_deriv ) {
  *
  */
 
-bool lcfgpackage_add_derivation( LCFGPackage * pkg,
-                                 const char * extra_deriv ) {
+bool lcfgpackage_add_derivation_string( LCFGPackage * pkg,
+                                        const char * extra_deriv ) {
   assert( pkg != NULL );
 
   if ( isempty(extra_deriv) ) return true;
 
-  char * new_deriv = NULL;
-  if ( isempty(pkg->derivation) ) {
-    new_deriv = strdup(extra_deriv);
-  } else if ( strstr( pkg->derivation, extra_deriv ) == NULL ) {
+  bool ok = true;
+  LCFGDerivationList * drvlist = lcfgpackage_get_derivation(pkg);
+  LCFGDerivationList * clone   = lcfgderivlist_clone(drvlist);
+  if ( clone != NULL ) {
+    char * merge_msg = NULL;
+    LCFGChange merge_rc = 
+      lcfgderivlist_merge_string_list( clone, extra_deriv, &merge_msg );
+    free(merge_msg);
 
-    /* Only adding the derivation when it is not present in the
-       current value. This avoids unnecessary duplication. */
-
-    new_deriv =
-      lcfgutils_string_join( " ", pkg->derivation, extra_deriv );
-    if ( new_deriv == NULL ) {
-      perror( "Failed to build LCFG derivation" );
-      exit(EXIT_FAILURE);
+    if ( LCFGChangeOK(merge_rc) ) {
+      /* Only keep the clone if it was modified */
+      if ( merge_rc == LCFG_CHANGE_NONE )
+        ok = true;
+      else
+        ok = lcfgpackage_set_derivation( pkg, clone );
     }
 
+    lcfgderivlist_relinquish(clone);
   }
 
-  /* If the extra derivation does not need to be added (since it is
-     already present) then new_deriv will be NULL which means ok needs
-     to be true. */
+  return ok;
+}
+
+/**
+ * @brief Add extra derivation information for the package
+ *
+ * Adds the extra filename to the @c LCFGDerivationList for the @c
+ * LCFGPackage if it is not already found. If the specified line
+ * number is non-negative it will be added to the list of line numbers
+ * for the specified file. This is done using the @c
+ * lcfgderivlist_merge_file_line() function. There is support for Copy
+ * On Write so that if a derivation list is shared between multiple
+ * packages it will be cloned before the merging is done.
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackage
+ * @param[in] filename Name of derivation file
+ * @param[in] line Line number of derivation
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgpackage_add_derivation_file_line( LCFGPackage * pkg,
+                                           const char * filename,
+                                           int line ) {
+  assert( pkg != NULL );
+
+  if ( isempty(filename) ) return true;
 
   bool ok = true;
-  if ( new_deriv != NULL ) {
-    ok = lcfgpackage_set_derivation( pkg, new_deriv );
+  LCFGDerivationList * drvlist = lcfgpackage_get_derivation(pkg);
+  LCFGDerivationList * clone   = lcfgderivlist_clone(drvlist);
+  if ( clone != NULL ) {
+    LCFGChange merge_rc =
+      lcfgderivlist_merge_file_line( clone, filename, line );
 
-    if ( !ok )
-      free(new_deriv);
+    if ( LCFGChangeOK(merge_rc) ) {
+      /* Only keep the clone if it was modified */
+      if ( merge_rc == LCFG_CHANGE_NONE )
+        ok = true;
+      else
+        ok = lcfgpackage_set_derivation( pkg, clone );
+    }
+
+    lcfgderivlist_relinquish(clone);
+  }
+
+  return ok;
+}
+
+
+/* Category */
+
+/**
+ * @brief Check if a string is a valid LCFG package category
+ *
+ * Checks the contents of a specified string against the specification
+ * for an LCFG package category
+ *
+ * An LCFG package category MUST be at least one character in
+ * length. Also the string MUST NOT contain any whitespace characters.
+ *
+ * @param[in] value String to be tested
+ *
+ * @return boolean which indicates if string is a valid package category
+ *
+ */
+
+bool lcfgpackage_valid_category( const char * value ) {
+
+  /* MUST be at least one character long and MUST NOT contain whitespace. */
+
+  bool valid = !isempty(value);
+
+  const char * ptr;
+  for ( ptr = value; valid && *ptr != '\0'; ptr++ )
+    if ( isspace(*ptr) ) valid = false;
+
+  return valid;
+}
+
+/**
+ * @brief Check if the package has category information
+ *
+ * Checks if the specified @c LCFGPackage currently has a
+ * value set for the @e category attribute. 
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackage
+ *
+ * @return boolean which indicates if the package has a category
+ *
+ */
+
+bool lcfgpackage_has_category( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
+  return !isempty(pkg->category);
+}
+
+/**
+ * @brief Get the category for the package
+ *
+ * This returns the value of the @e category parameter for the
+ * @c LCFGPackage. If the package does not currently have a
+ * @e category then the pointer returned will be @c NULL.
+ *
+ * It is important to note that this is NOT a copy of the string,
+ * changing the returned string will modify the @e category for the
+ * package.
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackage
+ *
+ * @return The category for the package (possibly NULL).
+ */
+
+const char * lcfgpackage_get_category( const LCFGPackage * pkg ) {
+  assert( pkg != NULL );
+
+  return pkg->category;
+}
+
+/**
+ * @brief Set the category for the package
+ *
+ * Sets the value of the @e category parameter for the @c LCFGPackage
+ * to that specified. This is used to group related packages. This may
+ * be defined in LCFG package list files (as used by the LCFG server)
+ * using the @e category LCFG pragma (e.g. @e core, @e standard or @e
+ * contrib). Mainly this is used for listing the packages by category,
+ * as on the LCFG website. Currently any 
+ *
+ * It is important to note that this does NOT take a copy of the
+ * string. Furthermore, once the value is set the package assumes
+ * "ownership", the memory will be freed if the category is further
+ * modified or the package is destroyed.
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackage
+ * @param[in] new_value String which is the new category
+ *
+ * @return boolean indicating success
+ *
+ */
+
+bool lcfgpackage_set_category( LCFGPackage * pkg, char * new_value ) {
+  assert( pkg != NULL );
+
+  bool ok = false;
+  if ( lcfgpackage_valid_category(new_value) ) {
+    free(pkg->category);
+
+    pkg->category = new_value;
+    ok = true;
+  } else {
+    errno = EINVAL;
   }
 
   return ok;
@@ -1527,7 +1838,7 @@ bool lcfgpackage_is_active( const LCFGPackage * pkg ) {
 /* Higher-level functions */
 
 /**
- * @brief Get the full version for the resource
+ * @brief Get the full version for the package
  *
  * Combines the version and release strings for the package using a
  * '-' (hyphen) separator to create a new "full version" string. If
@@ -1558,7 +1869,7 @@ char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
 }
 
 /**
- * @brief Get an identifier for the resource
+ * @brief Get an identifier for the package
  *
  * Combines the @c name and @c arch (if any) strings for the package
  * using a '.' (period) separator to create a new "identifier"
@@ -2088,12 +2399,15 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG package string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
 
   }
@@ -2243,18 +2557,21 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
 
   /* Optional meta-data */
 
-  const char * derivation = NULL;
-  size_t deriv_len = 0;
+  char * deriv_as_str = NULL;
+  ssize_t deriv_len = 0;
 
   const char * context = NULL;
   size_t ctx_len = 0;
   
   if ( options&LCFG_OPT_USE_META ) {
 
-    derivation = pkg->derivation;
-    if ( !isempty(derivation) ) {
-      deriv_len = strlen(derivation);
-      new_len += ( deriv_len + base_len );
+    if ( lcfgpackage_has_derivation(pkg) ) {
+      size_t deriv_size = 0;
+      deriv_len = lcfgpackage_get_derivation_as_string( pkg, LCFG_OPT_NONE,
+                                                        &deriv_as_str,
+                                                        &deriv_size );
+      if ( deriv_len > 0 )
+        new_len += ( deriv_len + base_len );
     }
 
     context = pkg->context;
@@ -2268,12 +2585,15 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG package string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
 
   }
@@ -2310,9 +2630,11 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
   /* Derivation */
 
   if ( deriv_len > 0 ) {
-    rc = sprintf( to, format, "derive", derivation );
+    rc = sprintf( to, format, "derive", deriv_as_str );
     to += rc;
   }
+
+  free(deriv_as_str);
 
   /* Context */
 
@@ -2328,17 +2650,157 @@ ssize_t lcfgpackage_to_summary( LCFG_PKG_TOSTR_ARGS ) {
   return new_len;
 }
 
+static const char pragma[] = "#pragma LCFG";
+static size_t pragma_len = sizeof(pragma) - 1;
+
+static size_t lcfgpackage_pragma_length( const LCFGPackage * pkg,
+                                         LCFGPkgPragma key,
+                                         LCFGOption options ) {
+
+  size_t value_len = 0;
+  size_t key_len;
+  switch(key)
+    {
+    case LCFG_PKG_PRAGMA_CATEGORY:
+      key_len   = 8;
+      value_len = lcfgpackage_has_category(pkg) ? strlen(pkg->category) : 0;
+      break;
+    case LCFG_PKG_PRAGMA_CONTEXT:
+      key_len   = 7;
+      value_len = lcfgpackage_has_context(pkg) ? strlen(pkg->context) : 0;
+      break;
+    case LCFG_PKG_PRAGMA_DERIVE:
+      key_len   = 6;
+      value_len = lcfgpackage_get_derivation_length(pkg);
+      break;
+    default:
+      key_len   = 0;
+      value_len = 0;
+      break;
+    }
+
+  /* + 4 for ' ' (single space) + ' "' + '"' (quotes/spaces around value) */ 
+  size_t new_len = pragma_len + key_len + value_len + 4;
+
+  if ( options&LCFG_OPT_NEWLINE ) new_len += 1;
+
+  return new_len;
+}
+
+static ssize_t lcfgpackage_build_pragma( const LCFGPackage * pkg,
+                                         LCFGPkgPragma key,
+                                         LCFGOption options,
+                                         char ** result, size_t * size ) {
+
+  size_t new_len = lcfgpackage_pragma_length( pkg, key, options );
+
+  /* Allocate the required space */
+
+  if ( *result == NULL || *size < ( new_len + 1 ) ) {
+    size_t new_size = new_len + 1;
+
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
+      perror("Failed to allocate memory for LCFG pragma string");
+      exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
+    }
+
+  }
+
+  /* Always initialise the characters of the full space to nul */
+  memset( *result, '\0', *size );
+
+  char * to = *result;
+
+  /* Build the new string */
+
+  to = stpncpy( to, pragma, pragma_len );
+
+  switch(key)
+    {
+    case LCFG_PKG_PRAGMA_CATEGORY:
+      to = stpncpy( to, " category \"", 11 );
+      if ( lcfgpackage_has_category(pkg) )
+        to = stpcpy( to, pkg->category );
+      break;
+    case LCFG_PKG_PRAGMA_CONTEXT:
+      to = stpncpy( to, " context \"", 10 );
+      if ( lcfgpackage_has_context(pkg) )
+        to = stpcpy( to, pkg->context );
+      break;
+    case LCFG_PKG_PRAGMA_DERIVE:
+      to = stpncpy( to, " derive \"", 9 );
+      if ( lcfgpackage_has_derivation(pkg) ) {
+        size_t deriv_size = lcfgpackage_get_derivation_length(pkg) + 1;
+
+        ssize_t inserted_len =
+          lcfgpackage_get_derivation_as_string( pkg, LCFG_OPT_NONE,
+                                                &to, &deriv_size );
+
+        if ( inserted_len > 0 )
+          to += inserted_len;
+      }
+      break;
+    }
+
+  *to = '"';
+  to++;
+
+  if ( options&LCFG_OPT_NEWLINE )
+    to = stpncpy( to, "\n", 1 );
+
+  *to = '\0';
+
+  assert( ( *result + new_len ) == to ) ;
+
+  return new_len;
+}
+
+bool lcfgpackage_parse_pragma( const char * line,
+			       LCFGPkgPragma * key, char ** value ) {
+
+  if ( isempty(line) || strncmp( line, pragma, pragma_len ) != 0 )
+    return false;
+
+  const char * key_start = line + pragma_len;
+  while ( isspace(*key_start) ) key_start++;
+
+  const char * value_start = NULL;
+
+  if ( strncmp( key_start, "category", 8 ) == 0 ) {
+    *key = LCFG_PKG_PRAGMA_CATEGORY;
+    value_start = key_start + 8;
+  } else if ( strncmp( key_start, "context", 7 ) == 0 ) {
+    *key = LCFG_PKG_PRAGMA_CONTEXT;
+    value_start = key_start + 7;
+  } else if ( strncmp( key_start, "derive", 6 ) == 0 ) {
+    *key = LCFG_PKG_PRAGMA_DERIVE;
+    value_start = key_start + 6;
+  } else {
+    return false;
+  }
+
+  while ( isspace(*value_start) ) value_start++;
+
+  if ( *value_start != '"' ) return false;
+  value_start++;
+
+  const char * value_end = strrchr( value_start, '"' );
+  if ( value_end == NULL ) return false;
+
+  *value = strndup( value_start, value_end - value_start );
+
+  return true;
+}
+
 static const char meta_start[]     = "#ifdef INCLUDE_META\n";
 static const char meta_end[]       = "#endif\n";
-static const char pragma_derive[]  = "#pragma LCFG derive \"";
-static const char pragma_context[] = "#pragma LCFG context \"";
-static const char pragma_end[]     = "\"\n";
 
 static const size_t meta_start_len     = sizeof(meta_start) - 1;
 static const size_t meta_end_len       = sizeof(meta_end) - 1;
-static const size_t pragma_derive_len  = sizeof(pragma_derive) - 1;
-static const size_t pragma_context_len = sizeof(pragma_context) - 1;
-static const size_t pragma_end_len     = sizeof(pragma_end) - 1;
 
 /**
  * @brief Format the package as CPP
@@ -2389,33 +2851,27 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
                                 LCFG_OPT_NEWLINE );
 
   ssize_t spec_len = lcfgpackage_to_spec( pkg, defarch,
-                                            spec_options,
-                                            result, size );
+					  spec_options,
+					  result, size );
 
   if ( spec_len < 0 ) return spec_len;
 
   /* Meta-Data */
 
-  size_t meta_len = 0;
-
-  const char * derivation = NULL;
+  size_t meta_len  = 0;
   size_t deriv_len = 0;
-
-  const char * context = NULL;
-  size_t ctx_len = 0;
+  size_t ctx_len   = 0;
 
   if ( options&LCFG_OPT_USE_META ) {
 
-    derivation = pkg->derivation;
-    if ( !isempty(derivation) ) {
-      deriv_len = strlen(derivation);
-      meta_len += ( pragma_derive_len + deriv_len + pragma_end_len );
-    }
+    deriv_len = lcfgpackage_pragma_length( pkg, LCFG_PKG_PRAGMA_DERIVE,
+                                           LCFG_OPT_NEWLINE );
+    meta_len += deriv_len;
 
-    context = pkg->context;
-    if ( !isempty(context) ) {
-      ctx_len = strlen(context);
-      meta_len += ( pragma_context_len + ctx_len + pragma_end_len );
+    if ( lcfgpackage_has_context(pkg) ) {
+      ctx_len = lcfgpackage_pragma_length( pkg, LCFG_PKG_PRAGMA_CONTEXT,
+					   LCFG_OPT_NEWLINE );
+      meta_len += ctx_len;
     }
 
   }
@@ -2432,12 +2888,15 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG package string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
 
   }
@@ -2455,24 +2914,36 @@ ssize_t lcfgpackage_to_cpp( LCFG_PKG_TOSTR_ARGS ) {
 
   to = stpncpy( to, meta_start, meta_start_len );
 
+  /* For efficiency we are inserting into the middle of a buffer. It
+     is IMPORTANT to tell lcfgpackage_build_pragma() the PRECISE size
+     (including nul terminator) otherwise it might try to
+     reallocate or initialise the wrong amount of space */
+
   /* Derivation */
 
   if ( deriv_len > 0 ) {
-    to = stpncpy( to, pragma_derive, pragma_derive_len );
+    deriv_len++; /* for nul terminator */
 
-    to = stpncpy( to, derivation, deriv_len );
+    ssize_t inserted_len = lcfgpackage_build_pragma( pkg,
+                                                     LCFG_PKG_PRAGMA_DERIVE,
+                                                     LCFG_OPT_NEWLINE,
+                                                     &to, &deriv_len );
 
-    to = stpncpy( to, pragma_end, pragma_end_len );
+    if ( inserted_len > 0 )
+      to += inserted_len;
   }
 
   /* Context */
 
   if ( ctx_len > 0 ) {
-    to = stpncpy( to, pragma_context, pragma_context_len );
+    ctx_len++; /* for nul terminator */
+    ssize_t inserted_len = lcfgpackage_build_pragma( pkg,
+                                                     LCFG_PKG_PRAGMA_CONTEXT,
+						     LCFG_OPT_NEWLINE,
+						     &to, &ctx_len );
 
-    to = stpncpy( to, context, ctx_len );
-
-    to = stpncpy( to, pragma_end, pragma_end_len );
+    if ( inserted_len > 0 )
+      to += inserted_len;
   }
 
   to = stpncpy( to, meta_end, meta_end_len );
@@ -2585,7 +3056,6 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
 
   /* Derivation - optional */
 
-  const char * derivation = NULL;
   size_t deriv_len = 0;
 
   if ( options&LCFG_OPT_USE_META ) {
@@ -2596,10 +3066,10 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
       new_len += ( ctx_len + 15 );   /* ' cfg:context=""' */
     }
 
-    derivation = pkg->derivation;
-    if ( !isempty(derivation) ) {
-      deriv_len = strlen(derivation);
-      new_len += ( deriv_len + 18 ); /* ' cfg:derivation=""' */
+    if ( lcfgpackage_has_derivation(pkg) ) {
+      deriv_len = lcfgpackage_get_derivation_length(pkg);
+      if ( deriv_len > 0 )
+        new_len += ( deriv_len + 18 ); /* ' cfg:derivation=""' */
     }
 
   }
@@ -2607,12 +3077,15 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG package string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
 
   }
@@ -2649,7 +3122,13 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
   if ( deriv_len > 0 ) {
     to = stpncpy( to, " cfg:derivation=\"", 17 );
 
-    to = stpncpy( to, derivation, deriv_len );
+    deriv_len++; /* include nul-terminator */
+    ssize_t inserted_len =
+      lcfgpackage_get_derivation_as_string( pkg, LCFG_OPT_NONE,
+                                            &to, &deriv_len );
+
+    if ( inserted_len > 0 )
+      to += inserted_len;
 
     *to = '"';
     to++;
@@ -3206,16 +3685,27 @@ char * lcfgpackage_build_message( const LCFGPackage * pkg,
 
   /* Final string, possibly with derivation information */
 
-  if ( pkg != NULL && !isempty(pkg->derivation) ) {
+  char * deriv_as_str = NULL;
+  ssize_t deriv_len = 0;
+  if ( pkg != NULL && lcfgpackage_has_derivation(pkg) ) {
+    size_t deriv_size = 0;
+    deriv_len = lcfgpackage_get_derivation_as_string( pkg, LCFG_OPT_NONE,
+                                                      &deriv_as_str,
+                                                      &deriv_size );
+  }
+
+  if ( deriv_len > 0 ) {
     const char * final_fmt = add_newline ? "%s %s at %s\n" : "%s %s at %s"; 
     rc = asprintf( &result, final_fmt,
                    msg_base, msg_mid,
-                   pkg->derivation );
+                   deriv_as_str );
   } else {
     const char * final_fmt = add_newline ? "%s %s\n" : "%s %s";
     rc = asprintf( &result, final_fmt,
                    msg_base, msg_mid );
   }
+
+  free(deriv_as_str);
 
   if ( rc < 0 ) {
     perror("Failed to build LCFG package message");
@@ -3280,6 +3770,129 @@ const char * default_architecture(void) {
 
 unsigned long lcfgpackage_hash( const LCFGPackage * pkg ) {
   return lcfgutils_string_djbhash( pkg->name, pkg->arch, NULL );
+}
+
+static bool valid_cpp_identifier( const char * name ) {
+
+  /* MUST NOT be a NULL.
+     MUST have non-zero length.
+     First character MUST be in [A-Za-z_] set. */
+
+  bool valid = !isempty(name) && ( isalpha(*name) || *name == '_' );
+
+  /* All other characters MUST be in [A-Za-z0-9_] set */
+
+  const char * ptr;
+  for ( ptr = name + 1; valid && *ptr != '\0'; ptr++ )
+    if ( !isword(*ptr) ) valid = false;
+
+  return valid;
+}
+
+static bool valid_cpp_simple_value( const char * value ) {
+
+  /* May be an empty string. All characters MUST be in [A-Za-z0-9_] set */
+
+  bool valid = ( value != NULL );
+
+  const char * ptr;
+  for ( ptr = value; valid && *ptr != '\0'; ptr++ )
+    if ( !isword(*ptr) ) valid = false;
+
+  return valid;
+}
+
+bool lcfgpackage_store_options( char ** file, ...  ) {
+
+  bool ok = true;
+
+  FILE * fh = lcfgutils_safe_tmpfile( NULL, file );
+  if ( fh == NULL ) {
+    perror("Failed to create temporarily file for storing package options\n");
+    exit(EXIT_FAILURE);
+  }
+
+  va_list ap;
+  va_start( ap, file );
+
+  char * defs = NULL;
+  while ( (defs=va_arg( ap, char *)) != NULL ) {
+
+    /* Split the list of options on space characters */
+
+    char ** defs_parts = lcfgutils_string_split( defs, " ", 0 );
+
+    char ** defn = NULL;
+    for ( defn=defs_parts; *defn!=NULL; defn++ ) {
+
+      /* For compatibility ignore the -D cpp flag */
+
+      const char * key = *defn;
+      if ( strncmp( key, "-D", 2 ) == 0 ) key += 2;
+
+      if ( !isempty(key) ) {
+	const char * value = NULL;
+
+	char * sep = strchr( key, '=' );
+	if ( sep != NULL ) {
+	  *sep = '\0';
+	  value = sep + 1;
+	}
+
+	if ( !valid_cpp_identifier(key) ) {
+	  fprintf( stderr, "Ignoring invalid CPP identifier '%s'\n", key );
+	} else {
+	  if ( isempty(value) ) {
+	    if ( fprintf( fh, "#define %s\n", key ) < 0 )
+	      ok = false;
+	  } else {
+	    if ( !valid_cpp_simple_value(value) ) {
+	      fprintf( stderr, "Ignoring unsafe CPP value '%s'\n", value );
+	    } else {
+	      if ( fprintf( fh, "#define %s %s\n", key, value ) < 0 )
+		ok = false;
+	    }
+	  }
+	}
+
+      }
+
+      free(*defn);
+      *defn = NULL;
+    }
+
+    free(defs_parts);
+  }
+
+  va_end(ap);
+
+  if ( fclose(fh) != 0 )
+    ok = false;
+
+  return ok;
+}
+
+/**
+ * @brief Test if packages have same context
+ *
+ * Compares the @e context for the two packages. Note that this only
+ * does a string comparison, it does NOT evaluate the context
+ * expressions thus two logically equivalent expressions with
+ * different string representations will be considered to be
+ * different.
+ *
+ * @param[in] pkg1 Pointer to @c LCFGPackage
+ * @param[in] pkg2 Pointer to @c LCFGPackage
+ *
+ * @return boolean indicating equality of contexts
+ *
+ */
+
+bool lcfgpackage_same_context( const LCFGPackage * pkg1,
+                               const LCFGPackage * pkg2 ) {
+
+  return ( lcfgcontext_compare_expressions( pkg1->context,
+                                            pkg2->context ) == 0 );
 }
 
 /* eof */

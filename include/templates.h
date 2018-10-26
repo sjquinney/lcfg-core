@@ -3,8 +3,8 @@
  * @brief LCFG resource template handling library
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-05-25 14:43:27 +0100 (Thu, 25 May 2017) $
- * $Revision: 32923 $
+ * $Date: 2018-01-24 11:40:33 +0000 (Wed, 24 Jan 2018) $
+ * $Revision: 34012 $
  */
 
 #ifndef LCFG_CORE_TEMPLATES_H
@@ -61,6 +61,12 @@ ssize_t lcfgtemplate_to_string( const LCFGTemplate * head_template,
 
 LCFGTemplate * lcfgtemplate_find( const LCFGTemplate * head_template,
                                   const char * field_name );
+
+ssize_t lcfgtemplate_substitute( const LCFGTemplate * res_tmpl,
+				 LCFGTagList * taglist,
+				 char ** result, size_t * size,
+				 char ** msg )
+  __attribute__((warn_unused_result));
 
 char * lcfgresource_build_name( const LCFGTemplate * templates,
                                 LCFGTagList  * taglist,

@@ -3,8 +3,8 @@
  * @brief Functions for iterating through LCFG package sets
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-08-15 11:39:25 +0100 (Tue, 15 Aug 2017) $
- * $Revision: 33333 $
+ * $Date: 2018-10-16 18:15:12 +0100 (Tue, 16 Oct 2018) $
+ * $Revision: 34992 $
  */
 
 #include <assert.h>
@@ -95,6 +95,8 @@ void lcfgpkgsetiter_destroy( LCFGPkgSetIterator * iterator ) {
  */
 
 void lcfgpkgsetiter_reset( LCFGPkgSetIterator * iterator ) {
+  assert( iterator != NULL );
+
   lcfgpkgiter_destroy(iterator->listiter);
   iterator->listiter = NULL;
 
@@ -114,6 +116,7 @@ void lcfgpkgsetiter_reset( LCFGPkgSetIterator * iterator ) {
  */
 
 bool lcfgpkgsetiter_has_next( LCFGPkgSetIterator * iterator ) {
+  assert( iterator != NULL );
 
   bool has_next = ( iterator->listiter != NULL &&
 		    lcfgpkgiter_has_next(iterator->listiter) );
@@ -146,6 +149,7 @@ bool lcfgpkgsetiter_has_next( LCFGPkgSetIterator * iterator ) {
  */
 
 LCFGPackage * lcfgpkgsetiter_next(LCFGPkgSetIterator * iterator) {
+  assert( iterator != NULL );
 
   LCFGPackage * next = NULL;
 

@@ -2,9 +2,21 @@ cmake_minimum_required(VERSION 2.6)
 
 project (lcfg-core C)
 
-file (STRINGS "lcfg-build-id.txt" LCFG_VERSION)
+file (STRINGS "lcfg-build-id.txt" PROJECT_VERSION)
 
-SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra" )
+# Support for these variables appears in CMake 3.something
+
+string(REPLACE "." ";" VERSION_LIST ${PROJECT_VERSION})
+list(GET VERSION_LIST 0 PROJECT_VERSION_MAJOR)
+list(GET VERSION_LIST 1 PROJECT_VERSION_MINOR)
+list(GET VERSION_LIST 2 PROJECT_VERSION_PATCH)
+
+SET( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -Wextra -std=gnu99" )
+
+# Specify where various files should be installed.
+
+SET(LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Output directory for libraries")
+SET(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Output directory for header files")
 
 set(LCFGTMP "/var/tmp/lcfg" CACHE PATH "Default directory for temporary files")
 set(LCFGLOG "/var/log/lcfg" CACHE PATH "Default directory for log files")
@@ -22,7 +34,7 @@ link_directories(${CMAKE_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
 
 add_subdirectory(utils)
 
-add_subdirectory(context)
+add_subdirectory(common)
 
 add_subdirectory(resources)
 
@@ -39,7 +51,7 @@ add_subdirectory(pc)
 # Headers
 
 install(DIRECTORY ${CMAKE_BINARY_DIR}/include/ include/
-                  DESTINATION "include/lcfg"
+                  DESTINATION "${INCLUDE_INSTALL_DIR}/lcfg"
                   FILES_MATCHING PATTERN "*.h"
                   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
 

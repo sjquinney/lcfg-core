@@ -5,8 +5,8 @@ includedir=@INCLUDE_INSTALL_DIR@
 modules=1
 
 Name: lcfg-xml
-Version: @LCFG_VERSION@
+Version: @PROJECT_VERSION@
 Description: LCFG profile XML handling library
-Requires: lcfg-profile = @LCFG_VERSION@, libxml-2.0
+Requires: lcfg-profile = @PROJECT_VERSION@, libxml-2.0
 Libs: -L${libdir} -llcfg_xml
 Cflags: -I${includedir}

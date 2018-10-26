@@ -3,8 +3,8 @@
  * @brief LCFG common constants
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-11-21 17:01:57 +0000 (Tue, 21 Nov 2017) $
- * $Revision: 33803 $
+ * $Date: 2018-10-16 16:25:18 +0100 (Tue, 16 Oct 2018) $
+ * $Revision: 34990 $
  */
 
 #ifndef LCFG_CORE_COMMON_H
@@ -56,22 +56,25 @@ typedef enum {
   LCFG_CHANGE_REMOVED     =  16  /**< Success - Removal */
 } LCFGChange;
 
+#define LCFGChangeOK(CHANGE)    ( CHANGE != LCFG_CHANGE_ERROR )
+#define LCFGChangeError(CHANGE) ( CHANGE == LCFG_CHANGE_ERROR )
+
 /**
  * @brief Various options for functions which read in or write out
  */
 
 typedef enum {
-  LCFG_OPT_NONE           =   0, /**< Null option */
-  LCFG_OPT_NOCONTEXT      =   1, /**< Ignore context */
-  LCFG_OPT_NOPREFIX       =   2, /**< Ignore prefix */
-  LCFG_OPT_NEWLINE        =   4, /**< Include newline */
-  LCFG_OPT_NOVALUE        =   8, /**< Ignore value */
-  LCFG_OPT_NOTEMPLATES    =  16, /**< Ignore templates */
-  LCFG_OPT_ALLOW_NOEXIST  =  32, /**< Allow object to not exist */
-  LCFG_OPT_ENCODE         =  64, /**< Encode data */
-  LCFG_OPT_ALL_CONTEXTS   = 128, /**< Include all contexts */
-  LCFG_OPT_ALL_PRIORITIES = 256, /**< Include all priorities */
-  LCFG_OPT_USE_META       = 512, /**< Include metadata */
+  LCFG_OPT_NONE           =    0, /**< Null option */
+  LCFG_OPT_NOCONTEXT      =    1, /**< Ignore context */
+  LCFG_OPT_NOPREFIX       =    2, /**< Ignore prefix */
+  LCFG_OPT_NEWLINE        =    4, /**< Include newline */
+  LCFG_OPT_NOVALUE        =    8, /**< Ignore value */
+  LCFG_OPT_NOTEMPLATES    =   16, /**< Ignore templates */
+  LCFG_OPT_ALLOW_NOEXIST  =   32, /**< Allow object to not exist */
+  LCFG_OPT_ENCODE         =   64, /**< Encode data */
+  LCFG_OPT_ALL_CONTEXTS   =  128, /**< Include all contexts */
+  LCFG_OPT_ALL_PRIORITIES =  256, /**< Include all priorities */
+  LCFG_OPT_USE_META       =  512, /**< Include metadata */
   LCFG_OPT_ALL_VALUES     = 1024,/**< Include all values */
   LCFG_OPT_COMPAT         = 2048 /**< Compatibility mode */
 } LCFGOption;

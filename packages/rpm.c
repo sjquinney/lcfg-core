@@ -3,8 +3,8 @@
  * @brief Functions for working with RPMs
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-12-13 16:34:15 +0000 (Wed, 13 Dec 2017) $
- * $Revision: 33883 $
+ * $Date: 2018-05-03 10:50:17 +0100 (Thu, 03 May 2018) $
+ * $Revision: 34438 $
  */
 
 #define _GNU_SOURCE   /* asprintf */
@@ -309,12 +309,15 @@ ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_TOSTR_ARGS ) {
   /* Allocate the required space */
 
   if ( *result == NULL || *size < ( new_len + 1 ) ) {
-    *size = new_len + 1;
+    size_t new_size = new_len + 1;
 
-    *result = realloc( *result, ( *size * sizeof(char) ) );
-    if ( *result == NULL ) {
-      perror("Failed to allocate memory for LCFG resource string");
+    char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
+    if ( new_buf == NULL ) {
+      perror("Failed to allocate memory for LCFG package string");
       exit(EXIT_FAILURE);
+    } else {
+      *result = new_buf;
+      *size   = new_size;
     }
 
   }
@@ -898,17 +901,13 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
     } else {
 
       if ( include_meta ) {
-        /* Simplest to use asprintf here since we have an unsigned int */
-        char * derivation = NULL;
-        int rc = asprintf( &derivation, "%s:%u", filename, linenum );
-        if ( rc < 0 || derivation == NULL ) {
-          perror( "Failed to build LCFG derivation string" );
-          exit(EXIT_FAILURE);
-        }
 
-        /* Ignore any problem with setting the derivation */
-        if ( !lcfgpackage_set_derivation( pkg, derivation ) )
-          free(derivation);
+        /* Generate a new derivation for the current filename and
+           current line number */
+
+        /* Ignoring any problem with setting the derivation */
+
+        (void) lcfgpackage_add_derivation_file_line( pkg, filename, linenum );
       }
 
       char * merge_msg = NULL;
@@ -1058,17 +1057,12 @@ LCFGStatus lcfgpkgset_from_rpmlist( const char * filename,
     } else {
 
       if ( include_meta ) {
-        /* Simplest to use asprintf here since we have an unsigned int */
-        char * derivation = NULL;
-        int rc = asprintf( &derivation, "%s:%u", filename, linenum );
-        if ( rc < 0 || derivation == NULL ) {
-          perror( "Failed to build LCFG derivation string" );
-          exit(EXIT_FAILURE);
-        }
+        /* Generate a new derivation for the current filename and
+           current line number */
 
-        /* Ignore any problem with setting the derivation */
-        if ( !lcfgpackage_set_derivation( pkg, derivation ) )
-          free(derivation);
+        /* Ignoring any problem with setting the derivation */
+
+        (void) lcfgpackage_add_derivation_file_line( pkg, filename, linenum );
       }
 
       char * merge_msg = NULL;
@@ -1150,7 +1144,7 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
                                   char ** msg ) {
 
   *msg = NULL;
-  LCFGChange change = LCFG_CHANGE_ERROR;
+  LCFGChange change = LCFG_CHANGE_NONE;
 
   char * tmpfile = NULL;
   FILE * tmpfh = lcfgutils_safe_tmpfile( filename, &tmpfile );

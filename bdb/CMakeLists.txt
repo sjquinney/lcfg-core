@@ -8,7 +8,7 @@ set(MY_SOURCES read.c write.c)
 
 add_library(lcfg_bdb SHARED ${MY_SOURCES})
 
-set_target_properties(lcfg_bdb PROPERTIES VERSION 1.0.1 SOVERSION 1)
+set_target_properties(lcfg_bdb PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 
 # Cannot have two targets with the same name so the static version has
 # '-static' appended and then the name of the output file is set
@@ -31,15 +31,11 @@ endif(NOT DB_LIBRARY)
 
 target_link_libraries(lcfg_bdb ${DB_LIBRARY})
 
-# Also need to link against the lcfg profile, context and resources libraries
+# Also need to link against the lcfg profile, common and resources libraries
 
-target_link_libraries(lcfg_bdb lcfg_context)
+target_link_libraries(lcfg_bdb lcfg_common)
 target_link_libraries(lcfg_bdb lcfg_resources)
 target_link_libraries(lcfg_bdb lcfg_profile)
-
-# Specify where various files should be installed.
-
-SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
 
 install(TARGETS lcfg_bdb lcfg_bdb-static
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}

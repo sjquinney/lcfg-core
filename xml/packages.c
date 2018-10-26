@@ -36,6 +36,7 @@
 
 static LCFGStatus lcfgxml_gather_package_attributes( xmlTextReaderPtr reader,
                                                      LCFGPackage * pkg,
+                                                     LCFGDerivationMap * drvmap, 
                                                      char ** msg ) {
   assert( reader != NULL );
   assert( pkg != NULL );
@@ -51,25 +52,23 @@ static LCFGStatus lcfgxml_gather_package_attributes( xmlTextReaderPtr reader,
     xmlTextReaderGetAttribute( reader, BAD_CAST "cfg:derivation" );
   if ( derivation != NULL && xmlStrlen(derivation) > 0 ) {
 
-    if ( lcfgpackage_has_derivation(pkg) ) {
+    char * drvmsg = NULL;
+    LCFGDerivationList * drvlist =
+      lcfgderivmap_find_or_insert_string( drvmap, (char *) derivation,
+                                          &drvmsg );
 
-      if ( !lcfgpackage_add_derivation( pkg, (char *) derivation ) )
-        status = LCFG_STATUS_ERROR;
+    bool ok = false;
 
-    } else {
+    if ( drvlist != NULL )
+      ok = lcfgpackage_set_derivation( pkg, drvlist );
 
-      if ( lcfgpackage_set_derivation( pkg, (char *) derivation ) )
-        derivation = NULL; /* Package now "owns" derivation string */
-      else
-        status = LCFG_STATUS_ERROR;
-
+    if (!ok) {
+      status = LCFG_STATUS_ERROR;
+      *msg = lcfgpackage_build_message( pkg, "Invalid derivation '%s': %s",
+                                        (char *) derivation, drvmsg );
     }
 
-    if ( status == LCFG_STATUS_ERROR ) {
-      *msg = lcfgpackage_build_message( pkg, "Invalid derivation '%s'",
-                                        (char *) derivation );
-    }
-
+    free(drvmsg);
   }
 
   xmlFree(derivation);
@@ -123,11 +122,12 @@ static LCFGStatus lcfgxml_gather_package_attributes( xmlTextReaderPtr reader,
  *
  */
 
-LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
-                                    LCFGPackage ** result,
-                                    const char * base_context,
-                                    const char * base_derivation,
-                                    char ** msg ) {
+static LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
+                                           LCFGPackage ** result,
+                                           const char * base_context,
+                                           const char * base_derivation,
+                                           LCFGDerivationMap * drvmap,
+                                           char ** msg ) {
   assert( reader != NULL );
 
   *result = NULL;
@@ -148,7 +148,12 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
   int linenum = 0;
   xmlChar * cur_element = NULL;
 
-  /* add base context and derivation rather than set so that we take a copy */
+  /* Gather any derivation and context information */
+
+  status = lcfgxml_gather_package_attributes( reader, pkg, drvmap, msg );
+  if ( status == LCFG_STATUS_ERROR ) goto cleanup;
+
+  /* add any base context and derivation */
 
   if ( !isempty(base_context) ) {
     if ( !lcfgpackage_add_context( pkg, base_context ) ) {
@@ -160,18 +165,13 @@ LCFGStatus lcfgxml_process_package( xmlTextReaderPtr reader,
   }
 
   if ( !isempty(base_derivation) ) {
-    if ( !lcfgpackage_add_derivation( pkg, base_derivation ) ) {
+    if ( !lcfgpackage_add_derivation_string( pkg, base_derivation ) ) {
       status = LCFG_STATUS_ERROR;
       *msg = lcfgpackage_build_message( pkg,
                 "Failed to set base derivation '%s'", base_derivation );
       goto cleanup;
     }
   }
-
-  /* Gather any derivation and context information */
-
-  status = lcfgxml_gather_package_attributes( reader, pkg, msg );
-  if ( status == LCFG_STATUS_ERROR ) goto cleanup;
 
   bool done  = false;
 
@@ -432,6 +432,11 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
   *active   = lcfgpkgset_new();
   *inactive = lcfgpkgset_new();
 
+  /* Many package derivations are HUGE and they are shared between
+     many packages so we use a map so that they are only parsed once. */
+
+  LCFGDerivationMap * drvmap = lcfgderivmap_new();
+
   LCFGStatus status = LCFG_STATUS_OK;
   int linenum = 0;
 
@@ -473,6 +478,7 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
 
       status = lcfgxml_process_package( reader, &pkg, 
                                         base_context, base_derivation,
+                                        drvmap,
                                         msg );
 
       if ( status == LCFG_STATUS_OK && pkg != NULL ) {
@@ -543,6 +549,8 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
   }
 
  cleanup:
+
+  lcfgderivmap_relinquish(drvmap);
 
   if ( status == LCFG_STATUS_ERROR ) {
 

@@ -3,8 +3,8 @@
  * @brief LCFG context handling library
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
- * $Date: 2017-12-12 16:19:49 +0000 (Tue, 12 Dec 2017) $
- * $Revision: 33878 $
+ * $Date: 2018-10-03 10:36:00 +0100 (Wed, 03 Oct 2018) $
+ * $Revision: 34955 $
  */
 
 #ifndef LCFG_CORE_CONTEXT_H
@@ -182,22 +182,6 @@ void lcfgctxlist_destroy(LCFGContextList * ctxlist);
 
 #define lcfgctxlist_is_empty(ctxlist) ( ctxlist == NULL || (ctxlist)->size == 0)
 
-/**
- * @brief Append a context to a list
- *
- * This is a simple macro wrapper around the
- * @c lcfgctxlist_insert_next() function which can be used to append
- * a context structure on to the end of the specified context list.
- *
- * @param[in] ctxlist Pointer to @c LCFGContextList
- * @param[in] ctx Pointer to @c LCFGContext
- * 
- * @return Integer value indicating type of change
- *
- */
-
-#define lcfgctxlist_append(ctxlist, ctx) ( lcfgctxlist_insert_next( ctxlist, lcfgslist_tail(ctxlist), ctx ) )
-
 LCFGChange lcfgctxlist_update( LCFGContextList * ctxlist,
                                LCFGContext     * new_ctx )
   __attribute__((warn_unused_result));
@@ -245,6 +229,10 @@ int lcfgctxlist_simple_query( const LCFGContextList * ctxlist,
 bool lcfgctxlist_eval_expression( const LCFGContextList * ctxlist,
                                   const char * expr,
                                   int * result, char ** msg );
+
+int lcfgcontext_compare_expressions( const char * ctx1,
+                                     const char * ctx2 )
+  __attribute__((const));
 
 /* Tools */
 

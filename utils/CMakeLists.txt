@@ -59,8 +59,6 @@ install(TARGETS ${BIN_TARGETS}
 install(TARGETS ${SBIN_TARGETS}
         DESTINATION sbin)
 
-SET(LIB_INSTALL_DIR lib CACHE PATH "Output directory for libraries")
-
 install(TARGETS lcfg_utils lcfg_utils-static
         LIBRARY DESTINATION ${LIB_INSTALL_DIR}
         ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
@@ -126,13 +124,13 @@ endmacro(pod2man PODFILE NAME SECTION CENTER)
 
 configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/shiftpressed.pod.cin"
                 "${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.pod" @ONLY)
-pod2man("${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.pod" ${LCFG_VERSION} 8 "LCFG/Utils")
+pod2man("${CMAKE_CURRENT_BINARY_DIR}/shiftpressed.pod" ${PROJECT_VERSION} 8 "LCFG/Utils")
 
 configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/lcfgmsg.pod.cin"
                 "${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.pod" @ONLY)
-pod2man("${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.pod" ${LCFG_VERSION} 8 "LCFG/Utils")
+pod2man("${CMAKE_CURRENT_BINARY_DIR}/lcfgmsg.pod" ${PROJECT_VERSION} 8 "LCFG/Utils")
 
 configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/lcfgutils.pod.cin"
                 "${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.pod" @ONLY)
-pod2man("${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.pod" ${LCFG_VERSION} 8 "LCFG/Utils")
+pod2man("${CMAKE_CURRENT_BINARY_DIR}/lcfgutils.pod" ${PROJECT_VERSION} 8 "LCFG/Utils")
 

@@ -1,6 +1,640 @@
-2017-12-13  SVN: new release
+2018-10-12  SVN: new release
 
-	* Release: 1.47.2
+	* Release: 1.50.6
+
+2018-10-12 11:08  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/components/component.c: Only load meta-data
+	  (e.g. derivation and context) from status files when
+	  LCFG_OPT_USE_META is specified
+
+2018-10-12 09:46  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.5
+
+2018-10-12 09:45  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, lcfg.yml: When loading resource information from the
+	  berkeley DB we now only load value and type by default. The
+	  LCFG_OPT_USE_META option must be specified to load derivation,
+	  context and priority information. Typically the extra meta-data
+	  is not required and it takes a long time to load so we now avoid
+	  it where possible
+
+2018-10-12 09:44  squinney@INF.ED.AC.UK
+
+	* include/bdb.h: lcfgbdb_process_components is now static so
+	  removed from public header
+
+2018-10-12 08:42  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.4
+
+2018-10-12 08:42  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, resources/components/diff.c: Avoid generating resource
+	  diff objects where there is no change in value, these won't be
+	  stored so it's just a waste of effort
+
+2018-10-12 08:41  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: When reading in from a status
+	  file hang on to the most recent resource to avoid having to
+	  repeatedly search the resource list for something which is
+	  inevitably right at the end
+
+2018-10-11 12:56  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: compare resources using priorities when
+	  names match
+
+2018-10-04 09:37  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.3
+
+2018-10-04 09:37  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Tweaked lcfgpkglist_merge_package to return a
+	  helpful error message when an invalid package is passed in
+
+2018-10-03 15:08  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c: lcfgderivmap_is_shared should verify
+	  that drvmap is not NULL
+
+2018-10-03 09:36  squinney@INF.ED.AC.UK
+
+	* common/context/context.c, include/context.h, include/packages.h,
+	  include/resources.h, lcfg.yml, packages/list.c,
+	  packages/package.c, resources/resource.c: Added same_context
+	  functions for both packages and resources, these are simple
+	  wrappers around a new lcfgcontext_compare_expressions function.
+	  This makes it easier to improve comparisons of context
+	  expressions at some later date
+
+2018-08-03 15:36  squinney@INF.ED.AC.UK
+
+	* include/components.h, resources/components/component.c: Made the
+	  resourcenode functions static as they are not used anywhere else
+
+2018-07-06 09:43  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: changed flags for opening bdb for write
+
+2018-07-06 08:41  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: Another attempt to replace the use of tempnam
+
+2018-07-05 10:59  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: Reverted failed attempt to remove tmpnam
+
+2018-07-05 10:56  squinney@INF.ED.AC.UK
+
+	* xml/resource.c: Corrected some error messages so they refer to
+	  resources not packages
+
+2018-06-13 17:43  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.2
+
+2018-06-13 09:33  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, lcfg.yml: Also need DB_TRUNCATE flag for bdb to open
+	  reviously created temporary file for writing
+
+2018-06-13 08:54  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: Altered lcfgprofile_to_bdb to use
+	  lcfgutils_safe_tmpfile instead of tempnam which has unexpected
+	  behaviour when the TMPDIR env variable is set
+
+2018-06-13 08:25  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: use strerror to get reason for db file rename
+	  problems
+
+2018-05-03 13:00  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.1
+
+2018-05-03 11:49  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Fixed call to snprintf in
+	  lcfgresource_get_priority_as_string so that the length includes
+	  the terminating nul
+
+2018-05-03 09:50  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.0
+
+2018-05-03 09:50  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, include/packages.h, include/resources.h, lcfg.yml,
+	  packages/container.c, packages/list.c, packages/package.c,
+	  packages/rpm.c, resources/resource.c, xml/packages.c,
+	  xml/resource.c: ** The derivations release **
+	  
+	  This is a complete rewrite of the derivations handling for both
+	  resources and packages. Instead of just treating them as single
+	  strings they are now represented using structures. This is used
+	  as in
+	  the parsing of LCFG header and package list files. As many
+	  packages
+	  have huge long derivations and they are often shared between many
+	  packages some effort has been put into improving efficiency by
+	  only
+	  parsing and storing the structures where absolutely necessary.
+
+2018-05-03 09:45  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c: fixed docs for lcfgdrvmap_insert_list
+
+2018-05-03 09:39  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c, include/derivation.h: Finished docs for
+	  LCFGDerivationMap API
+
+2018-05-02 14:20  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c, include/derivation.h: Reworked map as a
+	  proper hash for speed
+
+2018-04-27 14:32  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c: Fixed stashing of derivations
+
+2018-04-27 13:12  squinney@INF.ED.AC.UK
+
+	* TODO.md, common/derivation/map.c, include/derivation.h: Reworked
+	  derivations map to use an array which should be faster for
+	  searching
+
+2018-04-27 09:05  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: Fixed minor doc error
+
+2018-04-27 09:01  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: Removed an unnecessary assert from
+	  lcfgderivlist_to_string
+
+2018-04-26 12:47  squinney@INF.ED.AC.UK
+
+	* include/xml.h: no need to have lcfgxml_process_package be public
+
+2018-04-24 15:30  squinney@INF.ED.AC.UK
+
+	* packages/set.c: minor doc fix
+
+2018-04-24 14:28  squinney@INF.ED.AC.UK
+
+	* Doxyfile.in: warn about missing param docs
+
+2018-04-24 14:28  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: Added API docs
+
+2018-04-24 12:49  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: minor doc tweaks
+
+2018-04-24 12:49  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c: Added doc header and enabled some svn
+	  keywords
+
+2018-04-23 17:16  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c: minor tweaks to logic in
+	  lcfgderivmap_find_or_insert_string so that it doesn't cache any
+	  empty list
+
+2018-04-23 16:06  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt: use minimum of gnu99 C standard
+
+2018-04-23 16:05  squinney@INF.ED.AC.UK
+
+	* packages/ex/qxpack.c: Updated for latest API. Also ensure no
+	  memory is leaked
+
+2018-04-23 16:04  squinney@INF.ED.AC.UK
+
+	* common/CMakeLists.txt: include derivation/map.c in sources list
+
+2018-04-23 16:03  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: no longer need _GNU_SOURCE to be
+	  defined
+
+2018-04-23 15:58  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: massively improved performance of
+	  to_string by removing need for asprintf
+
+2018-04-23 15:17  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: Avoid an unnecessary copy when
+	  processing the line numbers for a derivation
+
+2018-04-23 13:07  squinney@INF.ED.AC.UK
+
+	* common/derivation/map.c, include/derivation.h: Added simple
+	  mapping of derivation lists to ID strings
+
+2018-04-23 12:46  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c, include/derivation.h: Use 'id' for
+	  field name instead of hash to make it clearer that it could be
+	  anything
+
+2018-04-23 09:38  squinney@INF.ED.AC.UK
+
+	* include/farmhash.h: Included support for FarmHash which is a
+	  modern fast hashing algorithm from google
+
+2018-04-23 09:33  squinney@INF.ED.AC.UK
+
+	* common/CMakeLists.txt, common/farmhash,
+	  common/farmhash/farmhash.c: Included support for FarmHash which
+	  is a modern fast hashing algorithm from google
+
+2018-04-23 09:25  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: removed const since list of lines will
+	  be sorted for derivation when printed
+
+2018-04-15 17:58  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: minor doc tweak
+
+2018-04-15 17:43  squinney@INF.ED.AC.UK
+
+	* packages/set.c: if merging a package spec results in there being
+	  no packages left with that name (i.e. for a '-' prefix) then drop
+	  the associated (now empty) package list
+
+2018-04-06 18:08  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: sort list of lines for each file before
+	  emitting string so the output is consistent
+
+2018-04-06 17:59  squinney@INF.ED.AC.UK
+
+	* packages/set.c: reworked lcfgpkgset_merge_package which didn't
+	  work properly when parsing package lists and using prefixes
+
+2018-04-06 12:34  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: Completed docs
+
+2018-04-06 09:48  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c, include/derivation.h: tweaked spec for
+	  lcfgderivlist_get_string_length
+
+2018-04-05 18:19  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: Further work to reduce the amount of
+	  memory used when manipulating lists of derivations
+
+2018-04-05 15:32  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c, common/derivation/list.c:
+	  Copy-on-write support for merging derivations
+
+2018-04-05 11:42  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: cloning a NULL list will now return an
+	  empty one
+
+2018-04-05 11:41  squinney@INF.ED.AC.UK
+
+	* include/derivation.h: Added support for cloning
+
+2018-04-05 11:41  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: Added support for cloning
+
+2018-04-03 15:38  squinney@INF.ED.AC.UK
+
+	* packages/set.c: Error message mentioned resource when it should
+	  be package
+
+2018-04-03 15:38  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Error message mentioned resource when it should
+	  be package
+
+2018-04-03 14:55  squinney@INF.ED.AC.UK
+
+	* include/derivation.h: fixed inclusion of headers from lcfg-core
+
+2018-04-03 11:58  squinney@INF.ED.AC.UK
+
+	* bdb/write.c: Just changed some variable names for clarity
+
+2018-04-03 09:43  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, include/resources.h, resources/resource.c: Reworked
+	  APIs for lcfgresource_get_priority_as_string and
+	  lcfgresource_get_template_as_string. The aim is to eventually
+	  make all stringify functions consistent
+
+2018-04-03 09:41  squinney@INF.ED.AC.UK
+
+	* common/CMakeLists.txt: fixed builds where soure and binary dirs
+	  are different
+
+2018-04-02 15:49  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c, include/derivation.h: Added
+	  lcfgderivlist_get_string_length, tidied stringification
+
+2018-04-02 14:26  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c: Minor fixes
+
+2018-04-02 13:22  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c, common/derivation/list.c,
+	  include/derivation.h: Added lcfgderivlist_merge_file_line and
+	  lcfgderivlist_merge_string_list
+
+2018-03-21 16:03  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec: Enabled hardened builds
+
+2018-03-09 16:42  squinney@INF.ED.AC.UK
+
+	* common/derivation/list.c, include/derivation.h: Added support for
+	  merging lists of derivations
+
+2018-03-09 12:04  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, bdb/CMakeLists.txt, common,
+	  common/CMakeLists.txt, common/context,
+	  common/context/CMakeLists.txt, common/context/context.c,
+	  common/derivation, common/derivation/derivation.c,
+	  common/derivation/list.c, context, derivation,
+	  docs/c-programmers-guide.tex, include/derivation.h,
+	  lcfg-core.spec, lcfg.yml, packages/CMakeLists.txt,
+	  pc/lcfg-common.pc.in, pc/lcfg-context.pc.in,
+	  pc/lcfg-packages.pc.in, pc/lcfg-resources.pc.in,
+	  resources/CMakeLists.txt, xml/CMakeLists.txt: To avoid a
+	  proliferation of small libraries which are needed for both
+	  resources and packages the 'context' library is renamed as
+	  'common' and the new derivation support is merged into that
+	  library
+
+2018-03-09 11:02  squinney@INF.ED.AC.UK
+
+	* derivation, derivation/derivation.c, derivation/list.c: Added dir
+	  for derivation sources
+
+2018-03-07 09:17  squinney@INF.ED.AC.UK
+
+	* context/context.c, lcfg.yml, packages/package.c, packages/rpm.c,
+	  resources/diff.c, resources/resource.c, resources/tags/list.c,
+	  resources/templates.c: Minor safety improvements for calls to
+	  realloc to resize strings
+
+2018-03-06 10:49  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.49.0
+
+2018-03-06 10:41  squinney@INF.ED.AC.UK
+
+	* packages/container.c: Added support for package categories and
+	  fixed handling of derivation information for when USE_META is
+	  enabled
+
+2018-03-06 10:40  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/package.c: Added support for package
+	  categories, only used by things like the website to group related
+	  packages
+
+2018-03-05 20:51  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/container.c, packages/container.h,
+	  packages/list.c, packages/set.c: Added support to the
+	  from_pkgsfile functions to also return a list of file
+	  dependencies
+
+2018-03-02 16:45  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.48.0
+
+2018-03-02 16:30  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/container.c, packages/list.c, packages/set.c:
+	  Added lcfgpkgset_from_pkgsfile and lcfgpkglist_from_pkgsfile for
+	  processing package list files according to the way the lcfg
+	  server works
+
+2018-03-02 16:20  squinney@INF.ED.AC.UK
+
+	* packages/container.c, packages/container.h: Added license headers
+
+2018-03-02 16:18  squinney@INF.ED.AC.UK
+
+	* packages/CMakeLists.txt: Include source for generic package
+	  container functions
+
+2018-03-02 16:17  squinney@INF.ED.AC.UK
+
+	* packages/package.c: fixed declaration of some vars
+
+2018-03-02 16:15  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/package.c: made
+	  lcfgpackage_pragma_length and lcfgpackage_build_pragma private
+	  functions
+
+2018-03-02 16:05  squinney@INF.ED.AC.UK
+
+	* packages/container.c, packages/container.h: Added start of new
+	  generic approach to handling lists of packages so that lists and
+	  sets can share common code. This provides the first support for
+	  processing package list files as used by the LCFG server
+
+2018-03-02 15:38  squinney@INF.ED.AC.UK
+
+	* utils/utils.c: reworked lcfgutils_parse_cpp_derivation so that it
+	  only updates parameters when the parse is successful, also now
+	  treats the flags as optional
+
+2018-03-01 17:31  squinney@INF.ED.AC.UK
+
+	* include/common.h: Added a couple of macros for easier checking of
+	  LCFGChange value
+
+2018-03-01 11:22  squinney@INF.ED.AC.UK
+
+	* include/packages.h: Added a LCFGPkgContainer enum so it is
+	  possible to indicate which container type (set or list) is being
+	  used
+
+2018-02-28 17:24  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, utils/utils.c: Added utility for parsing cpp
+	  derivation information (needed for both packages and resources)
+
+2018-02-28 17:23  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/list.c, packages/package.c,
+	  packages/set.c: Merged and refactored all the pragma handling for
+	  CPP package lists and rpmcfg
+
+2018-02-26 09:56  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, utils/utils.c: Added a lcfgutils_string_split
+	  utility function for splitting strings on a delimiter
+
+2018-02-23 15:12  squinney@INF.ED.AC.UK
+
+	* packages/list.c, packages/set.c: Fixed declaration of line buffer
+	  variable in lcfgpkgset_from_cpp and lcfgpkglist_from_cpp so that
+	  the memory is always freed even if an error occurs and a jump is
+	  made directly to cleanup stage
+
+2018-02-23 10:32  squinney@INF.ED.AC.UK
+
+	* packages/list.c, packages/set.c: Improved the way meta-data is
+	  handled in lcfgpkgset_from_cpp and lcfgpkglist_from_cpp so it's
+	  safer against corrupted files
+
+2018-02-15 16:18  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.47.7
+
+2018-02-15 16:18  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec, lcfg.yml: Marked doc subpackage as noarch
+
+2018-02-15 16:05  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.47.6
+
+2018-02-15 16:05  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, Doxyfile.in, bdb/CMakeLists.txt,
+	  context/CMakeLists.txt, docs/parse_pkgspec.pod.cin,
+	  include/utils.h.in, lcfg-core.spec, lcfg.yml,
+	  packages/CMakeLists.txt, pc/lcfg-bdb.pc.in,
+	  pc/lcfg-context.pc.in, pc/lcfg-packages.pc.in,
+	  pc/lcfg-profile.pc.in, pc/lcfg-resources.pc.in,
+	  pc/lcfg-utils.pc.in, pc/lcfg-xml.pc.in, profile/CMakeLists.txt,
+	  resources/CMakeLists.txt, utils/CMakeLists.txt,
+	  xml/CMakeLists.txt: Introduced new PROJECT_VERSION variables. Use
+	  the variables to set the library versions
+
+2018-02-15 15:07  squinney@INF.ED.AC.UK
+
+	* context/list.c, include/context.h, lcfg.yml: Moved
+	  lcfgctxlist_append macro as it calls static functions
+
+2018-01-24 11:41  squinney@INF.ED.AC.UK
+
+	* include/resources.h, resources/resource.c: Added
+	  lcfgresource_child_names which can be used to generate a list of
+	  all possible child resources for a list resource
+
+2018-01-24 11:40  squinney@INF.ED.AC.UK
+
+	* include/templates.h, resources/templates.c: Extracted
+	  lcfgtemplate_substitute from lcfgresource_build_name so that it
+	  can be used elsewhere.
+
+2017-12-20 12:47  squinney@INF.ED.AC.UK
+
+	* resources/mutate.c: fixed syntax error
+
+2017-12-20 12:45  squinney@INF.ED.AC.UK
+
+	* resources/mutate.c: Tidied the handling of the item separators
+
+2017-12-20 12:23  squinney@INF.ED.AC.UK
+
+	* pc/lcfg-resources.pc.in: ensure lcfg_utils is also linked in when
+	  linking against lcfg_resources
+
+2017-12-20 12:22  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec: Added symlink so that /usr/share/doc/lcfg-core
+	  always points to the correct docs directory
+
+2017-12-20 12:03  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, utils/utils.c: Added
+	  lcfgutils_string_finditem and lcfgutils_string_hasitem which can
+	  be used to search a delimited list of items (e.g. like a tag
+	  list)
+
+2017-12-19 10:42  squinney@INF.ED.AC.UK
+
+	* resources/templates.c: Minor correction to error message for
+	  string allocation failure
+
+2017-12-15 11:47  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.47.5
+
+2017-12-14 17:53  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, bdb/CMakeLists.txt, context/CMakeLists.txt,
+	  packages/CMakeLists.txt, profile/CMakeLists.txt,
+	  resources/CMakeLists.txt, utils/CMakeLists.txt,
+	  xml/CMakeLists.txt: Moved setting of LIB_INSTALL_DIR into main
+	  cmake file. Added support for INCLUDE_INSTALL_DIR. This makes it
+	  easier to build on different platforms
+
+2017-12-14 17:29  squinney@INF.ED.AC.UK
+
+	* docs/c-programmers-guide.tex: Added notes about using pkg-config
+
+2017-12-14 17:14  squinney@INF.ED.AC.UK
+
+	* docs/c-programmers-guide.tex: more work on guide
+
+2017-12-14 16:56  squinney@INF.ED.AC.UK
+
+	* docs/c-programmers-guide.tex: Started work on nC programmers
+	  guide
+
+2017-12-14 16:45  squinney@INF.ED.AC.UK
+
+	* include/resources.h, resources/resource.c: Fixed return type for
+	  lcfgresource_to_string
+
+2017-12-14 10:01  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.47.4
+
+2017-12-14 10:01  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, utils/utils.c: Fixed rename call in
+	  lcfgutils_file_update, also altered variable names to make it
+	  clear what is happening
+
+2017-12-14 09:14  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.47.3
+
+2017-12-13 18:38  squinney@INF.ED.AC.UK
+
+	* packages/translaterpmcfg.c: Check return value of fputs
+
+2017-12-13 18:19  squinney@INF.ED.AC.UK
+
+	* packages/rpm.c: fixed initialisation of change return value
+	  CID#1462752
+
+2017-12-13 16:38  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.47.2
 
 2017-12-13 16:38  squinney@INF.ED.AC.UK
 
