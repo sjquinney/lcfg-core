@@ -1,6 +1,95 @@
-2018-10-12  SVN: new release
+2018-10-26  SVN: new release
 
-	* Release: 1.50.6
+	* Release: 1.51.0
+
+2018-10-26 13:51  squinney@INF.ED.AC.UK
+
+	* include/components.h, lcfg.yml, resources/components/component.c,
+	  resources/components/iterator.c: Updated docs to match recent
+	  changes to API
+
+2018-10-26 08:44  squinney@INF.ED.AC.UK
+
+	* resources/components/diff.c: Tweaked quickdiff to get resource
+	  name directly
+
+2018-10-26 08:31  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Converted lcfgresource_same_context to
+	  using new lcfgcontext_compare_expressions function
+
+2018-10-25 16:52  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: Finished reworking of the
+	  component data structure as a hash
+
+2018-10-25 16:51  squinney@INF.ED.AC.UK
+
+	* resources/components/reslist.c, resources/components/reslist.h:
+	  Renamed lcfgreslist_name to lcfgreslist_get_name for consistency
+	  with other interfaces
+
+2018-10-25 09:20  squinney@INF.ED.AC.UK
+
+	* resources/components/reslist.c, resources/components/reslist.h:
+	  Minor tweaks and tidying for resource list functions
+
+2018-10-25 08:47  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: A lot of reworking to improve
+	  merging and cloning of resources
+
+2018-10-25 08:46  squinney@INF.ED.AC.UK
+
+	* include/components.h: tweaked lcfgcomponent_clone interface now
+	  it supports COW properly
+
+2018-10-24 11:32  squinney@INF.ED.AC.UK
+
+	* resources/components/reslist.c, resources/components/reslist.h:
+	  Added lcfgreslist_clone function, needed for COW support
+
+2018-10-23 16:19  squinney@INF.ED.AC.UK
+
+	* resources/components/reslist.c, resources/components/reslist.h:
+	  Added support for merging one resource list into another
+
+2018-10-22 16:38  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: removed todo block now code is
+	  functional
+
+2018-10-22 16:35  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: Updated lcfgcomponent_clone for
+	  switch to hash data structure
+
+2018-10-16 17:19  squinney@INF.ED.AC.UK
+
+	* bdb/write.c, include/components.h, lcfg.yml, profile/profile.c,
+	  resources/CMakeLists.txt, resources/components/component.c,
+	  resources/components/diff.c, resources/components/iterator.c,
+	  resources/components/reslist.c, resources/components/reslist.h,
+	  resources/components/set.c, resources/iterator.c: Massive
+	  reworking of component data structure to use hashing to make
+	  resource lookups much faster.
+
+2018-10-16 17:15  squinney@INF.ED.AC.UK
+
+	* packages/setiter.c: Added more assertions
+
+2018-10-16 15:25  squinney@INF.ED.AC.UK
+
+	* include/packages.h: tweaked how the package set/list primary key
+	  enum is declared
+
+2018-10-16 15:25  squinney@INF.ED.AC.UK
+
+	* include/common.h: tidying for clarity
+
+2018-10-12 11:08  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.50.6
 
 2018-10-12 11:08  squinney@INF.ED.AC.UK
 
