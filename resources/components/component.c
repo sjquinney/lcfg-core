@@ -235,20 +235,18 @@ static void lcfgcomponent_resize( LCFGComponent * comp ) {
     LCFGChange change = LCFG_CHANGE_NONE;
 
     unsigned long i;
-    for ( i=0; LCFGChangeOK(change) && i<cur_buckets; i++ )
+    for ( i=0; LCFGChangeOK(change) && i<cur_buckets; i++ ) {
       change = lcfgcomponent_insert_list( comp, cur_set[i] );
+      lcfgreslist_relinquish(cur_set[i]);
+    }
 
     if ( LCFGChangeOK(change) ) {
-
-      /* Need to decrement reference count for each resource list in
-         the old hash and free memory for previous hash */
-
-      for ( i=0; LCFGChangeOK(change) && i<cur_buckets; i++ )
-        lcfgreslist_relinquish(cur_set[i]);
 
       free(cur_set);
 
     } else { /* Restore previous state if error occurs */
+
+      free(new_set);
 
       comp->resources = cur_set;
       comp->entries   = cur_entries;
