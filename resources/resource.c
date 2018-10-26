@@ -4401,7 +4401,7 @@ ssize_t lcfgresource_build_key( const char * resource,
     size_t new_size = need_len + 1;
 
     char * new_buf = realloc( *result, ( new_size * sizeof(char) ) );
-    if ( *result == NULL ) {
+    if ( new_buf == NULL ) {
       perror("Failed to allocate memory for LCFG resource key");
       exit(EXIT_FAILURE);
     } else {
