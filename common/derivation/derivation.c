@@ -685,7 +685,10 @@ LCFGStatus lcfgderivation_from_string( const char * input,
   const char * sep = strrchr( input, ':' );
 
   char * file;
-  if ( sep != NULL ) {
+  if ( sep == NULL ) {
+    file = strdup(input);
+  }  else {
+
     file = strndup( input, sep - input );
 
     /* Line numbers */
@@ -719,12 +722,11 @@ LCFGStatus lcfgderivation_from_string( const char * input,
 
     }
 
-  } else {
-    file = strdup(input);
   }
 
+  bool set_ok = false;
   if ( status != LCFG_STATUS_ERROR ) {
-    bool set_ok = lcfgderivation_set_file( drv, file );
+    set_ok = lcfgderivation_set_file( drv, file );
     if ( !set_ok ) {
       lcfgutils_build_message( msg,
                                "Invalid derivation file name '%s'",
@@ -732,6 +734,9 @@ LCFGStatus lcfgderivation_from_string( const char * input,
       status = LCFG_STATUS_ERROR;
     }
   }
+
+  if ( !set_ok )
+    free(file);
 
   if ( status == LCFG_STATUS_ERROR ) {
     lcfgderivation_relinquish(drv);
