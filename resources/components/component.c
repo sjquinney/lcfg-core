@@ -22,8 +22,18 @@
 
 /* Component internal functions */
 
+/* Computes the initial number of buckets which would be required for
+   a hash given an expected number of entries. */
+
 static unsigned long want_buckets( unsigned long entries ) {
   return (unsigned long) ( (double) entries / LCFG_COMP_LOAD_INIT ) + 1;
+}
+
+/* Computes the current load factor, this is just the percentage of
+   buckets that are occupied. */
+
+static double lcfgcomponent_load_factor( const LCFGComponent * comp ) {
+  return ( (double) comp->entries / (double) comp->buckets );
 }
 
 static unsigned long lcfgcomponent_hash_string( const LCFGComponent * comp,
@@ -35,9 +45,8 @@ static unsigned long lcfgcomponent_hash_string( const LCFGComponent * comp,
   return farmhash64( string, len ) % comp->buckets;
 }
 
-static double lcfgcomponent_load_factor( const LCFGComponent * comp ) {
-  return ( (double) comp->entries / (double) comp->buckets );
-}
+/* Creates a new empty resource list then sets the 'merge rules' and
+   'primary key' to be the same as for the parent component. */
 
 static LCFGResourceList * lcfgcomponent_empty_list(const LCFGComponent * comp) {
 
@@ -48,9 +57,14 @@ static LCFGResourceList * lcfgcomponent_empty_list(const LCFGComponent * comp) {
   return new_list;
 }
 
-static bool lcfgcomponent_find_slot( const LCFGComponent * comp,
-                                     const char * want_name,
-                                     unsigned long * slot ) {
+/* Given a particular resource name this will return the associated
+   bucket in the hash. Note that this does NOT guarantee there is a
+   resource with that name already stored in the hash, the bucket
+   might be empty. */
+
+static bool lcfgcomponent_find_bucket( const LCFGComponent * comp,
+                                       const char * want_name,
+                                       unsigned long * bucket ) {
   assert( comp != NULL );
   assert( want_name != NULL );
 
@@ -58,7 +72,7 @@ static bool lcfgcomponent_find_slot( const LCFGComponent * comp,
 
   LCFGResourceList ** resources = comp->resources;
 
-  /* Find matching resource list or first empty slot */
+  /* Find matching resource list or first empty bucket */
 
   bool found = false;
 
@@ -73,7 +87,7 @@ static bool lcfgcomponent_find_slot( const LCFGComponent * comp,
         found = true;
     }
 
-    if (found) *slot = i;
+    if (found) *bucket = i;
   }
 
   for ( i = 0; !found && i < hash; i++ ) {
@@ -86,11 +100,15 @@ static bool lcfgcomponent_find_slot( const LCFGComponent * comp,
         found = true;
     }
 
-    if (found) *slot = i;
+    if (found) *bucket = i;
   }
 
   return found;
 }
+
+/* Finds the resource list in the hash for the specified resource
+   name. Will return NULL if there is not currently anything stored
+   with that name. */
 
 static const LCFGResourceList * lcfgcomponent_find_list( const LCFGComponent * comp,
                                                    const char * want_name ) {
@@ -99,29 +117,34 @@ static const LCFGResourceList * lcfgcomponent_find_list( const LCFGComponent * c
 
   if ( lcfgcomponent_is_empty(comp) ) return NULL;
 
-  unsigned long slot;
-  bool found = lcfgcomponent_find_slot( comp, want_name, &slot );
+  unsigned long bucket;
+  bool found = lcfgcomponent_find_bucket( comp, want_name, &bucket );
 
   const LCFGResourceList * result = NULL;
   if (found)
-    result = (comp->resources)[slot];
+    result = (comp->resources)[bucket];
 
   return result;
 }
 
-static LCFGChange lcfgcomponent_set_slot( LCFGComponent * comp,
-                                          unsigned long slot,
-                                          LCFGResourceList * new ) {
+/* Inserts the resource list into the specified bucket. If there is
+   already a list stored in that bucket the reference count will be
+   decremented. If the value specified for the resource list is NULL
+   then it functions as a removal. */
+
+static LCFGChange lcfgcomponent_set_bucket( LCFGComponent * comp,
+                                            unsigned long bucket,
+                                            LCFGResourceList * new ) {
   assert( comp != NULL );
 
   LCFGResourceList ** resources = comp->resources;
 
-  LCFGResourceList * current = resources[slot];
+  LCFGResourceList * current = resources[bucket];
 
   LCFGChange change = LCFG_CHANGE_NONE;
   if ( current != new ) {
 
-    resources[slot] = new;
+    resources[bucket] = new;
 
     if ( new != NULL ) {
       lcfgreslist_acquire(new);
@@ -150,6 +173,8 @@ static LCFGChange lcfgcomponent_set_slot( LCFGComponent * comp,
   return change;
 }
 
+/* Inserts a resource list into the correct bucket in the hash. */
+
 static LCFGChange lcfgcomponent_insert_list( LCFGComponent * comp,
                                              LCFGResourceList * list ) {
   assert( comp != NULL );
@@ -160,14 +185,19 @@ static LCFGChange lcfgcomponent_insert_list( LCFGComponent * comp,
 
   const char * name = lcfgreslist_get_name(list);
 
-  unsigned long slot;
-  if ( lcfgcomponent_find_slot( comp, name, &slot ) )
-    change = lcfgcomponent_set_slot( comp, slot, list );
+  unsigned long bucket;
+  if ( lcfgcomponent_find_bucket( comp, name, &bucket ) )
+    change = lcfgcomponent_set_bucket( comp, bucket, list );
   else
     change = LCFG_CHANGE_ERROR;
 
   return change;
 }
+
+/* Resizes the hash to the 'best' size for the number of entries. For
+   efficiency the code avoids constant resizes in small steps by only
+   actually doing a resize once the maximum allowed 'load factor' is
+   exceeded. */
 
 static void lcfgcomponent_resize( LCFGComponent * comp ) {
 
@@ -283,7 +313,7 @@ void lcfgcomponent_remove_all_resources( LCFGComponent * comp ) {
 
   unsigned long i;
   for ( i=0; i < comp->buckets; i++ )
-    lcfgcomponent_set_slot( comp, i, NULL );
+    lcfgcomponent_set_bucket( comp, i, NULL );
 
 }
 
@@ -316,7 +346,7 @@ void lcfgcomponent_remove_all_resources( LCFGComponent * comp ) {
  *
  */
 
-void lcfgcomponent_destroy(LCFGComponent * comp) {
+static void lcfgcomponent_destroy(LCFGComponent * comp) {
 
   if ( comp == NULL ) return;
 
@@ -381,6 +411,20 @@ void lcfgcomponent_relinquish(LCFGComponent * comp) {
     lcfgcomponent_destroy(comp);
 
 }
+
+/**
+ * @brief Check if there are multiple references to the component
+ *
+ * The @c LCFGComponent structure supports reference counting - see
+ * @c lcfgcomponent_acquire() and @c lcfgcomponent_relinquish(). This
+ * will return a boolean which indicates if there are multiple
+ * references.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ *
+ * @return Boolean which indicates if there are multiple references
+ *
+ */
 
 bool lcfgcomponent_is_shared( const LCFGComponent * comp ) {
   assert( comp != NULL );
@@ -456,9 +500,23 @@ LCFGMergeRule lcfgcomponent_get_merge_rules( const LCFGComponent * comp ) {
   return comp->merge_rules;
 }
 
-unsigned int lcfgcomponent_size( const LCFGComponent * comp ) {
+/**
+ * @brief Get the number of resources in the component
+ *
+ * Returns the number of @c LCFGResource instances stored in the @c
+ * LCFGComponent. Note that when the primary key is based on both name
+ * and context the component may contain multiple resources with the
+ * same name.
+ *
+ * @param[in] comp Pointer to @c LCFGComponent
+ *
+ * @return Integer number of resources
+ *
+ */
 
-  unsigned int size = 0;
+unsigned long lcfgcomponent_size( const LCFGComponent * comp ) {
+
+  unsigned long size = 0;
 
   /* No point scanning the whole array if there are no entries */
 
@@ -602,14 +660,14 @@ bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name ) {
 /**
  * @brief Clone a component
  *
- * This will create a clone of the specified component. If the @c
- * deep_copy parameter is false then this is a shallow-copy and the
- * resources are shared by the two components. If the @c deep_copy
- * parameter is true then the resources will also be cloned using the
- * @c lcfgresource_clone() function.
+ * This will create a clone of the specified @c LCFGComponent. Note
+ * that the component API supports Copy-On-Write, consequently all the
+ * resources will initially be shared between the two components. To
+ * avoid unexpected 'action at a distance' any modification of the
+ * resources stored in the component will result in them becoming
+ * duplicated so they are no longer shared.
  *
  * @param[in] comp Pointer to @c LCFGComponent to be cloned.
- * @param[in] deep_copy Boolean that controls whether resources are also cloned.
  *
  * @return Pointer to new clone @c LCFGComponent (@c NULL if error occurs)
  *
@@ -668,7 +726,7 @@ LCFGComponent * lcfgcomponent_clone( const LCFGComponent * comp ) {
 /* Use for sorting entries by name */
 struct LCFGComponentEntry {
   const char * name;
-  unsigned int slot;
+  unsigned int bucket;
 };
 
 typedef struct LCFGComponentEntry LCFGComponentEntry;
@@ -678,6 +736,8 @@ static int lcfgcomponent_entry_cmp( const void * a, const void * b ) {
   const char * b_name = ( (const LCFGComponentEntry *) b )->name;
   return strcasecmp( a_name, b_name );
 }
+
+/* Returns a sorted list of resource names along with the associated buckets */
 
 static unsigned int lcfgcomponent_sorted_entries( const LCFGComponent * comp,
                                                   LCFGComponentEntry ** result ) {
@@ -695,7 +755,7 @@ static unsigned int lcfgcomponent_sorted_entries( const LCFGComponent * comp,
 
        unsigned int k = count++;
        entries[k].name = lcfgreslist_get_name(list);
-       entries[k].slot = i;
+       entries[k].bucket = i;
 
      }
    }
@@ -776,9 +836,9 @@ bool lcfgcomponent_print( const LCFGComponent * comp,
   unsigned long i;
   for ( i=0; i<count && ok; i++ ) {
 
-    unsigned int slot = entries[i].slot;
+    unsigned int bucket = entries[i].bucket;
 
-    ok = lcfgreslist_print( resources[slot], comp_name, style, options,
+    ok = lcfgreslist_print( resources[bucket], comp_name, style, options,
                             &buffer, &buf_size, out );
   }
   free(buffer);
@@ -961,6 +1021,9 @@ LCFGStatus lcfgcomponent_to_export( const LCFGComponent * comp,
 
   return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
 }
+
+/* Checks for a resource with the required name, if none is already
+   stored in the hash then the resource will be created and inserted. */
 
 static LCFGChange lcfgcomponent_find_or_create_resource( LCFGComponent * comp,
                                                          const char * name,
@@ -1477,9 +1540,11 @@ LCFGChange lcfgcomponent_to_status_file( const LCFGComponent * comp,
  * the parent @c LCFGComponent is destroyed you would need to
  * call the @c lcfgresource_acquire() function.
  *
+ * If a @c NULL value is specified for the component or the component
+ * is empty then a @c NULL value will be returned.
+ *
  * @param[in] comp Pointer to @c LCFGComponent to be searched
- * @param[in] name The name of the required resource
- * @param[in] all_priorities Search through all resources (not just active)
+ * @param[in] want_name The name of the required resource
  *
  * @return Pointer to an @c LCFGResource (or the @c NULL value).
  *
@@ -1505,13 +1570,11 @@ const LCFGResource * lcfgcomponent_find_resource( const LCFGComponent * comp,
  * it contains a resource with a matching name. Note that the matching
  * is done using strcmp(3) which is case-sensitive.
  * 
- * This uses the @c lcfgcomponent_find_node() function to find the
- * relevant node. If a @c NULL value is specified for the list or the
- * list is empty then a false value will be returned.
+ * If a @c NULL value is specified for the component or the component
+ * is empty then a false value will be returned.
  *
  * @param[in] comp Pointer to @c LCFGComponent to be searched (may be @c NULL)
- * @param[in] name The name of the required resource
- * @param[in] all_priorities Search through all resources (not just active)
+ * @param[in] want_name The name of the required resource
  *
  * @return Boolean value which indicates presence of resource in component
  *
@@ -1578,7 +1641,7 @@ bool lcfgcomponent_has_resource( const LCFGComponent * comp,
  *   - @c LCFG_CHANGE_REPLACED - the current resource was replaced with the new one
  *
  * @param[in] comp Pointer to @c LCFGComponent
- * @param[in] new_res Pointer to @c LCFGResource
+ * @param[in] resource Pointer to @c LCFGResource
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return Integer value indicating type of change
@@ -1594,8 +1657,8 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
 
   const char * name = lcfgresource_get_name(resource);
 
-  unsigned long slot;
-  bool found = lcfgcomponent_find_slot( comp, name, &slot );
+  unsigned long bucket;
+  bool found = lcfgcomponent_find_bucket( comp, name, &bucket );
 
   LCFGChange change = LCFG_CHANGE_NONE;
   if ( !found ) {
@@ -1606,7 +1669,7 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
 
     /* find the existing list or create a new one */
 
-    LCFGResourceList * list = (comp->resources)[slot];
+    LCFGResourceList * list = (comp->resources)[bucket];
     LCFGResourceList * new_list = NULL;
     if ( list == NULL ) {
       new_list = lcfgcomponent_empty_list(comp);
@@ -1622,9 +1685,9 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
       LCFGChange set_rc = LCFG_CHANGE_NONE;
 
       if ( lcfgreslist_is_empty(list) ) { /* remove empty list */
-        set_rc = lcfgcomponent_set_slot( comp, slot, NULL );
+        set_rc = lcfgcomponent_set_bucket( comp, bucket, NULL );
       } else if ( change != LCFG_CHANGE_NONE ) {
-        set_rc = lcfgcomponent_set_slot( comp, slot, list );
+        set_rc = lcfgcomponent_set_bucket( comp, bucket, list );
 
         if ( set_rc == LCFG_CHANGE_ADDED )
           lcfgcomponent_resize(comp);
@@ -1646,8 +1709,8 @@ LCFGChange lcfgcomponent_merge_resource( LCFGComponent * comp,
  * LCFGComponent and merges them to the target component by calling
  * @c lcfgcomponent_merge_resource().
  *
- * @param[in] comp Pointer to @c LCFGComponent
- * @param[in] overrides Pointer to override @c LCFGComponent
+ * @param[in] comp1 Pointer to @c LCFGComponent
+ * @param[in] comp2 Pointer to override @c LCFGComponent
  * @param[out] msg Pointer to any diagnostic messages
  *
  * @return Integer value indicating type of change
@@ -1672,15 +1735,15 @@ LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp1,
 
     const char * name = lcfgreslist_get_name(list2);
 
-    unsigned long slot;
-    bool found = lcfgcomponent_find_slot( comp1, name, &slot );
+    unsigned long bucket;
+    bool found = lcfgcomponent_find_bucket( comp1, name, &bucket );
 
     if ( !found ) {
       lcfgutils_build_message( msg,
                                "No free space for new entries in component" );
       change = LCFG_CHANGE_ERROR;
     } else {
-      LCFGResourceList * list1 = (comp1->resources)[slot];
+      LCFGResourceList * list1 = (comp1->resources)[bucket];
 
       LCFGResourceList * new_list = NULL;
       if ( list1 == NULL ) {
@@ -1697,9 +1760,9 @@ LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp1,
         LCFGChange set_rc = LCFG_CHANGE_NONE;
 
         if ( lcfgreslist_is_empty(list1) ) { /* remove empty list */
-          set_rc = lcfgcomponent_set_slot( comp1, slot, NULL );
+          set_rc = lcfgcomponent_set_bucket( comp1, bucket, NULL );
         } else if ( change != LCFG_CHANGE_NONE ) {
-          set_rc = lcfgcomponent_set_slot( comp1, slot, list1 );
+          set_rc = lcfgcomponent_set_bucket( comp1, bucket, list1 );
 
           if ( set_rc == LCFG_CHANGE_ADDED )
             lcfgcomponent_resize(comp1);
@@ -1720,17 +1783,15 @@ LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp1,
  * @brief Get the list of resource names as a taglist
  *
  * This generates a new @c LCFGTagList which contains a list of
- * resource names for the @c LCFGComponent. If the component is empty
- * then an empty tag list will be returned. Only those resources which
- * are considered to be @e active ( a priority value of zero or
- * greater) will be included unless the @c LCFG_OPT_ALL_PRIORITIES
- * option is specified.  Will return @c NULL if an error occurs.
+ * resource names for the @c LCFGComponent.
+ *
+ * If the component is empty then an empty tag list will be
+ * returned. Will return @c NULL if an error occurs.
  *
  * To avoid memory leaks, when the list is no longer required the 
  * @c lcfgtaglist_relinquish() function should be called.
  *
  * @param[in] comp Pointer to @c LCFGComponent
- * @param[in] options Integer which controls behaviour.
  *
  * @return Pointer to a new @c LCFGTagList of resource names
  *
@@ -1775,13 +1836,9 @@ LCFGTagList * lcfgcomponent_get_resources_as_taglist(const LCFGComponent * comp)
  *
  * This generates a new string which contains a space-separated sorted
  * list of resource names for the @c LCFGComponent. If the component
- * is empty then an empty string will be returned. Only those
- * resources which are considered to be @e active ( a priority value
- * of zero or greater) will be included unless the
- * @c LCFG_OPT_ALL_PRIORITIES option is specified.
+ * is empty then an empty string will be returned.
  *
  * @param[in] comp Pointer to @c LCFGComponent
- * @param[in] options Integer which controls behaviour.
  *
  * @return Pointer to a new string (call @c free(3) when no longer required)
  *
@@ -2249,8 +2306,8 @@ bool lcfgcomponent_update_signature( const LCFGComponent * comp,
   unsigned long i;
   for ( i=0; i<count && ok; i++ ) {
 
-    unsigned int slot = entries[i].slot;
-    const LCFGResourceList * list = resources[slot];
+    unsigned int bucket = entries[i].bucket;
+    const LCFGResourceList * list = resources[bucket];
 
     if ( !lcfgreslist_is_empty(list) ) {
 

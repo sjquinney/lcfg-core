@@ -80,6 +80,12 @@ static const LCFGResource * lcfgreslistiter_next(LCFGResourceListIterator * iter
  * This can be used to create a new @c LCFGComponentIterator for the
  * specified @c LCFGComponent initialised to the start of the list.
  *
+ * By default this will only iterate through the list of currently
+ * active resources, this is typically what is required. Components
+ * support having multiple context-specific versions of resources. To
+ * iterate through all variants of each resource enable the @c
+ * all_priorities option.
+
  * It is allowable to have multiple iterators for each component. Note
  * that doing an in-place sort of the resource list whilst using an
  * iterator could thoroughly upset everything.
@@ -90,7 +96,8 @@ static const LCFGResource * lcfgreslistiter_next(LCFGResourceListIterator * iter
  * To avoid memory leaks, when you no longer require access to the
  * iterator you should call @c lcfgcompiter_destroy().
  *
- * @param[in] list Pointer to @c LCFGComponent
+ * @param[in] comp Pointer to @c LCFGComponent
+ * @param[in] all_priorities Controls iteration through multiple versions of resources
  *
  * @return Pointer to new @c LCFGComponentIterator
  *

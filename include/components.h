@@ -80,7 +80,7 @@ const char * lcfgcomponent_get_name(const LCFGComponent * comp);
 bool lcfgcomponent_set_name( LCFGComponent * comp, char * new_name )
   __attribute__((warn_unused_result));
 
-unsigned int lcfgcomponent_size( const LCFGComponent * comp );
+unsigned long lcfgcomponent_size( const LCFGComponent * comp );
 #define lcfgcomponent_is_empty(COMP) ( COMP == NULL || lcfgcomponent_size(COMP) == 0)
 
 bool lcfgcomponent_print( const LCFGComponent * comp,
