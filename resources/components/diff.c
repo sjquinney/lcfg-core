@@ -1072,10 +1072,7 @@ LCFGChange lcfgcomponent_quickdiff( const LCFGComponent * comp1,
 
     const LCFGResourceList * list = resources2[i];
     if ( !lcfgreslist_is_empty(list) ) {
-
-      const LCFGResource * res2 = lcfgreslist_first_resource(list);
-
-      const char * res2_name = lcfgresource_get_name(res2);
+      const char * res2_name = lcfgreslist_get_name(list);
 
       if ( !lcfgcomponent_has_resource( comp1, res2_name ) )
         status = LCFG_CHANGE_MODIFIED;
