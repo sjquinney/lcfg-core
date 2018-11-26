@@ -1,6 +1,42 @@
-2018-10-26  SVN: new release
+2018-11-26  SVN: new release
 
-	* Release: 1.51.0
+	* Release: 1.51.1
+
+2018-11-26 08:49  squinney@INF.ED.AC.UK
+
+	* xml/resource.c: Only return tag from lcfgxml_process_resource
+	  when resource is 'added', not just for any change
+
+2018-10-26 17:10  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: Tweaked reference counting in
+	  lcfgcomponent_resize so that error case cannot leak memory
+
+2018-10-26 16:01  squinney@INF.ED.AC.UK
+
+	* packages/container.c: Set secure umask for creation of temporary
+	  files used by cpp, fixes CID#1475248
+
+2018-10-26 15:47  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: Fixed minor memory leak issue
+	  with handling of errors in lcfgderivation_from_string, fixes
+	  CID#1475245
+
+2018-10-26 15:42  squinney@INF.ED.AC.UK
+
+	* common/derivation/derivation.c: Improved allocation of memory for
+	  array of line numbers in lcfgderivation_merge_line, fixes
+	  CID#1475243
+
+2018-10-26 15:34  squinney@INF.ED.AC.UK
+
+	* resources/resource.c: Fixed error checking on realloc in
+	  lcfgresource_build_key
+
+2018-10-26 14:01  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.51.0
 
 2018-10-26 13:51  squinney@INF.ED.AC.UK
 
