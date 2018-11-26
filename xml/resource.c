@@ -715,7 +715,7 @@ LCFGStatus lcfgxml_process_resource( xmlTextReaderPtr reader,
                                            "Failed to merge resource: %s",
                                            merge_msg);
 
-      } else if ( rc != LCFG_CHANGE_NONE ) {
+      } else if ( rc == LCFG_CHANGE_ADDED ) {
         /* new resource will not be stashed if previously seen
            something with higher priority */
 
