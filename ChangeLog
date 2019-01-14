@@ -1,6 +1,33 @@
-2018-11-26  SVN: new release
+2019-01-14  SVN: new release
 
-	* Release: 1.51.1
+	* Release: 1.51.2
+
+2019-01-14 17:23  squinney@INF.ED.AC.UK
+
+	* debian/rules: no need for cmake override
+
+2019-01-14 17:20  squinney@INF.ED.AC.UK
+
+	* debian/copyright: tweaked copyright
+
+2019-01-14 17:19  squinney@INF.ED.AC.UK
+
+	* debian, debian/compat, debian/control, debian/copyright,
+	  debian/docs, debian/rules, debian/source, debian/source/format:
+	  Added debian packaging directory
+
+2019-01-14 17:18  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec, lcfg.yml: Tweaked specfile to suit updates to
+	  lcfg build tools
+
+2019-01-14 17:18  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Allow '.' in simple CPP value string
+
+2018-11-26 08:50  squinney@INF.ED.AC.UK
+
+	* ChangeLog, lcfg-build-id.txt, lcfg.yml: lcfg-core release: 1.51.1
 
 2018-11-26 08:49  squinney@INF.ED.AC.UK
 
