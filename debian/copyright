@@ -3,7 +3,7 @@ Upstream-Name: lcfg-core
 Source: https://www.lcfg.org/
 
 Files: *
-Copyright: 2019 Stephen Quinney <squinney@inf.ed.ac.uk>
+Copyright: 2014-2019 Stephen Quinney <squinney@inf.ed.ac.uk>
 License: GPL-2+
 
 Files: debian/*
