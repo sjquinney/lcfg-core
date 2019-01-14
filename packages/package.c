@@ -3791,13 +3791,13 @@ static bool valid_cpp_identifier( const char * name ) {
 
 static bool valid_cpp_simple_value( const char * value ) {
 
-  /* May be an empty string. All characters MUST be in [A-Za-z0-9_] set */
+  /* May be an empty string. All characters MUST be in [A-Za-z0-9_.] set */
 
   bool valid = ( value != NULL );
 
   const char * ptr;
   for ( ptr = value; valid && *ptr != '\0'; ptr++ )
-    if ( !isword(*ptr) ) valid = false;
+    if ( !isword(*ptr) && *ptr != '.' ) valid = false;
 
   return valid;
 }
