@@ -1,0 +1,16 @@
+Source: lcfg-core
+Section: admin
+Priority: optional
+Maintainer: Stephen Quinney <squinney@inf.ed.ac.uk>
+Build-Depends: debhelper (>= 11), cmake, perl (>= 5.16.0)
+Standards-Version: 4.1.3
+Homepage: https://www.lcfg.org/
+Vcs-Svn: https://svn.lcfg.org/svn/source/trunk/lcfg-core
+Vcs-Browser: https://svn.lcfg.org/viewvc/source/trunk/lcfg-core
+
+Package: lcfg-core
+Architecture: all
+Depends: ${misc:Depends}, ${perl:Depends}
+Description: LCFG Core libraries
+ LCFG Core libraries
+

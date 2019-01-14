@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+
+# This is for CMake
+override_dh_auto_configure:
+	dh_auto_configure -- -DPERL_INSTALLDIRS:STRING=vendor
+
