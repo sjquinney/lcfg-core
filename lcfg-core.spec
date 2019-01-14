@@ -2,12 +2,12 @@
 
 Name:           lcfg-core
 Version:        @LCFG_VERSION@
-Release:        @LCFG_RELEASE@
+Release:        1
 Summary:        LCFG Core libraries
 License:        GPLv2
 Group:          LCFG/Components
 Packager:       Stephen Quinney <squinney@inf.ed.ac.uk>
-Source:         %{name}-%{version}.tar.gz
+Source:         %{name}_%{version}.orig.tar.gz
 Provides:       lcfg-utils = %{version}-%{release}
 BuildRequires:  cmake >= 2.6.0, pkgconfig
 BuildRequires:  libxml2-devel
