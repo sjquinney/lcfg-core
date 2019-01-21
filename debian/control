@@ -1,16 +1,36 @@
 Source: lcfg-core
-Section: admin
+Section: libs
 Priority: optional
 Maintainer: Stephen Quinney <squinney@inf.ed.ac.uk>
-Build-Depends: debhelper (>= 11), cmake, perl (>= 5.16.0)
+Build-Depends: debhelper (>= 11), cmake, perl (>= 5.16.0),
+    pkg-config,
+    flex,
+    bison,
+    libdb-dev,
+    libxml2-dev
+Build-Depends-Indep: doxygen-latex, doxygen
 Standards-Version: 4.1.3
 Homepage: https://www.lcfg.org/
 Vcs-Svn: https://svn.lcfg.org/svn/source/trunk/lcfg-core
 Vcs-Browser: https://svn.lcfg.org/viewvc/source/trunk/lcfg-core
 
 Package: lcfg-core
-Architecture: all
-Depends: ${misc:Depends}, ${perl:Depends}
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: LCFG Core libraries
+ LCFG Core libraries
+
+Package: lcfg-core-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends}, lcfg-core (= ${binary:Version})
+Description: LCFG Core libraries (development headers)
+ LCFG Core libraries
+
+Package: lcfg-core-doc
+Section: doc
+Architecture: all
+Depends: ${misc:Depends}
+Description: Documentation for LCFG Core libraries
  LCFG Core libraries
 
