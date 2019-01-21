@@ -1,0 +1,4 @@
+usr/share/pkgconfig/*.pc
+usr/include/lcfg/*.h
+usr/lib/*.a
+usr/lib/*.so
