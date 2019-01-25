@@ -1,5 +1,5 @@
 /**
- * @file resources/iterator.c
+ * @file resources/components/iterator.c
  * @brief Functions for iterating through LCFG resource lists
  * @author Stephen Quinney <squinney@inf.ed.ac.uk>
  * @copyright 2014-2017 University of Edinburgh. All rights reserved. This project is released under the GNU Public License version 2.
