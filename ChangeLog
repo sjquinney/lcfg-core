@@ -1,6 +1,25 @@
 2019-01-29  SVN: new release
 
-	* Release: 1.51.3
+	* Release: 1.51.4
+
+2019-01-29 16:19  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/rpm.c: Provide dummy lcfgpkgset_from_rpm_db
+	  when rpmlib is not available, it will just die with an error
+
+2019-01-29 15:13  squinney@INF.ED.AC.UK
+
+	* pc/CMakeLists.txt, pc/lcfg-packages.pc.in: Fixed handling of
+	  packages dependencies for non-rpm based platforms
+
+2019-01-29 15:09  squinney@INF.ED.AC.UK
+
+	* debian/control: fixed minor typo
+
+2019-01-29 15:07  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.51.3
 
 2019-01-29 15:07  squinney@INF.ED.AC.UK
 
