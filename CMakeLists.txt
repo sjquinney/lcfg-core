@@ -71,6 +71,9 @@ if(BUILD_DOCS)
 
     configure_file(${doxyfile_in} ${doxyfile} @ONLY)
 
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mainpage.md"
+                   "${CMAKE_CURRENT_BINARY_DIR}/mainpage.md" COPYONLY)
+
     add_custom_target(doc
         COMMAND ${DOXYGEN_EXECUTABLE} ${doxyfile}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
