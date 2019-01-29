@@ -33,7 +33,7 @@ Description: LCFG Core libraries (development headers)
  managing the component/resource metadata and package lists. LCFG
  profiles can be read from and written to various different formats.
  .
- This packages provides the headers and libraries required to build
+ This package provides the headers and libraries required to build
  software which uses the LCFG core libraries.
 
 Package: lcfg-core-doc
@@ -46,5 +46,5 @@ Description: Documentation for LCFG Core libraries
  managing the component/resource metadata and package lists. LCFG
  profiles can be read from and written to various different formats.
  .
- This packages provides useful API documentation for writing software
+ This package provides useful API documentation for writing software
  which uses the LCFG core libraries.
