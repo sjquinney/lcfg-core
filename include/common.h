@@ -26,8 +26,9 @@
  * @brief Test for word character
  *
  * Extends the standard alpha-numeric test to include the '_'
- * (underscore) character. This is similar to the @c '\w' in Perl
- * regexps, this gives the set of characters [A-Za-z0-9_]
+ * (underscore) character. This is similar to the "word character"
+ * support in Perl regexps, this gives the set of characters
+ * [A-Za-z0-9_]
  *
  */
 
