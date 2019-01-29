@@ -6,7 +6,7 @@ find_library(RPM_LIBRARY rpm)
 find_library(RPMIO_LIBRARY rpmio)
 
 IF(RPM_LIBRARY AND RPMIO_LIBRARY)
-SET(PACKAGES_DEPS "rpm")
+SET(PACKAGES_DEPS ", rpm")
 ENDIF(RPM_LIBRARY AND RPMIO_LIBRARY)
 
 # Variable to store output files
