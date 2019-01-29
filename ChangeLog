@@ -1,6 +1,59 @@
-2019-01-14  SVN: new release
+2019-01-29  SVN: new release
 
-	* Release: 1.51.2
+	* Release: 1.51.3
+
+2019-01-29 15:07  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt: Ensure mainpage.md is avalable for building docs
+
+2019-01-29 15:06  squinney@INF.ED.AC.UK
+
+	* include/common.h: minor tweak to docs to make doxygen happier
+
+2019-01-29 15:06  squinney@INF.ED.AC.UK
+
+	* debian/control: Improved the package descriptions
+
+2019-01-29 14:25  squinney@INF.ED.AC.UK
+
+	* Doxyfile.in: Removed some deprecated config we don't need
+
+2019-01-29 14:24  squinney@INF.ED.AC.UK
+
+	* debian/rules: Removed building of latex/pdf docs for now, doesn't
+	  work with version of doxygen in debian
+
+2019-01-29 14:24  squinney@INF.ED.AC.UK
+
+	* debian/lcfg-core-doc.docs: lcfg-core-doc package now installs
+	  generated html tree
+
+2019-01-25 16:26  squinney@INF.ED.AC.UK
+
+	* resources/components/iterator.c: Fixed doxygen metadata
+
+2019-01-21 17:58  squinney@INF.ED.AC.UK
+
+	* debian/rules: Added cmake config. Also build docs
+
+2019-01-21 17:57  squinney@INF.ED.AC.UK
+
+	* debian/control: Added sub-packages and build-deps
+
+2019-01-21 17:57  squinney@INF.ED.AC.UK
+
+	* debian/lcfg-core.install: Added list of files for main lcfg-core
+	  package
+
+2019-01-21 17:56  squinney@INF.ED.AC.UK
+
+	* debian/lcfg-core-dev.install: Added list of files for
+	  lcfg-core-dev package
+
+2019-01-14 17:23  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.51.2
 
 2019-01-14 17:23  squinney@INF.ED.AC.UK
 
