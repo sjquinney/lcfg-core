@@ -1393,7 +1393,7 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
   return change;
 }
 
-#ifdef HAVE_RPM
+#ifdef HAVE_RPMLIB
 
 #include <rpm/rpmlib.h>
 #include <rpm/rpmts.h>
@@ -1522,6 +1522,17 @@ LCFGStatus lcfgpkgset_from_rpm_db( const char * rootdir,
   return status;
 }
 
-#endif /* HAVE_RPM */
+#else /* NO RPMLIB SUPPORT */
+
+LCFGStatus lcfgpkgset_from_rpm_db( const char * rootdir,
+                                   LCFGPackageSet ** result,
+                                   char ** msg ) {
+
+  perror("No support for reading RPM DB files on this platform");
+  exit(EXIT_FAILURE);
+
+}
+
+#endif /* HAVE_RPMLIB */
 
 /* eof */
