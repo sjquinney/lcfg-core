@@ -11,4 +11,4 @@ override_dh_auto_configure:
 	dh_auto_configure -- -DCMAKE_INSTALL_PREFIX:PATH=/usr
 
 override_dh_auto_build-indep:
-	cd build && $(MAKE) doc && $(MAKE) -C docs/latex
+	cd build && $(MAKE) doc
