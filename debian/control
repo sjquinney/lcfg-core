@@ -18,19 +18,33 @@ Package: lcfg-core
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: LCFG Core libraries
- LCFG Core libraries
+ This provides all the standard libraries and utilities for the LCFG
+ configuration management framework. This includes support for
+ managing the component/resource metadata and package lists. LCFG
+ profiles can be read from and written to various different formats.
 
 Package: lcfg-core-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends}, lcfg-core (= ${binary:Version})
 Description: LCFG Core libraries (development headers)
- LCFG Core libraries
+ This provides all the standard libraries and utilities for the LCFG
+ configuration management framework. This includes support for
+ managing the component/resource metadata and package lists. LCFG
+ profiles can be read from and written to various different formats.
+ .
+ This packages provides the headers and libraries required to build
+ software which uses the LCFG core libraries.
 
 Package: lcfg-core-doc
 Section: doc
 Architecture: all
 Depends: ${misc:Depends}
 Description: Documentation for LCFG Core libraries
- LCFG Core libraries
-
+ This provides all the standard libraries and utilities for the LCFG
+ configuration management framework. This includes support for
+ managing the component/resource metadata and package lists. LCFG
+ profiles can be read from and written to various different formats.
+ .
+ This packages provides useful API documentation for writing software
+ which uses the LCFG core libraries.
