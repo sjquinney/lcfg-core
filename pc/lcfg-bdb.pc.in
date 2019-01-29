@@ -8,5 +8,6 @@ Name: lcfg-bdb
 Version: @PROJECT_VERSION@
 Description: LCFG profile Berkeley DB handling library
 Requires: lcfg-profile = @PROJECT_VERSION@
-Libs: -L${libdir} -ldb -llcfg_bdb
+Libs: -L${libdir} -llcfg_bdb
+Libs.private: -ldb
 Cflags: -I${includedir}
