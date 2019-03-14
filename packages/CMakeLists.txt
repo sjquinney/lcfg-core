@@ -43,6 +43,10 @@ target_link_libraries(lcfg_packages lcfg_utils)
 add_executable(parse_pkgspec parse_pkgspec.c)
 target_link_libraries(parse_pkgspec lcfg_packages)
 
+configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/parse_pkgspec.pod.cin"
+                "${CMAKE_CURRENT_BINARY_DIR}/parse_pkgspec.pod" @ONLY)
+pod2man("${CMAKE_CURRENT_BINARY_DIR}/parse_pkgspec.pod" ${PROJECT_VERSION} 8 "LCFG/Utils")
+
 add_executable(translaterpmcfg translaterpmcfg.c)
 target_link_libraries(translaterpmcfg lcfg_packages)
 
