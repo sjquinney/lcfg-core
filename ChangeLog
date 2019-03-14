@@ -1,6 +1,28 @@
-2019-01-29  SVN: new release
+2019-03-14  SVN: new release
 
-	* Release: 1.51.4
+	* Release: 1.51.5
+
+2019-03-14 10:25  squinney@INF.ED.AC.UK
+
+	* docs/parse_pkgspec.pod.cin, lcfg.yml, packages/CMakeLists.txt,
+	  packages/parse_pkgspec.pod.cin: Generate manual page from pod for
+	  parse_pkgspec utility
+
+2019-03-14 10:25  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, utils/CMakeLists.txt: Moved pod2man support into
+	  core cmake so it can be reused
+
+2019-01-29 16:39  squinney@INF.ED.AC.UK
+
+	* pc/lcfg-bdb.pc.in, pc/lcfg-xml.pc.in: Tweaked deps on other libs
+	  to reduce unnecessary linking from other libraries (e.g.
+	  LCFG-Core perl modules)
+
+2019-01-29 16:20  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.51.4
 
 2019-01-29 16:19  squinney@INF.ED.AC.UK
 
