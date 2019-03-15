@@ -1,6 +1,17 @@
-2019-03-14  SVN: new release
+2019-03-15  SVN: new release
 
-	* Release: 1.51.5
+	* Release: 1.51.6
+
+2019-03-15 14:45  squinney@INF.ED.AC.UK
+
+	* debian/control, debian/lcfg-core.triggers: activate the
+	  lcfg-rdxprof-restart so that rdxprof is restarted when this
+	  package is updated
+
+2019-03-14 10:36  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.51.5
 
 2019-03-14 10:25  squinney@INF.ED.AC.UK
 

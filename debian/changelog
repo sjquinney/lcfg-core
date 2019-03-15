@@ -1,3 +1,9 @@
+lcfg-core (1.51.6-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Stephen Quinney <squinney@inf.ed.ac.uk>  Fri, 15 Mar 2019 14:45:12 +0000
+
 lcfg-core (1.51.5-1) unstable; urgency=low
 
   * New upstream release
