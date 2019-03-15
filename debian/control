@@ -16,6 +16,7 @@ Vcs-Browser: https://svn.lcfg.org/viewvc/source/trunk/lcfg-core
 
 Package: lcfg-core
 Architecture: any
+Pre-Depends: dpkg (>= 1.16.1)
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: LCFG Core libraries
  This provides all the standard libraries and utilities for the LCFG
