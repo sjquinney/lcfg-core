@@ -96,7 +96,7 @@ LCFGStatus lcfgxml_process_component( xmlTextReaderPtr reader,
       } else {
         xmlChar * nodename  = xmlTextReaderName(reader);
 
-        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line %d whilst processing component.", nodename, nodetype, linenum );
+        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line %d whilst processing '%s' component.", nodename, nodetype, linenum, compname );
 
         xmlFree(nodename);
         nodename = NULL;
@@ -111,13 +111,13 @@ LCFGStatus lcfgxml_process_component( xmlTextReaderPtr reader,
              xmlStrcmp(nodename, BAD_CAST lcfgcomp->name ) == 0 ) {
           done = true; /* Successfully finished this block */
         } else {
-          status = lcfgxml_error( msg, "Unexpected end element '%s' at line %d whilst processing component.", nodename, linenum );
+          status = lcfgxml_error( msg, "Unexpected end element '%s' at line %d whilst processing '%s' component.", nodename, linenum, compname );
         }
 
       } else if ( nodetype != XML_READER_TYPE_WHITESPACE &&
                   nodetype != XML_READER_TYPE_SIGNIFICANT_WHITESPACE ) {
 
-        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line %d whilst processing component.", nodename, nodetype, linenum );
+        status = lcfgxml_error( msg, "Unexpected element '%s' of type %d at line %d whilst processing '%s' component.", nodename, nodetype, linenum, compname );
 
       }
 
@@ -139,7 +139,7 @@ LCFGStatus lcfgxml_process_component( xmlTextReaderPtr reader,
   if ( status == LCFG_STATUS_ERROR ) {
 
     if ( *msg == NULL )
-      lcfgxml_error( msg, "Something bad happened whilst processing component '%s'.", compname );
+      lcfgxml_error( msg, "Something bad happened whilst processing '%s' component.", compname );
 
     lcfgcomponent_relinquish(lcfgcomp);
     lcfgcomp = NULL;
