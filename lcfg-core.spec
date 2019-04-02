@@ -1,4 +1,6 @@
 %global _hardened_build 1
+%global build_docs 1
+%bcond_without docs
 
 Name:           lcfg-core
 Version:        @LCFG_VERSION@
@@ -18,7 +20,10 @@ BuildRequires:  db4-devel
 BuildRequires:  libdb-devel
 %endif
 BuildRequires:  rpm-devel
+
+%if 0%{?with_docs}
 BuildRequires:  doxygen, doxygen-latex
+%endif
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires(post,postun):         /sbin/ldconfig
 
@@ -38,6 +43,7 @@ Provides: lcfg-utils-devel
 This package contains the libraries and header files necessary for
 building software and linking against the LCFG core libraries.
 
+%if 0%{?with_docs}
 %package doc
 BuildArch: noarch
 Group: LCFG/Devel
@@ -47,6 +53,7 @@ Summary: Documentation files for the LCFG core libraries
 This package contains the documentation for the LCFG core
 libraries. The documentation is generated using Doxygen and is
 available as a PDF file or as an HTML tree.
+%endif
 
 %prep
 %setup
@@ -62,14 +69,19 @@ make
 
 # Documentation
 
+%if 0%{?with_docs}
 make doc
 make -C docs/latex
+%endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+
+%if 0%{?with_docs}
 mkdir -p $RPM_BUILD_ROOT/usr/share/doc/
 ln -s lcfg-core-doc-%{version} $RPM_BUILD_ROOT/usr/share/doc/lcfg-core 
+%endif
 
 %post -p /sbin/ldconfig
 
@@ -112,10 +124,12 @@ ln -s lcfg-core-doc-%{version} $RPM_BUILD_ROOT/usr/share/doc/lcfg-core
 %{_libdir}/liblcfg_xml.a
 %{_libdir}/liblcfg_xml.so
 
+%if 0%{?with_docs}
 %files doc
 %doc docs/html
 %doc docs/latex/refman.pdf
 /usr/share/doc/lcfg-core
+%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
