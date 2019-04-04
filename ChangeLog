@@ -1,6 +1,21 @@
-2019-03-15  SVN: new release
+2019-04-04  SVN: new release
 
-	* Release: 1.51.6
+	* Release: 1.51.7
+
+2019-04-02 15:01  squinney@INF.ED.AC.UK
+
+	* lcfg-core.spec: Made it possible to build without generating the
+	  docs, makes for quicker rebuilds
+
+2019-03-18 16:25  squinney@INF.ED.AC.UK
+
+	* xml/components.c: Improved error messages when an unexpected
+	  element is encountered
+
+2019-03-15 14:45  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.51.6
 
 2019-03-15 14:45  squinney@INF.ED.AC.UK
 
