@@ -1528,7 +1528,8 @@ LCFGStatus lcfgpkgset_from_rpm_db( const char * rootdir,
                                    LCFGPackageSet ** result,
                                    char ** msg ) {
 
-  perror("No support for reading RPM DB files on this platform");
+  errno = ENOSYS;
+  perror("lcfgpkgset_from_rpm_db: No support for reading RPM DB files on this platform");
   exit(EXIT_FAILURE);
 
 }
