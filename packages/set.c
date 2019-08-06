@@ -831,6 +831,7 @@ bool lcfgpkgset_print( const LCFGPackageSet * pkgset,
   switch (style)
     {
     case LCFG_PKG_STYLE_RPM:
+    case LCFG_PKG_STYLE_DEB:
       options |= LCFG_OPT_NEWLINE;
       if ( defarch == NULL ) defarch = default_architecture();
       break;

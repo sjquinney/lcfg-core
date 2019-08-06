@@ -258,7 +258,8 @@ typedef enum {
   LCFG_PKG_STYLE_CPP,  /**< LCFG CPP block (as used by updaterpms) */
   LCFG_PKG_STYLE_XML,  /**< LCFG XML block (as used by client/server) */
   LCFG_PKG_STYLE_SUMMARY, /**< qxpack style summary */
-  LCFG_PKG_STYLE_EVAL  /**< Shell variables */
+  LCFG_PKG_STYLE_EVAL, /**< Shell variables */
+  LCFG_PKG_STYLE_DEB   /* Debian package filename */
 } LCFGPkgStyle;
 
 ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,

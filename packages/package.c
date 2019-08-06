@@ -3492,6 +3492,7 @@ bool lcfgpackage_equals( const LCFGPackage * pkg1,
  *   - @c LCFG_PKG_STYLE_XML - uses @c lcfgpackage_to_xml()
  *   - @c LCFG_PKG_STYLE_CPP - uses @c lcfgpackage_to_cpp()
  *   - @c LCFG_PKG_STYLE_RPM - uses @c lcfgpackage_to_rpm_filename()
+ *   - @c LCFG_PKG_STYLE_DEB - uses @c lcfgpackage_to_deb_filename()
  *   - @c LCFG_PKG_STYLE_SPEC - uses @c lcfgpackage_to_spec()
  *   - @c LCFG_PKG_STYLE_SUMMARY - uses @c lcfgpackage_to_summary()
  *
@@ -3550,6 +3551,9 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
     case LCFG_PKG_STYLE_RPM:
       str_func = &lcfgpackage_to_rpm_filename;
       break;
+    case LCFG_PKG_STYLE_DEB:
+      str_func = &lcfgpackage_to_deb_filename;
+      break;
     case LCFG_PKG_STYLE_SPEC:
     default:
       str_func = &lcfgpackage_to_spec;
@@ -3568,6 +3572,7 @@ ssize_t lcfgpackage_to_string( const LCFGPackage * pkg,
  *   - @c LCFG_PKG_STYLE_XML - uses @c lcfgpackage_to_xml()
  *   - @c LCFG_PKG_STYLE_CPP - uses @c lcfgpackage_to_cpp()
  *   - @c LCFG_PKG_STYLE_RPM - uses @c lcfgpackage_to_rpm_filename()
+ *   - @c LCFG_PKG_STYLE_DEB - uses @c lcfgpackage_to_deb_filename()
  *   - @c LCFG_PKG_STYLE_SPEC - uses @c lcfgpackage_to_spec()
  *
  * See the documentation for each function to see which options are
@@ -3593,7 +3598,9 @@ bool lcfgpackage_print( const LCFGPackage * pkg,
   char * lcfgspec = NULL;
   size_t buf_size = 0;
 
-  if ( style == LCFG_PKG_STYLE_RPM || style == LCFG_PKG_STYLE_SPEC )
+  if ( style == LCFG_PKG_STYLE_RPM ||
+       style == LCFG_PKG_STYLE_DEB ||
+       style == LCFG_PKG_STYLE_SPEC )
     options |= LCFG_OPT_NEWLINE;
 
   ssize_t rc = lcfgpackage_to_string( pkg, defarch, style, options,
