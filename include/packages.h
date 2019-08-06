@@ -466,6 +466,9 @@ LCFGChange lcfgpkglist_to_rpmlist( LCFGPackageList * pkglist,
                                    char ** msg )
   __attribute__((warn_unused_result));
 
+ssize_t lcfgpackage_to_deb_filename( LCFG_PKG_TOSTR_ARGS )
+  __attribute__((warn_unused_result));
+
 LCFGPackageList * lcfgpkglist_match( const LCFGPackageList * pkglist,
                                      const char * name,
                                      const char * arch,

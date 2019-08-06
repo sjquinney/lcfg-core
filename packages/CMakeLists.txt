@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.6)
 
 # Generate the packagelib shared library.
 
-set(MY_SOURCES package.c container.c list.c rpm.c iterator.c set.c setiter.c)
+set(MY_SOURCES package.c container.c list.c rpm.c deb.c iterator.c set.c setiter.c)
 
 add_library(lcfg_packages SHARED ${MY_SOURCES})
 
