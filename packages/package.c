@@ -1840,11 +1840,15 @@ bool lcfgpackage_is_active( const LCFGPackage * pkg ) {
 /**
  * @brief Get the full version for the package
  *
- * Combines the version and release strings for the package using a
- * '-' (hyphen) separator to create a new "full version" string. If
- * either of the version or release attributes is empty then the
- * wildcard '*' (asterisk) character will be used. When this string is
- * no longer required it must be freed.
+ * This can be used to create a new "full version" string based on the
+ * @e version and @e release attributes.
+ *
+ * If there is no value for the @e version attribute then the wildcard
+ * '*' asterisk will be used. If there is a value for the @e release
+ * attribute it will be concatenated with the version using a '-'
+ * (hyphen) separator to create a new string. Otherwise a copy of the
+ * version string will be returned. When this string is no longer
+ * required it must be freed.
  *
  * @param[in] pkg Pointer to an @c LCFGPackage
  *
@@ -1856,9 +1860,14 @@ char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
   const char * v = or_default( pkg->version, LCFG_PACKAGE_WILDCARD );
-  const char * r = or_default( pkg->release, LCFG_PACKAGE_WILDCARD );
 
-  char * full_version = lcfgutils_string_join( "-", v, r );
+  /* Debian packages do not have a release field */
+
+  char * full_version = NULL;
+  if ( !isempty(pkg->release) )
+    full_version = lcfgutils_string_join( "-", v, pkg->release );
+  else
+    full_version = strdup(v);
 
   if ( full_version == NULL ) {
     perror( "Failed to build LCFG package full-version string" );
