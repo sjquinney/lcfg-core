@@ -1,6 +1,26 @@
-2019-08-20  SVN: new release
+2019-10-18  SVN: new release
 
-	* Release: 1.52.1
+	* Release: 1.53.0
+
+2019-10-18 11:30  squinney@INF.ED.AC.UK
+
+	* common/context/parser.y: Added support for bison 3.4. This is not
+	  backwards compatible with the version on EL7 and Debian10 so more
+	  thought is required...
+
+2019-10-18 10:05  squinney@INF.ED.AC.UK
+
+	* common/context/parser.y, lcfg.yml: reverted
+
+2019-10-18 09:17  squinney@INF.ED.AC.UK
+
+	* common/context/parser.y: Switched from deprecated name-prefix to
+	  'define api.prefix'
+
+2019-08-20 13:35  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.52.1
 
 2019-08-19 13:59  squinney@INF.ED.AC.UK
 
