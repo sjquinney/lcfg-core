@@ -5,7 +5,7 @@ Maintainer: Stephen Quinney <squinney@inf.ed.ac.uk>
 Build-Depends: debhelper (>= 11), cmake, perl (>= 5.16.0),
     pkg-config,
     flex,
-    bison,
+    bison (>= 3.4.0),
     libdb-dev,
     libxml2-dev
 Build-Depends-Indep: doxygen-latex, doxygen
