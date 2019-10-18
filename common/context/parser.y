@@ -20,7 +20,7 @@
 %parse-param {void * ctxscanner}
 %parse-param {const LCFGContextList * ctxlist}
 %parse-param {int * priority}
-%name-prefix "lcfgctx_yy"
+%define api.prefix {lcfgctx_yy}
 
 %defines "parser.h"
 
