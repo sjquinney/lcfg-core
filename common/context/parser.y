@@ -16,6 +16,7 @@
 }
 
 %define api.pure full
+%define api.header.include {"parser.h"}
 %lex-param {void * ctxscanner}
 %parse-param {void * ctxscanner}
 %parse-param {const LCFGContextList * ctxlist}
@@ -54,7 +55,7 @@
 %%
 
 query:
-  /* empty */       { *priority = 0; }
+  /* empty */        %empty { *priority = 0; }
   | expression      { *priority = $expression; }
   ;
 
