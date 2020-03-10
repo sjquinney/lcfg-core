@@ -1177,3 +1177,48 @@ LCFGPackageSet * lcfgpkgset_match( const LCFGPackageSet * pkgset,
   return result;
 }
 
+LCFGChange lcfgpkgset_from_debian_index( const char * filename,
+                                         LCFGPackageSet ** result,
+                                         LCFGOption options,
+                                         char ** msg ) {
+
+  LCFGPackageSet * pkgs = lcfgpkgset_new();
+
+  /* Allow multiple instances of a name/arch package */
+
+  pkgs->primary_key = LCFG_PKGLIST_PK_NAME | LCFG_PKGLIST_PK_ARCH;
+
+  LCFGMergeRule merge_rules =
+    LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_KEEP_ALL;
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+  if ( !lcfgpkgset_set_merge_rules( pkgs, merge_rules ) ) {
+    change = LCFG_CHANGE_ERROR;
+    lcfgutils_build_message( msg, "Failed to set package merge rules" );
+  } else {
+    LCFGPkgContainer ctr;
+    ctr.set = pkgs;
+
+    change = lcfgpackages_from_debian_index( filename,
+                                             &ctr, LCFG_PKG_CONTAINER_SET,
+                                             options, msg );
+  }
+
+  if ( LCFGChangeOK(change) ) {
+
+    if ( *result == NULL ) {
+      *result = pkgs;
+    } else {
+      change = lcfgpkgset_merge_set( *result, pkgs, msg );
+      lcfgpkgset_relinquish(pkgs);
+    }
+
+  } else {
+    lcfgpkgset_relinquish(pkgs);
+    pkgs = NULL;
+  }
+
+  return change;
+}
+
+/* eof */

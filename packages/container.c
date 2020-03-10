@@ -495,4 +495,170 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
   return change;
 }
 
+LCFGChange lcfgpackages_from_debian_index( const char * filename,
+                                           LCFGPkgContainer * ctr,
+                                           LCFGPkgContainerType ctr_type,
+                                           LCFGOption options,
+                                           char ** msg ) {
+
+  /* Ensure we have a filename and do a simple readability test */
+
+  if ( isempty(filename) ) {
+    lcfgutils_build_message( msg, "Invalid filename" );
+    return LCFG_CHANGE_ERROR;
+  }
+
+  FILE * fp;
+  if ( (fp = fopen(filename, "r")) == NULL ) {
+
+    if (errno == ENOENT) {
+      if ( options&LCFG_OPT_ALLOW_NOEXIST ) {
+        return LCFG_CHANGE_NONE;
+      } else {
+        lcfgutils_build_message( msg, "File does not exist" );
+        return LCFG_CHANGE_ERROR;
+      }
+    } else {
+      lcfgutils_build_message( msg, "File is not readable" );
+      return LCFG_CHANGE_ERROR;
+    }
+
+  }
+
+  /* Setup the getline buffer */
+
+  size_t line_len = 128;
+  char * line = malloc( line_len * sizeof(char) );
+  if ( line == NULL ) {
+    perror( "Failed to allocate memory whilst processing debian index file" );
+    exit(EXIT_FAILURE);
+  }
+
+  /* Process index file
+
+     Select package list merge function - hack to support sets and
+     lists - this generates warnings about pointer types but its
+     perfectly valid code.
+  */
+
+  LCFGChange (*merge_fn)(void *, LCFGPackage *, char **);
+
+  void * pkgs;
+  if ( ctr_type == LCFG_PKG_CONTAINER_SET ) {
+    pkgs = ctr->set;
+    merge_fn = &lcfgpkgset_merge_package;
+  } else {
+    pkgs = ctr->list;
+    merge_fn = &lcfgpkglist_merge_package;
+  }
+
+  LCFGChange change = LCFG_CHANGE_NONE;
+  LCFGPackage * pkg = NULL;
+  char * error_msg = NULL;
+
+  unsigned int cur_line = 0;
+  while( LCFGChangeOK(change) && getline( &line, &line_len, fp ) != -1 ) {
+    cur_line++;
+
+    lcfgutils_string_trim(line);
+
+    if ( isempty(line) ) {
+
+      if ( pkg == NULL )
+        continue;
+
+      /* Merge package into container (set or list) */
+
+      LCFGChange merge_status = (*merge_fn)( pkgs, pkg, &error_msg );
+      if ( LCFGChangeError(merge_status) )
+        change = LCFG_CHANGE_ERROR;
+      else if ( merge_status != LCFG_CHANGE_NONE )
+        change = LCFG_CHANGE_MODIFIED;
+
+      lcfgpackage_relinquish(pkg);
+      pkg = NULL;
+
+    } else {
+
+      if ( pkg == NULL )
+        pkg = lcfgpackage_new();
+
+      /* Only interested in Package/Version/Architecture */
+
+      bool ok = true;
+      char * value = NULL;
+      if ( strncmp( line, "Package: ", 9 ) == 0 ) {
+        value = strdup( line + 9 );
+        ok = lcfgpackage_set_name( pkg, value );
+
+        if (!ok) {
+          error_msg =
+            lcfgpackage_build_message(pkg, "Invalid name '%s'", value );
+        }
+
+      } else if ( strncmp( line, "Version: ", 9 ) == 0 ) {
+        value = strdup( line + 9 );
+        ok = lcfgpackage_set_version( pkg, value );
+
+        if (!ok) {
+          error_msg =
+            lcfgpackage_build_message(pkg, "Invalid version '%s'", value );
+        }
+
+      } else if ( strncmp( line, "Architecture: ", 14 ) == 0 ) {
+        value = strdup( line + 14 );
+        ok = lcfgpackage_set_arch( pkg, value );
+
+        if (!ok) {
+          error_msg =
+            lcfgpackage_build_message(pkg, "Invalid architecture '%s'", value );
+        }
+
+      }
+
+      if (!ok) {
+        change = LCFG_CHANGE_ERROR;
+
+        free(value);
+        lcfgpackage_relinquish(pkg);
+      }
+    }
+    
+  }
+
+  free(line);
+
+  if ( pkg != NULL ) {
+
+    /* Merge package into container (set or list) */
+
+    LCFGChange merge_status = (*merge_fn)( pkgs, pkg, &error_msg );
+    if ( LCFGChangeError(merge_status) )
+      change = LCFG_CHANGE_ERROR;
+    else if ( merge_status != LCFG_CHANGE_NONE )
+      change = LCFG_CHANGE_MODIFIED;
+
+    lcfgpackage_relinquish(pkg);
+    pkg = NULL;
+  }
+
+  fclose(fp);
+
+  /* Issue a useful error message */
+  if ( LCFGChangeError(change) ) {
+
+    if ( error_msg == NULL ) {
+      lcfgutils_build_message( msg, "Error in '%s' at line %u",
+                               filename, cur_line );
+    } else {
+      lcfgutils_build_message( msg, "Error in '%s' at line %u: %s",
+                               filename, cur_line, error_msg );
+    }
+  }
+
+  free(error_msg);
+
+  return change;
+}
+
 /* eof */

@@ -440,6 +440,12 @@ LCFGChange lcfgpkglist_to_rpmcfg( LCFGPackageList * active,
                                   char ** msg )
   __attribute__((warn_unused_result));
 
+LCFGChange lcfgpkglist_from_debian_index( const char * filename,
+                                          LCFGPackageList ** result,
+                                          LCFGOption options,
+                                          char ** msg )
+  __attribute__((warn_unused_result));
+
 LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
                                           LCFGPackage ** result,
                                           char ** msg)
@@ -613,6 +619,12 @@ LCFGChange lcfgpkgset_to_rpmcfg( LCFGPackageSet * active,
 LCFGStatus lcfgpkgset_from_rpm_db( const char * rootdir,
                                    LCFGPackageSet ** result,
                                    char ** msg )
+  __attribute__((warn_unused_result));
+
+LCFGChange lcfgpkgset_from_debian_index( const char * filename,
+                                         LCFGPackageSet ** result,
+                                         LCFGOption options,
+                                         char ** msg )
   __attribute__((warn_unused_result));
 
 LCFGPackageSet * lcfgpkgset_match( const LCFGPackageSet * pkgset,

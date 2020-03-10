@@ -49,6 +49,13 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
                                   char ** msg )
   __attribute__((warn_unused_result));
 
+LCFGChange lcfgpackages_from_debian_index( const char * filename,
+                                           LCFGPkgContainer * ctr,
+                                           LCFGPkgContainerType ctr_type,
+                                           LCFGOption options,
+                                           char ** msg )
+  __attribute__((warn_unused_result));
+
 #endif /* LCFG_CORE_PACKAGES_CONTAINER_H */
 
 /* eof */
