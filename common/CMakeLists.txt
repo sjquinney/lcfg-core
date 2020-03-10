@@ -10,7 +10,14 @@ if(NOT FLEX_FOUND)
   message(FATAL_ERROR "Could not find flex")
 endif(NOT FLEX_FOUND)
 
-BISON_TARGET(CtxParser context/parser.y ${CMAKE_CURRENT_BINARY_DIR}/context_parser.c
+if( ${BISON_VERSION} VERSION_LESS "3.4.0" )
+  set(BISON_MYINPUT "context/parser-legacy.y")
+  message(WARNING "bison version (${BISON_VERSION}) is less than 3.4.0, using legacy parser config")
+else()
+  set(BISON_MYINPUT "context/parser.y")
+endif()
+
+BISON_TARGET(CtxParser ${BISON_MYINPUT} ${CMAKE_CURRENT_BINARY_DIR}/context_parser.c
              COMPILE_FLAGS -Wall)
 FLEX_TARGET(CtxScanner context/lexer.l  ${CMAKE_CURRENT_BINARY_DIR}/context_lexer.c)
 ADD_FLEX_BISON_DEPENDENCY(CtxScanner CtxParser)
