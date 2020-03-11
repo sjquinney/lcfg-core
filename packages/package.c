@@ -37,6 +37,22 @@
 
 #define isnamechr(CHR) ( isword(CHR) || strchr( "-.+", CHR ) != NULL )
 
+/**
+ * @brief Check character is valid for package version
+ *
+ * This permits @c [A-Za-z0-9:.~+-_*?] characters in package names
+ */
+
+#define isverchr(CHR) ( isalnum(CHR) || strchr( ".~_+-:*?", CHR ) != NULL )
+
+/**
+ * @brief Check character is valid for package release/revision
+ *
+ * This permits @c [A-Za-z0-9:.~+-_*?] characters in package names
+ */
+
+#define isrelchr(CHR) ( isalnum(CHR) || strchr( ".~_+*?", CHR ) != NULL )
+
 static LCFGStatus invalid_package( char ** msg, const char * base, ... ) {
 
   const char * fmt = "Invalid package (%s)";
@@ -70,7 +86,7 @@ static LCFGStatus invalid_package( char ** msg, const char * base, ... ) {
    >  Use the package with the greater version
 */
 
-static const char * permitted_prefixes = "?+-=~>";
+static const char * permitted_prefixes = "?+-!~>";
 
 /**
  * @brief Create and initialise a new package
@@ -557,9 +573,10 @@ bool lcfgpackage_set_arch( LCFGPackage * pkg, char * new_arch ) {
  * for an LCFG package version.
  *
  * An LCFG package version MUST be at least one character in length.
- * Characters MUST be in the set @c [a-zA-Z0-9.+~:-] Note that some
+ * Characters MUST be in the set @c [a-zA-Z0-9.+~:-_] Note that some
  * distributions may have stricter rules on how version strings can
- * actually be formatted.
+ * actually be formatted. LCFG also supports the use of * and ? in the
+ * manner of fnmatch(3) in some situations.
  *
  * @param[in] version String to be tested
  *
@@ -574,17 +591,12 @@ bool lcfgpackage_valid_version( const char * version ) {
   bool valid = !isempty(version);
 
   /* Debian allows a-zA-Z0-9 and . ~ : + -
-     Redhat allows a-zA-Z0-9 and . ~ :    */
+     Redhat allows a-zA-Z0-9 and . ~ : _
+   */
 
   const char * ptr;
-  for ( ptr = version; valid && *ptr != '\0'; ptr++ ) {
-    if ( !isalnum(*ptr) &&
-         *ptr != '.'    &&
-         *ptr != '~'    &&
-         *ptr != '+'    && /* Only Debian allows plus */
-         *ptr != '-'    && /* Only Debian allows hyphen */
-         *ptr != ':' ) valid = false;
-  }
+  for ( ptr = version; valid && *ptr != '\0'; ptr++ )
+    if ( !isverchr(*ptr) ) valid = false;
 
   return valid;
 }
@@ -676,9 +688,10 @@ bool lcfgpackage_set_version( LCFGPackage * pkg, char * new_version ) {
  * for an LCFG package release.
  *
  * An LCFG package release MUST be at least one character in
- * length. Characters MUST be in the set @c [a-zA-Z0-9.+~] Note that
+ * length. Characters MUST be in the set @c [a-zA-Z0-9.+~_] Note that
  * some distributions may have stricter rules on how version strings
- * can actually be formatted.  space.
+ * can actually be formatted. LCFG also supports the use of * and ? in
+ * the manner of fnmatch(3) in some situations.
  *
  * @param[in] release String to be tested
  *
@@ -692,15 +705,11 @@ bool lcfgpackage_valid_release( const char * release ) {
 
   bool valid = !isempty(release);
 
-  /* Only allow a-zA-Z0-9 and . ~ + */
+  /* Only allow a-zA-Z0-9 and . ~ + _ * ? */
 
   const char * ptr;
-  for ( ptr = release; valid && *ptr != '\0'; ptr++ ) {
-    if ( !isalnum(*ptr) &&
-         *ptr != '.'    &&
-         *ptr != '~'    &&
-         *ptr != '+' ) valid = false;
-  }
+  for ( ptr = release; valid && *ptr != '\0'; ptr++ )
+    if ( !isrelchr(*ptr) ) valid = false;
 
   return valid;
 }
@@ -795,7 +804,7 @@ bool lcfgpackage_set_release( LCFGPackage * pkg, char * new_release ) {
  * supported prefixes are:
  * 
  *   - @c +  Add package to list, replace any existing package of same name/arch
- *   - @c =  Similar to @c + but "pins" the version so it cannot be overridden
+ *   - @c !  Similar to @c + but "pins" the version so it cannot be overridden
  *   - @c -  Remove any package from list which matches this name/arch
  *   - @c ?  Replace any existing package in list which matches this name/arch
  *   - @c ~  Add package to list if name/arch is not already present
@@ -2070,7 +2079,7 @@ static bool walk_backwards_until( const char * input, size_t * len,
  *     may be a '*' wildcard.
  *   - @b Release - required - must not contain a hyphen or whitespace,
  *     may be a '*' wildcard.
- *   - @b Prefix - optional - single character in @c [+-?=~] 
+ *   - @b Prefix - optional - single character in @c [?+-=~>] 
  *   - @b Flags - optional - must match @c [a-zA-Z0-9]
  *   - @b Context - optional - The contexts for which the package is
  *     applicable, must be valid according to the
@@ -2127,9 +2136,9 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
   /* Secondary Architecture - optional
 
    If used this is at the front of the string and is separated from
-   the name using a '/' (forward slash). If we find a '-' (hyphen) we
-   give up as that is likely to be the separator between name and
-   version.
+   the name using a '/' (forward slash). If we find a '-' (hyphen) or
+   '=' (equals) we give up as that is likely to be the separator
+   between name and version.
 
    This value will get handled when the primary architecture is found.
 
@@ -2182,7 +2191,8 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
 
    Whilst walking backwards to search for the separator this will give
    up if a '/' (forward slash - the arch separator) or '-' (hyphen -
-   version/release separator) character is found.
+   version/release separator) or '=' (equals - name/version separator)
+   character is found.
 
   */
 
@@ -2212,7 +2222,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
  */
 
   char * arch2 = NULL;
-  walk_backwards_until( start, &len, '/', NULL, &arch2 );
+  walk_backwards_until( start, &len, '/', "-", &arch2 );
 
   if ( pkg_arch == NULL ) {
     pkg_arch = arch2;
