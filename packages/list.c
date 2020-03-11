@@ -1335,6 +1335,30 @@ LCFGChange lcfgpkglist_eval_priority( const LCFGPackageList * pkglist,
   return result;
 }
 
+/**
+ * @brief Read packages from Debian Packages index file
+ *
+ * This creates a new @c LCFGPackageList from the contents of a Debian
+ * Packages file which is typically used as an index for an apt
+ * package repository. Note that there is no support for uncompressing
+ * the file.
+ *
+ * An error is returned if the file does not exist unless the
+ * @c LCFG_OPT_ALLOW_NOEXIST option is specified. If the file exists
+ * but is empty then an empty @c LCFGPackageList is returned.
+ *
+ * To avoid memory leaks, when the package list is no longer required
+ * the @c lcfgpkglist_relinquish() function should be called.
+ *
+ * @param[in] filename Path to Packages file
+ * @param[out] result Reference to pointer for new @c LCFGPackageList
+ * @param[in] options Controls the behaviour of the process.
+ * @param[out] msg Pointer to any diagnostic messages.
+ *
+ * @return Status value indicating success of the process
+ *
+ */
+
 LCFGChange lcfgpkglist_from_debian_index( const char * filename,
                                           LCFGPackageList ** result,
                                           LCFGOption options,
