@@ -611,37 +611,37 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 
   if ( merge_rules&LCFG_MERGE_RULE_USE_PREFIX ) {
 
-    char cur_prefix = cur_pkg != NULL ? cur_pkg->prefix : '\0';
+    char cur_prefix = cur_pkg != NULL ? cur_pkg->prefix : LCFG_PACKAGE_PREFIX_NONE;
     char new_prefix = new_pkg->prefix;
 
-    if ( new_prefix != '\0' ) {
+    if ( new_prefix != LCFG_PACKAGE_PREFIX_NONE ) {
 
       switch(new_prefix)
 	{
-	case '-':
+	case LCFG_PACKAGE_PREFIX_REMOVE:
 	  remove_old = true;
 	  accept     = true;
 	  break;
-	case '+':
-	case '!':
+	case LCFG_PACKAGE_PREFIX_ADD:
+	case LCFG_PACKAGE_PREFIX_PIN:
 	  remove_old = true;
 	  append_new = true;
 	  accept     = true;
 	  break;
-	case '~':
+	case LCFG_PACKAGE_PREFIX_ANY:
 	  if ( cur_pkg == NULL ) {
             append_new = true;
           }
 	  accept = true;
 	  break;
-	case '?':
-	  if ( cur_pkg != NULL && cur_prefix != '!' ) {
+	case LCFG_PACKAGE_PREFIX_UPDATE:
+	  if ( cur_pkg != NULL && cur_prefix != LCFG_PACKAGE_PREFIX_PIN ) {
 	    remove_old = true;
 	    append_new = true;
 	  }
 	  accept = true;
 	  break;
-        case '>':
+        case LCFG_PACKAGE_PREFIX_MIN:
           if ( cur_pkg == NULL ||
                lcfgpackage_compare_versions( new_pkg, cur_pkg ) > 0 ) {
               remove_old = true;
@@ -659,7 +659,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
          effect when a version already exists (e.g. '~') */
 
       if ( remove_old && cur_pkg != NULL ) {
-        if ( cur_prefix == '!' ) {
+        if ( cur_prefix == LCFG_PACKAGE_PREFIX_PIN ) {
           remove_old = false;
           append_new = false;
           accept = false;

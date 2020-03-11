@@ -121,7 +121,7 @@ LCFGPackage * lcfgpackage_new(void) {
   pkg->context    = NULL;
   pkg->derivation = NULL;
   pkg->category   = NULL;
-  pkg->prefix     = '\0';
+  pkg->prefix     = LCFG_PACKAGE_PREFIX_NONE;
   pkg->priority   = 0;
   pkg->_refcount  = 1;
 
@@ -835,7 +835,7 @@ bool lcfgpackage_valid_prefix( char prefix ) {
 bool lcfgpackage_has_prefix( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
-  return ( pkg->prefix != '\0' );
+  return ( pkg->prefix != LCFG_PACKAGE_PREFIX_NONE );
 }
 
 /**
@@ -871,7 +871,7 @@ char lcfgpackage_get_prefix( const LCFGPackage * pkg ) {
 bool lcfgpackage_clear_prefix( LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
-  pkg->prefix = '\0';
+  pkg->prefix = LCFG_PACKAGE_PREFIX_NONE;
   return true;
 }
 
@@ -2400,7 +2400,7 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
 
   /* prefix can be disabled */
 
-  char pkgpfx = '\0';
+  char pkgpfx = LCFG_PACKAGE_PREFIX_NONE;
   if ( !(options&LCFG_OPT_NOPREFIX) &&
        lcfgpackage_has_prefix(pkg) ) {
 
@@ -2474,7 +2474,7 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   char * to = *result;
 
   /* optional prefix */
-  if ( pkgpfx != '\0' ) {
+  if ( pkgpfx != LCFG_PACKAGE_PREFIX_NONE ) {
     *to = pkgpfx;
     to++;
   }
