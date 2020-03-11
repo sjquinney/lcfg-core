@@ -1284,6 +1284,57 @@ LCFGPackage * lcfgpkglist_first_package( const LCFGPackageList * pkglist ) {
   return first;
 }
 
+/**
+ * @brief Evaluate the priority for all packages for a list of contexts
+ *
+ * This will evaluate and update the value of the @e priority
+ * attribute for all the LCFG packages using the value set for the @e
+ * context attribute (if any) and the list of LCFG contexts passed in
+ * as an argument. The priority is evaluated using @c
+ * lcfgpackage_eval_priority().
+ *
+ * The default value for the priority is zero, if the package is
+ * applicable for the specified list of contexts the priority will be
+ * positive otherwise it will be negative.
+ *
+ * If the priority is successfully changed for any package the @c
+ * LCFG_CHANGE_MODIFIED value is returned, if nothing changes @c
+ * LCFG_CHANGE_NONE is returned, if an error occurs then @c
+ * LCFG_CHANGE_ERROR is returned.
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackageList
+ * @param[in] ctxlist List of LCFG contexts
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Integer value indicating type of change
+ *
+ */
+
+LCFGChange lcfgpkglist_eval_priority( const LCFGPackageList * pkglist,
+                                      const LCFGContextList * ctxlist,
+                                      char ** msg ) {
+
+  if ( lcfgslist_is_empty(pkglist) ) return LCFG_CHANGE_NONE;
+
+  LCFGChange result = LCFG_CHANGE_NONE;
+
+  const LCFGSListNode * cur_node = NULL;
+  for ( cur_node = lcfgslist_head(pkglist);
+        cur_node != NULL && LCFGChangeOK(result);
+        cur_node = lcfgslist_next(cur_node) ) {
+
+    LCFGPackage * pkg = lcfgslist_data(cur_node);
+
+    LCFGChange pkg_change = lcfgpackage_eval_priority( pkg, ctxlist, msg );
+
+    if ( pkg_change != LCFG_CHANGE_NONE )
+      result = pkg_change;
+
+  }
+
+  return result;
+}
+
 LCFGChange lcfgpkglist_from_debian_index( const char * filename,
                                           LCFGPackageList ** result,
                                           LCFGOption options,

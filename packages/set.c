@@ -528,19 +528,12 @@ LCFGChange lcfgpkgset_merge_set( LCFGPackageSet * pkgset1,
 
     if (pkglist_for_name) {
 
-      char * merge_msg = NULL;
       LCFGChange merge_rc = lcfgpkgset_merge_list( pkgset1,
                                                    pkglist_for_name,
-                                                   &merge_msg );
+                                                   msg );
 
-      if ( merge_rc == LCFG_CHANGE_ERROR ) {
-        change = LCFG_CHANGE_ERROR;
-        lcfgutils_build_message( msg, "Merge failure: %s", merge_msg );
-      } else if ( merge_rc != LCFG_CHANGE_NONE ) {
+      if ( LCFGChangeOK(merge_rc) && merge_rc != LCFG_CHANGE_NONE )
         change = LCFG_CHANGE_MODIFIED;
-      }
-
-      free(merge_msg);
 
     }
 
@@ -1054,7 +1047,7 @@ LCFGChange lcfgpkgset_from_pkgsfile( const char * filename,
   pkgs->primary_key = LCFG_PKGLIST_PK_NAME | LCFG_PKGLIST_PK_ARCH | LCFG_PKGLIST_PK_CTX;
 
   LCFGMergeRule merge_rules =
-    LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_USE_PREFIX;
+    LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_KEEP_ALL;
 
   LCFGChange change = LCFG_CHANGE_NONE;
   if ( !lcfgpkgset_set_merge_rules( pkgs, merge_rules ) ) {
@@ -1128,9 +1121,9 @@ LCFGPackageSet * lcfgpkgset_match( const LCFGPackageSet * pkgset,
   result->merge_rules =
     LCFG_MERGE_RULE_SQUASH_IDENTICAL | LCFG_MERGE_RULE_KEEP_ALL;
 
-  LCFGPackageList ** packages = pkgset->packages;
-
   if ( lcfgpkgset_is_empty(pkgset) ) return result;
+
+  LCFGPackageList ** packages = pkgset->packages;
 
   /* Run the search */
 
@@ -1172,6 +1165,59 @@ LCFGPackageSet * lcfgpkgset_match( const LCFGPackageSet * pkgset,
   if ( !ok ) {
     lcfgpkgset_destroy(result);
     result = NULL;
+  }
+
+  return result;
+}
+
+/**
+ * @brief Evaluate the priority for all packages for a list of contexts
+ *
+ * This will evaluate and update the value of the @e priority
+ * attribute for all the LCFG packages using the value set for the @e
+ * context attribute (if any) and the list of LCFG contexts passed in
+ * as an argument. The priority is evaluated using @c
+ * lcfgpackage_eval_priority().
+ *
+ * The default value for the priority is zero, if the package is
+ * applicable for the specified list of contexts the priority will be
+ * positive otherwise it will be negative.
+ *
+ * If the priority is successfully changed for any package the @c
+ * LCFG_CHANGE_MODIFIED value is returned, if nothing changes @c
+ * LCFG_CHANGE_NONE is returned, if an error occurs then @c
+ * LCFG_CHANGE_ERROR is returned.
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackageSet
+ * @param[in] ctxlist List of LCFG contexts
+ * @param[out] msg Pointer to any diagnostic messages
+ *
+ * @return Integer value indicating type of change
+ *
+ */
+
+LCFGChange lcfgpkgset_eval_priority( const LCFGPackageSet * pkgset,
+                                     const LCFGContextList * ctxlist,
+                                     char ** msg ) {
+
+  if ( lcfgpkgset_is_empty(pkgset) ) return LCFG_CHANGE_NONE;
+
+  LCFGPackageList ** packages = pkgset->packages;
+
+  LCFGChange result = LCFG_CHANGE_NONE;
+
+  unsigned long i;
+  for ( i=0; i<pkgset->buckets && LCFGChangeOK(result); i++ ) {
+
+    if ( packages[i] ) {
+
+      LCFGChange list_change =
+        lcfgpkglist_eval_priority( packages[i], ctxlist, msg );
+
+      if ( list_change != LCFG_CHANGE_NONE )
+        result = list_change;
+    }
+
   }
 
   return result;

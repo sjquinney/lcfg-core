@@ -1780,22 +1780,26 @@ bool lcfgpackage_set_priority( LCFGPackage * pkg, int new_prio ) {
  * applicable for the specified list of contexts the priority will be
  * positive otherwise it will be negative.
  *
+ * If the priority is successfully changed the @c LCFG_CHANGE_MODIFIED
+ * value is returned, if nothing changes @c LCFG_CHANGE_NONE is
+ * returned, if an error occurs then @c LCFG_CHANGE_ERROR is returned.
+ *
  * @param[in] pkg Pointer to an @c LCFGPackage
  * @param[in] ctxlist List of LCFG contexts
  * @param[out] msg Pointer to any diagnostic messages
  *
- * @return boolean indicating success
+ * @return Integer value indicating type of change
  *
  */
 
-bool lcfgpackage_eval_priority( LCFGPackage * pkg,
-                                const LCFGContextList * ctxlist,
-				char ** msg ) {
+LCFGChange lcfgpackage_eval_priority( LCFGPackage * pkg,
+                                      const LCFGContextList * ctxlist,
+                                      char ** msg ) {
   assert( pkg != NULL );
 
   bool ok = true;
 
-  int priority = 0;
+  int new_priority = 0;
   if ( !isempty(pkg->context) ) {
 
     /* Calculate the priority using the context expression for this
@@ -1803,14 +1807,22 @@ bool lcfgpackage_eval_priority( LCFGPackage * pkg,
 
     ok = lcfgctxlist_eval_expression( ctxlist,
                                       pkg->context,
-                                      &priority, msg );
+                                      &new_priority, msg );
 
   }
 
-  if (ok)
-    ok = lcfgpackage_set_priority( pkg, priority );
+  LCFGChange change = LCFG_CHANGE_NONE;
+  if (ok) {
+    if ( new_priority != pkg->priority ) {
+      change = LCFG_CHANGE_MODIFIED;
+      ok = lcfgpackage_set_priority( pkg, new_priority );
+    }
+  }
 
-  return ok;
+  if (!ok)
+    change = LCFG_CHANGE_ERROR;
+
+  return change;
 }
 
 /**

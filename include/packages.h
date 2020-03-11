@@ -206,9 +206,9 @@ bool lcfgpackage_set_priority( LCFGPackage * pkg, int priority )
 
 bool lcfgpackage_is_active( const LCFGPackage * pkg );
 
-bool lcfgpackage_eval_priority( LCFGPackage * pkg,
-                                const LCFGContextList * ctxlist,
-				char ** msg )
+LCFGChange lcfgpackage_eval_priority( LCFGPackage * pkg,
+                                      const LCFGContextList * ctxlist,
+                                      char ** msg )
   __attribute__((warn_unused_result));
 
 char * lcfgpackage_full_version( const LCFGPackage * pkg );
@@ -482,6 +482,11 @@ LCFGPackageList * lcfgpkglist_match( const LCFGPackageList * pkglist,
                                      const char * ver,
                                      const char * rel );
 
+LCFGChange lcfgpkglist_eval_priority( const LCFGPackageList * pkglist,
+                                      const LCFGContextList * ctxlist,
+                                      char ** msg )
+  __attribute__((warn_unused_result));
+
 /**
  * @brief Simple iterator for package lists
  */
@@ -632,6 +637,11 @@ LCFGPackageSet * lcfgpkgset_match( const LCFGPackageSet * pkgset,
                                    const char * want_arch,
                                    const char * want_ver,
                                    const char * want_rel );
+
+LCFGChange lcfgpkgset_eval_priority( const LCFGPackageSet * pkgset,
+                                     const LCFGContextList * ctxlist,
+                                     char ** msg )
+  __attribute__((warn_unused_result));
 
 /**
  * @brief Iterator for package sets

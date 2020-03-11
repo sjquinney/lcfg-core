@@ -485,7 +485,7 @@ LCFGStatus lcfgxml_process_packages( xmlTextReaderPtr reader,
 
 	char * eval_msg = NULL;
         if ( !lcfgpackage_has_context(pkg) ||
-             lcfgpackage_eval_priority( pkg, ctxlist, &eval_msg ) ) {
+             lcfgpackage_eval_priority( pkg, ctxlist, &eval_msg ) != LCFG_CHANGE_ERROR ) {
 
           LCFGChange rc;
           char * merge_msg = NULL;
