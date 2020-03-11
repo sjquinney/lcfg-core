@@ -556,8 +556,10 @@ bool lcfgpackage_set_arch( LCFGPackage * pkg, char * new_arch ) {
  * Checks the contents of a specified string against the specification
  * for an LCFG package version.
  *
- * An LCFG package version MUST be at least one character in length. The
- * version string must NOT contain a '-' (hyphen) or white space.
+ * An LCFG package version MUST be at least one character in length.
+ * Characters MUST be in the set @c [a-zA-Z0-9.+~:-] Note that some
+ * distributions may have stricter rules on how version strings can
+ * actually be formatted.
  *
  * @param[in] version String to be tested
  *
@@ -571,12 +573,18 @@ bool lcfgpackage_valid_version( const char * version ) {
 
   bool valid = !isempty(version);
 
-  /* It is not entirely clear exactly which characters are allowed but
-     it is necessary to forbid '-' (hyphen) and any whitespace */
+  /* Debian allows a-zA-Z0-9 and . ~ : + -
+     Redhat allows a-zA-Z0-9 and . ~ :    */
 
   const char * ptr;
-  for ( ptr = version; valid && *ptr != '\0'; ptr++ )
-    if ( *ptr == '-' || isspace(*ptr) ) valid = false;
+  for ( ptr = version; valid && *ptr != '\0'; ptr++ ) {
+    if ( !isalnum(*ptr) &&
+         *ptr != '.'    &&
+         *ptr != '~'    &&
+         *ptr != '+'    && /* Only Debian allows plus */
+         *ptr != '-'    && /* Only Debian allows hyphen */
+         *ptr != ':' ) valid = false;
+  }
 
   return valid;
 }
@@ -668,8 +676,9 @@ bool lcfgpackage_set_version( LCFGPackage * pkg, char * new_version ) {
  * for an LCFG package release.
  *
  * An LCFG package release MUST be at least one character in
- * length. The version string must NOT contain a '-' (hyphen) or white
- * space.
+ * length. Characters MUST be in the set @c [a-zA-Z0-9.+~] Note that
+ * some distributions may have stricter rules on how version strings
+ * can actually be formatted.  space.
  *
  * @param[in] release String to be tested
  *
@@ -678,8 +687,22 @@ bool lcfgpackage_set_version( LCFGPackage * pkg, char * new_version ) {
  */
 
 bool lcfgpackage_valid_release( const char * release ) {
-  /* Currently the same rules as for version strings */
-  return lcfgpackage_valid_version(release);
+
+  /* Must be at least one character long. */
+
+  bool valid = !isempty(release);
+
+  /* Only allow a-zA-Z0-9 and . ~ + */
+
+  const char * ptr;
+  for ( ptr = release; valid && *ptr != '\0'; ptr++ ) {
+    if ( !isalnum(*ptr) &&
+         *ptr != '.'    &&
+         *ptr != '~'    &&
+         *ptr != '+' ) valid = false;
+  }
+
+  return valid;
 }
 
 /**
