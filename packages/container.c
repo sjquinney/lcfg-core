@@ -591,7 +591,9 @@ LCFGChange lcfgpackages_from_debian_index( const char * filename,
         value = strdup( line + 9 );
         ok = lcfgpackage_set_name( pkg, value );
 
-        if (!ok) {
+        if (ok) {
+          value = NULL;
+        } else {
           error_msg =
             lcfgpackage_build_message(pkg, "Invalid name '%s'", value );
         }
@@ -600,7 +602,9 @@ LCFGChange lcfgpackages_from_debian_index( const char * filename,
         value = strdup( line + 9 );
         ok = lcfgpackage_set_version( pkg, value );
 
-        if (!ok) {
+        if (ok) {
+          value = NULL;
+        } else {
           error_msg =
             lcfgpackage_build_message(pkg, "Invalid version '%s'", value );
         }
@@ -609,7 +613,9 @@ LCFGChange lcfgpackages_from_debian_index( const char * filename,
         value = strdup( line + 14 );
         ok = lcfgpackage_set_arch( pkg, value );
 
-        if (!ok) {
+        if (ok) {
+          value = NULL;
+        } else {
           error_msg =
             lcfgpackage_build_message(pkg, "Invalid architecture '%s'", value );
         }
