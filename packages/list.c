@@ -503,7 +503,7 @@ ue
  * the conflict. This can be one of the following:
  *
  *   - @c +  Add package to list, replace any existing package of same name/arch
- *   - @c =  Similar to @c + but "pins" the version so it cannot be overridden
+ *   - @c !  Similar to @c + but "pins" the version so it cannot be overridden
  *   - @c -  Remove any package from list which matches this name/arch
  *   - @c ?  Replace existing package in list which matches this name/arch if not pinned
  *   - @c ~  Add package to list if name/arch is not already present
@@ -623,7 +623,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 	  accept     = true;
 	  break;
 	case '+':
-	case '=':
+	case '!':
 	  remove_old = true;
 	  append_new = true;
 	  accept     = true;
@@ -635,7 +635,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
 	  accept = true;
 	  break;
 	case '?':
-	  if ( cur_pkg != NULL && cur_prefix != '=' ) {
+	  if ( cur_pkg != NULL && cur_prefix != '!' ) {
 	    remove_old = true;
 	    append_new = true;
 	  }
@@ -659,7 +659,7 @@ LCFGChange lcfgpkglist_merge_package( LCFGPackageList * pkglist,
          effect when a version already exists (e.g. '~') */
 
       if ( remove_old && cur_pkg != NULL ) {
-        if ( cur_prefix == '=' ) {
+        if ( cur_prefix == '!' ) {
           remove_old = false;
           append_new = false;
           accept = false;
