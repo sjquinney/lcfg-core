@@ -626,7 +626,10 @@ LCFGChange lcfgpackages_from_debian_index( const char * filename,
         change = LCFG_CHANGE_ERROR;
 
         free(value);
+
         lcfgpackage_relinquish(pkg);
+        pkg = NULL;
+
       }
     }
     
