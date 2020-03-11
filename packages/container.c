@@ -445,7 +445,7 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
       if ( LCFGChangeError(merge_status) )
         change = LCFG_CHANGE_ERROR;
       else if ( merge_status != LCFG_CHANGE_NONE )
-	change = LCFG_CHANGE_MODIFIED;
+        change = LCFG_CHANGE_MODIFIED;
     }
 
     /* Issue a useful error message */
