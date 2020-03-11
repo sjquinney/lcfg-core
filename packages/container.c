@@ -599,7 +599,13 @@ LCFGChange lcfgpackages_from_debian_index( const char * filename,
         }
 
       } else if ( strncmp( line, "Version: ", 9 ) == 0 ) {
-        value = strdup( line + 9 );
+        char * ver_start = line + 9;
+        char * sep = strrchr( ver_start, '-' );
+        if ( sep == NULL )
+          value = strdup( ver_start );
+        else
+          value = strndup( ver_start, sep - ver_start );
+
         ok = lcfgpackage_set_version( pkg, value );
 
         if (ok) {
@@ -609,6 +615,22 @@ LCFGChange lcfgpackages_from_debian_index( const char * filename,
             lcfgpackage_build_message(pkg, "Invalid version '%s'", value );
         }
 
+        /* Release is optional for Debian (native) packages */
+
+        if ( sep != NULL ) {
+          value = strdup( sep + 1 );
+
+          ok = lcfgpackage_set_release( pkg, value );
+
+          if (ok) {
+            value = NULL;
+          } else {
+            error_msg =
+              lcfgpackage_build_message(pkg, "Invalid release '%s'", value );
+          }
+
+        }
+        
       } else if ( strncmp( line, "Architecture: ", 14 ) == 0 ) {
         value = strdup( line + 14 );
         ok = lcfgpackage_set_arch( pkg, value );
