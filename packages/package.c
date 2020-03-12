@@ -2420,7 +2420,7 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
 
   /* Calculate the required space */
 
-  /* name, version and release always have values */
+  /* name and version always have values */
 
   const char * pkgnam = pkg->name;
   size_t pkgnamlen    = strlen(pkgnam);
@@ -2428,11 +2428,20 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   const char * pkgver = or_default( pkg->version, LCFG_PKG_WILDCARD );
   size_t pkgverlen    = strlen(pkgver);
 
-  const char * pkgrel = or_default( pkg->release, LCFG_PKG_WILDCARD );
-  size_t pkgrellen    = strlen(pkgrel);
+  size_t new_len = pkgnamlen + pkgverlen + 1; /* +1 for '-' or '=' separator */
 
-  /* +2 for the two '-' separators */
-  size_t new_len = pkgnamlen + pkgverlen + pkgrellen + 2;
+  /* Release field is optional in 'modern' style but required otherwise */
+
+  const char * pkgrel = pkg->release;
+  size_t pkgrellen    = 0;
+
+  if ( !(options&LCFG_OPT_NEW) && isempty(pkgrel) )
+    pkgrel = LCFG_PKG_WILDCARD;
+
+  if ( !isempty(pkgrel) ) {
+    pkgrellen = strlen(pkgrel);
+    new_len += ( pkgrellen + 1 ); /* +1 for '-' separator */
+  }
 
   /* prefix can be disabled */
 
@@ -2446,25 +2455,23 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
 
   const char * pkgarch = NULL;
   size_t pkgarchlen = 0;
-  bool arch_compat = false;
+
+  /* No support for compatibility in 'modern' style */
+  bool arch_compat = (options&LCFG_OPT_COMPAT) && !(options&LCFG_OPT_NEW);
 
   if ( lcfgpackage_has_arch(pkg) ) {
 
     /* Not added to the spec when same as default architecture */
 
-    bool needs_arch = false;
-    if ( isempty(defarch) ) {
-      needs_arch = true;
-    } else if ( strcmp( pkg->arch, defarch ) != 0 ) {
-      needs_arch = true;
-      arch_compat = ( options&LCFG_OPT_COMPAT &&
-                      strcmp( pkg->arch, "noarch" ) != 0 );
-    }
-
-    if ( needs_arch ) {
+    if ( isempty(defarch) || strcmp( pkg->arch, defarch ) != 0 ) {
       pkgarch = pkg->arch;
       pkgarchlen = strlen(pkgarch);
       new_len += ( pkgarchlen + 1 ); /* +1 for '/' separator */
+
+      /* Special case: 'noarch' is not affected by compat mode */
+      if ( arch_compat && strcmp( pkg->arch, "noarch" ) == 0 )
+        arch_compat = false;
+
     }
 
   }
@@ -2538,11 +2545,13 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   /* version */
   to = stpncpy( to, pkgver, pkgverlen );
 
-  *to = '-';
-  to++;
-
   /* release */
-  to = stpncpy( to, pkgrel, pkgrellen );
+  if ( pkgrellen > 0 ) {
+    *to = '-';
+    to++;
+
+    to = stpncpy( to, pkgrel, pkgrellen );
+  }
 
   /* arch */
   if ( pkgarch != NULL && !arch_compat ) {
