@@ -2068,8 +2068,11 @@ static bool walk_backwards_until( const char * input, size_t * len,
  * @brief Create a new package from a string
  *
  * This parses an LCFG package specification as a string and creates a
- * new @c LCFGPackage. The specification is expected to be of the
- * following form: @c PrefixArch2/Name-Version-Release/Arch1:Flags[Context]
+ * new @c LCFGPackage. The specification is expected to be in one of the
+ * following forms:
+ *
+ *   - @c PrefixArch2/Name=Version-Release/Arch1:Flags[Context]
+ *   - @c PrefixArch2/Name-Version-Release/Arch1:Flags[Context]
  *
  *   - @b Name - required - must match @c [A-Za-z][A-Za-z0-9_]*
  *   - @b Architecture - optional - must match @c [a-zA-Z0-9_-]+ - for
@@ -2243,52 +2246,78 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
 
   }
 
-  /* Release - required
+  /* Release and Version */
 
-     This is separated from the version field using a '-' (hyphen) character.
-  */
-
+  char * pkg_version = NULL;
   char * pkg_release = NULL;
-  walk_backwards_until( start, &len, '-', NULL, &pkg_release );
 
-  if ( pkg_release == NULL ) {
-    ok = false;
-    invalid_package( msg, "failed to extract release" );
-    goto failure;
-  } else {
+  char * vr = NULL;
+  walk_backwards_until( start, &len, '=', NULL, &vr );
 
-    ok = lcfgpackage_set_release( pkg, pkg_release );
+  if ( vr != NULL ) { /* Modern specification style is name=version */
+    pkg_version = vr;
 
-    if (!ok) {
-      invalid_package( msg, "bad release '%s'", pkg_release );
-      free(pkg_release);
-      pkg_release = NULL;
+    char * vr_sep = strrchr( vr, '-' );
+
+    if ( vr_sep != NULL ) {
+      const char * rel_start = vr_sep + 1;
+
+      if ( !isempty(rel_start) )
+        pkg_release = strdup(rel_start);
+
+      *vr_sep = '\0';
+    }
+
+  } else { /* Legacy style */
+
+    /* Release - required
+
+       This is separated from the version field using a '-' (hyphen) character.
+    */
+
+    walk_backwards_until( start, &len, '-', NULL, &pkg_release );
+
+    if ( pkg_release == NULL ) {
+      ok = false;
+      invalid_package( msg, "failed to extract release" );
+      goto failure;
+    }
+
+    /* Version - required
+
+       This is separated from the version and name fields using a '-'
+       (hyphen) character.
+    */
+
+    walk_backwards_until( start, &len, '-', NULL, &pkg_version );
+
+    if ( pkg_version == NULL ) {
+      ok = false;
+      invalid_package( msg, "failed to extract version" );
       goto failure;
     }
 
   }
 
-  /* Version - required
-
-     This is separated from the version and name fields using a '-'
-     (hyphen) character.
- */
-
-  char * pkg_version = NULL;
-  walk_backwards_until( start, &len, '-', NULL, &pkg_version );
-
-  if ( pkg_version == NULL ) {
-    ok = false;
-    invalid_package( msg, "failed to extract version" );
-    goto failure;
-  } else {
-
+  if ( !isempty(pkg_version) ) {
     ok = lcfgpackage_set_version( pkg, pkg_version );
 
     if (!ok) {
       invalid_package( msg, "bad version '%s'", pkg_version );
       free(pkg_version);
       pkg_version = NULL;
+      goto failure;
+    }
+
+  }
+
+  if ( !isempty(pkg_release) ) {
+    ok = lcfgpackage_set_release( pkg, pkg_release );
+
+    if (!ok) {
+      invalid_package( msg, "bad release '%s'", pkg_release );
+      free(pkg_release);
+      pkg_release = NULL;
       goto failure;
     }
 
