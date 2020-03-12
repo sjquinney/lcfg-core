@@ -2376,6 +2376,13 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
  *   - @c LCFG_OPT_NOCONTEXT - Do not include any context information.
  *   - @c LCFG_OPT_NEWLINE - Add a newline at the end of the string.
  *   - @c LCFG_OPT_COMPAT - Put arch before name if not default or noarch
+ *   - @c LCFG_OPT_LEGACY - Generate a legacy style specification
+ *   - @c LCFG_OPT_NEW - Generate a modern style specification
+ *
+ * When the modern style is enabled the separator between the name and
+ * version parts of the specification is an @c '=' (equals sign)
+ * rather than the legacy-style @c '-' (hyphen). The modern style
+ * allows version strings to contain hyphens.
  *
  * This function uses a string buffer which may be pre-allocated if
  * nececesary to improve efficiency. This makes it possible to reuse
@@ -2519,7 +2526,13 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   /* name */
   to = stpncpy( to, pkgnam, pkgnamlen );
 
-  *to = '-';
+  /* Name / Version separator */
+
+  if (options&LCFG_OPT_NEW)
+    *to = '=';
+  else
+    *to = '-';
+
   to++;
 
   /* version */
