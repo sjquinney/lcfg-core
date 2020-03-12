@@ -1,6 +1,100 @@
-2019-10-18  SVN: new release
+2020-03-12  SVN: new release
 
-	* Release: 1.53.1
+	* Release: 1.54.0
+
+2020-03-12 10:58  squinney@INF.ED.AC.UK
+
+	* include/common.h, lcfg.yml, packages/package.c: Added support for
+	  emitting package specifications in the modern or
+	  legacy styles. Currently the legacy style is the standard but it
+	  is
+	  now considered to be deprecated and the standard style is likely
+	  to
+	  change once we drop support for SL7.
+
+2020-03-12 10:35  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/package.c: Added support for parsing a new
+	  style of package specification of the
+	  form name=version. This is necessary to support Debian package
+	  versions which may contain multiple hyphens and also native
+	  packages
+	  which do not have a release field.
+
+2020-03-12 09:11  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/ex/search.c,
+	  packages/list.c, packages/package.c: Standardised package cpp
+	  macro namespace to be LCFG_PKG_
+
+2020-03-11 15:50  squinney@INF.ED.AC.UK
+
+	* packages/list.c, packages/package.c: Introduced macros for
+	  package prefixes to make the code more readable
+
+2020-03-11 15:13  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Tidied how the version and release strings
+	  are validated
+
+2020-03-11 14:57  squinney@INF.ED.AC.UK
+
+	* packages/list.c: Prefix for pinning package versions has been
+	  changed from '=' to '!', this is not actively being used so
+	  nothing will break.
+
+2020-03-11 13:34  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/package.c: Tweaked the rules for validating
+	  package version and release strings to add support for Debian
+	  packages
+
+2020-03-11 13:20  squinney@INF.ED.AC.UK
+
+	* packages/container.c: Added support for extracting the
+	  revision/release from the Debian package version string
+
+2020-03-11 12:12  squinney@INF.ED.AC.UK
+
+	* packages/container.c: Still chasing double-free
+
+2020-03-11 12:06  squinney@INF.ED.AC.UK
+
+	* packages/container.c: Avoid double-free on value parameter
+
+2020-03-11 11:42  squinney@INF.ED.AC.UK
+
+	* packages/container.c: Tweaked indentation for clarity
+
+2020-03-11 09:59  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/list.c, packages/set.c: Documented new
+	  from_debian_index functions
+
+2020-03-11 09:53  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/list.c, packages/package.c,
+	  packages/set.c, xml/packages.c: Added support for applying a
+	  context change to a set of packages. This changes the signature
+	  for lcfgpackage_eval_priority to return the type of change rather
+	  than just success/fail
+
+2020-03-10 15:57  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/container.c,
+	  packages/container.h, packages/list.c, packages/set.c: Added
+	  support for reading a Debian packages index file
+
+2020-03-10 15:56  squinney@INF.ED.AC.UK
+
+	* common/CMakeLists.txt, common/context/parser-legacy.y: A better
+	  solution for the bison API change. The cmake file will now check
+	  the version and use the legacy config where necessary
+
+2019-10-18 11:43  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.53.1
 
 2019-10-18 11:43  squinney@INF.ED.AC.UK
 
