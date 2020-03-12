@@ -1,6 +1,24 @@
 2020-03-12  SVN: new release
 
-	* Release: 1.54.0
+	* Release: 1.54.1
+
+2020-03-12 13:57  squinney@INF.ED.AC.UK
+
+	* lcfg.yml, packages/package.c: When emitting a package spec in the
+	  modern style there is no support
+	  for the old "compatibility" style of putting the architecture
+	  before
+	  the package name. That was only required for the old mkxprof
+	  code.
+	  
+	  Also for the modern style there is no need to emit a wildcard for
+	  the
+	  release when it has no value set.
+
+2020-03-12 10:59  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.54.0
 
 2020-03-12 10:58  squinney@INF.ED.AC.UK
 
