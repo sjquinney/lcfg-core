@@ -121,7 +121,7 @@ LCFGPackage * lcfgpackage_new(void) {
   pkg->context    = NULL;
   pkg->derivation = NULL;
   pkg->category   = NULL;
-  pkg->prefix     = LCFG_PACKAGE_PREFIX_NONE;
+  pkg->prefix     = LCFG_PKG_PREFIX_NONE;
   pkg->priority   = 0;
   pkg->_refcount  = 1;
 
@@ -835,7 +835,7 @@ bool lcfgpackage_valid_prefix( char prefix ) {
 bool lcfgpackage_has_prefix( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
-  return ( pkg->prefix != LCFG_PACKAGE_PREFIX_NONE );
+  return ( pkg->prefix != LCFG_PKG_PREFIX_NONE );
 }
 
 /**
@@ -871,7 +871,7 @@ char lcfgpackage_get_prefix( const LCFGPackage * pkg ) {
 bool lcfgpackage_clear_prefix( LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
-  pkg->prefix = LCFG_PACKAGE_PREFIX_NONE;
+  pkg->prefix = LCFG_PKG_PREFIX_NONE;
   return true;
 }
 
@@ -1903,7 +1903,7 @@ bool lcfgpackage_is_active( const LCFGPackage * pkg ) {
 char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
   assert( pkg != NULL );
 
-  const char * v = or_default( pkg->version, LCFG_PACKAGE_WILDCARD );
+  const char * v = or_default( pkg->version, LCFG_PKG_WILDCARD );
 
   /* Debian packages do not have a release field */
 
@@ -2389,10 +2389,10 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   const char * pkgnam = pkg->name;
   size_t pkgnamlen    = strlen(pkgnam);
 
-  const char * pkgver = or_default( pkg->version, LCFG_PACKAGE_WILDCARD );
+  const char * pkgver = or_default( pkg->version, LCFG_PKG_WILDCARD );
   size_t pkgverlen    = strlen(pkgver);
 
-  const char * pkgrel = or_default( pkg->release, LCFG_PACKAGE_WILDCARD );
+  const char * pkgrel = or_default( pkg->release, LCFG_PKG_WILDCARD );
   size_t pkgrellen    = strlen(pkgrel);
 
   /* +2 for the two '-' separators */
@@ -2400,7 +2400,7 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
 
   /* prefix can be disabled */
 
-  char pkgpfx = LCFG_PACKAGE_PREFIX_NONE;
+  char pkgpfx = LCFG_PKG_PREFIX_NONE;
   if ( !(options&LCFG_OPT_NOPREFIX) &&
        lcfgpackage_has_prefix(pkg) ) {
 
@@ -2474,7 +2474,7 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   char * to = *result;
 
   /* optional prefix */
-  if ( pkgpfx != LCFG_PACKAGE_PREFIX_NONE ) {
+  if ( pkgpfx != LCFG_PKG_PREFIX_NONE ) {
     *to = pkgpfx;
     to++;
   }
@@ -3067,14 +3067,14 @@ ssize_t lcfgpackage_to_xml( LCFG_PKG_TOSTR_ARGS ) {
 
   /* Version - required */
 
-  const char * version = or_default( pkg->version, LCFG_PACKAGE_WILDCARD );
+  const char * version = or_default( pkg->version, LCFG_PKG_WILDCARD );
   size_t ver_len = strlen(version);
 
   new_len += ( ver_len + 7 ); /* <v></v> */
 
   /* Release - required (and possibly architecture) */
 
-  const char * release = or_default( pkg->release, LCFG_PACKAGE_WILDCARD );
+  const char * release = or_default( pkg->release, LCFG_PKG_WILDCARD );
   size_t rel_len = strlen(release);
 
   new_len += ( rel_len + 7 ); /* <r></r> */
@@ -3267,7 +3267,7 @@ bool lcfgpackage_match( const LCFGPackage * pkg,
 
   /* Allows wildcard matching on the architecture */
 
-  if ( match && strcmp( arch, LCFG_PACKAGE_WILDCARD ) != 0 ) {
+  if ( match && strcmp( arch, LCFG_PKG_WILDCARD ) != 0 ) {
     const char * pkg_arch = or_default( pkg->arch, "" );
     match = ( strcmp( pkg_arch, arch ) == 0 );
   }
@@ -3296,8 +3296,8 @@ int compare_vstrings( const char * v1, const char * v2 ) {
 
   } else {
 
-    bool v1_iswild  = ( strcmp( v1, LCFG_PACKAGE_WILDCARD ) == 0 );
-    bool v2_iswild  = ( strcmp( v2, LCFG_PACKAGE_WILDCARD ) == 0 );
+    bool v1_iswild  = ( strcmp( v1, LCFG_PKG_WILDCARD ) == 0 );
+    bool v2_iswild  = ( strcmp( v2, LCFG_PKG_WILDCARD ) == 0 );
 
     /* wild compares as "less than" any non-wild value */
 

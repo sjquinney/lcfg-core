@@ -98,7 +98,7 @@ static void lcfgpkglist_destroy_match( LCFGPackageMatch * match ) {
 inline static bool lcfgpkglist_match_required( const char * expr ) {
   return ( expr  != NULL &&
            *expr != '\0' &&
-           strcmp( expr, LCFG_PACKAGE_WILDCARD ) != 0 );
+           strcmp( expr, LCFG_PKG_WILDCARD ) != 0 );
 }
 
 LCFGPackageList * lcfgpkglist_search( const LCFGPackageList * pkglist,

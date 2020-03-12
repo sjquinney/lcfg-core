@@ -21,8 +21,8 @@
 
 const char * default_architecture(void);
 
-#define LCFG_PACKAGE_NOVALUE ""
-#define LCFG_PACKAGE_WILDCARD "*"
+#define LCFG_PKG_NOVALUE ""
+#define LCFG_PKG_WILDCARD "*"
 
 /**
  * @brief A structure to represent an LCFG Package
@@ -102,6 +102,14 @@ bool lcfgpackage_set_release( LCFGPackage * pkg, char * new_value )
   __attribute__((warn_unused_result));
 
 /* Prefix */
+
+#define LCFG_PKG_PREFIX_NONE   '\0'
+#define LCFG_PKG_PREFIX_ADD    '+'
+#define LCFG_PKG_PREFIX_REMOVE '-'
+#define LCFG_PKG_PREFIX_UPDATE '?'
+#define LCFG_PKG_PREFIX_PIN    '!'
+#define LCFG_PKG_PREFIX_ANY    '~'
+#define LCFG_PKG_PREFIX_MIN    '>' 
 
 bool lcfgpackage_valid_prefix( char prefix )
   __attribute__((const));
