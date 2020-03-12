@@ -31,7 +31,7 @@ find_library(RPM_LIBRARY rpm)
 find_library(RPMIO_LIBRARY rpmio)
 
 if(RPM_LIBRARY AND RPMIO_LIBRARY)
-add_definitions(-DHAVE_RPM)
+add_definitions(-DHAVE_RPMLIB)
 target_link_libraries(lcfg_packages ${RPM_LIBRARY} ${RPMIO_LIBRARY})
 endif(RPM_LIBRARY AND RPMIO_LIBRARY)
 
