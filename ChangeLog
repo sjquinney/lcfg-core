@@ -1,6 +1,21 @@
-2020-03-12  SVN: new release
+2020-03-13  SVN: new release
 
-	* Release: 1.54.2
+	* Release: 1.54.3
+
+2020-03-13 12:05  squinney@INF.ED.AC.UK
+
+	* include/packages.h, lcfg.yml, packages/package.c: Added support
+	  for extracting the epoch from the version string with an
+	  lcfgpackage_get_epoch function. Also improved the comparison of
+	  versions to take into account of epochs and use a better
+	  algorithm when rpmlib is not available. Ideally we would provide
+	  a way to select the algorithm at run time and default to the
+	  "best" for the current platform.
+
+2020-03-12 18:39  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.54.2
 
 2020-03-12 18:27  squinney@INF.ED.AC.UK
 
