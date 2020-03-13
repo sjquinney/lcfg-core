@@ -641,6 +641,55 @@ const char * lcfgpackage_get_version( const LCFGPackage * pkg ) {
   return pkg->version;
 }
 
+static unsigned long int extract_epoch( const char * version,
+                                        char ** vstart ) {
+
+  unsigned long int epoch = 0;
+
+  char * endptr = NULL;
+  epoch = strtoul( version, &endptr, 10 );
+
+  /* Epoch is only valid if followed by a colon */
+  if ( endptr != version && *endptr == ':' ) {
+
+    if ( vstart != NULL )
+      *vstart = endptr + 1;
+
+  } else {
+    epoch = 0;
+
+    if ( vstart != NULL )
+      *vstart = version;
+
+  }
+
+  return epoch;
+}
+
+/**
+ * @brief Get the epoch for the package
+ *
+ * This returns the value of the epoch part of the @e version
+ * parameter for the @c LCFGPackage. An epoch is a series of integers
+ * followed by a @c ':' (colon) character at the start of the version
+ * string. If the package does not currently have a @e version then a
+ * value of zero will be returned.
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackage
+ *
+ * @return The integer epoch for the package.
+ */
+
+unsigned long int lcfgpackage_get_epoch( const LCFGPackage * pkg ) {
+
+  unsigned long int epoch = 0;
+
+  if ( !isempty(pkg->version) )
+    epoch = extract_epoch( pkg->version, NULL );
+
+  return epoch;
+}
+
 /**
  * @brief Set the version for the package
  *
@@ -1905,7 +1954,7 @@ char * lcfgpackage_full_version( const LCFGPackage * pkg ) {
 
   const char * v = or_default( pkg->version, LCFG_PKG_WILDCARD );
 
-  /* Debian packages do not have a release field */
+  /* Debian native packages do not have a release field */
 
   char * full_version = NULL;
   if ( !isempty(pkg->release) )
@@ -3326,6 +3375,78 @@ bool lcfgpackage_match( const LCFGPackage * pkg,
   return match;
 }
 
+/**
+ * Give a weight to the character to order in the version comparison.
+ *
+ * Based on Debian dpkg code (from lib/dpkg/version.c) with minor
+ * tweaks. License is GPL-2 so is compatible with our code.
+ *
+ * @param c An ASCII character.
+ */
+
+static int
+order(int c)
+{
+	if (isdigit(c))
+		return 0;
+	else if (isalpha(c))
+		return c;
+	else if (c == '~')
+		return -1;
+	else if (c)
+		return c + 256;
+	else
+		return 0;
+}
+
+/*
+ * Based on Debian dpkg code (from lib/dpkg/version.c) with minor
+ * tweaks. License is GPL-2 so is compatible with our code.
+ */
+
+static int
+debvercmp(const char *a, const char *b)
+{
+	if (a == NULL)
+		a = "";
+	if (b == NULL)
+		b = "";
+
+	while (*a || *b) {
+		int first_diff = 0;
+
+		while ((*a && !isdigit(*a)) || (*b && !isdigit(*b))) {
+			int ac = order(*a);
+			int bc = order(*b);
+
+			if (ac != bc)
+				return ac - bc;
+
+			a++;
+			b++;
+		}
+		while (*a == '0')
+			a++;
+		while (*b == '0')
+			b++;
+		while (isdigit(*a) && isdigit(*b)) {
+			if (!first_diff)
+				first_diff = *a - *b;
+			a++;
+			b++;
+		}
+
+		if (isdigit(*a))
+			return 1;
+		if (isdigit(*b))
+			return -1;
+		if (first_diff)
+			return first_diff;
+	}
+
+	return 0;
+}
+
 int compare_vstrings( const char * v1, const char * v2 ) {
 
   bool v1_isempty = isempty(v1);
@@ -3367,14 +3488,14 @@ int compare_vstrings( const char * v1, const char * v2 ) {
 #ifdef HAVE_RPMLIB
       result = rpmvercmp( v1, v2 );
 #else
-      result = strcmp( v1, v2 );
+      result = debvercmp( v1, v2 );
 #endif
 
     }
 
   }
 
-  return result;
+  return ( result > 0 ? 1 : ( result < 0 ? -1 : 0 ) );
 }
 
 /**
@@ -3389,7 +3510,7 @@ int compare_vstrings( const char * v1, const char * v2 ) {
  *   - Empty is "less than" non-empty
  *   - Wild is "less than" non-empty non-wild
  *   - When rpmlib is available the @c rpmvercmp() function is used
- *   - Fall back to simple @c strcmp(3)
+ *   - Fall back to a comparison based on that used by dpkg.
  *
  * @param[in] pkg1 Pointer to @c LCFGPackage
  * @param[in] pkg2 Pointer to @c LCFGPackage
@@ -3403,7 +3524,24 @@ int lcfgpackage_compare_versions( const LCFGPackage * pkg1,
   assert( pkg1 != NULL );
   assert( pkg2 != NULL );
 
-  int result = compare_vstrings( pkg1->version, pkg2->version );
+  char * v1 = pkg1->version;
+
+  unsigned long int epoch1 = 0;
+  if ( !isempty(v1) )
+    epoch1 = extract_epoch( v1, &v1 );
+
+  char * v2 = pkg2->version;
+
+  unsigned long int epoch2 = 0;
+  if ( !isempty(v2) )
+    epoch2 = extract_epoch( v2, &v2 );
+
+  if (epoch1 > epoch2)
+    return 1;
+  else if (epoch1 < epoch2)
+    return -1;
+
+  int result = compare_vstrings( v1, v2 );
 
   if ( result == 0 )
     result = compare_vstrings( pkg1->release, pkg2->release );
