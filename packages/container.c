@@ -642,6 +642,20 @@ LCFGChange lcfgpackages_from_debian_index( const char * filename,
             lcfgpackage_build_message(pkg, "Invalid architecture '%s'", value );
         }
 
+      } else if ( strncmp( line, "Filename: ", 10 ) == 0 ) {
+
+        /* ok, ok, this is a hack. I really needed to store the
+           location of the package file and I did not want to add yet
+           another field to the package struct just for this case. */
+
+        const char * filename = line + 10; /* copy not required */
+        ok = lcfgpackage_set_derivation_as_string( pkg, filename );
+
+        if (!ok) {
+          error_msg =
+            lcfgpackage_build_message(pkg, "Invalid filename '%s'", filename );
+        }
+
       }
 
       if (!ok) {
