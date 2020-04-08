@@ -72,6 +72,12 @@ ssize_t lcfgpackage_to_deb_filename( LCFG_PKG_TOSTR_ARGS ) {
   size_t pkgnamlen    = strlen(pkgnam);
 
   const char * pkgver = lcfgpackage_get_version(pkg);
+
+  /* Step beyond any epoch */
+  const char * epoch_colon = strchr( pkgver, ':' );
+  if ( epoch_colon != NULL )
+    pkgver = epoch_colon + 1;
+
   size_t pkgverlen    = strlen(pkgver);
 
   const char * pkgarch;
