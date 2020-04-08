@@ -1,6 +1,26 @@
-2020-03-13  SVN: new release
+2020-04-08  SVN: new release
 
-	* Release: 1.54.3
+	* Release: 1.54.4
+
+2020-04-08 18:12  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Fixed parsing of modern package spec where
+	  there is no release/revision field
+
+2020-04-08 16:02  squinney@INF.ED.AC.UK
+
+	* packages/container.c: Store the location of the package file when
+	  scanning a debian package repository index.
+
+2020-04-08 12:54  squinney@INF.ED.AC.UK
+
+	* packages/deb.c, packages/rpm.c: Avoid including the epoch in the
+	  generated file name for deb and RPM packages
+
+2020-03-13 12:05  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.54.3
 
 2020-03-13 12:05  squinney@INF.ED.AC.UK
 
