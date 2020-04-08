@@ -2197,7 +2197,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
   */
 
   char * pkg_arch = NULL;
-  walk_forwards_until( &start, '/', "-", &pkg_arch );
+  walk_forwards_until( &start, '/', "-=", &pkg_arch );
 
   /* Find the end of the string, ignoring any trailing whitespace */
 
@@ -2249,7 +2249,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
   */
 
   char * pkg_flags = NULL;
-  walk_backwards_until( start, &len, ':', "/-", &pkg_flags );
+  walk_backwards_until( start, &len, ':', "/-=", &pkg_flags );
 
   if ( pkg_flags != NULL ) {
 
@@ -2274,7 +2274,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
  */
 
   char * arch2 = NULL;
-  walk_backwards_until( start, &len, '/', "-", &arch2 );
+  walk_backwards_until( start, &len, '/', "-=", &arch2 );
 
   if ( pkg_arch == NULL ) {
     pkg_arch = arch2;
