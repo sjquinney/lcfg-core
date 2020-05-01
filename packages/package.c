@@ -2249,7 +2249,7 @@ LCFGStatus lcfgpackage_from_spec( const char * input,
   */
 
   char * pkg_flags = NULL;
-  walk_backwards_until( start, &len, ':', "/-=", &pkg_flags );
+  walk_backwards_until( start, &len, ':', "/-=.~_+-*?", &pkg_flags );
 
   if ( pkg_flags != NULL ) {
 
