@@ -1,6 +1,17 @@
-2020-04-08  SVN: new release
+2020-05-15  SVN: new release
 
-	* Release: 1.54.4
+	* Release: 1.54.5
+
+2020-05-01 11:18  squinney@INF.ED.AC.UK
+
+	* packages/package.c: Further minor improvements to parsing of
+	  flags so we can handle packages with an epoch but no
+	  release/revision field
+
+2020-04-08 18:15  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.54.4
 
 2020-04-08 18:12  squinney@INF.ED.AC.UK
 
