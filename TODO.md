@@ -18,6 +18,19 @@ Merge rules support for components in perl
 
 Add rpmlist and package fetch support with curl.
 
+Functions for clearing package attributes for: arch, version, release,
+context, derivation, category. Note that name cannot be unset.
+
+Support for setting default architecture on a list or set
+
+Support for setting list of allowed architectures for list or set
+
+Convert to 'container' model: from_rpmlist, from_rpm_dir, from_rpm_db
+
+Add support for failure modes to lcfgpkglist_merge_list and all
+callers: immediate (default) and continue. Also come up with some way
+to collect all errors in 'continue' mode
+
 ## Resources
 
 tags - add unique, add set functions - union, difference, intersection
