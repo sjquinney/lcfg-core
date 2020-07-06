@@ -464,12 +464,12 @@ LCFGStatus lcfgpackage_from_rpm_filename( const char * input,
 ssize_t lcfgpackage_to_rpm_filename( LCFG_PKG_TOSTR_ARGS )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgpkglist_from_rpm_dir( const char * rpmdir,
+LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
                                      LCFGPackageList ** result,
                                      char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgpkglist_from_rpmlist( const char * filename,
+LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
                                      LCFGPackageList ** result,
                                      LCFGOption options,
                                      char ** msg )
@@ -586,13 +586,13 @@ bool lcfgpkgset_print( const LCFGPackageSet * pkgset,
                        FILE * out )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgpkgset_from_rpmlist( const char * filename,
+LCFGStatus lcfgpkgset_from_rpmlist( const char * filename,
                                      LCFGPackageSet ** result,
                                      LCFGOption options,
                                      char ** msg )
   __attribute__((warn_unused_result));
 
-LCFGChange lcfgpkgset_from_rpm_dir( const char * rpmdir,
+LCFGStatus lcfgpkgset_from_rpm_dir( const char * rpmdir,
                                     LCFGPackageSet ** result,
                                     char ** msg )
   __attribute__((warn_unused_result));
