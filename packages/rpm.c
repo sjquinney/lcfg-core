@@ -581,7 +581,7 @@ LCFGChange lcfgpkgset_to_rpmlist( LCFGPackageSet * pkgset,
  *
  */
 
-LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
+LCFGChange lcfgpkglist_from_rpm_dir( const char * rpmdir,
                                      LCFGPackageList ** result,
                                      char ** msg ) {
 
@@ -589,7 +589,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
 
   if ( isempty(rpmdir) ) {
     lcfgutils_build_message( msg, "Invalid RPM directory" );
-    return LCFG_STATUS_ERROR;
+    return LCFG_CHANGE_ERROR;
   }
 
   DIR * dir;
@@ -601,7 +601,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
       lcfgutils_build_message( msg, "Directory is not readable" );
     }
 
-    return LCFG_STATUS_ERROR;
+    return LCFG_CHANGE_ERROR;
   }
 
   /* Results */
@@ -674,7 +674,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
     }
   }
 
-  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+  return ( ok ? LCFG_CHANGE_MODIFIED : LCFG_CHANGE_ERROR );
 }
 
 /**
@@ -701,7 +701,7 @@ LCFGStatus lcfgpkglist_from_rpm_dir( const char * rpmdir,
  *
  */
 
-LCFGStatus lcfgpkgset_from_rpm_dir( const char * rpmdir,
+LCFGChange lcfgpkgset_from_rpm_dir( const char * rpmdir,
                                     LCFGPackageSet ** result,
                                     char ** msg ) {
 
@@ -709,7 +709,7 @@ LCFGStatus lcfgpkgset_from_rpm_dir( const char * rpmdir,
 
   if ( isempty(rpmdir) ) {
     lcfgutils_build_message( msg, "Invalid RPM directory" );
-    return LCFG_STATUS_ERROR;
+    return LCFG_CHANGE_ERROR;
   }
 
   DIR * dir;
@@ -721,7 +721,7 @@ LCFGStatus lcfgpkgset_from_rpm_dir( const char * rpmdir,
       lcfgutils_build_message( msg, "Directory is not readable" );
     }
 
-    return LCFG_STATUS_ERROR;
+    return LCFG_CHANGE_ERROR;
   }
 
   /* Results */
@@ -794,7 +794,7 @@ LCFGStatus lcfgpkgset_from_rpm_dir( const char * rpmdir,
     }
   }
 
-  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+  return ( ok ? LCFG_CHANGE_OK : LCFG_CHANGE_ERROR );
 }
 
 /**
@@ -827,7 +827,7 @@ LCFGStatus lcfgpkgset_from_rpm_dir( const char * rpmdir,
  *
  */
 
-LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
+LCFGChange lcfgpkglist_from_rpmlist( const char * filename,
                                      LCFGPackageList ** result,
                                      LCFGOption options,
                                      char ** msg ) {
@@ -836,17 +836,18 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
 
   if ( isempty(filename) ) {
     lcfgutils_build_message( msg, "Invalid filename" );
-    return LCFG_STATUS_ERROR;
+    return LCFG_CHANGE_ERROR;
   }
 
   FILE * fp;
   if ( (fp = fopen(filename, "r")) == NULL ) {
-    LCFGStatus status = LCFG_STATUS_ERROR;
+    LCFGChange change = LCFG_CHANGE_ERROR;
 
     if (errno == ENOENT) {
       if ( options&LCFG_OPT_ALLOW_NOEXIST ) {
         /* No file so just create an empty list */
         *result = lcfgpkglist_new();
+        change = LCFG_CHANGE_NONE;
       } else {
         lcfgutils_build_message( msg, "File does not exist" );
       }
@@ -854,7 +855,7 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
       lcfgutils_build_message( msg, "File is not readable" );
     }
 
-    return status;
+    return change;
   }
 
   /* Setup the getline buffer */
@@ -950,7 +951,7 @@ LCFGStatus lcfgpkglist_from_rpmlist( const char * filename,
     }
   }
 
-  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+  return ( ok ? LCFG_CHANGE_OK : LCFG_CHANGE_ERROR );
 }
 
 /**
@@ -992,17 +993,18 @@ LCFGStatus lcfgpkgset_from_rpmlist( const char * filename,
 
   if ( isempty(filename) ) {
     lcfgutils_build_message( msg, "Invalid filename" );
-    return LCFG_STATUS_ERROR;
+    return LCFG_CHANGE_ERROR;
   }
 
   FILE * fp;
   if ( (fp = fopen(filename, "r")) == NULL ) {
-    LCFGStatus status = LCFG_STATUS_ERROR;
+    LCFGChange change = LCFG_CHANGE_ERROR;
 
     if (errno == ENOENT) {
       if ( options&LCFG_OPT_ALLOW_NOEXIST ) {
         /* No file so just create an empty list */
         *result = lcfgpkgset_new();
+        change = LCFG_CHANGE_NONE;
       } else {
         lcfgutils_build_message( msg, "File does not exist" );
       }
@@ -1010,7 +1012,7 @@ LCFGStatus lcfgpkgset_from_rpmlist( const char * filename,
       lcfgutils_build_message( msg, "File is not readable" );
     }
 
-    return status;
+    return change;
   }
 
   /* Setup the getline buffer */
@@ -1105,7 +1107,7 @@ LCFGStatus lcfgpkgset_from_rpmlist( const char * filename,
     }
   }
 
-  return ( ok ? LCFG_STATUS_OK : LCFG_STATUS_ERROR );
+  return ( ok ? LCFG_CHANGE_OK : LCFG_CHANGE_ERROR );
 }
 
 /**

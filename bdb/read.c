@@ -306,7 +306,7 @@ static LCFGStatus lcfgbdb_process_component( DB * dbh,
  *
  * @param[in] dbh Handle for database.
  * @param[out] result Reference to the pointer for the @c LCFGComponentSet struct.
- * @param[in] comps_wanted Whitelist for component names.
+ * @param[in] comps_wanted List of allowed component names.
  * @param[in] namespace Namespace for the DB keys (usually the nodename).
  * @param[out] msg Pointer to any diagnostic messages.
  *
@@ -460,7 +460,7 @@ static LCFGStatus lcfgbdb_process_components( DB * dbh,
  *
  * @param[in] filename Path to the Berkeley DB file.
  * @param[out] result Reference to the pointer for the @c LCFGProfile struct.
- * @param[in] comps_wanted Whitelist for component names.
+ * @param[in] comps_wanted List of allowed component names.
  * @param[in] namespace Namespace for the DB keys (usually the nodename)
  * @param[in] options Controls the behaviour of the process.
  * @param[out] msg Pointer to any diagnostic messages

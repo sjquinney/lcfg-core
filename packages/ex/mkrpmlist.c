@@ -11,9 +11,9 @@ int main(int argc, char *argv[]) {
   LCFGPackageList * pkglist = NULL;
   char * msg = NULL;
 
-  LCFGStatus read_rc = lcfgpkglist_from_rpm_dir( rpmdir, &pkglist, &msg );
+  LCFGChange read_rc = lcfgpkglist_from_rpm_dir( rpmdir, &pkglist, &msg );
 
-  if ( read_rc == LCFG_STATUS_ERROR ) {
+  if ( read_rc == LCFG_CHANGE_ERROR ) {
     fprintf( stderr, "Failed to read rpm directory '%s': %s\n", rpmdir, msg );
   } else {
 
