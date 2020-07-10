@@ -667,6 +667,26 @@ static unsigned long int extract_epoch( const char * version,
 }
 
 /**
+ * @brief Check if the package has an epoch in the version 
+ *
+ * Checks if the specified @c LCFGPackage currently has an 
+ * epoch field set in the @e version attribute. 
+ *
+ * An epoch is a series of integers followed by a @c ':' (colon) at
+ * the star of the version string.
+ *
+ * @param[in] pkg Pointer to an @c LCFGPackage
+ *
+ * @return boolean which indicates if a package has an epoch
+ *
+ */
+
+bool lcfgpackage_has_epoch( const LCFGPackage * pkg ) {
+
+  return ( !isempty(pkg->version) && strchr(pkg->version,':') != NULL );
+}
+
+/**
  * @brief Get the epoch for the package
  *
  * This returns the value of the epoch part of the @e version
@@ -2484,8 +2504,14 @@ ssize_t lcfgpackage_to_spec( LCFG_PKG_TOSTR_ARGS ) {
   const char * pkgrel = pkg->release;
   size_t pkgrellen    = 0;
 
-  if ( !(options&LCFG_OPT_NEW) && isempty(pkgrel) )
+  /* Always have something for the release when there is an epoch to
+     avoid a conflict with the flags field which also uses a ':'
+     separator. Old-style specifications always have a release. */
+
+  if ( isempty(pkgrel) &&
+       ( lcfgpackage_has_epoch(pkg) || !(options&LCFG_OPT_NEW) ) ) {
     pkgrel = LCFG_PKG_WILDCARD;
+  }
 
   if ( !isempty(pkgrel) ) {
     pkgrellen = strlen(pkgrel);

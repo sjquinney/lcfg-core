@@ -90,6 +90,7 @@ const char * lcfgpackage_get_version( const LCFGPackage * pkg );
 bool lcfgpackage_set_version( LCFGPackage * pkg, char * new_value )
   __attribute__((warn_unused_result));
 
+bool lcfgpackage_has_epoch( const LCFGPackage * pkg );
 unsigned long int lcfgpackage_get_epoch(  const LCFGPackage * pkg );
 
 /* Release */
