@@ -1,6 +1,33 @@
-2020-05-15  SVN: new release
+2020-07-10  SVN: new release
 
-	* Release: 1.54.5
+	* Release: 1.54.6
+
+2020-07-10 13:37  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/package.c: Added a simple function
+	  for checking if a package has an epoch in the version string.
+	  Tweaked the lcfgpackage_to_spec function to always emit something
+	  for the release when there is an epoch in the version to avoid a
+	  conflict with the flags field separator
+
+2020-07-06 17:58  squinney@INF.ED.AC.UK
+
+	* include/packages.h, packages/ex/mkrpmlist.c, packages/rpm.c:
+	  Reverted accidental changes
+
+2020-07-06 17:56  squinney@INF.ED.AC.UK
+
+	* bdb/read.c, include/packages.h, lcfg.yml,
+	  packages/ex/mkrpmlist.c, packages/rpm.c: Tweaked a few comments
+
+2020-06-30 17:49  squinney@INF.ED.AC.UK
+
+	* TODO.md: Added more ideas
+
+2020-05-15 10:04  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.54.5
 
 2020-05-01 11:18  squinney@INF.ED.AC.UK
 
