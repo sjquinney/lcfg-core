@@ -18,6 +18,9 @@ Merge rules support for components in perl
 
 Add rpmlist and package fetch support with curl.
 
+Add a proper epoch attribute rather than storing it in the version
+attribute. This will make it easier to generate RPM and Deb filenames.
+
 Functions for clearing package attributes for: arch, version, release,
 context, derivation, category. Note that name cannot be unset.
 
