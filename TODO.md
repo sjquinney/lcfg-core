@@ -24,6 +24,11 @@ attribute. This will make it easier to generate RPM and Deb filenames.
 Functions for clearing package attributes for: arch, version, release,
 context, derivation, category. Note that name cannot be unset.
 
+Support for setting the allowed rules for a package name or
+version. Debian and Redhat rules are subtlely different. It would be
+really nice to catch to be able to catch mistakes on the server when
+processing a profile. Package level or list level?
+
 Support for setting default architecture on a list or set
 
 Support for setting list of allowed architectures for list or set
