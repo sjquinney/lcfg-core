@@ -18,6 +18,7 @@ Package: lcfg-core
 Architecture: any
 Pre-Depends: dpkg (>= 1.16.1)
 Depends: ${misc:Depends}, ${shlibs:Depends}
+Recommends: cpp
 Description: LCFG Core libraries
  This provides all the standard libraries and utilities for the LCFG
  configuration management framework. This includes support for

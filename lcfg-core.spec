@@ -20,6 +20,7 @@ BuildRequires:  db4-devel
 BuildRequires:  libdb-devel
 %endif
 BuildRequires:  rpm-devel
+Requires:       cpp
 
 %if 0%{?with_docs}
 BuildRequires:  doxygen, doxygen-latex
