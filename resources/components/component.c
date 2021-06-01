@@ -1721,7 +1721,7 @@ LCFGChange lcfgcomponent_merge_component( LCFGComponent * comp1,
 
   assert( comp1 != NULL );
 
-  if ( lcfgcomponent_is_empty(comp2) ) return LCFG_CHANGE_NONE;
+  if ( lcfgcomponent_is_empty(comp2) || comp1 == comp2 ) return LCFG_CHANGE_NONE;
 
   LCFGChange change = LCFG_CHANGE_NONE;
 
