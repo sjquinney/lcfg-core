@@ -931,4 +931,118 @@ bool lcfgutils_parse_cpp_derivation( const char * line,
   return true;
 }
 
+LCFGSList * lcfgslist_new( AcquireFunc acquire,
+                           RelinquishFunc relinquish,
+                           ValidateFunc validate ) {
+
+  LCFGSList * list = malloc( sizeof(LCFGSList) );
+  if ( list == NULL ) {
+    perror( "Failed to allocate memory for LCFG list" );
+    exit(EXIT_FAILURE);
+  }
+
+  list->head = NULL;
+  list->tail = NULL;
+  list->size = 0;
+
+  list->acquire    = acquire;
+  list->relinquish = relinquish;
+  list->validate   = validate;
+
+  return list;
+}
+
+void lcfgslist_destroy(LCFGSList * list) {
+
+  if ( list == NULL ) return;
+
+  while ( lcfgslist_size(list) > 0 ) {
+    void * data = NULL;
+    if ( lcfgslist_remove_next( list, NULL,
+                                &data ) == LCFG_CHANGE_REMOVED ) {
+
+      if ( list->relinquish != NULL )
+        list->relinquish(data);
+    }
+  }
+
+  free(list);
+  list = NULL;
+
+}
+
+LCFGChange lcfgslist_insert_next( LCFGSList     * list,
+                                  LCFGSListNode * node,
+                                  void          * item ) {
+  assert( list != NULL );
+
+  if ( list->validate != NULL && !list->validate(item) )
+    return LCFG_CHANGE_ERROR;
+
+  LCFGSListNode * new_node = lcfgslistnode_new(item);
+  if ( new_node == NULL ) return LCFG_CHANGE_ERROR;
+
+  if ( list->acquire != NULL )
+    list->acquire(item);
+
+  if ( node == NULL ) { /* HEAD */
+
+    if ( lcfgslist_is_empty(list) )
+      list->tail = new_node;
+
+    new_node->next = list->head;
+    list->head     = new_node;
+
+  } else {
+
+    if ( node->next == NULL )
+      list->tail = new_node;
+
+    new_node->next = node->next;
+    node->next     = new_node;
+
+  }
+
+  list->size++;
+
+  return LCFG_CHANGE_ADDED;
+}
+
+LCFGChange lcfgslist_remove_next( LCFGSList      * list,
+                                  LCFGSListNode  * node,
+                                  void          ** item ) {
+
+  if ( lcfgslist_is_empty(list) ) return LCFG_CHANGE_NONE;
+
+  LCFGSListNode * old_node = NULL;
+
+  if ( node == NULL ) { /* HEAD */
+
+    old_node   = list->head;
+    list->head = list->head->next;
+
+    if ( lcfgslist_size(list) == 1 )
+      list->tail = NULL;
+
+  } else {
+
+    if ( node->next == NULL ) return LCFG_CHANGE_ERROR;
+
+    old_node   = node->next;
+    node->next = node->next->next;
+
+    if ( node->next == NULL )
+      list->tail = node;
+
+  }
+
+  list->size--;
+
+  *item = lcfgslist_data(old_node);
+
+  lcfgslistnode_destroy(old_node);
+
+  return LCFG_CHANGE_REMOVED;
+}
+
 /* eof */

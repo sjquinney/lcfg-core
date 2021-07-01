@@ -127,6 +127,23 @@ struct LCFGSListNode {
 
 typedef struct LCFGSListNode LCFGSListNode;
 
+typedef void (* AcquireFunc)(void * data);
+typedef void (* RelinquishFunc)(void * data);
+typedef bool (* ValidateFunc)(void * data);
+
+struct LCFGSList {
+  /*@{*/
+  LCFGSListNode * head;      /**< The first entry in the list */
+  LCFGSListNode * tail;      /**< The last entry in the list */
+  AcquireFunc acquire;       /**< Function for acquiring data */
+  RelinquishFunc relinquish; /**< Function for relinquishing data */
+  ValidateFunc validate;     /**< Function for validating data */
+  unsigned int size;         /**< The length of the list */
+  /*@}*/
+};
+
+typedef struct LCFGSList LCFGSList;
+
 LCFGSListNode * lcfgslistnode_new( void * data );
 void lcfgslistnode_destroy(LCFGSListNode * node);
 
@@ -139,6 +156,23 @@ void lcfgslistnode_destroy(LCFGSListNode * node);
 #define lcfgslist_has_next(node) ((node)->next != NULL)
 #define lcfgslist_next(node) ((node)->next)
 #define lcfgslist_data(node) ((node)->data)
+
+LCFGSList * lcfgslist_new(AcquireFunc acquire,
+                           RelinquishFunc relinquish,
+                           ValidateFunc validate);
+void lcfgslist_destroy(LCFGSList * list);
+
+LCFGChange lcfgslist_insert_next( LCFGSList     * list,
+                                  LCFGSListNode * node,
+                                  void          * item )
+  __attribute_warn_unused_result__;
+
+LCFGChange lcfgslist_remove_next( LCFGSList      * list,
+                                  LCFGSListNode  * node,
+                                  void          ** item )
+  __attribute_warn_unused_result__;
+
+#define lcfgslist_append(list, data) ( lcfgslist_insert_next( list, lcfgslist_tail(list), data ) )
 
 /**
  * @brief CPP flags that appear in derivation information
