@@ -11,7 +11,7 @@ license: GPLv2
 name: lcfg-core
 orgident: org.lcfg
 platforms: 
-  - ScientificLinux7
+  - EnterpriseLinux7
 release: 1
 schema: 1
 translate: 
