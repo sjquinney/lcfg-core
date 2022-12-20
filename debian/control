@@ -2,7 +2,7 @@ Source: lcfg-core
 Section: libs
 Priority: optional
 Maintainer: Stephen Quinney <squinney@inf.ed.ac.uk>
-Build-Depends: debhelper (>= 11), cmake, perl (>= 5.16.0),
+Build-Depends: debhelper (>= 11), lcfg-build-deps,
     pkg-config,
     flex,
     bison (>= 3.4.0),
