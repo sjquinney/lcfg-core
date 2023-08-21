@@ -265,6 +265,10 @@ LCFGChange lcfgpackages_from_cpp( const char * filename,
 
   LCFGDerivationMap * drvmap = include_meta ? lcfgderivmap_new() : NULL;
 
+  /* Collect all messages */
+
+  LCFGSList * messages = lcfgslist_new( NULL, &free, NULL );
+
   char * cur_file = NULL;
   unsigned int cur_line = 0;
   while( LCFGChangeOK(change) && getline( &line, &line_len, fp ) != -1 ) {
