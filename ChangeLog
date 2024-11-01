@@ -1,6 +1,70 @@
-2020-07-10  SVN: new release
+2024-11-01  SVN: new release
 
-	* Release: 1.54.6
+	* Release: 1.54.7
+
+2024-11-01 14:28  squinney@INF.ED.AC.UK
+
+	* CMakeLists.txt, bdb/CMakeLists.txt, lcfg.yml,
+	  packages/CMakeLists.txt, profile/CMakeLists.txt,
+	  resources/CMakeLists.txt, utils/CMakeLists.txt,
+	  xml/CMakeLists.txt: Bumped minimum CMake version to 2.8.12 to
+	  silence warnings
+
+2024-11-01 14:26  squinney@INF.ED.AC.UK
+
+	* debian/compat, debian/control: Updated standards versions, no
+	  changes required
+
+2024-11-01 14:26  squinney@INF.ED.AC.UK
+
+	* lcfg.yml: Updated the list of supported platforms
+
+2023-08-21 16:03  squinney@INF.ED.AC.UK
+
+	* packages/container.c: Reverted accidental commit
+
+2023-08-21 16:01  squinney@INF.ED.AC.UK
+
+	* packages/container.c: Replaced copernicus with arcturus
+
+2022-12-20 15:20  squinney@INF.ED.AC.UK
+
+	* debian/control: Build-depend on the new lcfg-build-deps package
+
+2022-09-22 10:16  cc/root@INF.ED.AC.UK
+
+	* lcfg.yml: platforms strings standardised to UbuntuFocal and
+	  EnterpriseLinux7
+
+2021-07-01 11:08  squinney@INF.ED.AC.UK
+
+	* include/utils.h.in, utils/utils.c: Beginnings of better generic
+	  linked list support
+
+2021-06-01 14:30  squinney@INF.ED.AC.UK
+
+	* resources/components/component.c: Return LCFG_CHANGE_NONE if
+	  lcfgcomponent_merge_component is passed the same pointer for both
+	  component arguments
+
+2020-07-17 09:03  squinney@INF.ED.AC.UK
+
+	* debian/control, lcfg-core.spec: Tweaked dependencies to include
+	  cpp which is required for parsing lcfg headers and package lists
+
+2020-07-14 08:24  squinney@INF.ED.AC.UK
+
+	* TODO.md: Added note about need to have different rules regarding
+	  package names/versions for Ubuntu and Redhat
+
+2020-07-13 05:52  squinney@INF.ED.AC.UK
+
+	* TODO.md: Added note about epochs
+
+2020-07-10 13:42  squinney@INF.ED.AC.UK
+
+	* ChangeLog, debian/changelog, lcfg-build-id.txt, lcfg.yml:
+	  lcfg-core release: 1.54.6
 
 2020-07-10 13:37  squinney@INF.ED.AC.UK
 

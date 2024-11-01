@@ -1,3 +1,9 @@
+lcfg-core (1.54.7-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Stephen Quinney <squinney@inf.ed.ac.uk>  Fri, 01 Nov 2024 14:29:54 +0000
+
 lcfg-core (1.54.6-1) unstable; urgency=low
 
   * New upstream release

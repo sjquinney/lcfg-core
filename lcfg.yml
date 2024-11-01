@@ -5,7 +5,7 @@ author:
 base: ~
 build: 
   gencmake: 0
-date: 10/07/20 13:42:12
+date: 01/11/24 14:29:54
 group: LCFG
 license: GPLv2
 name: lcfg-core
@@ -14,7 +14,7 @@ platforms:
   - EnterpriseLinux7
   - UbuntuFocal
   - UbuntuJammy
-release: 2
+release: 1
 schema: 1
 translate: 
   - "*.cin"
@@ -24,4 +24,4 @@ vcs:
   logname: ChangeLog
   store_version: 1
 vendor: University of Edinburgh
-version: 1.54.6
+version: 1.54.7
