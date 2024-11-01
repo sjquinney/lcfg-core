@@ -14,7 +14,7 @@ platforms:
   - EnterpriseLinux7
   - UbuntuFocal
   - UbuntuJammy
-release: 1
+release: 2
 schema: 1
 translate: 
   - "*.cin"
